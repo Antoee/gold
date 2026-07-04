@@ -1,0 +1,5 @@
+"Variant","Count","TotalNetProfit","WorstNetProfit","BestNetProfit","ProfitableWindows","FlatWindows","LosingWindows"
+"buy2_sell3","30","1492.91","-83.61","834.56","10","6","14"
+"confirm3","30","487.71","-84.75","372.63","7","10","13"
+"buy3_sell2","30","331.04","-83.26","372.7","8","7","15"
+"confirm4","30","0","0","0","0","30","0"
