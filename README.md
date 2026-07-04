@@ -6,33 +6,31 @@ The EA is modular and risk-first. It is designed for repeated Strategy Tester op
 
 ## Current Status
 
+The promoted default is now the robust no-date BOS + liquidity-sweep profile at `1.00%` risk. It sacrifices raw historical profit to improve start-date robustness and remove hard-coded calendar blocks.
+
 Latest promoted real-tick validation, XAUUSD M15, deposit `$1,000`, period `2024.01.01` to `2026.07.02`:
 
-- Full period net profit: `+$4,153.12`
-- Final balance: `$5,153.12`
-- Yearly windows: all profitable
-- Half-year walk-forward: no losing windows
-- Quarterly windows: positive overall at `+$1,661.98`, but 3 losing quarters
-- Monthly windows: positive overall at `+$1,903.98`, but 17 losing months out of 30
-- Worst quarter: `-$206.77`
-- Worst month: `-$83.61`
+- Full period net profit: `+$319.26`
+- Final balance: `$1,319.26`
+- Yearly windows: `2024 +$135.42`, `2025 +$153.20`, `2026 YTD $0.00`
+- Half-year windows: one losing window, `2024 H1 -$99.84`
+- Quarterly windows: `+$314.76`, 2 profitable, 7 flat, 1 losing
+- Monthly windows: `+$314.76`, 2 profitable, 27 flat, 1 losing
+- Worst month/quarter: `-$99.84`
 
-Important: this is research output, not a live-trading guarantee. The current profitable configuration uses date-specific trade blocks, which may be overfit. The next major objective is replacing those date blocks with general market-regime filters.
+The previous date-block profile remains an aggressive research benchmark: full period `+$4,153.12`, but 17 losing months out of 30 and hard-coded calendar filters.
 
 ## Included Files
 
 - `BACKTEST_RESULTS.md` - detailed validation notes and rejected candidate results.
-- `MONTHLY_REAL_TICK_SUMMARY.csv` - current promoted monthly validation summary.
-- `MONTHLY_CONFIRMATION_FILTER_SUMMARY.csv` - monthly confirmation-filter research summary.
-- `MONTHLY_NO_TRAIL_SUMMARY.csv` - exploratory monthly no-trailing-stop research summary.
-- `NO_TRAIL_QUARTERS_CLEAN.csv` - clean quarterly no-trailing-stop validation windows.
-- `NO_TRAIL_QUARTER_CLEAN_SUMMARY.csv` - clean quarterly no-trailing-stop validation summary.
-- `MONTHLY_REGIME_FILTER_SUMMARY.csv` - monthly ADX/ATR regime-filter research summary.
-- `QUARTERLY_REAL_TICK_SUMMARY.csv` - promoted quarterly summary metrics.
-- `DIRECTIONAL_CONFIRMATION_SUMMARY.csv` - directional confirmation research summary.
-- `EQUITY_DD_GUARD_SUMMARY.csv` - equity drawdown guard research summary.
-- `MTF_SLOPE_DIRECTION_NO_DATE_SUMMARY.csv` - no-date MTF slope direction filter summary.
-- `SIGNAL_TIMEFRAME_NO_DATE_SUMMARY.csv` - no-date signal timeframe research summary.
+- `BOS_SWEEP_WINDOWS_risk1.csv` - promoted robust profile quarterly/monthly windows.
+- `BOS_SWEEP_WINDOW_SUMMARY_risk1.csv` - promoted robust profile quarterly/monthly summary.
+- `BOS_SWEEP_SPLITS_risk1.csv` - promoted robust profile yearly/half/full windows.
+- `BOS_SWEEP_SPLIT_SUMMARY_risk1.csv` - promoted robust profile split summary.
+- `GENERAL_REGIME_STRESS_SUMMARY.csv` - no-date general regime stress sweep summary.
+- `BOS_SWEEP_VARIANT_SUMMARY.csv` - BOS/sweep variant stress summary.
+- `MONTHLY_REAL_TICK_SUMMARY.csv` - previous aggressive date-block monthly validation summary.
+- `QUARTERLY_REAL_TICK_SUMMARY.csv` - previous aggressive date-block quarterly summary metrics.
 
 ## Strategy Rules
 
@@ -40,6 +38,7 @@ No martingale. No grid. No averaging down. No recovery systems.
 
 Current promoted defaults include:
 
+- Risk per trade: `1.00%`.
 - Adaptive reverse enabled.
 - Adaptive slope threshold: `500` points.
 - Minimum risk/reward: `1.50`.
@@ -48,46 +47,25 @@ Current promoted defaults include:
 - Daily loss limit: `1.00%`.
 - Weekly loss limit: `2.50%`.
 - Monthly loss limit: `4.00%`.
-- Peak-equity drawdown guard disabled by default: `0.00%`.
-- MTF slope direction filter disabled by default.
-- Date buy block from `2024.01.01` through `2024.06.30`.
-- Second date buy block from `2025.07.01` through `2025.12.31`.
-- Date sell block from `2025.07.01` through `2025.12.31`.
+- Date buy/sell blocks disabled.
+- EMA cross, momentum candle, and engulfing confirmations disabled.
+- BOS and liquidity sweep enabled with `InpMinimumConfirmations=2`.
 
 ## Latest Research
 
-Monthly validation showed that the current promoted build is carried by a few large winning months while many months lose modestly.
+Best no-date profiles found so far:
 
-Monthly confirmation filters:
+- Robust BOS+sweep at `1.00%` risk: monthly `+$314.76`, 1 losing month, promoted default.
+- Momentum+sweep no-date: full period `+$664.59`, but still 17 losing months, not promoted.
+- BOS+sweep at `0.50%` risk: monthly `+$157.38`, 1 losing month, safer but lower profit.
 
-- Baseline: `+$1,903.98`, 17 losing months.
-- `buy2_sell3`: `+$1,492.91`, 14 losing months.
-- `confirm3`: `+$487.71`, 13 losing months.
-- `buy3_sell2`: `+$331.04`, 15 losing months.
-- `confirm4`: `$0.00`, all months flat.
+Rejected or non-promoted paths:
 
-Monthly ADX filters were rejected: `adx22`, `adx25`, and `adx30` all reduced profit without improving the losing-month count.
-
-No-trail follow-up:
-
-- `InpUseATRTrailing=false`
-- Clean quarterly total: `+$1,099.90`
-- Clean quarterly worst window: `-$144.33`
-- Clean quarterly best window: `+$789.92`
-- Profitable quarters: `5`
-- Flat quarters: `2`
-- Losing quarters: `3`
-
-No-trail is not promoted. It improved the worst quarterly loss versus the promoted baseline, but reduced total quarterly net from `+$1,661.98` to `+$1,099.90` with the same number of losing quarters.
-
-Other rejected research paths:
-
-- Directional confirmation `buy2_sell3_ny`: full-period net fell to `+$2,620.98` and 2025 became losing.
-- Equity drawdown guard `dd4`: full-period net fell to only `+$85.45` and 2025 became losing.
-- MTF slope direction filter: best no-date stress variant still lost `-$444.20`.
-- H4 no-date signal timeframe: full validation was `-$136.90` and had no profitable validation windows.
-
-The current promoted defaults remain better overall.
+- Monthly ADX filters reduced profit without improving losing-month count.
+- No-trail improved worst quarter but reduced quarterly net too much.
+- Directional confirmation `buy2_sell3_ny` made 2025 losing.
+- Equity drawdown guard `dd4` cut full-period net to only `+$85.45`.
+- H4 no-date signal timeframe avoided trades but did not make profit.
 
 ## Background Testing
 
@@ -97,14 +75,13 @@ The local project includes PowerShell automation scripts that run MT5 in the bac
 - Strategy Tester visual mode disabled.
 - Dashboard disabled during tests.
 - MT5/tester audio sessions muted while tests run.
-- Dynamic newest tester-log parsing so scripts continue working after the date changes.
-- Newer validators wait for MT5's tester-log completion marker instead of process exit, which avoids stale result rows.
+- Validators wait for MT5's tester-log completion marker instead of process exit, which avoids stale result rows.
 
 ## Research Direction
 
-The current build makes profit on the tested full period, yearly splits, and half-year walk-forward windows. Monthly testing shows the start-point problem more clearly, so the next work should focus on:
+Next work should focus on increasing profit from the robust no-date profile without bringing back many losing monthly windows.
 
-1. General market-regime filters that reduce the many small losing months without removing the few large winning months.
-2. More out-of-sample broker/history validation.
-3. Report parsing for profit factor, drawdown, Sharpe, and trade count.
-4. Replacing date-specific behavior with robust, reusable market-state logic.
+1. Tune BOS/sweep entry filters and risk conservatively.
+2. Test on additional broker/history sources.
+3. Add drawdown/profit-factor extraction from reports, not only final balance.
+4. Keep the date-block profile as a benchmark, not the default.
