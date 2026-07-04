@@ -40,9 +40,6 @@ Promoted inputs:
 
 Full real-tick period `2024.01.01` to `2026.07.02`:
 
-- Ticks: `158,316,982`
-- Bars: `58,755`
-- Runtime: `0:57.250`
 - Final balance: `$5,153.12`
 - Net profit: `+$4,153.12`
 
@@ -66,60 +63,53 @@ Quarterly windows:
 - Worst quarter: `-$206.77`
 - Losing quarters: `3`
 
-## Directional Confirmation Research
+Monthly windows:
 
-Best directional candidate tested: `buy2_sell3_ny`.
+- Monthly total: `+$1,903.98`
+- Worst month: `-$83.61`
+- Best month: `+$952.38`
+- Profitable months: `7`
+- Flat months: `6`
+- Losing months: `17`
 
-- Weak-quarter total: `+$109.70`
-- Worst weak quarter: `-$51.13`
-- All-quarter total: `+$1,738.01`
-- Full period: `+$2,620.98`
+Important finding: the current promoted build is profitable over larger windows because a few very strong months carry many small losing months. This is profitable, but it does not yet satisfy the goal of being robust from any start point.
 
-Conclusion: useful as a research module, but rejected as a promoted default because it lowers full-period profit and makes 2025/2025 H1 losing.
+Largest profitable months:
 
-## Equity Drawdown Guard Research
+- `2025_03`: `+$952.38`
+- `2024_12`: `+$846.52`
+- `2026_06`: `+$382.53`
+- `2026_03`: `+$300.46`
+- `2024_04`: `+$274.11`
 
-Best weak-quarter threshold `dd4`:
+Worst losing months:
 
-- Weak-quarter total: `+$71.45`
-- Worst weak quarter: `-$87.32`
-- Full period: `+$85.45`
-- `2025`: `-$83.61`
+- `2025_01`: `-$83.61`
+- `2024_08`: `-$83.26`
+- `2025_02`: `-$82.94`
+- `2024_09`: `-$79.83`
+- `2024_03`: `-$66.04`
 
-Conclusion: useful as optional capital preservation, but rejected as a promoted default because it crushes full-period profit.
+## Monthly Confirmation Filter Research
 
-## MTF Slope Direction Filter Research
+Stricter confirmation filters were tested across the same 30 monthly windows.
 
-Optional higher-timeframe EMA slope direction filter was tested as a no-date replacement. No tested variant was profitable across the stress set.
+Results:
 
-- Best stress-set total: `-$444.20`
-- Worst tested variant total: `-$614.31`
+- Baseline: total `+$1,903.98`, worst `-$83.61`, profitable `7`, flat `6`, losing `17`
+- `buy2_sell3`: total `+$1,492.91`, worst `-$83.61`, profitable `10`, flat `6`, losing `14`
+- `confirm3`: total `+$487.71`, worst `-$84.75`, profitable `7`, flat `10`, losing `13`
+- `buy3_sell2`: total `+$331.04`, worst `-$83.26`, profitable `8`, flat `7`, losing `15`
+- `confirm4`: total `$0.00`, all 30 months flat
 
-Conclusion: useful as a configurable research module, but it failed as a date-block replacement and is not promoted.
+Conclusion: `buy2_sell3` improves monthly start-window consistency by reducing losing months from `17` to `14`, but it reduces total monthly net by about `$411`. It is useful as a smoother alternate profile, but it is not promoted because the current defaults make more profit.
 
-## No-Date Signal Timeframe Research
+## Other Rejected Research Paths
 
-Signal timeframe was tested as another possible replacement for date-specific blocks. All date blocks were disabled and stress windows were run on real ticks: `2024 Q1`, `2024 Q3`, `2025 Q2`, `2025 Q3`, and `2025 Q4`.
-
-Stress-window results:
-
-- `H4`: total `-$68.30`, worst `-$68.30`, four flat windows
-- `H1`: total `-$260.55`, worst `-$156.97`
-- `M15`: total `-$583.30`, worst `-$206.77`
-- `M30`: total `-$601.34`, worst `-$160.95`
-
-`H4` was the best stress-window candidate, so it was validated across quarters, half-years, years, and full period.
-
-Full H4 no-date validation:
-
-- Quarterly total: `-$136.90`
-- Worst quarter: `-$68.30`
-- Full period: `-$136.90`
-- Profitable windows: `0`
-- Flat windows: `12`
-- Losing windows: `7`
-
-Conclusion: H4 no-date is rejected as a promoted default because it avoids many bad trades but does not make profit.
+- Directional confirmation `buy2_sell3_ny`: full period `+$2,620.98`, 2025/2025 H1 losing.
+- Equity drawdown guard `dd4`: full period `+$85.45`, 2025 losing.
+- MTF slope direction no-date filter: best stress-set total `-$444.20`.
+- H4 no-date signal timeframe: full validation `-$136.90`, no profitable validation windows.
 
 ## Background Testing Speed
 
@@ -133,6 +123,6 @@ The local automation scripts were updated for faster, quieter testing:
 
 ## Conclusion
 
-The current promoted configuration makes profit on the full real-tick period, all tested yearly windows, and all half-year walk-forward windows. It still has three losing quarterly windows and uses date-specific filters, so it is not production-ready.
+The current promoted configuration makes profit on the full real-tick period, all tested yearly windows, and all half-year walk-forward windows. Monthly validation now shows the start-point problem more clearly: `17` of `30` monthly windows are losing. The EA is still not production-ready.
 
-Next optimization target: replace date-specific behavior with general market-regime rules that reduce `2024 Q3` and `2025 Q2` losses without removing the strong `2024 Q4` and `2025 Q1` gains.
+Next optimization target: reduce the many small losing months without removing the few large winning months.
