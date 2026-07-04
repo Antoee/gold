@@ -24,7 +24,9 @@ Important: this is research output, not a live-trading guarantee. The current pr
 - `BACKTEST_RESULTS.md` - detailed validation notes and rejected candidate results.
 - `MONTHLY_REAL_TICK_SUMMARY.csv` - current promoted monthly validation summary.
 - `MONTHLY_CONFIRMATION_FILTER_SUMMARY.csv` - monthly confirmation-filter research summary.
-- `MONTHLY_NO_TRAIL_SUMMARY.csv` - monthly no-trailing-stop research summary.
+- `MONTHLY_NO_TRAIL_SUMMARY.csv` - exploratory monthly no-trailing-stop research summary.
+- `NO_TRAIL_QUARTERS_CLEAN.csv` - clean quarterly no-trailing-stop validation windows.
+- `NO_TRAIL_QUARTER_CLEAN_SUMMARY.csv` - clean quarterly no-trailing-stop validation summary.
 - `MONTHLY_REGIME_FILTER_SUMMARY.csv` - monthly ADX/ATR regime-filter research summary.
 - `QUARTERLY_REAL_TICK_SUMMARY.csv` - promoted quarterly summary metrics.
 - `DIRECTIONAL_CONFIRMATION_SUMMARY.csv` - directional confirmation research summary.
@@ -66,14 +68,17 @@ Monthly confirmation filters:
 
 Monthly ADX filters were rejected: `adx22`, `adx25`, and `adx30` all reduced profit without improving the losing-month count.
 
-Monthly no-trail profile:
+No-trail follow-up:
 
 - `InpUseATRTrailing=false`
-- Monthly total: `+$1,902.84`
-- Worst month: `-$74.68`
-- Losing months: `16`
+- Clean quarterly total: `+$1,099.90`
+- Clean quarterly worst window: `-$144.33`
+- Clean quarterly best window: `+$789.92`
+- Profitable quarters: `5`
+- Flat quarters: `2`
+- Losing quarters: `3`
 
-No-trail is the best monthly robustness lead so far, but it is not promoted yet because broader split validation needs a clean rerun.
+No-trail is not promoted. It improved the worst quarterly loss versus the promoted baseline, but reduced total quarterly net from `+$1,661.98` to `+$1,099.90` with the same number of losing quarters.
 
 Other rejected research paths:
 
@@ -93,12 +98,13 @@ The local project includes PowerShell automation scripts that run MT5 in the bac
 - Dashboard disabled during tests.
 - MT5/tester audio sessions muted while tests run.
 - Dynamic newest tester-log parsing so scripts continue working after the date changes.
+- Newer validators wait for MT5's tester-log completion marker instead of process exit, which avoids stale result rows.
 
 ## Research Direction
 
 The current build makes profit on the tested full period, yearly splits, and half-year walk-forward windows. Monthly testing shows the start-point problem more clearly, so the next work should focus on:
 
-1. Cleanly rerun no-trail split validation.
-2. General market-regime filters that reduce the many small losing months without removing the few large winning months.
-3. More out-of-sample broker/history validation.
-4. Report parsing for profit factor, drawdown, Sharpe, and trade count.
+1. General market-regime filters that reduce the many small losing months without removing the few large winning months.
+2. More out-of-sample broker/history validation.
+3. Report parsing for profit factor, drawdown, Sharpe, and trade count.
+4. Replacing date-specific behavior with robust, reusable market-state logic.
