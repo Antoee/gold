@@ -12,9 +12,12 @@ Leverage: `1:100`
 
 ## Current Promoted Robust No-Date Results
 
-The promoted default is now the no-date BOS + liquidity-sweep profile at `1.50%` risk:
+The promoted default is now the no-date BOS + liquidity-sweep profile at `1.50%` risk with a tighter `1.80` ATR stop:
 
 - `InpRiskPercent=1.50`
+- `InpStopATRMultiplier=1.80`
+- `InpTakeProfitATRMultiplier=3.50`
+- `InpMinRiskReward=1.50`
 - `InpUseDateBuyBlock=false`
 - `InpUseDateBuyBlock2=false`
 - `InpUseDateSellBlock=false`
@@ -27,49 +30,49 @@ The promoted default is now the no-date BOS + liquidity-sweep profile at `1.50%`
 
 Full real-tick period `2024.01.01` to `2026.07.02`:
 
-- Final balance: `$1,452.75`
-- Net profit: `+$452.75`
+- Final balance: `$1,521.12`
+- Net profit: `+$521.12`
 
 Yearly windows:
 
-- `2024`: `+$176.99`
+- `2024`: `+$230.04`
 - `2025`: `+$245.12`
 - `2026 YTD`: `$0.00`
 
 Half-year windows:
 
-- `2024 H1`: `-$149.76`
-- `2024 H2`: `+$392.10`
+- `2024 H1`: `-$148.99`
+- `2024 H2`: `+$444.38`
 - `2025 H1`: `$0.00`
 - `2025 H2`: `+$245.12`
 - `2026 H1`: `$0.00`
 
 Quarterly windows:
 
-- Quarterly total: `+$487.46`
-- Worst quarter: `-$149.76`
+- Quarterly total: `+$540.51`
+- Worst quarter: `-$148.99`
 - Profitable quarters: `2`
 - Flat quarters: `7`
 - Losing quarters: `1`
 
 Monthly windows:
 
-- Monthly total: `+$487.46`
-- Worst month: `-$149.76`
+- Monthly total: `+$540.51`
+- Worst month: `-$148.99`
 - Profitable months: `2`
 - Flat months: `27`
 - Losing months: `1`
 
 Split-window aggregate:
 
-- Total across yearly/half/full windows: `+$1,362.32`
-- Worst split window: `-$149.76`
-- Best split window: `+$452.75`
+- Total across yearly/half/full windows: `+$1,536.79`
+- Worst split window: `-$148.99`
+- Best split window: `+$521.12`
 - Profitable split windows: `5`
 - Flat split windows: `3`
 - Losing split windows: `1`
 
-Conclusion: this profile makes much less historical profit than the date-block profile, but it is the best validated default so far for improving start-date robustness without hard-coded calendar behavior. A `2.00%` risk variant had zero losing monthly/quarterly/split windows, but lower full-period profit at `+$321.72`; `1.50%` is promoted as the better profit/robustness tradeoff.
+Conclusion: tightening the ATR stop from `2.20` to `1.80` improved full-period profit from `+$452.75` to `+$521.12`, improved monthly/quarter aggregate from `+$487.46` to `+$540.51`, and kept one losing monthly/quarter/split window. A `2.00%` risk variant had zero losing monthly/quarterly/split windows, but lower full-period profit at `+$321.72`.
 
 ## Aggressive Date-Block Benchmark
 
@@ -86,14 +89,15 @@ Conclusion: the date-block profile remains the highest-profit historical benchma
 
 ## Other Research
 
+- BOS+sweep at `1.75%` risk: stress-window total `+$560.41`, but worst loss worsened to `-$172.80`, so it was not promoted.
+- BOS+sweep at `1.50%` risk with `2.20` stop ATR: full period `+$452.75`, monthly `+$487.46`, 1 losing month; previous default.
 - BOS+sweep at `2.00%` risk: full period `+$321.72`, zero losing monthly/quarterly/split windows; safer but lower profit than `1.50%`.
-- BOS+sweep at `1.00%` risk: full period `+$319.26`, monthly `+$314.76`, 1 losing month; previous default.
+- BOS+sweep at `1.00%` risk: full period `+$319.26`, monthly `+$314.76`, 1 losing month; older default.
 - Momentum+sweep no-date profile: full period `+$664.59`, but still had 17 losing months, so it was not promoted.
-- BOS+sweep at `0.50%` risk: monthly `+$157.38`, 1 losing month; safer but lower profit.
 - BOS/sweep variants with `MinimumConfirmations=1`, BOS-only, or sweep-only made more in stress windows but brought back larger losses.
 - No-trail reduced the worst quarter but cut total quarterly net too much.
 - Monthly ADX filters reduced profit without improving losing-month count.
 
 ## Next Target
 
-Increase profit from the robust BOS+sweep profile without bringing back many losing monthly windows. The next sweeps should focus on conservative risk scaling, session filters, and exact BOS/sweep definitions.
+Increase profit from the robust BOS+sweep profile without bringing back many losing monthly windows. The next sweeps should focus on conservative entry expansion, exact BOS/sweep definitions, and adding drawdown/profit-factor extraction from reports.
