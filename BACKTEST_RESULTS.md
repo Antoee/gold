@@ -68,12 +68,6 @@ Quarterly windows:
 
 ## Directional Confirmation Research
 
-Optional module added locally:
-
-- `InpUseDirectionalConfirmations=false` by default
-- `InpBuyMinimumConfirmations=2`
-- `InpSellMinimumConfirmations=2`
-
 Best directional candidate tested: `buy2_sell3_ny`.
 
 - Weak-quarter total: `+$109.70`
@@ -84,10 +78,6 @@ Best directional candidate tested: `buy2_sell3_ny`.
 Conclusion: useful as a research module, but rejected as a promoted default because it lowers full-period profit and makes 2025/2025 H1 losing.
 
 ## Equity Drawdown Guard Research
-
-Optional peak-equity circuit breaker added locally:
-
-- `InpMaxEquityDrawdownPercent=0.00` by default
 
 Best weak-quarter threshold `dd4`:
 
@@ -100,26 +90,36 @@ Conclusion: useful as optional capital preservation, but rejected as a promoted 
 
 ## MTF Slope Direction Filter Research
 
-Optional higher-timeframe EMA slope direction filter added locally:
+Optional higher-timeframe EMA slope direction filter was tested as a no-date replacement. No tested variant was profitable across the stress set.
 
-- `InpUseMTFSlopeDirectionFilter=false` by default
-- `InpDirectionSlopeLookback=50`
-- `InpBuyMinMTFSlopePts=0.0`
-- `InpSellMaxMTFSlopePts=0.0`
-
-The filter was tested as a general replacement for date-specific blocks by disabling all date blocks and running real-tick stress windows: `2024 Q1`, `2024 Q3`, `2025 Q2`, `2025 Q3`, and `2025 Q4`.
-
-No tested variant was profitable across the stress set:
-
-- `buy500_sell0`: total `-$444.20`, worst `-$145.19`
-- `buy0_sell-500`: total `-$457.79`, worst `-$133.72`
-- `buy500_sell-500`: total `-$476.06`, worst `-$150.52`
-- `buy0_sell0`: total `-$535.04`, worst `-$145.19`
-- `buy250_sell-250`: total `-$556.68`, worst `-$152.30`
-- `buy750_sell-750`: total `-$560.23`, worst `-$150.52`
-- `buy-250_sell250`: total `-$614.31`, worst `-$189.69`
+- Best stress-set total: `-$444.20`
+- Worst tested variant total: `-$614.31`
 
 Conclusion: useful as a configurable research module, but it failed as a date-block replacement and is not promoted.
+
+## No-Date Signal Timeframe Research
+
+Signal timeframe was tested as another possible replacement for date-specific blocks. All date blocks were disabled and stress windows were run on real ticks: `2024 Q1`, `2024 Q3`, `2025 Q2`, `2025 Q3`, and `2025 Q4`.
+
+Stress-window results:
+
+- `H4`: total `-$68.30`, worst `-$68.30`, four flat windows
+- `H1`: total `-$260.55`, worst `-$156.97`
+- `M15`: total `-$583.30`, worst `-$206.77`
+- `M30`: total `-$601.34`, worst `-$160.95`
+
+`H4` was the best stress-window candidate, so it was validated across quarters, half-years, years, and full period.
+
+Full H4 no-date validation:
+
+- Quarterly total: `-$136.90`
+- Worst quarter: `-$68.30`
+- Full period: `-$136.90`
+- Profitable windows: `0`
+- Flat windows: `12`
+- Losing windows: `7`
+
+Conclusion: H4 no-date is rejected as a promoted default because it avoids many bad trades but does not make profit.
 
 ## Background Testing Speed
 
