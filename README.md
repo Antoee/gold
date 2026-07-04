@@ -26,6 +26,7 @@ Important: this is research output, not a live-trading guarantee. The current pr
 - `DIRECTIONAL_CONFIRMATION_SUMMARY.csv` - directional confirmation research summary.
 - `EQUITY_DD_GUARD_SUMMARY.csv` - equity drawdown guard research summary.
 - `MTF_SLOPE_DIRECTION_NO_DATE_SUMMARY.csv` - no-date MTF slope direction filter summary.
+- `SIGNAL_TIMEFRAME_NO_DATE_SUMMARY.csv` - no-date signal timeframe research summary.
 
 ## Strategy Rules
 
@@ -68,6 +69,10 @@ Optional MTF slope direction filter:
 - `InpUseMTFSlopeDirectionFilter=false` by default.
 
 No-date stress tests failed across all tested slope variants. Best tested variant still lost `-$444.20` across the stress set, so it is not a date-block replacement.
+
+No-date signal timeframe research:
+
+- H4 reduced stress-window losses to only `-$68.30`, but full validation was `-$136.90` and had no profitable validation windows.
 
 The current promoted defaults remain better overall.
 
