@@ -1,0 +1,5 @@
+"Variant","Count","TotalNetProfit","WorstNetProfit","BestNetProfit","ProfitableWindows","FlatWindows","LosingWindows"
+"adx22","30","972.38","-83.61","829.3","7","6","17"
+"adx25","30","352.74","-83.26","559.88","5","6","19"
+"adx30","30","104.14","-82.94","274.11","7","6","17"
+"atr120","6","45.16","-81.87","274.11","2","0","4"
