@@ -1,4 +1,4 @@
-InpRiskPercent=1.50||1.50||0.10||5.00||N
+InpRiskPercent=1.60||1.60||0.10||5.00||N
 InpUseDateBuyBlock=false||false||0||true||N
 InpUseDateBuyBlock2=false||false||0||true||N
 InpUseDateSellBlock=false||false||0||true||N
