@@ -42,6 +42,16 @@ Current promoted defaults include:
 - Second date buy block from `2025.07.01` through `2025.12.31`.
 - Date sell block from `2025.07.01` through `2025.12.31`.
 
+## Latest Research
+
+A new optional directional-confirmation module was added locally:
+
+- `InpUseDirectionalConfirmations=false` by default.
+- `InpBuyMinimumConfirmations=2`.
+- `InpSellMinimumConfirmations=2`.
+
+Best tested candidate, `buy2_sell3_ny`, improved weak-quarter total to `+$109.70`, but it was rejected as a promoted default because full-period net fell to `+$2,620.98` and 2025 became losing. The current promoted defaults remain better overall.
+
 ## Background Testing
 
 The local project includes PowerShell automation scripts that run MT5 in the background:
