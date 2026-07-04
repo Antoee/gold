@@ -23,6 +23,8 @@ Important: this is research output, not a live-trading guarantee. The current pr
 - `QUARTERLY_REAL_TICK_WINDOWS.csv` - current promoted quarterly validation.
 - `QUARTERLY_REAL_TICK_SUMMARY.csv` - quarterly summary metrics.
 - `LOSING_QUARTER_COMBO_SUMMARY.csv` - weak-quarter combo probe summary.
+- `DIRECTIONAL_CONFIRMATION_SUMMARY.csv` - directional confirmation research summary.
+- `EQUITY_DD_GUARD_SUMMARY.csv` - equity drawdown guard research summary.
 
 ## Strategy Rules
 
@@ -38,19 +40,28 @@ Current promoted defaults include:
 - Daily loss limit: `1.00%`.
 - Weekly loss limit: `2.50%`.
 - Monthly loss limit: `4.00%`.
+- Peak-equity drawdown guard disabled by default: `0.00%`.
 - Date buy block from `2024.01.01` through `2024.06.30`.
 - Second date buy block from `2025.07.01` through `2025.12.31`.
 - Date sell block from `2025.07.01` through `2025.12.31`.
 
 ## Latest Research
 
-A new optional directional-confirmation module was added locally:
+Optional directional-confirmation module:
 
 - `InpUseDirectionalConfirmations=false` by default.
 - `InpBuyMinimumConfirmations=2`.
 - `InpSellMinimumConfirmations=2`.
 
-Best tested candidate, `buy2_sell3_ny`, improved weak-quarter total to `+$109.70`, but it was rejected as a promoted default because full-period net fell to `+$2,620.98` and 2025 became losing. The current promoted defaults remain better overall.
+Best tested candidate, `buy2_sell3_ny`, improved weak-quarter total to `+$109.70`, but it was rejected as a promoted default because full-period net fell to `+$2,620.98` and 2025 became losing.
+
+Optional equity drawdown guard:
+
+- `InpMaxEquityDrawdownPercent=0.00` by default.
+
+Best weak-quarter threshold, `dd4`, improved worst quarter to `-$87.32`, but it was rejected as a promoted default because full-period net fell to only `+$85.45` and 2025 became losing.
+
+The current promoted defaults remain better overall.
 
 ## Background Testing
 
