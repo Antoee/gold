@@ -13,7 +13,9 @@ Latest promoted real-tick validation, XAUUSD M15, deposit `$1,000`, period `2024
 - Yearly windows: all profitable
 - Half-year walk-forward: no losing windows
 - Quarterly windows: positive overall at `+$1,661.98`, but 3 losing quarters
+- Monthly windows: positive overall at `+$1,903.98`, but 17 losing months out of 30
 - Worst quarter: `-$206.77`
+- Worst month: `-$83.61`
 
 Important: this is research output, not a live-trading guarantee. The current profitable configuration uses date-specific trade blocks, which may be overfit. The next major objective is replacing those date blocks with general market-regime filters.
 
@@ -22,6 +24,8 @@ Important: this is research output, not a live-trading guarantee. The current pr
 - `BACKTEST_RESULTS.md` - detailed validation notes and rejected candidate results.
 - `QUARTERLY_REAL_TICK_WINDOWS.csv` - current promoted quarterly validation.
 - `QUARTERLY_REAL_TICK_SUMMARY.csv` - quarterly summary metrics.
+- `MONTHLY_REAL_TICK_SUMMARY.csv` - current promoted monthly validation summary.
+- `MONTHLY_CONFIRMATION_FILTER_SUMMARY.csv` - monthly confirmation-filter research summary.
 - `LOSING_QUARTER_COMBO_SUMMARY.csv` - weak-quarter combo probe summary.
 - `DIRECTIONAL_CONFIRMATION_SUMMARY.csv` - directional confirmation research summary.
 - `EQUITY_DD_GUARD_SUMMARY.csv` - equity drawdown guard research summary.
@@ -50,29 +54,24 @@ Current promoted defaults include:
 
 ## Latest Research
 
-Optional directional-confirmation module:
+Monthly validation showed that the current promoted build is carried by a few large winning months while many months lose modestly.
 
-- `InpUseDirectionalConfirmations=false` by default.
-- `InpBuyMinimumConfirmations=2`.
-- `InpSellMinimumConfirmations=2`.
+Monthly confirmation filters:
 
-Best tested candidate, `buy2_sell3_ny`, improved weak-quarter total to `+$109.70`, but it was rejected as a promoted default because full-period net fell to `+$2,620.98` and 2025 became losing.
+- Baseline: `+$1,903.98`, 17 losing months.
+- `buy2_sell3`: `+$1,492.91`, 14 losing months.
+- `confirm3`: `+$487.71`, 13 losing months.
+- `buy3_sell2`: `+$331.04`, 15 losing months.
+- `confirm4`: `$0.00`, all months flat.
 
-Optional equity drawdown guard:
+`buy2_sell3` is smoother but not promoted because it gives up about `$411` of monthly net.
 
-- `InpMaxEquityDrawdownPercent=0.00` by default.
+Other rejected research paths:
 
-Best weak-quarter threshold, `dd4`, improved worst quarter to `-$87.32`, but it was rejected as a promoted default because full-period net fell to only `+$85.45` and 2025 became losing.
-
-Optional MTF slope direction filter:
-
-- `InpUseMTFSlopeDirectionFilter=false` by default.
-
-No-date stress tests failed across all tested slope variants. Best tested variant still lost `-$444.20` across the stress set, so it is not a date-block replacement.
-
-No-date signal timeframe research:
-
-- H4 reduced stress-window losses to only `-$68.30`, but full validation was `-$136.90` and had no profitable validation windows.
+- Directional confirmation `buy2_sell3_ny`: full-period net fell to `+$2,620.98` and 2025 became losing.
+- Equity drawdown guard `dd4`: full-period net fell to only `+$85.45` and 2025 became losing.
+- MTF slope direction filter: best no-date stress variant still lost `-$444.20`.
+- H4 no-date signal timeframe: full validation was `-$136.90` and had no profitable validation windows.
 
 The current promoted defaults remain better overall.
 
@@ -88,9 +87,9 @@ The local project includes PowerShell automation scripts that run MT5 in the bac
 
 ## Research Direction
 
-The current build makes profit on the tested full period, yearly splits, and half-year walk-forward windows. Quarterly testing still reveals weak regimes, so the next work should focus on:
+The current build makes profit on the tested full period, yearly splits, and half-year walk-forward windows. Monthly testing shows the start-point problem more clearly, so the next work should focus on:
 
-1. General market-regime filters for the weak quarters.
+1. General market-regime filters that reduce the many small losing months without removing the few large winning months.
 2. More out-of-sample broker/history validation.
 3. Report parsing for profit factor, drawdown, Sharpe, and trade count.
 4. Fast sweeps first, then real-tick validation only for promising candidates.
