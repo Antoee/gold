@@ -25,6 +25,7 @@ Promoted inputs:
 - `InpMaxWeeklyLossPercent=2.50`
 - `InpMaxMonthlyLossPercent=4.00`
 - `InpMaxEquityDrawdownPercent=0.00`
+- `InpUseMTFSlopeDirectionFilter=false`
 - `InpUseDateBuyBlock=true`
 - `InpBuyBlockStart=2024.01.01 00:00`
 - `InpBuyBlockEnd=2024.06.30 23:59`
@@ -67,7 +68,7 @@ Quarterly windows:
 
 ## Directional Confirmation Research
 
-A new optional module was added locally:
+Optional module added locally:
 
 - `InpUseDirectionalConfirmations=false` by default
 - `InpBuyMinimumConfirmations=2`
@@ -84,31 +85,41 @@ Conclusion: useful as a research module, but rejected as a promoted default beca
 
 ## Equity Drawdown Guard Research
 
-A new optional peak-equity circuit breaker was added locally:
+Optional peak-equity circuit breaker added locally:
 
 - `InpMaxEquityDrawdownPercent=0.00` by default
 
-When enabled, the EA blocks new entries once current equity falls more than the configured percentage from peak equity. Existing position management still runs.
+Best weak-quarter threshold `dd4`:
 
-Weak-quarter sweep:
-
-- `dd4`: total `+$71.45`, worst `-$87.32`, two profitable weak quarters
-- `dd6`: total `+$16.27`, worst `-$87.32`, two profitable weak quarters
-- `dd8`: total `+$16.27`, worst `-$87.32`, two profitable weak quarters
-- `dd10`: total `-$130.54`, worst `-$128.92`
-- `dd12`: total `-$130.54`, worst `-$128.92`
-- `dd15`: total `-$167.56`, worst `-$128.92`
-
-Full validation for best weak-quarter threshold `dd4`:
-
-- Quarterly total: `+$341.00`
-- Worst quarter: `-$87.32`
+- Weak-quarter total: `+$71.45`
+- Worst weak quarter: `-$87.32`
 - Full period: `+$85.45`
-- `2024`: `+$85.45`
 - `2025`: `-$83.61`
-- `2026 YTD`: `+$25.96`
 
-Conclusion: useful as an optional capital-preservation module, but rejected as a promoted default because it reduces full-period net from `+$4,153.12` to `+$85.45` and makes 2025 losing.
+Conclusion: useful as optional capital preservation, but rejected as a promoted default because it crushes full-period profit.
+
+## MTF Slope Direction Filter Research
+
+Optional higher-timeframe EMA slope direction filter added locally:
+
+- `InpUseMTFSlopeDirectionFilter=false` by default
+- `InpDirectionSlopeLookback=50`
+- `InpBuyMinMTFSlopePts=0.0`
+- `InpSellMaxMTFSlopePts=0.0`
+
+The filter was tested as a general replacement for date-specific blocks by disabling all date blocks and running real-tick stress windows: `2024 Q1`, `2024 Q3`, `2025 Q2`, `2025 Q3`, and `2025 Q4`.
+
+No tested variant was profitable across the stress set:
+
+- `buy500_sell0`: total `-$444.20`, worst `-$145.19`
+- `buy0_sell-500`: total `-$457.79`, worst `-$133.72`
+- `buy500_sell-500`: total `-$476.06`, worst `-$150.52`
+- `buy0_sell0`: total `-$535.04`, worst `-$145.19`
+- `buy250_sell-250`: total `-$556.68`, worst `-$152.30`
+- `buy750_sell-750`: total `-$560.23`, worst `-$150.52`
+- `buy-250_sell250`: total `-$614.31`, worst `-$189.69`
+
+Conclusion: useful as a configurable research module, but it failed as a date-block replacement and is not promoted.
 
 ## Background Testing Speed
 
