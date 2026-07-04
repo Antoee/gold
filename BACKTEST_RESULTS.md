@@ -24,6 +24,7 @@ Promoted inputs:
 - `InpMaxDailyLossPercent=1.00`
 - `InpMaxWeeklyLossPercent=2.50`
 - `InpMaxMonthlyLossPercent=4.00`
+- `InpMaxEquityDrawdownPercent=0.00`
 - `InpUseDateBuyBlock=true`
 - `InpBuyBlockStart=2024.01.01 00:00`
 - `InpBuyBlockEnd=2024.06.30 23:59`
@@ -34,9 +35,9 @@ Promoted inputs:
 - `InpSellBlockStart=2025.07.01 00:00`
 - `InpSellBlockEnd=2025.12.31 23:59`
 
-## Full Real-Tick Result
+## Current Promoted Results
 
-Real ticks, full period `2024.01.01` to `2026.07.02`:
+Full real-tick period `2024.01.01` to `2026.07.02`:
 
 - Ticks: `158,316,982`
 - Bars: `58,755`
@@ -44,14 +45,11 @@ Real ticks, full period `2024.01.01` to `2026.07.02`:
 - Final balance: `$5,153.12`
 - Net profit: `+$4,153.12`
 
-## Split Results
-
-Yearly real-tick windows:
+Yearly windows:
 
 - `2024`: `+$581.16`
 - `2025`: `+$1,054.96`
 - `2026 YTD`: `+$448.56`
-- Split-window total: `+$2,084.68`
 
 Half-year walk-forward windows:
 
@@ -60,38 +58,12 @@ Half-year walk-forward windows:
 - `2025 H1`: `+$1,054.96`
 - `2025 H2`: `$0.00`
 - `2026 H1`: `+$457.16`
-- Half-year total: `+$2,053.09`
-- Worst half-year: `$0.00`
 
 Quarterly windows:
 
-- `2024 Q1`: `-$63.05`
-- `2024 Q2`: `+$147.10`
-- `2024 Q3`: `-$206.77`
-- `2024 Q4`: `+$856.57`
-- `2025 Q1`: `+$651.70`
-- `2025 Q2`: `-$128.92`
-- `2025 Q3`: `$0.00`
-- `2025 Q4`: `$0.00`
-- `2026 Q1`: `+$189.20`
-- `2026 Q2`: `+$216.15`
 - Quarterly total: `+$1,661.98`
 - Worst quarter: `-$206.77`
 - Losing quarters: `3`
-
-## Weak-Quarter Probes
-
-Quarterly validation exposed three weak quarters under the current promoted defaults:
-
-- `2024 Q1`: `-$63.05`
-- `2024 Q3`: `-$206.77`
-- `2025 Q2`: `-$128.92`
-
-Earlier rejected probes:
-
-- `no_date_buy_only`: failed all-quarter validation with only `+$383.82` quarterly net and five losing quarters.
-- `confirm3_ny`: reduced the worst weak-quarter loss to `-$53.83`, but all-quarter validation fell to `+$531.02`.
-- `adx25_no_trail`: best weak-quarter combo-probe total at `+$408.42`, but still left two losing weak quarters.
 
 ## Directional Confirmation Research
 
@@ -103,33 +75,40 @@ A new optional module was added locally:
 
 Best directional candidate tested: `buy2_sell3_ny`.
 
-Weak-quarter real-tick result:
-
-- `2024 Q1`: `-$51.13`
-- `2024 Q3`: `+$181.19`
-- `2025 Q2`: `-$20.36`
 - Weak-quarter total: `+$109.70`
 - Worst weak quarter: `-$51.13`
-
-All-quarter validation:
-
-- Quarterly total: `+$1,738.01`
-- Worst quarter: `-$142.73`
-- Losing quarters: `4`
-
-Yearly, half-year, and full validation:
-
-- `2024`: `+$2,321.85`
-- `2025`: `-$134.15`
-- `2026 YTD`: `+$298.00`
-- `2024 H1`: `+$503.07`
-- `2024 H2`: `+$1,212.72`
-- `2025 H1`: `-$134.15`
-- `2025 H2`: `$0.00`
-- `2026 H1`: `+$298.00`
+- All-quarter total: `+$1,738.01`
 - Full period: `+$2,620.98`
 
-Conclusion: directional confirmations are useful as a research module, but `buy2_sell3_ny` is rejected as a promoted default because it lowers full-period net profit from `+$4,153.12` to `+$2,620.98` and makes 2025/2025 H1 losing.
+Conclusion: useful as a research module, but rejected as a promoted default because it lowers full-period profit and makes 2025/2025 H1 losing.
+
+## Equity Drawdown Guard Research
+
+A new optional peak-equity circuit breaker was added locally:
+
+- `InpMaxEquityDrawdownPercent=0.00` by default
+
+When enabled, the EA blocks new entries once current equity falls more than the configured percentage from peak equity. Existing position management still runs.
+
+Weak-quarter sweep:
+
+- `dd4`: total `+$71.45`, worst `-$87.32`, two profitable weak quarters
+- `dd6`: total `+$16.27`, worst `-$87.32`, two profitable weak quarters
+- `dd8`: total `+$16.27`, worst `-$87.32`, two profitable weak quarters
+- `dd10`: total `-$130.54`, worst `-$128.92`
+- `dd12`: total `-$130.54`, worst `-$128.92`
+- `dd15`: total `-$167.56`, worst `-$128.92`
+
+Full validation for best weak-quarter threshold `dd4`:
+
+- Quarterly total: `+$341.00`
+- Worst quarter: `-$87.32`
+- Full period: `+$85.45`
+- `2024`: `+$85.45`
+- `2025`: `-$83.61`
+- `2026 YTD`: `+$25.96`
+
+Conclusion: useful as an optional capital-preservation module, but rejected as a promoted default because it reduces full-period net from `+$4,153.12` to `+$85.45` and makes 2025 losing.
 
 ## Background Testing Speed
 
