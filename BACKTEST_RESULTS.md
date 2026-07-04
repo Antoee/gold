@@ -44,45 +44,39 @@ Real ticks, full period `2024.01.01` to `2026.07.02`:
 - Final balance: `$5,153.12`
 - Net profit: `+$4,153.12`
 
-## Yearly Split Results
+## Split Results
 
-Real ticks, yearly split windows:
+Yearly real-tick windows:
 
-- `2024`: `$1,581.16` balance, `+$581.16` net
-- `2025`: `$2,054.96` balance, `+$1,054.96` net
-- `2026 YTD`: `$1,448.56` balance, `+$448.56` net
+- `2024`: `+$581.16`
+- `2025`: `+$1,054.96`
+- `2026 YTD`: `+$448.56`
 - Split-window total: `+$2,084.68`
 
-## Half-Year Walk-Forward Results
+Half-year walk-forward windows:
 
-Real ticks, half-year walk-forward windows:
-
-- `2024 H1`: `$1,072.62` balance, `+$72.62` net
-- `2024 H2`: `$1,468.35` balance, `+$468.35` net
-- `2025 H1`: `$2,054.96` balance, `+$1,054.96` net
-- `2025 H2`: `$1,000.00` balance, `$0.00` net
-- `2026 H1`: `$1,457.16` balance, `+$457.16` net
+- `2024 H1`: `+$72.62`
+- `2024 H2`: `+$468.35`
+- `2025 H1`: `+$1,054.96`
+- `2025 H2`: `$0.00`
+- `2026 H1`: `+$457.16`
 - Half-year total: `+$2,053.09`
 - Worst half-year: `$0.00`
 
-## Quarterly Results
+Quarterly windows:
 
-Real ticks, quarterly windows:
-
-- `2024 Q1`: `$936.95` balance, `-$63.05` net
-- `2024 Q2`: `$1,147.10` balance, `+$147.10` net
-- `2024 Q3`: `$793.23` balance, `-$206.77` net
-- `2024 Q4`: `$1,856.57` balance, `+$856.57` net
-- `2025 Q1`: `$1,651.70` balance, `+$651.70` net
-- `2025 Q2`: `$871.08` balance, `-$128.92` net
-- `2025 Q3`: `$1,000.00` balance, `$0.00` net
-- `2025 Q4`: `$1,000.00` balance, `$0.00` net
-- `2026 Q1`: `$1,189.20` balance, `+$189.20` net
-- `2026 Q2`: `$1,216.15` balance, `+$216.15` net
+- `2024 Q1`: `-$63.05`
+- `2024 Q2`: `+$147.10`
+- `2024 Q3`: `-$206.77`
+- `2024 Q4`: `+$856.57`
+- `2025 Q1`: `+$651.70`
+- `2025 Q2`: `-$128.92`
+- `2025 Q3`: `$0.00`
+- `2025 Q4`: `$0.00`
+- `2026 Q1`: `+$189.20`
+- `2026 Q2`: `+$216.15`
 - Quarterly total: `+$1,661.98`
 - Worst quarter: `-$206.77`
-- Profitable quarters: `5`
-- Flat quarters: `2`
 - Losing quarters: `3`
 
 ## Weak-Quarter Probes
@@ -93,13 +87,49 @@ Quarterly validation exposed three weak quarters under the current promoted defa
 - `2024 Q3`: `-$206.77`
 - `2025 Q2`: `-$128.92`
 
-Targeted weak-quarter probes were run on real ticks. None fixed all three weak quarters while preserving overall quarterly profitability.
+Earlier rejected probes:
 
-Best weak-quarter probes:
+- `no_date_buy_only`: failed all-quarter validation with only `+$383.82` quarterly net and five losing quarters.
+- `confirm3_ny`: reduced the worst weak-quarter loss to `-$53.83`, but all-quarter validation fell to `+$531.02`.
+- `adx25_no_trail`: best weak-quarter combo-probe total at `+$408.42`, but still left two losing weak quarters.
 
-- `no_date_buy_only`: reduced losses in the weak quarters, but failed all-quarter validation with only `+$383.82` quarterly net and five losing quarters.
-- `confirm3_ny`: reduced the worst weak-quarter loss to `-$53.83`, but all-quarter validation fell to `+$531.02`, far below the promoted defaults.
-- `adx25_no_trail`: best weak-quarter probe total at `+$408.42`, but still left two losing weak quarters.
+## Directional Confirmation Research
+
+A new optional module was added locally:
+
+- `InpUseDirectionalConfirmations=false` by default
+- `InpBuyMinimumConfirmations=2`
+- `InpSellMinimumConfirmations=2`
+
+Best directional candidate tested: `buy2_sell3_ny`.
+
+Weak-quarter real-tick result:
+
+- `2024 Q1`: `-$51.13`
+- `2024 Q3`: `+$181.19`
+- `2025 Q2`: `-$20.36`
+- Weak-quarter total: `+$109.70`
+- Worst weak quarter: `-$51.13`
+
+All-quarter validation:
+
+- Quarterly total: `+$1,738.01`
+- Worst quarter: `-$142.73`
+- Losing quarters: `4`
+
+Yearly, half-year, and full validation:
+
+- `2024`: `+$2,321.85`
+- `2025`: `-$134.15`
+- `2026 YTD`: `+$298.00`
+- `2024 H1`: `+$503.07`
+- `2024 H2`: `+$1,212.72`
+- `2025 H1`: `-$134.15`
+- `2025 H2`: `$0.00`
+- `2026 H1`: `+$298.00`
+- Full period: `+$2,620.98`
+
+Conclusion: directional confirmations are useful as a research module, but `buy2_sell3_ny` is rejected as a promoted default because it lowers full-period net profit from `+$4,153.12` to `+$2,620.98` and makes 2025/2025 H1 losing.
 
 ## Background Testing Speed
 
