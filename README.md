@@ -22,11 +22,11 @@ Important: this is research output, not a live-trading guarantee. The current pr
 ## Included Files
 
 - `BACKTEST_RESULTS.md` - detailed validation notes and rejected candidate results.
-- `QUARTERLY_REAL_TICK_WINDOWS.csv` - current promoted quarterly validation.
-- `QUARTERLY_REAL_TICK_SUMMARY.csv` - quarterly summary metrics.
 - `MONTHLY_REAL_TICK_SUMMARY.csv` - current promoted monthly validation summary.
 - `MONTHLY_CONFIRMATION_FILTER_SUMMARY.csv` - monthly confirmation-filter research summary.
-- `LOSING_QUARTER_COMBO_SUMMARY.csv` - weak-quarter combo probe summary.
+- `MONTHLY_NO_TRAIL_SUMMARY.csv` - monthly no-trailing-stop research summary.
+- `MONTHLY_REGIME_FILTER_SUMMARY.csv` - monthly ADX/ATR regime-filter research summary.
+- `QUARTERLY_REAL_TICK_SUMMARY.csv` - promoted quarterly summary metrics.
 - `DIRECTIONAL_CONFIRMATION_SUMMARY.csv` - directional confirmation research summary.
 - `EQUITY_DD_GUARD_SUMMARY.csv` - equity drawdown guard research summary.
 - `MTF_SLOPE_DIRECTION_NO_DATE_SUMMARY.csv` - no-date MTF slope direction filter summary.
@@ -64,7 +64,16 @@ Monthly confirmation filters:
 - `buy3_sell2`: `+$331.04`, 15 losing months.
 - `confirm4`: `$0.00`, all months flat.
 
-`buy2_sell3` is smoother but not promoted because it gives up about `$411` of monthly net.
+Monthly ADX filters were rejected: `adx22`, `adx25`, and `adx30` all reduced profit without improving the losing-month count.
+
+Monthly no-trail profile:
+
+- `InpUseATRTrailing=false`
+- Monthly total: `+$1,902.84`
+- Worst month: `-$74.68`
+- Losing months: `16`
+
+No-trail is the best monthly robustness lead so far, but it is not promoted yet because broader split validation needs a clean rerun.
 
 Other rejected research paths:
 
@@ -89,7 +98,7 @@ The local project includes PowerShell automation scripts that run MT5 in the bac
 
 The current build makes profit on the tested full period, yearly splits, and half-year walk-forward windows. Monthly testing shows the start-point problem more clearly, so the next work should focus on:
 
-1. General market-regime filters that reduce the many small losing months without removing the few large winning months.
-2. More out-of-sample broker/history validation.
-3. Report parsing for profit factor, drawdown, Sharpe, and trade count.
-4. Fast sweeps first, then real-tick validation only for promising candidates.
+1. Cleanly rerun no-trail split validation.
+2. General market-regime filters that reduce the many small losing months without removing the few large winning months.
+3. More out-of-sample broker/history validation.
+4. Report parsing for profit factor, drawdown, Sharpe, and trade count.
