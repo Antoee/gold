@@ -68,17 +68,17 @@ Completed ADX results:
 
 Conclusion: stricter ADX filtering is rejected because it removes too much profit without improving monthly robustness.
 
-No-trailing-stop monthly result:
+No-trailing-stop follow-up:
 
 - `InpUseATRTrailing=false`
-- Monthly total: `+$1,902.84`
-- Worst month: `-$74.68`
-- Best month: `+$937.98`
-- Profitable months: `7`
-- Flat months: `7`
-- Losing months: `16`
+- Clean quarterly total: `+$1,099.90`
+- Clean quarterly worst window: `-$144.33`
+- Clean quarterly best window: `+$789.92`
+- Profitable quarters: `5`
+- Flat quarters: `2`
+- Losing quarters: `3`
 
-Conclusion: disabling ATR trailing is the best monthly robustness lead so far. It nearly matches baseline monthly net while improving worst month and reducing losing months by one. It is not promoted yet because broader split validation needs a clean rerun before changing defaults.
+Conclusion: disabling ATR trailing is rejected as a promoted default. The clean quarterly rerun improved the worst quarterly loss versus the promoted baseline (`-$144.33` vs `-$206.77`), but total quarterly net fell from `+$1,661.98` to `+$1,099.90` with the same number of losing quarters. The earlier monthly no-trail output is treated as exploratory only because the old process-based tester runner could reuse stale log rows.
 
 ## Other Rejected Research Paths
 
@@ -91,4 +91,4 @@ Conclusion: disabling ATR trailing is the best monthly robustness lead so far. I
 
 The current promoted configuration makes profit on the full real-tick period, all tested yearly windows, and all half-year walk-forward windows. Monthly validation now shows the start-point problem clearly: `17` of `30` monthly windows are losing. The EA is still not production-ready.
 
-Next optimization target: cleanly rerun no-trail split validation, because it is the first candidate to preserve monthly profit while slightly improving monthly robustness.
+Next optimization target: general market-regime filters that reduce the many small losing months without removing the few large winning months, while replacing date-specific behavior with reusable market-state logic.
