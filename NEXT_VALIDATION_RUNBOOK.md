@@ -85,6 +85,22 @@ To explain why the current next batch deserves scarce tester time, run:
 
 The batch rationale does not launch MT5. It classifies each queued config by baseline anchor, evidence-backed upside, adjacent upside, risk-control variant, or other research role, and repeats that phase-1 runs are prune-only.
 
+To decide what to do after importing fresh reports, run:
+
+- `work/build_result_import_decision_matrix.ps1`
+- Output CSV: `outputs/RESULT_IMPORT_DECISION_MATRIX.csv`
+- Output report: `outputs/RESULT_IMPORT_DECISION_MATRIX.md`
+
+The decision matrix does not launch MT5. It converts parsed ranking evidence into next actions: run missing reports, repair unparsed reports, advance phase-1 candidates to phase 2, build a promotion packet, keep a profile for research, or reject it for loss risk.
+
+To summarize whether the EA is ready for a more profitable promoted default, run:
+
+- `work/build_profit_readiness_snapshot.ps1`
+- Output CSV: `outputs/PROFIT_READINESS_SNAPSHOT.csv`
+- Output report: `outputs/PROFIT_READINESS_SNAPSHOT.md`
+
+The readiness snapshot does not launch MT5. It combines current promotion-gate, handoff-integrity, local-safety, and result-import evidence into a single keep/promote/not-ready view.
+
 ## Validation Order
 
 1. `risk160_sl16_tp38`
@@ -131,14 +147,16 @@ Configs use:
 8. Rerun `work/audit_mt5_local_safety.ps1` before any local MT5 work is considered.
 9. Rerun `work/build_strategy_research_brief.ps1` to keep the strategy thesis current.
 10. Rerun `work/build_profit_search_batch_rationale.ps1` after the next batch changes.
-11. For any promising candidate, rerun `work/build_profit_promotion_packet.ps1 -Profile <profile_name>`.
-12. Rerun `work/audit_profit_search_coverage.ps1` after changing the search pack.
-13. Rerun `work/analyze_robust_candidates.ps1`.
-14. Rerun `work/analyze_loss_control.ps1`.
-15. Rerun `work/analyze_promotion_gate.ps1`.
-16. Rerun `work/audit_profile_inputs.ps1` before trusting any changed `.set` file.
-17. Update `VALIDATION_REPORT_METRICS.md`, `PROFIT_SEARCH_REPORT_METRICS.md`, `PROFIT_SEARCH_RANKING.md`, `NEXT_PROFIT_SEARCH_BATCH.md`, `PROFIT_SEARCH_BATCH_RATIONALE.md`, `STRATEGY_RESEARCH_BRIEF.md`, `MT5_LOCAL_SAFETY_AUDIT.md`, `outputs/next_test_handoff/README.md`, `outputs/next_test_handoff/HANDOFF_MANIFEST.csv`, `HANDOFF_CONFIG_INTEGRITY.md`, `PROFIT_SEARCH_COVERAGE_AUDIT.md`, `outputs/promotion_packets/*`, `ROBUST_CANDIDATE_RANKING.md`, `LOSS_CONTROL_REPORT.md`, `PROMOTION_GATE_REPORT.md`, and `PROFILE_INPUT_AUDIT.md`.
-18. Promote only if all profit, no-loss, drawdown/profit-factor, promotion-gate, profile-input, handoff-integrity, local-safety, batch-rationale, strategy-thesis, and coverage checks pass.
+11. Rerun `work/build_result_import_decision_matrix.ps1` to convert imported evidence into next actions.
+12. Rerun `work/build_profit_readiness_snapshot.ps1` to summarize whether a replacement is ready.
+13. For any promising candidate, rerun `work/build_profit_promotion_packet.ps1 -Profile <profile_name>`.
+14. Rerun `work/audit_profit_search_coverage.ps1` after changing the search pack.
+15. Rerun `work/analyze_robust_candidates.ps1`.
+16. Rerun `work/analyze_loss_control.ps1`.
+17. Rerun `work/analyze_promotion_gate.ps1`.
+18. Rerun `work/audit_profile_inputs.ps1` before trusting any changed `.set` file.
+19. Update `VALIDATION_REPORT_METRICS.md`, `PROFIT_SEARCH_REPORT_METRICS.md`, `PROFIT_SEARCH_RANKING.md`, `NEXT_PROFIT_SEARCH_BATCH.md`, `PROFIT_SEARCH_BATCH_RATIONALE.md`, `RESULT_IMPORT_DECISION_MATRIX.md`, `PROFIT_READINESS_SNAPSHOT.md`, `STRATEGY_RESEARCH_BRIEF.md`, `MT5_LOCAL_SAFETY_AUDIT.md`, `outputs/next_test_handoff/README.md`, `outputs/next_test_handoff/HANDOFF_MANIFEST.csv`, `HANDOFF_CONFIG_INTEGRITY.md`, `PROFIT_SEARCH_COVERAGE_AUDIT.md`, `outputs/promotion_packets/*`, `ROBUST_CANDIDATE_RANKING.md`, `LOSS_CONTROL_REPORT.md`, `PROMOTION_GATE_REPORT.md`, and `PROFILE_INPUT_AUDIT.md`.
+20. Promote only if all profit, no-loss, drawdown/profit-factor, promotion-gate, profile-input, handoff-integrity, local-safety, batch-rationale, result-import decision, readiness snapshot, strategy-thesis, and coverage checks pass.
 
 ## Offline Report Collector
 
@@ -240,3 +258,21 @@ It keeps parameter changes tied to evidence. Current thesis: keep `risk1p6_sl18_
 - `outputs/PROFIT_SEARCH_BATCH_RATIONALE.md`
 
 It explains each queued run before tester time is spent. Current batch shape: 24 phase-1 prune runs, 5 baseline anchors, 8 evidence-backed TP `3.8` runs, and 11 adjacent TP-expansion runs. No candidate can be promoted from this rationale or phase-1 evidence alone.
+
+## Result Import Decision Matrix
+
+`work/build_result_import_decision_matrix.ps1` reads `outputs/PROFIT_SEARCH_RANKING.csv` and writes:
+
+- `outputs/RESULT_IMPORT_DECISION_MATRIX.csv`
+- `outputs/RESULT_IMPORT_DECISION_MATRIX.md`
+
+It turns the current ranking evidence into concrete next actions after reports are imported. Current state: all rows are `RunMissingReports`, because the profit-search reports have not been exported or parsed yet.
+
+## Profit Readiness Snapshot
+
+`work/build_profit_readiness_snapshot.ps1` reads the decision matrix, promotion gate, handoff integrity, and local safety audit, then writes:
+
+- `outputs/PROFIT_READINESS_SNAPSHOT.csv`
+- `outputs/PROFIT_READINESS_SNAPSHOT.md`
+
+It answers whether the current promoted profile should stay in place or whether a more profitable candidate is ready for deeper review. Current state: `NOT_READY`; keep the current promoted profile until missing reports are exported, parsed, and passed through the promotion workflow.
