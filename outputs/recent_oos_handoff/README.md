@@ -18,6 +18,7 @@ Each window is paired candidate vs baseline:
 - Manifest: `outputs/recent_oos_handoff/HANDOFF_MANIFEST.csv`
 - Configs: `outputs/recent_oos_handoff/configs/*.ini`
 - Expert expected by configs: `Professional_XAUUSD_EA.ex5`
+- Decision gate: `work/build_recent_oos_decision.ps1`
 
 ## Safety
 
@@ -29,12 +30,18 @@ Do not run these configs on the active desktop while normal PC use must remain u
 - If `tp38_sl18` matches or improves every paired window, continue to the full handoff and phase-2 real-tick validation.
 - Do not promote from this handoff alone.
 
-## Import Command
+## Import And Decide
 
-After reports are exported into `outputs`, parse them with:
+After reports are exported into `outputs`, parse and decide with:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\work\collect_validation_results.ps1 -ManifestPath "outputs\recent_oos_handoff\HANDOFF_MANIFEST.csv" -ReportDir "outputs" -ReportNameTemplate "recent_oos_{Profile}_{Window}" -OutResults "outputs\RECENT_OOS_REPORT_METRICS.csv" -OutSummary "outputs\RECENT_OOS_REPORT_SUMMARY.csv" -OutMarkdown "outputs\RECENT_OOS_REPORT_METRICS.md"
+powershell -NoProfile -ExecutionPolicy Bypass -File .\work\build_recent_oos_decision.ps1
 ```
 
-Review `outputs\RECENT_OOS_REPORT_METRICS.md` before spending time on the full validation queue.
+Review:
+
+- `outputs\RECENT_OOS_REPORT_METRICS.md`
+- `outputs\RECENT_OOS_DECISION.md`
+
+Only continue to the full validation queue if the decision gate returns `PASS_RECENT_OOS`.
