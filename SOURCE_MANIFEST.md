@@ -37,6 +37,7 @@ The current GitHub source should be compiled and tested before live or promotion
 - Optional EMA cross, momentum candle, engulfing candle, ADX, ATR, adaptive trend-bias, break-even, ATR trailing, and profit giveback guard modules.
 - Risk protections:
   - risk-based lot sizing
+  - minimum-lot over-risk protection: trades are skipped when the correctly sized lot is below broker minimum
   - daily/weekly/monthly loss guards
   - equity drawdown guard
   - maximum consecutive loss guard through `InpMaxConsecutiveLosses`
