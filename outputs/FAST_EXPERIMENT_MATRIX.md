@@ -14,10 +14,11 @@ This matrix keeps tester time focused on the shortest gates that can reject a ca
 | 6 | `ADX_FILTER_PROBE` | 4 | Does ADX 18 filtering improve 2026 behavior? | Candidate >= paired no-ADX profile and non-negative | Expand passing ADX profile |
 | 7 | `SPREAD_GUARD_PROBE` | 4 | Does ATR-relative spread filtering improve 2026 behavior? | Candidate >= paired unguarded profile and non-negative | Expand passing spread-guard profile |
 | 8 | `TIME_EXIT_PROBE` | 4 | Does a 240-minute stale-trade exit improve 2026 behavior? | Candidate >= paired no-time-exit profile and non-negative | Expand passing time-exit profile |
-| 9 | `MTF_TREND_PROBE` | 4 | Does H1 EMA 200 filtering help? | Candidate >= paired unfiltered profile and non-negative | Expand passing MTF profile |
-| 10 | `STRUCTURE_TRAIL_PROBE` | 4 | Does structure trailing protect winners? | Candidate >= paired unfiltered profile and non-negative | Expand passing structure-trailing profile |
-| 11 | `SESSION_PROBE` | 6 | Does session filtering improve 2026 behavior? | Candidate >= paired baseline and non-negative | Expand passing session profile |
-| 12 | `FULL_HANDOFF` | 24 | Does a survivor beat the promoted baseline broadly? | Full net > `$866.59`, split aggregate > `$2354.65`, no losing required window | Build promotion packet |
+| 9 | `NEWS_FILTER_PROBE` | 4 | Does first-Friday NFP/news-time filtering improve 2026 risk-adjusted behavior? | Candidate >= paired no-news profile, or drawdown improves with small profit tradeoff | Expand passing news-filter profile |
+| 10 | `MTF_TREND_PROBE` | 4 | Does H1 EMA 200 filtering help? | Candidate >= paired unfiltered profile and non-negative | Expand passing MTF profile |
+| 11 | `STRUCTURE_TRAIL_PROBE` | 4 | Does structure trailing protect winners? | Candidate >= paired unfiltered profile and non-negative | Expand passing structure-trailing profile |
+| 12 | `SESSION_PROBE` | 6 | Does session filtering improve 2026 behavior? | Candidate >= paired baseline and non-negative | Expand passing session profile |
+| 13 | `FULL_HANDOFF` | 24 | Does a survivor beat the promoted baseline broadly? | Full net > `$866.59`, split aggregate > `$2354.65`, no losing required window | Build promotion packet |
 
 ## Rules
 
@@ -45,6 +46,12 @@ Break-even reports can also be imported alone with:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\work\import_breakeven_probe_reports.ps1
+```
+
+News-filter reports can also be imported alone with:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\work\import_news_filter_probe_reports.ps1
 ```
 
 All wrappers import exported reports only and do not launch MT5.
