@@ -1,5 +1,5 @@
 param(
-   [string]$HandoffDir = "outputs\micro_test_handoff",
+   [string]$HandoffDir = "outputs\risk_adjusted_micro_handoff",
    [string]$EaSourcePath = "outputs\Professional_XAUUSD_EA.mq5",
    [string]$PackageDir = "outputs\external_mt5_validation_package",
    [string]$PackageName = "xauusd_micro_validation_package"
@@ -56,12 +56,22 @@ $contents.Add([pscustomobject]@{ Type = "manifest"; Source = $manifestPath; Pack
 Copy-RequiredFile $EaSourcePath (Join-Path $PackageDir "source\Professional_XAUUSD_EA.mq5")
 $contents.Add([pscustomobject]@{ Type = "ea_source"; Source = $EaSourcePath; PackagePath = "source\Professional_XAUUSD_EA.mq5" }) | Out-Null
 
-$profileFiles = @(
+$profileFiles = New-Object System.Collections.Generic.List[string]
+@(
    "outputs\ROBUST_BOS_SWEEP_PROFILE.set",
    "outputs\CANDIDATE_RISK16_SL18_TP38_PROFILE.set",
    "outputs\CANDIDATE_RISK16_SL16_TP38_PROFILE.set",
    "outputs\CANDIDATE_RISK16_SL18_TP35_GIVEBACK_PROFILE.set"
-)
+) | ForEach-Object { $profileFiles.Add($_) | Out-Null }
+
+foreach($profileName in @($rows | Select-Object -ExpandProperty Profile -Unique | Sort-Object)) {
+   $generatedProfile = Join-Path "work\generated_profit_search\profiles" ("{0}.set" -f $profileName)
+   if(Test-Path -LiteralPath $generatedProfile) {
+      $profileFiles.Add($generatedProfile) | Out-Null
+   }
+}
+
+$profileFiles = @($profileFiles | Select-Object -Unique)
 foreach($profileFile in $profileFiles) {
    if(Test-Path -LiteralPath $profileFile) {
       $dest = Join-Path $PackageDir ("profiles\" + (Split-Path -Leaf $profileFile))
