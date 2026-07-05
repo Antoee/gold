@@ -32,7 +32,7 @@ Generated without launching MT5.
 - Script: `work/static_repo_safety_audit.py`
 - Break-even pack audit: `work/static_breakeven_probe_audit.py`
 - Workflow: `.github/workflows/static-safety.yml`
-- Checks source risk/research inputs, forbidden recovery terms, native risk sizing markers, confirmation strictness pinning, ADX filter pinning, time exit, ATR spread guard, MTF/structure trailing implementation markers, profile input pins, local MT5 launch lock, and non-visual handoff config safety.
+- Checks source risk/research inputs, forbidden recovery terms, native risk sizing markers, confirmation strictness pinning, break-even pinning, ADX filter pinning, time exit, ATR spread guard, MTF/structure trailing implementation markers, profile input pins, local MT5 launch lock, and non-visual handoff config safety.
 - Meaning: this is a safety/readiness gate only. It does not compile the EA and does not prove profit.
 
 ## Validation Pack State
