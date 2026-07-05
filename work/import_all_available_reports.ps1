@@ -2,6 +2,7 @@ param(
    [string]$ReportDir = "outputs",
    [switch]$SkipMicro,
    [switch]$SkipRecentOos,
+   [switch]$SkipMTFTrendProbe,
    [switch]$SkipSessionVariant,
    [switch]$SkipFullProfitSearch,
    [switch]$SkipReadinessRefresh
@@ -82,6 +83,22 @@ if(-not $SkipRecentOos) {
       }
    } else {
       Add-Step $rows "Import recent-OOS reports" "SKIP" "Manifest not found: $manifest" "Create the recent-OOS handoff before importing recent reports."
+   }
+}
+
+if(-not $SkipMTFTrendProbe) {
+   $manifest = "outputs\mtf_trend_probe_handoff\HANDOFF_MANIFEST.csv"
+   if(Test-File $manifest) {
+      Invoke-Step $rows "Import MTF trend probe reports" {
+         powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\collect_validation_results.ps1" -ManifestPath $manifest -ReportDir $ReportDir -ReportNameTemplate "mtf_probe_{Profile}_{Window}" -OutResults "outputs\MTF_TREND_PROBE_REPORT_METRICS.csv" -OutSummary "outputs\MTF_TREND_PROBE_REPORT_SUMMARY.csv" -OutMarkdown "outputs\MTF_TREND_PROBE_REPORT_METRICS.md"
+      } "Run MTF trend decision next." "Check report file names and parser coverage."
+      if(Test-File "work\build_mtf_trend_probe_decision.ps1") {
+         Invoke-Step $rows "Build MTF trend probe decision" {
+            powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_mtf_trend_probe_decision.ps1"
+         } "Review outputs\MTF_TREND_PROBE_DECISION.md." "Fix decision script inputs or report metrics."
+      }
+   } else {
+      Add-Step $rows "Import MTF trend probe reports" "SKIP" "Manifest not found: $manifest" "Create the MTF trend handoff before importing MTF reports."
    }
 }
 
