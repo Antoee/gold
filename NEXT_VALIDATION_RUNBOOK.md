@@ -60,5 +60,6 @@ Configs use:
 1. Export or parse result CSVs.
 2. Rerun `work/analyze_robust_candidates.ps1`.
 3. Rerun `work/analyze_loss_control.ps1`.
-4. Update `ROBUST_CANDIDATE_RANKING.md` and `LOSS_CONTROL_REPORT.md`.
-5. Promote only if all profit and no-loss gates pass.
+4. Rerun `work/analyze_promotion_gate.ps1`.
+5. Update `ROBUST_CANDIDATE_RANKING.md`, `LOSS_CONTROL_REPORT.md`, and `PROMOTION_GATE_REPORT.md`.
+6. Promote only if all profit, no-loss, and promotion-gate checks pass.
