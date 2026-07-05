@@ -43,7 +43,7 @@ Preferred options for testing:
 
 ## Fast First Pass
 
-Use the micro handoff first:
+Use the stress micro handoff first:
 
 - Manifest: `outputs/micro_test_handoff/HANDOFF_MANIFEST.csv`
 - Configs: `outputs/micro_test_handoff/configs/*.ini`
@@ -57,7 +57,7 @@ Use the micro handoff first:
 Decision rule:
 
 - If `tp38_sl18` loses any paired stress window, keep the current promoted profile and deprioritize it.
-- If `tp38_sl18` matches or improves every paired stress window, continue to the full 24-config handoff.
+- If `tp38_sl18` matches or improves every paired stress window, continue to the recent out-of-sample pack before the full 24-config handoff.
 
 ## Micro Import Workflow
 
@@ -78,12 +78,37 @@ Micro outcomes:
 - `WAITING_FOR_REPORTS`: finish exporting the paired reports.
 - `REPAIR_REPORTS`: re-export or fix parser coverage.
 - `REJECT_CANDIDATE`: keep the promoted baseline and stop spending tester time on this candidate.
-- `REVIEW_DRAWDOWN`: inspect drawdown before allowing the candidate into the full handoff.
-- `PASS_MICRO`: continue to the full 24-config handoff, not promotion.
+- `REVIEW_DRAWDOWN`: inspect drawdown before allowing the candidate into recent-OOS and full handoff testing.
+- `PASS_MICRO`: continue to the recent out-of-sample pack, not promotion.
 
-## Full Handoff After Micro Pass
+## Recent Out-of-Sample Pack
 
-Use the full handoff only after the micro pass is clean:
+After the stress micro pass is clean, run the recent-OOS pack to check late-2025 and 2026 behavior before spending time on the full handoff:
+
+- Manifest: `outputs/recent_oos_handoff/HANDOFF_MANIFEST.csv`
+- Configs: `outputs/recent_oos_handoff/configs/*.ini`
+- Candidate/baseline pairs: 8 rows total
+- Windows:
+  - `2025_Q4`
+  - `2026_Q1`
+  - `2026_Q2`
+  - `2026_YTD`
+
+Decision rule:
+
+- If `tp38_sl18` loses any recent-OOS paired window, keep the current promoted profile and deprioritize it.
+- If `tp38_sl18` matches or improves every paired recent-OOS window, continue to the full 24-config handoff.
+- Do not promote from recent-OOS evidence alone.
+
+Import command after reports are exported:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\work\collect_validation_results.ps1 -ManifestPath "outputs\recent_oos_handoff\HANDOFF_MANIFEST.csv" -ReportDir "outputs" -ReportNameTemplate "recent_oos_{Profile}_{Window}" -OutResults "outputs\RECENT_OOS_REPORT_METRICS.csv" -OutSummary "outputs\RECENT_OOS_REPORT_SUMMARY.csv" -OutMarkdown "outputs\RECENT_OOS_REPORT_METRICS.md"
+```
+
+## Full Handoff After Micro And Recent-OOS Pass
+
+Use the full handoff only after both fast checks are clean:
 
 - Manifest: `outputs/next_test_handoff/HANDOFF_MANIFEST.csv`
 - Expected rows: 24
@@ -114,4 +139,4 @@ Import the reports, rebuild metrics, then refresh:
 
 ## Bottom Line
 
-The fastest safe route is not more unfiltered optimization on the active desktop. It is paired micro validation on a non-interrupting tester environment, then full handoff validation, then promotion gates. Until those reports exist, keep the current promoted profile.
+The fastest safe route is not more unfiltered optimization on the active desktop. It is paired stress micro validation on a non-interrupting tester environment, then recent out-of-sample validation through 2026, then full handoff validation, then promotion gates. Until those reports exist, keep the current promoted profile.
