@@ -1,6 +1,6 @@
 param(
    [int]$MonitorSeconds = 0,
-   [int]$PollMilliseconds = 100,
+   [int]$PollMilliseconds = 25,
    [switch]$StopProcesses = $true
 )
 
@@ -97,11 +97,11 @@ function Invoke-MT5WatchdogPass {
 }
 
 "$(Get-Date -Format o) MT5 focus watchdog started." | Add-Content -LiteralPath $logPath
-$deadline = if($MonitorSeconds -gt 0) { (Get-Date).AddSeconds($MonitorSeconds) } else { Get-Date }
+$deadline = if($MonitorSeconds -gt 0) { (Get-Date).AddSeconds($MonitorSeconds) } else { [datetime]::MaxValue }
 $rows = New-Object System.Collections.Generic.List[object]
 do {
    $rows.Add((Invoke-MT5WatchdogPass)) | Out-Null
-   if($MonitorSeconds -le 0 -or (Test-Path -LiteralPath $stopFile)) { break }
+   if(Test-Path -LiteralPath $stopFile) { break }
    Start-Sleep -Milliseconds $PollMilliseconds
 } while((Get-Date) -lt $deadline)
 
