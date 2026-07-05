@@ -51,6 +51,10 @@ jobs:
         shell: powershell
         run: powershell -NoProfile -ExecutionPolicy Bypass -File work\test_report_import_preflight.ps1
 
+      - name: Run offline refresh quiet-mode smoke test
+        shell: powershell
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File work\test_offline_refresh_quiet_mode.ps1
+
       - name: Run MT5 local safety audit
         shell: powershell
         run: powershell -NoProfile -ExecutionPolicy Bypass -File work\audit_mt5_local_safety.ps1
