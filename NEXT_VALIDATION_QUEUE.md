@@ -87,6 +87,8 @@ Prepared profit-search pack:
 - Result-import decision script: `work/build_result_import_decision_matrix.ps1`
 - Profit readiness snapshot: `PROFIT_READINESS_SNAPSHOT.md`
 - Profit readiness script: `work/build_profit_readiness_snapshot.ps1`
+- Report import preflight: `REPORT_IMPORT_PREFLIGHT.md`
+- Report import preflight script: `work/build_report_import_preflight.ps1`
 - Promotion packet builder: `work/build_profit_promotion_packet.ps1`
 - Promotion packet outputs: `outputs/promotion_packets/`
 - Coverage audit report: `PROFIT_SEARCH_COVERAGE_AUDIT.md`
@@ -110,6 +112,7 @@ Prepared profit-search pack:
 - Current result-import decision status: all 21 profile/phase rows are `RunMissingReports`; no profile is ready for phase-2 advancement or promotion-packet review until reports are exported and parsed.
 - Current profit readiness status: `NOT_READY`; keep the current promoted profile because no candidate has enough imported evidence to replace it.
 - Current parser smoke-test status: `REPORT_COLLECTOR_PARSER_SMOKE_PASS`; the offline collector can parse synthetic MT5-style reports, derive fields, and mark incomplete reports as `UNPARSED` rather than usable evidence.
+- Current report-import preflight status: parser, manifest, handoff, and local safety checks pass; imported metrics are still `WAITING_FOR_REPORTS`.
 - Current promotion-packet status: baseline and `tp38_sl18` both correctly report `MISSING_EVIDENCE` because phase-2 reports have not been exported yet.
 - Current coverage audit status: 16 profiles, 5 phase-2 seeds, 1 aggressive-risk candidate (`risk20_tp38_sl18`) kept phase-1 only, with TP/SL, trailing, RR, risk, giveback, breakeven, baseline, and reduced-risk coverage present.
 - Current handoff status: 24 prioritized `.ini` configs copied into `outputs/next_test_handoff/configs/` and zipped for the next safe testing window.
