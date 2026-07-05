@@ -19,9 +19,14 @@ $profiles = @(
       Priority = 2
    },
    [pscustomobject]@{
+      Name = "risk160_sl18_tp35_giveback"
+      Settings = "outputs\CANDIDATE_RISK16_SL18_TP35_GIVEBACK_PROFILE.set"
+      Priority = 3
+   },
+   [pscustomobject]@{
       Name = "promoted_risk160_sl18_tp35"
       Settings = "outputs\ROBUST_BOS_SWEEP_PROFILE.set"
-      Priority = 3
+      Priority = 4
    }
 )
 
@@ -145,11 +150,12 @@ $readme = @(
    '',
    '1. `risk160_sl16_tp38`',
    '2. `risk160_sl18_tp38`',
-   '3. `promoted_risk160_sl18_tp35` baseline comparison',
+   '3. `risk160_sl18_tp35_giveback`',
+   '4. `promoted_risk160_sl18_tp35` baseline comparison',
    '',
    'Each profile has `split`, `quarter`, and `month` configs.',
    '',
-   'Do not execute these configs locally until the hidden-desktop MT5 launcher has been deliberately verified and `ALLOW_MT5_FOCUS_RISK=1` is set.',
+   'Do not execute these configs locally until the hidden-desktop MT5 launcher has been deliberately verified. Local launch now requires both `ALLOW_MT5_FOCUS_RISK=1` and an explicit `work\ALLOW_MT5_LOCAL_LAUNCH.unlock` file.',
    '',
    'Manifest: `VALIDATION_MANIFEST.csv`'
 )
