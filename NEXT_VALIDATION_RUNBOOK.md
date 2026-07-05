@@ -87,12 +87,13 @@ Configs use:
 4. Rerun `work/analyze_profit_search.ps1`.
 5. Rerun `work/build_next_profit_search_batch.ps1`.
 6. For any promising candidate, rerun `work/build_profit_promotion_packet.ps1 -Profile <profile_name>`.
-7. Rerun `work/analyze_robust_candidates.ps1`.
-8. Rerun `work/analyze_loss_control.ps1`.
-9. Rerun `work/analyze_promotion_gate.ps1`.
-10. Rerun `work/audit_profile_inputs.ps1` before trusting any changed `.set` file.
-11. Update `VALIDATION_REPORT_METRICS.md`, `PROFIT_SEARCH_REPORT_METRICS.md`, `PROFIT_SEARCH_RANKING.md`, `NEXT_PROFIT_SEARCH_BATCH.md`, `outputs/promotion_packets/*`, `ROBUST_CANDIDATE_RANKING.md`, `LOSS_CONTROL_REPORT.md`, `PROMOTION_GATE_REPORT.md`, and `PROFILE_INPUT_AUDIT.md`.
-12. Promote only if all profit, no-loss, drawdown/profit-factor, promotion-gate, and profile-input checks pass.
+7. Rerun `work/audit_profit_search_coverage.ps1` after changing the search pack.
+8. Rerun `work/analyze_robust_candidates.ps1`.
+9. Rerun `work/analyze_loss_control.ps1`.
+10. Rerun `work/analyze_promotion_gate.ps1`.
+11. Rerun `work/audit_profile_inputs.ps1` before trusting any changed `.set` file.
+12. Update `VALIDATION_REPORT_METRICS.md`, `PROFIT_SEARCH_REPORT_METRICS.md`, `PROFIT_SEARCH_RANKING.md`, `NEXT_PROFIT_SEARCH_BATCH.md`, `PROFIT_SEARCH_COVERAGE_AUDIT.md`, `outputs/promotion_packets/*`, `ROBUST_CANDIDATE_RANKING.md`, `LOSS_CONTROL_REPORT.md`, `PROMOTION_GATE_REPORT.md`, and `PROFILE_INPUT_AUDIT.md`.
+13. Promote only if all profit, no-loss, drawdown/profit-factor, promotion-gate, profile-input, and coverage checks pass.
 
 ## Offline Report Collector
 
@@ -138,3 +139,12 @@ It skips parsed reports, prioritizes unparsed report repairs, prioritizes fast s
 - `outputs/promotion_packets/<profile>_promotion_gates.csv`
 
 The packet decision is `MISSING_EVIDENCE`, `DO_NOT_PROMOTE`, or `PROMOTION_REVIEW`. Only `PROMOTION_REVIEW` can be considered for replacing the current default, and it still requires human review for drawdown shape, trade count, data quality, and overfitting risk.
+
+## Coverage Audit
+
+`work/audit_profit_search_coverage.ps1` reads the generated profit-search profiles and configs, then writes:
+
+- `outputs/PROFIT_SEARCH_COVERAGE_AUDIT.csv`
+- `outputs/PROFIT_SEARCH_COVERAGE_AUDIT.md`
+
+Use it after changing the search pack to confirm candidate families and risk bands are intentional. Aggressive-risk candidates should stay phase-1 only unless later evidence justifies deeper real-tick validation.
