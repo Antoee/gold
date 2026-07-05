@@ -4,6 +4,8 @@ Offline planning artifact. No MT5 process was launched.
 
 The goal is to spend the least tester time necessary before making the next decision. Do not run a larger batch if a smaller gate already rejects the candidate.
 
+For the consolidated gate rules, use `outputs/FAST_EXPERIMENT_MATRIX.md` and `outputs/FAST_EXPERIMENT_MATRIX.csv`.
+
 ## Order
 
 | Priority | Gate | Batch | Rows | Pass Action | Fail Action |
@@ -24,21 +26,7 @@ All available report packs can be imported with the wrapper:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\work\import_all_available_reports.ps1
 ```
 
-Structure trailing probe:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\work\collect_validation_results.ps1 -ManifestPath "outputs\structure_trailing_probe_handoff\HANDOFF_MANIFEST.csv" -ReportDir "outputs" -ReportNameTemplate "structure_probe_{Profile}_{Window}" -OutResults "outputs\STRUCTURE_TRAILING_PROBE_REPORT_METRICS.csv" -OutSummary "outputs\STRUCTURE_TRAILING_PROBE_REPORT_SUMMARY.csv" -OutMarkdown "outputs\STRUCTURE_TRAILING_PROBE_REPORT_METRICS.md"
-powershell -NoProfile -ExecutionPolicy Bypass -File .\work\build_structure_trailing_probe_decision.ps1
-```
-
-MTF trend probe:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\work\collect_validation_results.ps1 -ManifestPath "outputs\mtf_trend_probe_handoff\HANDOFF_MANIFEST.csv" -ReportDir "outputs" -ReportNameTemplate "mtf_probe_{Profile}_{Window}" -OutResults "outputs\MTF_TREND_PROBE_REPORT_METRICS.csv" -OutSummary "outputs\MTF_TREND_PROBE_REPORT_SUMMARY.csv" -OutMarkdown "outputs\MTF_TREND_PROBE_REPORT_METRICS.md"
-powershell -NoProfile -ExecutionPolicy Bypass -File .\work\build_mtf_trend_probe_decision.ps1
-```
-
-Stress micro, recent-OOS, and session probe commands remain in their handoff READMEs.
+Pack-specific commands remain in their handoff READMEs.
 
 ## Bottom Line
 
