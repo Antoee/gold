@@ -102,6 +102,7 @@ Add-Result $rows "Runner scripts" "No runner bypasses Start-MT5Hidden with raw t
 $watchdogText = Read-TextSafe $watchdogPath
 Add-Result $rows "Watchdog" "Watchdog script exists" (Test-Path -LiteralPath $watchdogPath) $watchdogPath "Restore work\mt5_focus_watchdog.ps1 if local cleanup monitoring is needed."
 Add-Result $rows "Watchdog" "Watchdog targets MT5 and MetaEditor" ((Contains-Text $watchdogText 'terminal64') -and (Contains-Text $watchdogText 'metatester64') -and (Contains-Text $watchdogText 'MetaEditor')) $watchdogPath "Watchdog must stop terminal64, metatester64, and MetaEditor."
+Add-Result $rows "Watchdog" "Watchdog default stays resident" ((Contains-Text $watchdogText '[datetime]::MaxValue') -and !(Contains-Text $watchdogText '$MonitorSeconds -le 0 -or')) $watchdogPath "Default watchdog mode must keep running until the stop file is created."
 
 $rows | Export-Csv -LiteralPath $OutCsv -NoTypeInformation
 $failed = @($rows | Where-Object { -not $_.Passed })
