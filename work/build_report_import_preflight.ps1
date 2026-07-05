@@ -6,6 +6,7 @@ param(
    [string]$GuardrailPath = "outputs\OPTIMIZATION_GUARDRAIL_AUDIT.csv",
    [string]$HandoffIntegrityPath = "outputs\HANDOFF_CONFIG_INTEGRITY.csv",
    [string]$MicroHandoffIntegrityPath = "outputs\MICRO_HANDOFF_CONFIG_INTEGRITY.csv",
+   [string]$MicroDecisionPath = "outputs\MICRO_TEST_DECISION.csv",
    [string]$SafetyAuditPath = "outputs\MT5_LOCAL_SAFETY_AUDIT.csv",
    [string]$BatchPath = "outputs\NEXT_PROFIT_SEARCH_BATCH.csv",
    [string]$PromotionPacketDir = "outputs\promotion_packets",
@@ -65,6 +66,7 @@ $readiness = Read-CsvSafe $ReadinessPath
 $guardrail = Read-CsvSafe $GuardrailPath
 $handoff = Read-CsvSafe $HandoffIntegrityPath
 $microHandoff = Read-CsvSafe $MicroHandoffIntegrityPath
+$microDecision = Read-CsvSafe $MicroDecisionPath
 $safety = Read-CsvSafe $SafetyAuditPath
 $batch = Read-CsvSafe $BatchPath
 
@@ -157,6 +159,20 @@ if($microHandoff.Count -gt 0 -and $microFailures.Count -eq 0) {
    Add-Row $rows "Micro handoff" "FAIL" "$($microFailures.Count) failed rows." "Fix micro handoff integrity before using the fast test batch."
 } else {
    Add-Row $rows "Micro handoff" "MISSING" "Micro handoff report missing or empty: $MicroHandoffIntegrityPath" "Run work\build_micro_test_handoff.ps1 and audit the micro manifest."
+}
+
+if($microDecision.Count -gt 0) {
+   $decisionCounts = ($microDecision | Group-Object Decision | Sort-Object Name | ForEach-Object { "$($_.Name)=$($_.Count)" }) -join "; "
+   $hasFail = @($microDecision | Where-Object { (Get-Value $_ "Decision") -like "FAIL_*" }).Count -gt 0
+   $hasRepair = @($microDecision | Where-Object { (Get-Value $_ "Decision") -eq "REPAIR_REPORT" }).Count -gt 0
+   $hasWaiting = @($microDecision | Where-Object { (Get-Value $_ "Decision") -eq "WAITING_FOR_REPORTS" }).Count -gt 0
+   $hasReview = @($microDecision | Where-Object { (Get-Value $_ "Decision") -eq "REVIEW_DRAWDOWN" }).Count -gt 0
+   $allPass = $microDecision.Count -gt 0 -and @($microDecision | Where-Object { (Get-Value $_ "Decision") -eq "PASS_WINDOW" }).Count -eq $microDecision.Count
+   $status = if($hasFail) { "REJECT_CANDIDATE" } elseif($hasRepair) { "REPAIR_REPORTS" } elseif($hasWaiting) { "WAITING_FOR_REPORTS" } elseif($hasReview) { "REVIEW_DRAWDOWN" } elseif($allPass) { "PASS_MICRO" } else { "REVIEW_REQUIRED" }
+   $next = if($status -eq "PASS_MICRO") { "Proceed to full handoff; do not promote from micro evidence alone." } elseif($status -eq "REJECT_CANDIDATE") { "Keep current promoted profile and deprioritize the candidate." } elseif($status -eq "REPAIR_REPORTS") { "Repair or re-export micro reports." } else { "Complete paired micro report import before spending full-handoff tester time." }
+   Add-Row $rows "Micro decision" $status $decisionCounts $next
+} else {
+   Add-Row $rows "Micro decision" "WAITING_FOR_REPORTS" "No micro decision rows found at $MicroDecisionPath" "Run the micro import workflow after exporting paired reports."
 }
 
 $safetyFailures = Get-FailureRows $safety
