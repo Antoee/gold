@@ -1,0 +1,20 @@
+# Report Import Preflight
+
+Offline preflight only. No MT5 process was launched.
+
+| Area | Status | Evidence | Next Action |
+|---|---|---|---|
+| Parser smoke | PASS | REPORT_COLLECTOR_PARSER_SMOKE_PASS | Parser can be trusted for import preflight. |
+| Manifest | PASS | 183 expected profit-search configs: 128 phase-1, 55 phase-2. | Use the manifest as the source of truth for expected report names. |
+| Imported metrics | WAITING_FOR_REPORTS | 0 parsed, 183 missing, 0 unparsed across 183 expected rows. | Export/import reports before expecting promotion decisions. |
+| Decision matrix | NO_READY_ACTIONS | RunMissingReports=21 | Continue collecting reports; no candidate action is ready. |
+| Profit readiness | NOT_READY | No candidate has enough imported evidence to replace the current promoted profile. | Keep current promoted profile. |
+| Optimization guardrails | TRACKED | Top score: giveback25_tp38=95. REVIEW_REQUIRED=16 | Use guardrail status to prioritize tester time and block promotion shortcuts. |
+| Promotion packet | TRACKED | Top queued profile tp38_sl18 has promotion gates with guardrail/equity checks. | Refresh packet after importing reports. |
+| Handoff integrity | PASS | 24 rows checked, 0 failures. | Handoff configs remain statically safe for a controlled tester window. |
+| Micro handoff | PASS | 8 paired stress-window rows prepared for tp38_sl18 vs baseline_promoted. | Use micro handoff first when tester time or desktop focus is constrained. |
+| Local safety | PASS | 27 safety checks pass. | Keep local MT5 launch locked while the PC is in normal use. |
+
+## Bottom Line
+
+The import pipeline is ready, but no new profit-search reports have been parsed yet. Keep the current promoted profile until the paired micro handoff and full validation provide report evidence.
