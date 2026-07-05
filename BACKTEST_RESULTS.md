@@ -88,6 +88,19 @@ Top candidates:
 
 Decision: queue the two `TP 3.80` candidates for full monthly, quarterly, yearly, half-year, and full-period validation. Do not promote them based on stress-window improvement alone.
 
+## Promotion Gate Status
+
+The offline promotion gate requires full, split, quarterly, and monthly evidence before a profile can replace the promoted default. Each set must be profitable, have no losing windows, and have a worst window of at least `$0.00`.
+
+Current gate result:
+
+- `promoted_risk160_sl18_tp35`: `PASS`, 4/4 evidence sets, worst observed window `$0.00`.
+- `risk160_sl18_tp38`: `MISSING_EVIDENCE`, missing full/split/quarter/month validation.
+- `risk160_sl16_tp38`: `MISSING_EVIDENCE`, missing full/split/quarter/month validation.
+- `risk160_sl18_tp35_giveback`: `MISSING_EVIDENCE`, missing full/split/quarter/month validation.
+
+Use `work/analyze_promotion_gate.ps1` after every validation run and do not promote any candidate that fails this gate.
+
 ## Optimization Fitness Update
 
 The local EA source now includes an `OnTester()` custom optimization score so future MT5 optimization can rank robust candidates instead of sorting only by raw net profit.
@@ -132,7 +145,7 @@ Conclusion: the date-block profile remains the highest-profit historical benchma
 
 ## Local MT5 Safety Note
 
-No new local MT5 validation should run while normal PC use is the priority. Local MT5 launch is gated behind `ALLOW_MT5_FOCUS_RISK=1` because `terminal64.exe` can still flash and steal focus on this machine.
+No new local MT5 validation should run while normal PC use is the priority. Local MT5 launch is gated behind both `ALLOW_MT5_FOCUS_RISK=1` and `work/ALLOW_MT5_LOCAL_LAUNCH.unlock` because `terminal64.exe` can still flash and steal focus on this machine.
 
 The local runner has been patched to attempt a separate hidden Windows desktop launch, but that must be verified in a controlled test before unattended local validation resumes.
 
@@ -140,6 +153,6 @@ The local runner has been patched to attempt a separate hidden Windows desktop l
 
 Increase profit from the robust BOS+sweep profile without bringing back losing monthly windows.
 
-1. Validate `risk160_sl18_tp38` and `risk160_sl16_tp38` across monthly, quarterly, yearly, half-year, and full-period windows.
+1. Validate `risk160_sl18_tp38`, `risk160_sl16_tp38`, and `risk160_sl18_tp35_giveback` across monthly, quarterly, yearly, half-year, and full-period windows.
 2. Keep local MT5 tests blocked until the hidden-desktop runner has been deliberately verified.
 3. Add drawdown/profit-factor extraction from reports, not only final balance.
