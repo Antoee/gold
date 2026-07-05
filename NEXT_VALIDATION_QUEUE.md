@@ -80,12 +80,15 @@ Prepared profit-search pack:
 - Next-batch report: `NEXT_PROFIT_SEARCH_BATCH.md`
 - Next-batch CSV: `NEXT_PROFIT_SEARCH_BATCH.csv`
 - Next-batch builder: `work/build_next_profit_search_batch.ps1`
+- Promotion packet builder: `work/build_profit_promotion_packet.ps1`
+- Promotion packet outputs: `outputs/promotion_packets/`
 - Contains 16 generated candidate profiles.
 - Phase 1: 128 fast triage configs using `Model=2`.
 - Phase 2: 55 real-tick validation configs using `Model=4`.
 - Current profit-search collector status: 183 expected exported reports, 0 parsed, 183 missing.
 - Current profit-search ranking status: all 21 profile/phase rows are `MissingEvidence`; no candidate is recommended yet.
 - Current next-batch status: 24 prioritized configs, starting with fast stress-window triage for the baseline and highest-priority TP/SL candidates.
+- Current promotion-packet status: baseline and `tp38_sl18` both correctly report `MISSING_EVIDENCE` because phase-2 reports have not been exported yet.
 - Phase 1 is pruning only; candidates still need real-tick phase 2 plus full promotion-gate validation before promotion.
 
 Local MT5 run safety:
