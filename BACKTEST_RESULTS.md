@@ -88,6 +88,25 @@ Top candidates:
 
 Decision: queue the two `TP 3.80` candidates for full monthly, quarterly, yearly, half-year, and full-period validation. Do not promote them based on stress-window improvement alone.
 
+## Optimization Fitness Update
+
+The local EA source now includes an `OnTester()` custom optimization score so future MT5 optimization can rank robust candidates instead of sorting only by raw net profit.
+
+Default scoring mode:
+
+- `InpTesterFitnessMode=FITNESS_ROBUST_PROFIT`
+- Rewards net profit and profit factor.
+- Penalizes results below `InpTesterMinTrades`.
+- Penalizes results below `InpTesterMinProfitFactor`.
+- Penalizes equity drawdown above `InpTesterMaxDrawdownPercent`.
+
+Alternate modes:
+
+- `FITNESS_NET_PROFIT`: raw net profit for benchmark comparisons.
+- `FITNESS_RECOVERY_SHARPE`: net profit weighted by recovery factor and Sharpe ratio, then penalized by the same robustness gates.
+
+No new MT5 test was run for this change because local terminal launches are currently blocked to avoid desktop focus issues.
+
 ## Aggressive Date-Block Benchmark
 
 Previous aggressive date-block validation:
