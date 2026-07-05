@@ -29,6 +29,15 @@ Candidate 2: `risk160_sl16_tp38`
 - Stress-window result: `+$798.00`, worst window `$0.00`, 0 losing windows
 - Status: needs full monthly/quarter/split validation before promotion
 
+Candidate 3: `risk160_sl18_tp35_giveback`
+
+- Settings file: `CANDIDATE_RISK16_SL18_TP35_GIVEBACK_PROFILE.set`
+- Same core settings as the current promoted no-date BOS/sweep profile
+- `InpUseProfitGivebackGuard=true`
+- Daily/weekly/monthly giveback threshold: `35%`
+- Minimum period profit before protection: `0.50%`
+- Status: needs full loss-control validation before promotion
+
 Offline robust-candidate ranking:
 
 - Local generated ranking file: `ROBUST_CANDIDATE_RANKING.csv`
@@ -40,6 +49,7 @@ Offline robust-candidate ranking:
 - The next unvalidated candidates are ranked #3 and #4: `risk160_sl16_tp38` and `risk160_sl18_tp38`.
 - Single-period high-profit date-block summaries are treated as benchmark-only by the analyzer because they do not prove start-window robustness.
 - For the updated goal, no-date candidates with zero losing windows rank above higher-profit date-block benchmarks.
+- Profit giveback guard candidates should be judged primarily by whether they preserve or improve zero-loss windows without reducing full-period profit too much.
 
 Prepared validation pack:
 
@@ -47,9 +57,9 @@ Prepared validation pack:
 - Generated configs: `work/generated_validation/`
 - Manifest: `work/generated_validation/VALIDATION_MANIFEST.csv`
 - Configs were generated without launching MT5.
-- The pack contains 147 configs: 49 windows for each of the two queued candidates plus the current promoted baseline.
+- The pack contains 196 configs: 49 windows for each of the three queued candidates plus the current promoted baseline.
 
 Local MT5 run safety:
 
-- Local MT5 launch is disabled unless `ALLOW_MT5_FOCUS_RISK=1` is set.
+- Local MT5 launch is disabled unless `ALLOW_MT5_FOCUS_RISK=1` is set and `work\ALLOW_MT5_LOCAL_LAUNCH.unlock` exists.
 - The runner now attempts to launch MT5 on a separate hidden desktop, but this still needs a controlled test before unattended local validation resumes.
