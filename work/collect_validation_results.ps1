@@ -2,6 +2,7 @@ param(
    [string]$RepoRoot = (Resolve-Path ".").Path,
    [string]$ManifestPath = "work\generated_validation\VALIDATION_MANIFEST.csv",
    [string]$ReportDir = "outputs",
+   [string]$ReportNameTemplate = "validation_{Profile}_{Set}_{Window}",
    [string]$OutResults = "outputs\VALIDATION_REPORT_METRICS.csv",
    [string]$OutSummary = "outputs\VALIDATION_REPORT_SUMMARY.csv",
    [string]$OutMarkdown = "outputs\VALIDATION_REPORT_METRICS.md"
@@ -78,16 +79,33 @@ function Get-RowValue {
    return [string]$property.Value
 }
 
-function Find-Report {
+function Get-ReportStem {
    param(
-      [string]$Root,
+      [string]$Template,
       [object]$ManifestRow
    )
 
+   $phase = Get-RowValue -Row $ManifestRow -Name "Phase"
+   $phaseShort = if($phase -like "phase1*") { "phase1" } elseif($phase -like "phase2*") { "phase2" } else { $phase }
    $profile = Get-RowValue -Row $ManifestRow -Name "Profile"
    $set = Get-RowValue -Row $ManifestRow -Name "Set"
    $window = Get-RowValue -Row $ManifestRow -Name "Window"
-   $base = "validation_{0}_{1}_{2}" -f $profile, $set, $window
+   return $Template.
+      Replace("{Phase}", $phase).
+      Replace("{PhaseShort}", $phaseShort).
+      Replace("{Profile}", $profile).
+      Replace("{Set}", $set).
+      Replace("{Window}", $window)
+}
+
+function Find-Report {
+   param(
+      [string]$Root,
+      [object]$ManifestRow,
+      [string]$Template
+   )
+
+   $base = Get-ReportStem -Template $Template -ManifestRow $ManifestRow
    $candidates = @(
       (Join-Path $Root $base),
       (Join-Path $Root ($base + ".htm")),
@@ -116,6 +134,7 @@ function Read-ValidationReport {
    )
 
    $priority = Get-RowValue -Row $ManifestRow -Name "Priority"
+   $phase = Get-RowValue -Row $ManifestRow -Name "Phase"
    $profile = Get-RowValue -Row $ManifestRow -Name "Profile"
    $set = Get-RowValue -Row $ManifestRow -Name "Set"
    $window = Get-RowValue -Row $ManifestRow -Name "Window"
@@ -125,6 +144,7 @@ function Read-ValidationReport {
    if(!$Path) {
       return [pscustomobject]@{
          Priority = $priority
+         Phase = $phase
          Profile = $profile
          Set = $set
          Window = $window
@@ -181,6 +201,7 @@ function Read-ValidationReport {
 
    return [pscustomobject]@{
       Priority = $priority
+      Phase = $phase
       Profile = $profile
       Set = $set
       Window = $window
@@ -210,14 +231,14 @@ if(!(Test-Path -LiteralPath $manifestFullPath)) {
 $manifest = Import-Csv -LiteralPath $manifestFullPath
 $rows = New-Object System.Collections.Generic.List[object]
 foreach($item in $manifest) {
-   $report = Find-Report -Root $reportRoot -ManifestRow $item
+   $report = Find-Report -Root $reportRoot -ManifestRow $item -Template $ReportNameTemplate
    $rows.Add((Read-ValidationReport -Path $report -ManifestRow $item)) | Out-Null
 }
 
 $outResultsPath = Join-Path $RepoRoot $OutResults
 $rows | Export-Csv -LiteralPath $outResultsPath -NoTypeInformation
 
-$summary = foreach($group in ($rows | Group-Object Profile, Set)) {
+$summary = foreach($group in ($rows | Group-Object Profile, Phase, Set)) {
    $parsed = @($group.Group | Where-Object { $_.Status -eq "PARSED" -and "$($_.NetProfit)" -ne "" })
    $profits = @($parsed | ForEach-Object { [double]$_.NetProfit })
    $drawdowns = @($parsed | Where-Object { "$($_.MaxDrawdownMoney)" -ne "" } | ForEach-Object { [double]$_.MaxDrawdownMoney })
@@ -226,7 +247,8 @@ $summary = foreach($group in ($rows | Group-Object Profile, Set)) {
 
    [pscustomobject]@{
       Profile = $parts[0]
-      Set = $parts[1]
+      Phase = $parts[1]
+      Set = $parts[2]
       ReportsExpected = $group.Count
       ReportsParsed = $parsed.Count
       MissingReports = @($group.Group | Where-Object Status -eq "MISSING_REPORT").Count
@@ -244,7 +266,7 @@ $summary = foreach($group in ($rows | Group-Object Profile, Set)) {
 }
 
 $outSummaryPath = Join-Path $RepoRoot $OutSummary
-$summary | Sort-Object Profile, Set | Export-Csv -LiteralPath $outSummaryPath -NoTypeInformation
+$summary | Sort-Object Profile, Phase, Set | Export-Csv -LiteralPath $outSummaryPath -NoTypeInformation
 
 $markdown = New-Object System.Collections.Generic.List[string]
 $markdown.Add("# Validation Report Metrics") | Out-Null
@@ -255,6 +277,7 @@ $parsedCount = @($rows | Where-Object { $_.Status -eq "PARSED" }).Count
 $missingCount = @($rows | Where-Object { $_.Status -eq "MISSING_REPORT" }).Count
 $unparsedCount = @($rows | Where-Object { $_.Status -eq "UNPARSED" }).Count
 $markdown.Add("- Manifest: ``$ManifestPath``") | Out-Null
+$markdown.Add("- Report name template: ``$ReportNameTemplate``") | Out-Null
 $markdown.Add("- Expected reports: " + $rows.Count) | Out-Null
 $markdown.Add("- Parsed reports: " + $parsedCount) | Out-Null
 $markdown.Add("- Missing reports: " + $missingCount) | Out-Null
@@ -262,10 +285,10 @@ $markdown.Add("- Unparsed reports: " + $unparsedCount) | Out-Null
 $markdown.Add("") | Out-Null
 $markdown.Add("## Summary By Profile And Set") | Out-Null
 $markdown.Add("") | Out-Null
-$markdown.Add("| Profile | Set | Parsed/Expected | Total Net | Worst Window | Losing | Worst DD | Avg PF | Complete |") | Out-Null
-$markdown.Add("|---|---:|---:|---:|---:|---:|---:|---:|---:|") | Out-Null
-foreach($item in ($summary | Sort-Object Profile, Set)) {
-   $markdown.Add("| ``$($item.Profile)`` | $($item.Set) | $($item.ReportsParsed)/$($item.ReportsExpected) | $($item.TotalNetProfit) | $($item.WorstWindowNetProfit) | $($item.LosingWindows) | $($item.WorstDrawdownMoney) | $($item.AverageProfitFactor) | $($item.EvidenceComplete) |") | Out-Null
+$markdown.Add("| Profile | Phase | Set | Parsed/Expected | Total Net | Worst Window | Losing | Worst DD | Avg PF | Complete |") | Out-Null
+$markdown.Add("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|") | Out-Null
+foreach($item in ($summary | Sort-Object Profile, Phase, Set)) {
+   $markdown.Add("| ``$($item.Profile)`` | $($item.Phase) | $($item.Set) | $($item.ReportsParsed)/$($item.ReportsExpected) | $($item.TotalNetProfit) | $($item.WorstWindowNetProfit) | $($item.LosingWindows) | $($item.WorstDrawdownMoney) | $($item.AverageProfitFactor) | $($item.EvidenceComplete) |") | Out-Null
 }
 
 $markdown.Add("") | Out-Null
@@ -275,10 +298,10 @@ $issues = @($rows | Where-Object { $_.Status -ne "PARSED" } | Sort-Object Priori
 if($issues.Count -eq 0) {
    $markdown.Add("All expected reports parsed.") | Out-Null
 } else {
-   $markdown.Add("| Profile | Set | Window | Status |") | Out-Null
-   $markdown.Add("|---|---:|---:|---:|") | Out-Null
+   $markdown.Add("| Profile | Phase | Set | Window | Status |") | Out-Null
+   $markdown.Add("|---|---:|---:|---:|---:|") | Out-Null
    foreach($issue in ($issues | Select-Object -First 80)) {
-      $markdown.Add("| ``$($issue.Profile)`` | $($issue.Set) | $($issue.Window) | $($issue.Status) |") | Out-Null
+      $markdown.Add("| ``$($issue.Profile)`` | $($issue.Phase) | $($issue.Set) | $($issue.Window) | $($issue.Status) |") | Out-Null
    }
    if($issues.Count -gt 80) {
       $markdown.Add("") | Out-Null
