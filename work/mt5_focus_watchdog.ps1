@@ -1,6 +1,6 @@
 param(
    [int]$MonitorSeconds = 0,
-   [int]$PollMilliseconds = 500,
+   [int]$PollMilliseconds = 100,
    [switch]$StopProcesses = $true
 )
 
@@ -8,9 +8,13 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 # Cleanup-only watchdog. It starts nothing and only targets MT5-family executable processes.
+$repo = Split-Path -Parent $PSScriptRoot
+$logPath = Join-Path $PSScriptRoot "mt5_focus_watchdog.log"
+$stopFile = Join-Path $PSScriptRoot "STOP_MT5_FOCUS_WATCHDOG"
 $targetNameRegex = '^(terminal64|terminal|metatester64|metatester|metaeditor64|metaeditor)\.exe$'
 $targetPathRegex = '\\(MetaTrader|MT5|MetaQuotes|MQL5)\\|terminal64\.exe$|terminal\.exe$|metatester64\.exe$|metatester\.exe$|metaeditor64\.exe$|metaeditor\.exe$'
 $excludeNameRegex = '^(powershell|pwsh|cmd|conhost|OpenAI|Codex|Code|WindowsTerminal)\.exe$'
+$processNames = @("terminal", "terminal64", "metatester", "metatester64", "MetaEditor", "metaeditor64")
 
 if(-not ("Mt5Safe.WatchdogWindowControl" -as [type])) {
 Add-Type -TypeDefinition @"
@@ -65,7 +69,7 @@ function Get-MT5WatchdogTargets {
 function Invoke-MT5WatchdogPass {
    $targets = @(Get-MT5WatchdogTargets)
    $hidden = 0
-   try { $hidden = [Mt5Safe.WatchdogWindowControl]::HideWindows(@("terminal", "terminal64", "metatester", "metatester64", "MetaEditor", "metaeditor64")) } catch {}
+   try { $hidden = [Mt5Safe.WatchdogWindowControl]::HideWindows($processNames) } catch {}
 
    $stopped = 0
    $errors = New-Object System.Collections.Generic.List[string]
@@ -80,6 +84,9 @@ function Invoke-MT5WatchdogPass {
       }
    }
 
+   $line = "$(Get-Date -Format o) targets=$($targets.Count) hidden=$hidden stopped=$stopped errors=$($errors.Count)"
+   Add-Content -LiteralPath $logPath -Value $line
+
    [pscustomobject]@{
       StartedNothing = $true
       Targets = $targets.Count
@@ -89,13 +96,15 @@ function Invoke-MT5WatchdogPass {
    }
 }
 
+"$(Get-Date -Format o) MT5 focus watchdog started." | Add-Content -LiteralPath $logPath
 $deadline = if($MonitorSeconds -gt 0) { (Get-Date).AddSeconds($MonitorSeconds) } else { Get-Date }
 $rows = New-Object System.Collections.Generic.List[object]
 do {
    $rows.Add((Invoke-MT5WatchdogPass)) | Out-Null
-   if($MonitorSeconds -le 0) { break }
+   if($MonitorSeconds -le 0 -or (Test-Path -LiteralPath $stopFile)) { break }
    Start-Sleep -Milliseconds $PollMilliseconds
 } while((Get-Date) -lt $deadline)
 
+"$(Get-Date -Format o) MT5 focus watchdog stopped." | Add-Content -LiteralPath $logPath
 $rows
 if(@($rows | Where-Object { -not [string]::IsNullOrWhiteSpace($_.Errors) }).Count -gt 0) { exit 1 }
