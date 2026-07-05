@@ -53,14 +53,13 @@ Expected current state:
 
 ## After Reports Are Exported
 
-1. Copy MT5 HTML reports into the expected output folder.
+1. Copy returned package reports into `outputs/external_mt5_validation_package/reports_here`.
 2. Import the latest MetaEditor compile log with `work/import_mt5_compile_log.ps1`.
-3. Rerun `work/import_all_available_reports.ps1` to import available reports, rebuild probe decisions, refresh readiness snapshots, and select the next smallest useful batch.
-4. Rerun `work/analyze_profit_search.ps1` if full profit-search reports changed.
-5. Rerun `work/build_result_import_decision_matrix.ps1` if full profit-search reports changed.
-6. Rerun `work/build_optimization_guardrail_audit.ps1`.
-7. Rerun `work/build_report_import_preflight.ps1`.
-8. Build promotion packets only for candidates with complete evidence.
+3. Run `work/import_external_mt5_validation_package_reports.ps1`.
+4. Run `work/build_external_mt5_micro_decision.ps1`.
+5. If the micro decision is `PASS_MICRO`, continue to the full handoff and phase-2 real-tick validation.
+6. If broader profit-search reports changed, rerun `work/import_all_available_reports.ps1`, `work/analyze_profit_search.ps1`, `work/build_result_import_decision_matrix.ps1`, `work/build_optimization_guardrail_audit.ps1`, and `work/build_report_import_preflight.ps1`.
+7. Build promotion packets only for candidates with complete evidence.
 
 ## Promotion Rule
 
