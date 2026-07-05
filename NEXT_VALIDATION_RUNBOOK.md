@@ -30,15 +30,15 @@ The one-command refresh above is the preferred path. If you need to debug a spec
 2. `work/build_risk_adjusted_micro_batch.ps1`
 3. `work/build_next_test_handoff.ps1 -BatchCsv outputs\RISK_ADJUSTED_MICRO_BATCH.csv -OutDir outputs\risk_adjusted_micro_handoff -ZipPath outputs\risk_adjusted_micro_handoff.zip`
 4. `work/audit_handoff_config_integrity.ps1 -ManifestPath outputs\risk_adjusted_micro_handoff\HANDOFF_MANIFEST.csv -OutCsv outputs\RISK_ADJUSTED_MICRO_HANDOFF_INTEGRITY.csv -OutMarkdown outputs\RISK_ADJUSTED_MICRO_HANDOFF_INTEGRITY.md -ZipPath outputs\risk_adjusted_micro_handoff.zip`
-5. `work/build_fast_probe_readiness_snapshot.ps1`
-6. `work/build_next_fast_batch_selector.ps1`
-7. `work/import_mt5_compile_log.ps1` against the latest exported MetaEditor compile log
-8. `work/build_external_mt5_validation_package.ps1`
-9. `work/test_external_mt5_validation_package.ps1`
-10. `work/import_external_mt5_validation_package_reports.ps1`
-11. `work/test_external_mt5_micro_decision.ps1`
-12. `work/build_external_mt5_micro_decision.ps1`
-13. `work/build_external_validation_readiness.ps1`
+5. `work/build_external_mt5_validation_package.ps1`
+6. `work/test_external_mt5_validation_package.ps1`
+7. `work/import_external_mt5_validation_package_reports.ps1`
+8. `work/test_external_mt5_micro_decision.ps1`
+9. `work/build_external_mt5_micro_decision.ps1`
+10. `work/build_external_validation_readiness.ps1`
+11. `work/build_fast_probe_readiness_snapshot.ps1`
+12. `work/build_next_fast_batch_selector.ps1`
+13. `work/import_mt5_compile_log.ps1` against the latest exported MetaEditor compile log
 14. `work/build_profit_readiness_snapshot.ps1`
 15. `work/build_report_import_preflight.ps1`
 16. `work/audit_handoff_config_integrity.ps1`
@@ -51,11 +51,11 @@ Expected current state:
 - New capital-protection candidate: `risk12_tp38_sl18`, phase-2 seeded, risk 1.20%, TP 3.80 ATR, equity drawdown guard 4.00%
 - Risk-adjusted micro batch: 12 rows selected from 221 configs, with 5 baseline anchors, 4 `risk12_tp38_sl18` stress windows, and 3 `baseline_dd4` stress windows
 - Risk-adjusted micro handoff integrity: PASS, 12 configs checked, 12 passed
+- External MT5 package: PASS, 12 configs packaged, 7 profile snapshots, 24 zip entries
+- External micro decision smoke: PASS for pass/reject/repair/waiting and multi-candidate branches
+- External validation readiness: `WAITING_FOR_REPORTS` until the 12 package reports return; current decision rows show 7 candidate/baseline comparisons waiting
 - Fast-probe readiness: waiting for exported reports until the fast handoff packs are run/imported
 - Next fast batch: `STRESS_SMOKE`, 2 rows, because it is the first pending gate
-- External MT5 package: PASS, 8 micro configs packaged, 17 zip entries
-- External micro decision smoke: PASS for pass/reject/repair/waiting branches
-- External validation readiness: `WAITING_FOR_REPORTS` until the four paired micro reports return
 - Compile status: PASS only when the imported MetaEditor log shows `0 errors, 0 warnings`
 - Readiness: `NOT_READY`
 - Report import preflight: parser, manifest, guardrails, handoff, safety, and compile status pass; reports still missing
@@ -84,15 +84,15 @@ This batch can only produce triage evidence. Never promote from it alone.
 
 ## External MT5 Micro Package
 
-`work/build_external_mt5_validation_package.ps1` creates `outputs/xauusd_micro_validation_package.zip` from `outputs/micro_test_handoff`. It packages:
+`work/build_external_mt5_validation_package.ps1` now packages the current risk-adjusted micro handoff by default. It creates `outputs/xauusd_micro_validation_package.zip` from `outputs/risk_adjusted_micro_handoff` and includes:
 
-- 8 paired stress-window configs for `tp38_sl18` versus `baseline_promoted`
+- 12 configs: baseline anchors, `risk12_tp38_sl18` stress windows, and `baseline_dd4` stress windows
 - EA source
-- promoted/candidate `.set` files
+- promoted, candidate, and generated profile `.set` snapshots
 - manifest and expected-report checklist
 - README for the external MT5 machine
 
-`work/test_external_mt5_validation_package.ps1` audits the package offline. `work/test_external_mt5_micro_decision.ps1` verifies the decision gate with synthetic metrics. `work/build_external_validation_readiness.ps1` summarizes compile, package, and micro-decision state into one external-readiness snapshot. Passing the package does not prove profitability; it only makes the next external/non-interrupting MT5 run ready.
+`work/test_external_mt5_validation_package.ps1` audits the package offline. `work/test_external_mt5_micro_decision.ps1` verifies single-candidate and multi-candidate decision gates with synthetic metrics. `work/build_external_validation_readiness.ps1` summarizes compile, package, and micro-decision state into one external-readiness snapshot. Passing the package does not prove profitability; it only makes the next external/non-interrupting MT5 run ready.
 
 ## After Reports Are Exported
 
