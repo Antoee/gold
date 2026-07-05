@@ -121,11 +121,14 @@ def check_source() -> None:
         "InpMinimumConfirmations",
         "InpUseATRTrailing",
         "InpUseProfitGivebackGuard",
+        "InpUseMTFTrendFilter",
+        "InpMTFTrendTimeframe",
+        "InpMTFTrendEMA",
         "InpShowDashboard",
         "InpDashboardInTester",
         "InpTesterFitnessMode",
     ]
-    input_names = set(re.findall(r"^\s*input\s+(?:bool|int|long|double|string|datetime)\s+(Inp[A-Za-z0-9_]+)\s*=", source, flags=re.M))
+    input_names = set(re.findall(r"^\s*input\s+(?:bool|int|long|double|string|datetime|ENUM_TIMEFRAMES)\s+(Inp[A-Za-z0-9_]+)\s*=", source, flags=re.M))
     for name in required_inputs:
         if name not in input_names:
             fail(f"EA source missing required risk/research input: {name}")
@@ -138,6 +141,8 @@ def check_source() -> None:
         "TimeToStruct",
         "OnTester",
         "consecutiveLosses",
+        "ApplyMTFTrendFilter",
+        "HigherTimeframeTrendBias",
     ]
     for term in required_code_terms:
         if term not in source:
@@ -170,11 +175,16 @@ def check_profiles() -> None:
         "InpDisableFridayEvening": "false",
         "InpFridayCutoffHour": "20",
     }
+    base_mtf = {
+        "InpUseMTFTrendFilter": "false",
+        "InpMTFTrendTimeframe": "PERIOD_H1",
+        "InpMTFTrendEMA": "200",
+    }
     expected = {
-        "ROBUST_BOS_SWEEP_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.50", "InpRiskPercent": "1.60", **base_session},
-        "CANDIDATE_RISK16_SL18_TP38_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.80", "InpMaxEquityDrawdownPercent": "4.00", **base_session},
-        "CANDIDATE_RISK16_SL16_TP38_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.80", "InpMaxEquityDrawdownPercent": "4.00", **base_session},
-        "CANDIDATE_RISK16_SL18_TP35_GIVEBACK_PROFILE.set": {"InpUseProfitGivebackGuard": "true", **base_session},
+        "ROBUST_BOS_SWEEP_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.50", "InpRiskPercent": "1.60", **base_session, **base_mtf},
+        "CANDIDATE_RISK16_SL18_TP38_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.80", "InpMaxEquityDrawdownPercent": "4.00", **base_session, **base_mtf},
+        "CANDIDATE_RISK16_SL16_TP38_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.80", "InpMaxEquityDrawdownPercent": "4.00", **base_session, **base_mtf},
+        "CANDIDATE_RISK16_SL18_TP35_GIVEBACK_PROFILE.set": {"InpUseProfitGivebackGuard": "true", **base_session, **base_mtf},
     }
     for rel, required in expected.items():
         values = parse_set(ROOT / rel)
