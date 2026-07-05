@@ -1,12 +1,25 @@
-$mt5ProcessNames = @("terminal", "terminal64", "metatester", "metatester64", "MetaEditor", "metaeditor64")
+$mt5TargetNameRegex = '^(terminal64|terminal|metatester64|metatester|metaeditor64|metaeditor)\.exe$'
+$mt5TargetPathRegex = '\\(MetaTrader|MT5|MetaQuotes|MQL5)\\|terminal64\.exe$|terminal\.exe$|metatester64\.exe$|metatester\.exe$|metaeditor64\.exe$|metaeditor\.exe$'
+$mt5ExcludeNameRegex = '^(powershell|pwsh|cmd|conhost|OpenAI|Codex|Code|WindowsTerminal)\.exe$'
 $unlockFile = Join-Path $PSScriptRoot "ALLOW_MT5_LOCAL_LAUNCH.unlock"
 $hiddenDesktopAckFile = Join-Path $PSScriptRoot "ALLOW_MT5_HIDDEN_DESKTOP_ACK.unlock"
 $hardLockFile = Join-Path $PSScriptRoot "MT5_LOCAL_LAUNCH_DISABLED.lock"
 
 function Stop-MT5StrayProcesses {
-   $running = Get-Process -Name $mt5ProcessNames -ErrorAction SilentlyContinue
-   if($running) {
-      $running | Stop-Process -Force -ErrorAction SilentlyContinue
+   try {
+      $running = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
+         $_.Name -notmatch $mt5ExcludeNameRegex -and (
+            $_.Name -match $mt5TargetNameRegex -or
+            ([string]$_.ExecutablePath) -match $mt5TargetPathRegex
+         )
+      })
+      foreach($process in $running) {
+         Stop-Process -Id ([int]$process.ProcessId) -Force -ErrorAction SilentlyContinue
+      }
+   } catch {
+      foreach($name in @("terminal", "terminal64", "metatester", "metatester64", "MetaEditor", "metaeditor64")) {
+         Get-Process -Name $name -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+      }
    }
 }
 
