@@ -4,7 +4,7 @@
 //| No martingale. No grid. No averaging down. No recovery systems.   |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.02"
+#property version   "1.03"
 #property description "Professional risk-first XAUUSD EA with BOS/sweep entries and ATR exits."
 
 #include <Trade/Trade.mqh>
@@ -410,22 +410,52 @@ void OpenTrade(const int direction, const double atr, const string reason)
 double CalculateLots(const double entry, const double sl)
 {
    double riskMoney = AccountInfoDouble(ACCOUNT_BALANCE) * InpRiskPercent / 100.0;
-   double tickSize = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
-   double tickValue = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE);
    double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
    double maxLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX);
    double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
    double distance = MathAbs(entry - sl);
-   if(distance <= 0.0 || tickSize <= 0.0 || tickValue <= 0.0 || step <= 0.0)
+   if(riskMoney <= 0.0 || distance <= 0.0 || minLot <= 0.0 || maxLot <= 0.0 || step <= 0.0)
       return 0.0;
 
-   double moneyPerLot = distance / tickSize * tickValue;
+   ENUM_ORDER_TYPE orderType = sl < entry ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+   double profitForOneLot = 0.0;
+   double moneyPerLot = 0.0;
+   if(OrderCalcProfit(orderType, _Symbol, 1.0, entry, sl, profitForOneLot))
+      moneyPerLot = MathAbs(profitForOneLot);
+
+   if(moneyPerLot <= 0.0)
+   {
+      double tickSize = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
+      double tickValue = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE);
+      if(tickSize <= 0.0 || tickValue <= 0.0)
+         return 0.0;
+      moneyPerLot = distance / tickSize * tickValue;
+   }
+
+   if(moneyPerLot <= 0.0)
+      return 0.0;
+
    double rawLots = riskMoney / moneyPerLot;
    double lots = MathFloor(rawLots / step) * step;
    if(lots < minLot)
       return 0.0;
 
    lots = MathMin(maxLot, lots);
+   double freeMargin = AccountInfoDouble(ACCOUNT_MARGIN_FREE);
+   double requiredMargin = 0.0;
+   while(lots >= minLot)
+   {
+      requiredMargin = 0.0;
+      if(!OrderCalcMargin(orderType, _Symbol, lots, entry, requiredMargin))
+         return 0.0;
+      if(requiredMargin <= freeMargin)
+         break;
+      lots = MathFloor((lots - step) / step) * step;
+   }
+
+   if(lots < minLot)
+      return 0.0;
+
    return NormalizeDouble(lots, 2);
 }
 
