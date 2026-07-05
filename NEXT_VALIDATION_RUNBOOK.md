@@ -61,6 +61,14 @@ Before any handoff configs are run, audit their static safety settings:
 
 The integrity audit does not launch MT5. It verifies non-visual tester mode, shutdown-after-test, non-optimization mode, XAUUSD/M15, expected date/model/report names, critical EA inputs, and file hashes for the exact handoff configs.
 
+To summarize the current strategy thesis before changing parameters, run:
+
+- `work/build_strategy_research_brief.ps1`
+- Output CSV: `outputs/STRATEGY_RESEARCH_BRIEF.csv`
+- Output report: `outputs/STRATEGY_RESEARCH_BRIEF.md`
+
+The research brief does not launch MT5. It distills existing evidence into promoted defaults, promising unpromoted candidates, research-only clues, and benchmark-only ideas.
+
 ## Validation Order
 
 1. `risk160_sl16_tp38`
@@ -104,14 +112,15 @@ Configs use:
 5. Rerun `work/build_next_profit_search_batch.ps1`.
 6. Rerun `work/build_next_test_handoff.ps1` if another batch is needed.
 7. Rerun `work/audit_handoff_config_integrity.ps1` before any handoff run.
-8. For any promising candidate, rerun `work/build_profit_promotion_packet.ps1 -Profile <profile_name>`.
-9. Rerun `work/audit_profit_search_coverage.ps1` after changing the search pack.
-10. Rerun `work/analyze_robust_candidates.ps1`.
-11. Rerun `work/analyze_loss_control.ps1`.
-12. Rerun `work/analyze_promotion_gate.ps1`.
-13. Rerun `work/audit_profile_inputs.ps1` before trusting any changed `.set` file.
-14. Update `VALIDATION_REPORT_METRICS.md`, `PROFIT_SEARCH_REPORT_METRICS.md`, `PROFIT_SEARCH_RANKING.md`, `NEXT_PROFIT_SEARCH_BATCH.md`, `outputs/next_test_handoff/README.md`, `outputs/next_test_handoff/HANDOFF_MANIFEST.csv`, `HANDOFF_CONFIG_INTEGRITY.md`, `PROFIT_SEARCH_COVERAGE_AUDIT.md`, `outputs/promotion_packets/*`, `ROBUST_CANDIDATE_RANKING.md`, `LOSS_CONTROL_REPORT.md`, `PROMOTION_GATE_REPORT.md`, and `PROFILE_INPUT_AUDIT.md`.
-15. Promote only if all profit, no-loss, drawdown/profit-factor, promotion-gate, profile-input, handoff-integrity, and coverage checks pass.
+8. Rerun `work/build_strategy_research_brief.ps1` to keep the strategy thesis current.
+9. For any promising candidate, rerun `work/build_profit_promotion_packet.ps1 -Profile <profile_name>`.
+10. Rerun `work/audit_profit_search_coverage.ps1` after changing the search pack.
+11. Rerun `work/analyze_robust_candidates.ps1`.
+12. Rerun `work/analyze_loss_control.ps1`.
+13. Rerun `work/analyze_promotion_gate.ps1`.
+14. Rerun `work/audit_profile_inputs.ps1` before trusting any changed `.set` file.
+15. Update `VALIDATION_REPORT_METRICS.md`, `PROFIT_SEARCH_REPORT_METRICS.md`, `PROFIT_SEARCH_RANKING.md`, `NEXT_PROFIT_SEARCH_BATCH.md`, `STRATEGY_RESEARCH_BRIEF.md`, `outputs/next_test_handoff/README.md`, `outputs/next_test_handoff/HANDOFF_MANIFEST.csv`, `HANDOFF_CONFIG_INTEGRITY.md`, `PROFIT_SEARCH_COVERAGE_AUDIT.md`, `outputs/promotion_packets/*`, `ROBUST_CANDIDATE_RANKING.md`, `LOSS_CONTROL_REPORT.md`, `PROMOTION_GATE_REPORT.md`, and `PROFILE_INPUT_AUDIT.md`.
+16. Promote only if all profit, no-loss, drawdown/profit-factor, promotion-gate, profile-input, handoff-integrity, strategy-thesis, and coverage checks pass.
 
 ## Offline Report Collector
 
@@ -186,3 +195,12 @@ Use this when preparing a controlled tester session. The archive is a convenienc
 - `outputs/HANDOFF_CONFIG_INTEGRITY.md`
 
 It confirms the handoff configs are static-safe before a controlled run: `Visual=0`, `ShutdownTerminal=1`, `Optimization=0`, `Professional_XAUUSD_EA.ex5`, `XAUUSD`, `M15`, expected dates/models/report names, critical strategy inputs, and SHA256 hashes.
+
+## Strategy Research Brief
+
+`work/build_strategy_research_brief.ps1` reads the existing offline evidence and writes:
+
+- `outputs/STRATEGY_RESEARCH_BRIEF.csv`
+- `outputs/STRATEGY_RESEARCH_BRIEF.md`
+
+It keeps parameter changes tied to evidence. Current thesis: keep `risk1p6_sl18_tp35` promoted, prioritize TP `3.8` / SL `1.6` to `1.8` for the next profit search, treat momentum+sweep as research-only, and keep date-block logic benchmark-only unless it can be explained by a general regime rule.
