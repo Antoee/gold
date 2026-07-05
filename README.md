@@ -34,12 +34,13 @@ The previous date-block profile remains an aggressive research benchmark: full p
 - `ROBUST_CANDIDATE_RANKING.md` - offline robust-candidate ranking from existing CSV results.
 - `LOSS_CONTROL_REPORT.md` - offline loss-control ranking from existing CSV windows.
 - `outputs/CONTROLLED_PROFIT_TEST_RUNBOOK.md` - no-popup testing policy and current validation workflow.
-- `outputs/micro_test_handoff/` - 8-config paired micro handoff for fast candidate-vs-baseline validation.
+- `outputs/micro_test_handoff/` - 8-config paired stress micro handoff for fast candidate-vs-baseline validation.
+- `outputs/recent_oos_handoff/` - 8-config paired recent out-of-sample handoff for 2025_Q4 and 2026 freshness checks.
 - `work/MT5_LOCAL_LAUNCH_DISABLED.lock` - active hard lock that prevents guarded local MT5 launches.
 - `work/stop_mt5_stray_processes.ps1` - cleanup-only helper for stopping already-running MT5/MetaTester/MetaEditor processes.
 - `ROBUST_BOS_SWEEP_PROFILE.set` - promoted robust BOS/sweep MT5 settings profile.
-- `CANDIDATE_RISK16_SL18_TP38_PROFILE.set` - queued candidate: risk `1.60`, stop ATR `1.80`, TP ATR `3.80`.
-- `CANDIDATE_RISK16_SL16_TP38_PROFILE.set` - queued candidate: risk `1.60`, stop ATR `1.60`, TP ATR `3.80`.
+- `CANDIDATE_RISK16_SL18_TP38_PROFILE.set` - queued candidate: risk `1.60`, stop ATR `1.80`, TP ATR `3.80`, equity drawdown guard `4.00%`.
+- `CANDIDATE_RISK16_SL16_TP38_PROFILE.set` - queued candidate: risk `1.60`, stop ATR `1.60`, TP ATR `3.80`, equity drawdown guard `4.00%`.
 - `CANDIDATE_RISK16_SL18_TP35_GIVEBACK_PROFILE.set` - queued loss-control candidate with the profit giveback guard enabled.
 - `RISK16_NEIGHBORHOOD_SUMMARY.csv` - latest stress-window sweep summary around the promoted profile.
 - `BOS_SWEEP_WINDOWS_risk1p6_sl18_tp35.csv` - promoted robust profile quarterly/monthly windows.
@@ -97,8 +98,8 @@ The EA source includes an `OnTester()` custom optimization score for MT5 Strateg
 
 Queued candidates from the latest risk/stop/target neighborhood stress sweep:
 
-- `risk160_sl18_tp38`: stress-window total `+$798.00`, worst `$0.00`, 2 profitable, 5 flat, 0 losing. Needs full monthly/quarter/split validation before promotion.
-- `risk160_sl16_tp38`: stress-window total `+$798.00`, worst `$0.00`, 2 profitable, 5 flat, 0 losing. Needs full monthly/quarter/split validation before promotion.
+- `risk160_sl18_tp38`: stress-window total `+$798.00`, worst `$0.00`, 2 profitable, 5 flat, 0 losing. Needs stress micro, recent out-of-sample, then full monthly/quarter/split validation before promotion.
+- `risk160_sl16_tp38`: stress-window total `+$798.00`, worst `$0.00`, 2 profitable, 5 flat, 0 losing. Needs stress micro, recent out-of-sample, then full monthly/quarter/split validation before promotion.
 - `risk160_sl18_tp35_giveback`: same core as the promoted profile, with the profit giveback guard enabled. Needs full loss-control validation before promotion.
 
 Best no-date profiles found so far:
@@ -133,9 +134,10 @@ Local MT5 launch is intentionally hard-locked because terminal/metatester window
 
 Next work should focus on increasing profit from the robust no-date profile without bringing back losing monthly windows.
 
-1. Fully validate the queued `3.80` TP candidates and the giveback candidate across monthly, quarterly, yearly, half-year, and full-period windows on a non-interrupting tester environment.
-2. Rerun `work/audit_profile_inputs.ps1` after changing `.set` files so MT5 cannot reuse stale cached inputs unnoticed.
-3. Rerun `work/analyze_promotion_gate.ps1` and promote only candidates that pass full, split, quarterly, and monthly gates.
-4. Test on additional broker/history sources.
-5. Use the custom optimization criterion to rank candidates by robustness, not only raw net profit.
-6. Keep the date-block profile as a benchmark, not the default.
+1. Run the paired stress micro handoff, then the recent out-of-sample handoff through 2026, before spending time on the full validation queue.
+2. Fully validate surviving `3.80` TP candidates and the giveback candidate across monthly, quarterly, yearly, half-year, and full-period windows on a non-interrupting tester environment.
+3. Rerun `work/audit_profile_inputs.ps1` after changing `.set` files so MT5 cannot reuse stale cached inputs unnoticed.
+4. Rerun `work/analyze_promotion_gate.ps1` and promote only candidates that pass full, split, quarterly, and monthly gates.
+5. Test on additional broker/history sources.
+6. Use the custom optimization criterion to rank candidates by robustness, not only raw net profit.
+7. Keep the date-block profile as a benchmark, not the default.
