@@ -2,6 +2,7 @@ param(
    [string]$ReportDir = "outputs",
    [switch]$SkipMicro,
    [switch]$SkipRecentOos,
+   [switch]$SkipADXFilterProbe,
    [switch]$SkipSpreadGuardProbe,
    [switch]$SkipTimeExitProbe,
    [switch]$SkipMTFTrendProbe,
@@ -48,6 +49,14 @@ if(-not $SkipRecentOos) {
       Invoke-Step $rows "Import recent-OOS reports" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\collect_validation_results.ps1" -ManifestPath $manifest -ReportDir $ReportDir -ReportNameTemplate "recent_oos_{Profile}_{Window}" -OutResults "outputs\RECENT_OOS_REPORT_METRICS.csv" -OutSummary "outputs\RECENT_OOS_REPORT_SUMMARY.csv" -OutMarkdown "outputs\RECENT_OOS_REPORT_METRICS.md" } "Run recent-OOS decision next." "Check report file names and parser coverage."
       if(Test-File "work\build_recent_oos_decision.ps1") { Invoke-Step $rows "Build recent-OOS decision" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_recent_oos_decision.ps1" } "Review outputs\RECENT_OOS_DECISION.md." "Fix decision script inputs or report metrics." }
    } else { Add-Step $rows "Import recent-OOS reports" "SKIP" "Manifest not found: $manifest" "Create the recent-OOS handoff before importing recent reports." }
+}
+
+if(-not $SkipADXFilterProbe) {
+   $manifest = "outputs\adx_filter_probe_handoff\HANDOFF_MANIFEST.csv"
+   if(Test-File $manifest) {
+      Invoke-Step $rows "Import ADX filter probe reports" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\collect_validation_results.ps1" -ManifestPath $manifest -ReportDir $ReportDir -ReportNameTemplate "adx_probe_{Profile}_{Window}" -OutResults "outputs\ADX_FILTER_PROBE_REPORT_METRICS.csv" -OutSummary "outputs\ADX_FILTER_PROBE_REPORT_SUMMARY.csv" -OutMarkdown "outputs\ADX_FILTER_PROBE_REPORT_METRICS.md" } "Run ADX filter decision next." "Check report file names and parser coverage."
+      if(Test-File "work\build_adx_filter_probe_decision.ps1") { Invoke-Step $rows "Build ADX filter probe decision" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_adx_filter_probe_decision.ps1" } "Review outputs\ADX_FILTER_PROBE_DECISION.md." "Fix decision script inputs or report metrics." }
+   } else { Add-Step $rows "Import ADX filter probe reports" "SKIP" "Manifest not found: $manifest" "Create the ADX filter handoff before importing ADX reports." }
 }
 
 if(-not $SkipSpreadGuardProbe) {
