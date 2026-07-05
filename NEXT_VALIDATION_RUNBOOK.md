@@ -1,0 +1,58 @@
+# Next Validation Runbook
+
+No MT5 process should be launched from this workspace until the hidden-desktop launcher is deliberately verified and `ALLOW_MT5_FOCUS_RISK=1` is set.
+
+## Prepared Validation Pack
+
+Generated configs live under:
+
+- `work/generated_validation/risk160_sl16_tp38`
+- `work/generated_validation/risk160_sl18_tp38`
+- `work/generated_validation/promoted_risk160_sl18_tp35`
+
+Manifest:
+
+- `work/generated_validation/VALIDATION_MANIFEST.csv`
+
+Each profile has:
+
+- 9 split windows: yearly, half-year, 2026 YTD, and full period.
+- 10 quarterly windows from 2024 Q1 through 2026 Q2.
+- 30 monthly windows from 2024-01 through 2026-06.
+
+## Validation Order
+
+1. `risk160_sl16_tp38`
+2. `risk160_sl18_tp38`
+3. `promoted_risk160_sl18_tp35`
+
+The promoted profile is included as a baseline comparison so reruns can detect history or broker-data changes.
+
+## Promotion Gate
+
+A candidate should not replace the promoted profile unless it improves profit while preserving robustness:
+
+- Full-period net profit greater than `+$866.59`.
+- Split aggregate greater than `+$2,354.65`.
+- Monthly/quarter aggregate greater than `+$744.03`.
+- Worst monthly, quarterly, and split window at least `$0.00`.
+- Zero losing monthly, quarterly, and split windows.
+
+## Tester Settings
+
+Configs use:
+
+- XAUUSD M15.
+- Real ticks, `Model=4`.
+- Deposit `$1,000`.
+- Leverage `1:100`.
+- Visual mode off.
+- Dashboard off.
+- `OptimizationCriterion=6`, MetaTrader 5 custom max, using the EA `OnTester()` score.
+
+## After Running
+
+1. Export or parse result CSVs.
+2. Rerun `work/analyze_robust_candidates.ps1`.
+3. Update `ROBUST_CANDIDATE_RANKING.md`.
+4. Promote only if all promotion gates pass.
