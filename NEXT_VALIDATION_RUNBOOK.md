@@ -36,8 +36,9 @@ Run these without launching MT5:
 
 Expected current state:
 
-- Optimization guardrails: 16 profiles audited, 16 require promotion review
-- Risk-adjusted micro batch: 12 rows selected from 183 configs, with baseline anchors plus `tp38_sl18` and `giveback25_tp38` stress windows
+- Optimization guardrails: 17 profiles audited, 17 require promotion review
+- Profit-search manifest: 202 expected configs, 136 phase-1 fast triage and 66 phase-2 real-tick validation
+- Risk-adjusted micro batch: 12 rows selected from 202 configs, with baseline anchors plus `baseline_dd4` and `tp38_sl18` stress windows
 - Risk-adjusted micro handoff integrity: PASS, 12 configs checked, 12 passed
 - Fast-probe readiness: waiting for exported reports until the fast handoff packs are run/imported
 - Next fast batch: `STRESS_SMOKE`, 2 rows, because it is the first pending gate
@@ -60,7 +61,7 @@ Expected current state:
 - caps rows per profile so one idea cannot consume the whole testing window
 - penalizes higher risk, far TP extensions, tighter stops, and promotion-rejected profiles
 
-The current local selection is 12 runs: 5 `baseline_promoted` anchors, 4 `tp38_sl18` stress windows, and 3 `giveback25_tp38` stress windows. The handoff package is built with:
+The current local selection is 12 runs: 5 `baseline_promoted` anchors, 4 `baseline_dd4` stress windows, and 3 `tp38_sl18` stress windows. `baseline_dd4` changes only `InpMaxEquityDrawdownPercent=4.00`, so it tests drawdown protection without changing entry or exit logic. The handoff package is built with:
 
 `work/build_next_test_handoff.ps1 -BatchCsv outputs\RISK_ADJUSTED_MICRO_BATCH.csv -OutDir outputs\risk_adjusted_micro_handoff -ZipPath outputs\risk_adjusted_micro_handoff.zip`
 
