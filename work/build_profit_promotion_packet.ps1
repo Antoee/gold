@@ -2,6 +2,7 @@ param(
    [string]$Profile = "baseline_promoted",
    [string]$MetricsPath = "outputs\PROFIT_SEARCH_REPORT_METRICS.csv",
    [string]$ProfilesPath = "work\generated_profit_search\PROFIT_SEARCH_PROFILES.csv",
+   [string]$GuardrailPath = "outputs\OPTIMIZATION_GUARDRAIL_AUDIT.csv",
    [string]$OutDir = "outputs\promotion_packets",
    [double]$BaselineFullProfit = 866.59,
    [double]$BaselineSplitAggregate = 2354.65,
@@ -46,10 +47,12 @@ if(!(Test-Path -LiteralPath $ProfilesPath)) { throw "Profiles file not found: $P
 
 $metrics = Import-Csv -LiteralPath $MetricsPath
 $profiles = Import-Csv -LiteralPath $ProfilesPath
+$guardrails = if(Test-Path -LiteralPath $GuardrailPath) { @(Import-Csv -LiteralPath $GuardrailPath) } else { @() }
 $profileInfo = $profiles | Where-Object { $_.Profile -eq $Profile } | Select-Object -First 1
 if($null -eq $profileInfo) {
    throw "Profile '$Profile' not found in $ProfilesPath"
 }
+$guardrail = $guardrails | Where-Object { $_.Profile -eq $Profile } | Select-Object -First 1
 
 $rows = @($metrics | Where-Object { $_.Profile -eq $Profile })
 $phase1Rows = @($rows | Where-Object { $_.Phase -eq "phase1_fast_triage" })
@@ -79,8 +82,18 @@ $fullProfitEvidence = if($null -eq $fullProfit) { "missing full-period phase-2 r
 $worstWindowEvidence = if($null -eq $phase2Worst) { "missing" } else { Format-Money $phase2Worst }
 $drawdownEvidence = if($null -eq $phase2WorstDrawdown) { "missing" } else { Format-Money $phase2WorstDrawdown }
 $profitFactorEvidence = if($null -eq $phase2AveragePf) { "missing" } else { $phase2AveragePf.ToString("0.0000", [Globalization.CultureInfo]::InvariantCulture) }
+$guardrailStatus = if($null -eq $guardrail) { "MISSING" } else { [string]$guardrail.GuardrailStatus }
+$guardrailScore = if($null -eq $guardrail) { "" } else { [string]$guardrail.GuardrailScore }
+$riskFlags = if($null -eq $guardrail) { "missing guardrail audit" } else { [string]$guardrail.RiskFlags }
+$overfitFlags = if($null -eq $guardrail) { "missing guardrail audit" } else { [string]$guardrail.OverfitFlags }
+$equityDrawdownPct = if($null -eq $guardrail) { "" } else { [string]$guardrail.EquityDrawdownPct }
+$guardrailEvidence = if($null -eq $guardrail) { "missing guardrail audit" } else { "status=$guardrailStatus, score=$guardrailScore, equity_dd=$equityDrawdownPct, risk_flags=$riskFlags, overfit_flags=$overfitFlags" }
+$hasEquityGuard = $null -ne $guardrail -and (To-Double $guardrail.EquityDrawdownPct) -gt 0.0
+$isBaseline = $Profile -eq "baseline_promoted"
 
 $gateRows = New-Object System.Collections.Generic.List[object]
+Add-Gate -Rows $gateRows -Gate "Optimization guardrail tracked" -Pass ($null -ne $guardrail -and $guardrailStatus -ne "REJECT_PROMOTION") -Evidence $guardrailEvidence -Required "Guardrail audit exists and does not reject promotion"
+Add-Gate -Rows $gateRows -Gate "Equity drawdown guard active or baseline anchor" -Pass ($isBaseline -or $hasEquityGuard) -Evidence "InpMaxEquityDrawdownPercent=$equityDrawdownPct" -Required "Non-baseline candidates must use an equity drawdown guard"
 Add-Gate -Rows $gateRows -Gate "Complete phase-2 evidence" -Pass $phase2Complete -Evidence "$($phase2Parsed.Count)/$phase2Expected parsed, $phase2Missing missing, $phase2Unparsed unparsed" -Required "Every phase-2 real-tick report parsed"
 Add-Gate -Rows $gateRows -Gate "Full-period profit beats baseline" -Pass ($null -ne $fullProfit -and $fullProfit -gt $BaselineFullProfit) -Evidence $fullProfitEvidence -Required ("> " + (Format-Money $BaselineFullProfit))
 Add-Gate -Rows $gateRows -Gate "Split aggregate beats baseline" -Pass ($phase2SplitTotal -gt $BaselineSplitAggregate) -Evidence (Format-Money $phase2SplitTotal) -Required ("> " + (Format-Money $BaselineSplitAggregate))
@@ -107,6 +120,11 @@ $report.Add("- Decision: **$decision**") | Out-Null
 $report.Add("- Profile priority: $($profileInfo.Priority)") | Out-Null
 $report.Add("- Phase-2 seed: $($profileInfo.Phase2Seed)") | Out-Null
 $report.Add("- Overrides: ``$($profileInfo.Overrides)``") | Out-Null
+$report.Add("- Guardrail status: $guardrailStatus") | Out-Null
+$report.Add("- Guardrail score: $guardrailScore") | Out-Null
+$report.Add("- Equity drawdown guard: $equityDrawdownPct") | Out-Null
+$report.Add("- Risk flags: ``$riskFlags``") | Out-Null
+$report.Add("- Overfit flags: ``$overfitFlags``") | Out-Null
 $report.Add("- Phase-1 parsed: $($phase1Parsed.Count)/$($phase1Rows.Count)") | Out-Null
 $report.Add("- Phase-2 parsed: $($phase2Parsed.Count)/$phase2Expected") | Out-Null
 $report.Add("- Phase-2 total net profit: $(Format-Money $phase2Total)") | Out-Null
@@ -120,9 +138,7 @@ $report.Add("## Gates") | Out-Null
 $report.Add("") | Out-Null
 $report.Add("| Gate | Status | Evidence | Required |") | Out-Null
 $report.Add("|---|---|---|---|") | Out-Null
-foreach($gate in $gateRows) {
-   $report.Add("| $($gate.Gate) | $($gate.Status) | $($gate.Evidence) | $($gate.Required) |") | Out-Null
-}
+foreach($gate in $gateRows) { $report.Add("| $($gate.Gate) | $($gate.Status) | $($gate.Evidence) | $($gate.Required) |") | Out-Null }
 $report.Add("") | Out-Null
 $report.Add("## Rule") | Out-Null
 $report.Add("") | Out-Null
