@@ -1,5 +1,6 @@
 param(
    [string]$ReportDir = "outputs",
+   [switch]$SkipStressSmoke,
    [switch]$SkipMicro,
    [switch]$SkipRecentOos,
    [switch]$SkipConfirmationProbe,
@@ -17,25 +18,20 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-function Add-Step {
-   param([System.Collections.Generic.List[object]]$Rows, [string]$Step, [string]$Status, [string]$Evidence, [string]$NextAction)
-   $Rows.Add([pscustomobject]@{ Step = $Step; Status = $Status; Evidence = $Evidence; NextAction = $NextAction }) | Out-Null
-}
-
-function Invoke-Step {
-   param([System.Collections.Generic.List[object]]$Rows, [string]$Step, [scriptblock]$Body, [string]$PassAction = "Continue.", [string]$FailAction = "Fix the failed step and rerun this wrapper.")
-   try {
-      $output = & $Body 2>&1
-      $evidence = ($output | Out-String).Trim()
-      if([string]::IsNullOrWhiteSpace($evidence)) { $evidence = "Completed without console output." }
-      Add-Step $Rows $Step "PASS" $evidence $PassAction
-   } catch { Add-Step $Rows $Step "FAIL" $_.Exception.Message $FailAction }
-}
-
+function Add-Step { param([System.Collections.Generic.List[object]]$Rows, [string]$Step, [string]$Status, [string]$Evidence, [string]$NextAction) $Rows.Add([pscustomobject]@{ Step = $Step; Status = $Status; Evidence = $Evidence; NextAction = $NextAction }) | Out-Null }
+function Invoke-Step { param([System.Collections.Generic.List[object]]$Rows, [string]$Step, [scriptblock]$Body, [string]$PassAction = "Continue.", [string]$FailAction = "Fix the failed step and rerun this wrapper.") try { $output = & $Body 2>&1; $evidence = ($output | Out-String).Trim(); if([string]::IsNullOrWhiteSpace($evidence)) { $evidence = "Completed without console output." }; Add-Step $Rows $Step "PASS" $evidence $PassAction } catch { Add-Step $Rows $Step "FAIL" $_.Exception.Message $FailAction } }
 function Test-File { param([string]$Path) return Test-Path -LiteralPath $Path -PathType Leaf }
 
 $rows = New-Object System.Collections.Generic.List[object]
 Add-Step $rows "Start" "INFO" "Offline report import wrapper. No MT5 process is launched by this script." "Process available exported reports only."
+
+if(-not $SkipStressSmoke) {
+   $manifest = "outputs\stress_smoke_handoff\HANDOFF_MANIFEST.csv"
+   if(Test-File $manifest) {
+      Invoke-Step $rows "Import stress smoke reports" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\collect_validation_results.ps1" -ManifestPath $manifest -ReportDir $ReportDir -ReportNameTemplate "stress_smoke_phase1_{Profile}_{Window}" -OutResults "outputs\STRESS_SMOKE_REPORT_METRICS.csv" -OutSummary "outputs\STRESS_SMOKE_REPORT_SUMMARY.csv" -OutMarkdown "outputs\STRESS_SMOKE_REPORT_METRICS.md" } "Run stress smoke decision next." "Check smoke report file names and parser coverage."
+      if(Test-File "work\build_micro_test_decision.ps1") { Invoke-Step $rows "Build stress smoke decision" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_micro_test_decision.ps1" -MetricsPath "outputs\STRESS_SMOKE_REPORT_METRICS.csv" -ManifestPath $manifest -OutCsv "outputs\STRESS_SMOKE_DECISION.csv" -OutReport "outputs\STRESS_SMOKE_DECISION.md" } "Review outputs\STRESS_SMOKE_DECISION.md." "Fix smoke decision script inputs or report metrics." }
+   } else { Add-Step $rows "Import stress smoke reports" "SKIP" "Manifest not found: $manifest" "Create the stress smoke handoff before importing smoke reports." }
+}
 
 if(-not $SkipMicro) {
    $manifest = "outputs\micro_test_handoff\HANDOFF_MANIFEST.csv"
@@ -45,76 +41,25 @@ if(-not $SkipMicro) {
    } else { Add-Step $rows "Import stress micro reports" "SKIP" "Manifest not found: $manifest" "Create the micro handoff before importing micro reports." }
 }
 
-if(-not $SkipRecentOos) {
-   $manifest = "outputs\recent_oos_handoff\HANDOFF_MANIFEST.csv"
-   if(Test-File $manifest) {
-      Invoke-Step $rows "Import recent-OOS reports" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\collect_validation_results.ps1" -ManifestPath $manifest -ReportDir $ReportDir -ReportNameTemplate "recent_oos_{Profile}_{Window}" -OutResults "outputs\RECENT_OOS_REPORT_METRICS.csv" -OutSummary "outputs\RECENT_OOS_REPORT_SUMMARY.csv" -OutMarkdown "outputs\RECENT_OOS_REPORT_METRICS.md" } "Run recent-OOS decision next." "Check report file names and parser coverage."
-      if(Test-File "work\build_recent_oos_decision.ps1") { Invoke-Step $rows "Build recent-OOS decision" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_recent_oos_decision.ps1" } "Review outputs\RECENT_OOS_DECISION.md." "Fix decision script inputs or report metrics." }
-   } else { Add-Step $rows "Import recent-OOS reports" "SKIP" "Manifest not found: $manifest" "Create the recent-OOS handoff before importing recent reports." }
-}
-
-if(-not $SkipConfirmationProbe) {
-   $manifest = "outputs\confirmation_probe_handoff\HANDOFF_MANIFEST.csv"
-   if(Test-File $manifest) {
-      Invoke-Step $rows "Import confirmation probe reports" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\collect_validation_results.ps1" -ManifestPath $manifest -ReportDir $ReportDir -ReportNameTemplate "confirmation_probe_{Profile}_{Window}" -OutResults "outputs\CONFIRMATION_PROBE_REPORT_METRICS.csv" -OutSummary "outputs\CONFIRMATION_PROBE_REPORT_SUMMARY.csv" -OutMarkdown "outputs\CONFIRMATION_PROBE_REPORT_METRICS.md" } "Run confirmation decision next." "Check report file names and parser coverage."
-      if(Test-File "work\build_confirmation_probe_decision.ps1") { Invoke-Step $rows "Build confirmation probe decision" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_confirmation_probe_decision.ps1" } "Review outputs\CONFIRMATION_PROBE_DECISION.md." "Fix decision script inputs or report metrics." }
-   } else { Add-Step $rows "Import confirmation probe reports" "SKIP" "Manifest not found: $manifest" "Create the confirmation handoff before importing confirmation reports." }
-}
-
-if(-not $SkipBreakEvenProbe) {
-   $manifest = "outputs\breakeven_probe_handoff\HANDOFF_MANIFEST.csv"
-   if(Test-File $manifest) {
-      Invoke-Step $rows "Import break-even probe reports" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\collect_validation_results.ps1" -ManifestPath $manifest -ReportDir $ReportDir -ReportNameTemplate "breakeven_probe_{Profile}_{Window}" -OutResults "outputs\BREAKEVEN_PROBE_REPORT_METRICS.csv" -OutSummary "outputs\BREAKEVEN_PROBE_REPORT_SUMMARY.csv" -OutMarkdown "outputs\BREAKEVEN_PROBE_REPORT_METRICS.md" } "Run break-even decision next." "Check report file names and parser coverage."
-      if(Test-File "work\build_breakeven_probe_decision.ps1") { Invoke-Step $rows "Build break-even probe decision" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_breakeven_probe_decision.ps1" } "Review outputs\BREAKEVEN_PROBE_DECISION.md." "Fix decision script inputs or report metrics." }
-   } else { Add-Step $rows "Import break-even probe reports" "SKIP" "Manifest not found: $manifest" "Create the break-even handoff before importing break-even reports." }
-}
-
-if(-not $SkipADXFilterProbe) {
-   $manifest = "outputs\adx_filter_probe_handoff\HANDOFF_MANIFEST.csv"
-   if(Test-File $manifest) {
-      Invoke-Step $rows "Import ADX filter probe reports" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\collect_validation_results.ps1" -ManifestPath $manifest -ReportDir $ReportDir -ReportNameTemplate "adx_probe_{Profile}_{Window}" -OutResults "outputs\ADX_FILTER_PROBE_REPORT_METRICS.csv" -OutSummary "outputs\ADX_FILTER_PROBE_REPORT_SUMMARY.csv" -OutMarkdown "outputs\ADX_FILTER_PROBE_REPORT_METRICS.md" } "Run ADX filter decision next." "Check report file names and parser coverage."
-      if(Test-File "work\build_adx_filter_probe_decision.ps1") { Invoke-Step $rows "Build ADX filter probe decision" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_adx_filter_probe_decision.ps1" } "Review outputs\ADX_FILTER_PROBE_DECISION.md." "Fix decision script inputs or report metrics." }
-   } else { Add-Step $rows "Import ADX filter probe reports" "SKIP" "Manifest not found: $manifest" "Create the ADX filter handoff before importing ADX reports." }
-}
-
-if(-not $SkipSpreadGuardProbe) {
-   $manifest = "outputs\spread_guard_probe_handoff\HANDOFF_MANIFEST.csv"
-   if(Test-File $manifest) {
-      Invoke-Step $rows "Import ATR spread guard probe reports" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\collect_validation_results.ps1" -ManifestPath $manifest -ReportDir $ReportDir -ReportNameTemplate "spread_probe_{Profile}_{Window}" -OutResults "outputs\SPREAD_GUARD_PROBE_REPORT_METRICS.csv" -OutSummary "outputs\SPREAD_GUARD_PROBE_REPORT_SUMMARY.csv" -OutMarkdown "outputs\SPREAD_GUARD_PROBE_REPORT_METRICS.md" } "Run ATR spread guard decision next." "Check report file names and parser coverage."
-      if(Test-File "work\build_spread_guard_probe_decision.ps1") { Invoke-Step $rows "Build ATR spread guard probe decision" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_spread_guard_probe_decision.ps1" } "Review outputs\SPREAD_GUARD_PROBE_DECISION.md." "Fix decision script inputs or report metrics." }
-   } else { Add-Step $rows "Import ATR spread guard probe reports" "SKIP" "Manifest not found: $manifest" "Create the ATR spread guard handoff before importing spread guard reports." }
-}
-
-if(-not $SkipTimeExitProbe) {
-   $manifest = "outputs\time_exit_probe_handoff\HANDOFF_MANIFEST.csv"
-   if(Test-File $manifest) {
-      Invoke-Step $rows "Import time-exit probe reports" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\collect_validation_results.ps1" -ManifestPath $manifest -ReportDir $ReportDir -ReportNameTemplate "time_exit_probe_{Profile}_{Window}" -OutResults "outputs\TIME_EXIT_PROBE_REPORT_METRICS.csv" -OutSummary "outputs\TIME_EXIT_PROBE_REPORT_SUMMARY.csv" -OutMarkdown "outputs\TIME_EXIT_PROBE_REPORT_METRICS.md" } "Run time-exit decision next." "Check report file names and parser coverage."
-      if(Test-File "work\build_time_exit_probe_decision.ps1") { Invoke-Step $rows "Build time-exit probe decision" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_time_exit_probe_decision.ps1" } "Review outputs\TIME_EXIT_PROBE_DECISION.md." "Fix decision script inputs or report metrics." }
-   } else { Add-Step $rows "Import time-exit probe reports" "SKIP" "Manifest not found: $manifest" "Create the time-exit handoff before importing time-exit reports." }
-}
-
-if(-not $SkipMTFTrendProbe) {
-   $manifest = "outputs\mtf_trend_probe_handoff\HANDOFF_MANIFEST.csv"
-   if(Test-File $manifest) {
-      Invoke-Step $rows "Import MTF trend probe reports" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\collect_validation_results.ps1" -ManifestPath $manifest -ReportDir $ReportDir -ReportNameTemplate "mtf_probe_{Profile}_{Window}" -OutResults "outputs\MTF_TREND_PROBE_REPORT_METRICS.csv" -OutSummary "outputs\MTF_TREND_PROBE_REPORT_SUMMARY.csv" -OutMarkdown "outputs\MTF_TREND_PROBE_REPORT_METRICS.md" } "Run MTF trend decision next." "Check report file names and parser coverage."
-      if(Test-File "work\build_mtf_trend_probe_decision.ps1") { Invoke-Step $rows "Build MTF trend probe decision" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_mtf_trend_probe_decision.ps1" } "Review outputs\MTF_TREND_PROBE_DECISION.md." "Fix decision script inputs or report metrics." }
-   } else { Add-Step $rows "Import MTF trend probe reports" "SKIP" "Manifest not found: $manifest" "Create the MTF trend handoff before importing MTF reports." }
-}
-
-if(-not $SkipStructureTrailingProbe) {
-   $manifest = "outputs\structure_trailing_probe_handoff\HANDOFF_MANIFEST.csv"
-   if(Test-File $manifest) {
-      Invoke-Step $rows "Import structure trailing probe reports" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\collect_validation_results.ps1" -ManifestPath $manifest -ReportDir $ReportDir -ReportNameTemplate "structure_probe_{Profile}_{Window}" -OutResults "outputs\STRUCTURE_TRAILING_PROBE_REPORT_METRICS.csv" -OutSummary "outputs\STRUCTURE_TRAILING_PROBE_REPORT_SUMMARY.csv" -OutMarkdown "outputs\STRUCTURE_TRAILING_PROBE_REPORT_METRICS.md" } "Run structure trailing decision next." "Check report file names and parser coverage."
-      if(Test-File "work\build_structure_trailing_probe_decision.ps1") { Invoke-Step $rows "Build structure trailing probe decision" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_structure_trailing_probe_decision.ps1" } "Review outputs\STRUCTURE_TRAILING_PROBE_DECISION.md." "Fix decision script inputs or report metrics." }
-   } else { Add-Step $rows "Import structure trailing probe reports" "SKIP" "Manifest not found: $manifest" "Create the structure trailing handoff before importing structure reports." }
-}
-
-if(-not $SkipSessionVariant) {
-   $manifest = "outputs\session_variant_handoff\HANDOFF_MANIFEST.csv"
-   if(Test-File $manifest) {
-      Invoke-Step $rows "Import session-variant reports" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\collect_validation_results.ps1" -ManifestPath $manifest -ReportDir $ReportDir -ReportNameTemplate "session_variant_{Profile}_{Window}" -OutResults "outputs\SESSION_VARIANT_REPORT_METRICS.csv" -OutSummary "outputs\SESSION_VARIANT_REPORT_SUMMARY.csv" -OutMarkdown "outputs\SESSION_VARIANT_REPORT_METRICS.md" } "Run session decision next." "Check report file names and parser coverage."
-      if(Test-File "work\build_session_variant_decision.ps1") { Invoke-Step $rows "Build session-variant decision" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_session_variant_decision.ps1" } "Review outputs\SESSION_VARIANT_DECISION.md." "Fix decision script inputs or report metrics." }
-   } else { Add-Step $rows "Import session-variant reports" "SKIP" "Manifest not found: $manifest" "Create the session handoff before importing session reports." }
+$probeBlocks = @(
+   @{ Skip=$SkipRecentOos; Manifest="outputs\recent_oos_handoff\HANDOFF_MANIFEST.csv"; Step="recent-OOS"; Template="recent_oos_{Profile}_{Window}"; Out="RECENT_OOS"; Decision="work\build_recent_oos_decision.ps1" },
+   @{ Skip=$SkipConfirmationProbe; Manifest="outputs\confirmation_probe_handoff\HANDOFF_MANIFEST.csv"; Step="confirmation probe"; Template="confirmation_probe_{Profile}_{Window}"; Out="CONFIRMATION_PROBE"; Decision="work\build_confirmation_probe_decision.ps1" },
+   @{ Skip=$SkipBreakEvenProbe; Manifest="outputs\breakeven_probe_handoff\HANDOFF_MANIFEST.csv"; Step="break-even probe"; Template="breakeven_probe_{Profile}_{Window}"; Out="BREAKEVEN_PROBE"; Decision="work\build_breakeven_probe_decision.ps1" },
+   @{ Skip=$SkipADXFilterProbe; Manifest="outputs\adx_filter_probe_handoff\HANDOFF_MANIFEST.csv"; Step="ADX filter probe"; Template="adx_probe_{Profile}_{Window}"; Out="ADX_FILTER_PROBE"; Decision="work\build_adx_filter_probe_decision.ps1" },
+   @{ Skip=$SkipSpreadGuardProbe; Manifest="outputs\spread_guard_probe_handoff\HANDOFF_MANIFEST.csv"; Step="ATR spread guard probe"; Template="spread_probe_{Profile}_{Window}"; Out="SPREAD_GUARD_PROBE"; Decision="work\build_spread_guard_probe_decision.ps1" },
+   @{ Skip=$SkipTimeExitProbe; Manifest="outputs\time_exit_probe_handoff\HANDOFF_MANIFEST.csv"; Step="time-exit probe"; Template="time_exit_probe_{Profile}_{Window}"; Out="TIME_EXIT_PROBE"; Decision="work\build_time_exit_probe_decision.ps1" },
+   @{ Skip=$SkipMTFTrendProbe; Manifest="outputs\mtf_trend_probe_handoff\HANDOFF_MANIFEST.csv"; Step="MTF trend probe"; Template="mtf_probe_{Profile}_{Window}"; Out="MTF_TREND_PROBE"; Decision="work\build_mtf_trend_probe_decision.ps1" },
+   @{ Skip=$SkipStructureTrailingProbe; Manifest="outputs\structure_trailing_probe_handoff\HANDOFF_MANIFEST.csv"; Step="structure trailing probe"; Template="structure_probe_{Profile}_{Window}"; Out="STRUCTURE_TRAILING_PROBE"; Decision="work\build_structure_trailing_probe_decision.ps1" },
+   @{ Skip=$SkipSessionVariant; Manifest="outputs\session_variant_handoff\HANDOFF_MANIFEST.csv"; Step="session-variant"; Template="session_variant_{Profile}_{Window}"; Out="SESSION_VARIANT"; Decision="work\build_session_variant_decision.ps1" }
+)
+foreach($block in $probeBlocks) {
+   if(-not $block.Skip) {
+      $manifest = $block.Manifest
+      if(Test-File $manifest) {
+         Invoke-Step $rows "Import $($block.Step) reports" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\collect_validation_results.ps1" -ManifestPath $manifest -ReportDir $ReportDir -ReportNameTemplate $block.Template -OutResults "outputs\$($block.Out)_REPORT_METRICS.csv" -OutSummary "outputs\$($block.Out)_REPORT_SUMMARY.csv" -OutMarkdown "outputs\$($block.Out)_REPORT_METRICS.md" } "Run $($block.Step) decision next." "Check report file names and parser coverage."
+         if(Test-File $block.Decision) { Invoke-Step $rows "Build $($block.Step) decision" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\$($block.Decision)" } "Review outputs\$($block.Out)_DECISION.md." "Fix decision script inputs or report metrics." }
+      } else { Add-Step $rows "Import $($block.Step) reports" "SKIP" "Manifest not found: $manifest" "Create the handoff before importing $($block.Step) reports." }
+   }
 }
 
 if(-not $SkipFullProfitSearch) {
@@ -127,11 +72,8 @@ if(-not $SkipFullProfitSearch) {
 
 if(-not $SkipReadinessRefresh) {
    if(Test-File "work\build_fast_probe_readiness_snapshot.ps1") { Invoke-Step $rows "Refresh fast-probe readiness snapshot" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_fast_probe_readiness_snapshot.ps1" } "Review outputs\FAST_PROBE_READINESS_SNAPSHOT.md." "Fix fast-probe readiness script inputs." }
-   else { Add-Step $rows "Refresh fast-probe readiness snapshot" "SKIP" "work\build_fast_probe_readiness_snapshot.ps1 not found." "Restore fast-probe readiness builder if needed." }
    if(Test-File "work\build_next_fast_batch_selector.ps1") { Invoke-Step $rows "Refresh next fast batch selection" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_next_fast_batch_selector.ps1" } "Review outputs\NEXT_FAST_BATCH_SELECTION.md." "Fix next-batch selector inputs." }
-   else { Add-Step $rows "Refresh next fast batch selection" "SKIP" "work\build_next_fast_batch_selector.ps1 not found." "Restore next-batch selector if needed." }
    if(Test-File "work\build_profit_readiness_snapshot.ps1") { Invoke-Step $rows "Refresh profit readiness snapshot" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_profit_readiness_snapshot.ps1" } "Review outputs\PROFIT_READINESS_SNAPSHOT.md." "Fix readiness script inputs." }
-   else { Add-Step $rows "Refresh profit readiness snapshot" "SKIP" "work\build_profit_readiness_snapshot.ps1 not found." "Restore readiness builder if needed." }
 }
 
 $outCsv = "outputs\REPORT_IMPORT_REBUILD_SUMMARY.csv"
