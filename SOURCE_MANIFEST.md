@@ -5,7 +5,7 @@ Generated without launching MT5.
 ## GitHub EA Source
 
 - File: `Professional_XAUUSD_EA.mq5`
-- Version: `1.04`
+- Version: `1.05`
 - Status: committed to GitHub as a risk-first, no-martingale/no-grid XAUUSD EA source.
 - Compile status: not locally compiled in this remote-only pass.
 - Purpose: provides the repository with an actual EA source file matching the documented tester input surface and handoff configs.
@@ -31,11 +31,13 @@ The current GitHub source should be compiled and tested before live or promotion
   - `InpTakeProfitATRMultiplier=3.50`
   - `InpMinRiskReward=1.50`
   - `InpUseBreakEven=false`
+  - `InpUseMTFTrendFilter=false`
 - Candidate override support:
   - `InpTakeProfitATRMultiplier=3.80`
   - `InpMaxEquityDrawdownPercent=4.00`
+  - H1 MTF trend-filter probes through `outputs/mtf_trend_probe_handoff/`
 - BOS and liquidity-sweep confirmations.
-- Optional EMA cross, momentum candle, engulfing candle, ADX, ATR, adaptive trend-bias, break-even, ATR trailing, session/day filter, Friday-evening cutoff, and profit giveback guard modules.
+- Optional EMA cross, momentum candle, engulfing candle, ADX, ATR, adaptive trend-bias, higher-timeframe EMA trend filter, break-even, ATR trailing, session/day filter, Friday-evening cutoff, and profit giveback guard modules.
 - Risk protections:
   - risk-based lot sizing
   - native `OrderCalcProfit` loss-per-lot sizing with tick-value fallback
@@ -52,6 +54,10 @@ The current GitHub source should be compiled and tested before live or promotion
   - `InpSessionStartHour` / `InpSessionEndHour`
   - weekday toggles for Monday through Friday plus Sunday
   - `InpDisableFridayEvening` and `InpFridayCutoffHour`
+- MTF trend controls:
+  - `InpUseMTFTrendFilter`
+  - `InpMTFTrendTimeframe`
+  - `InpMTFTrendEMA`
 - Custom Strategy Tester scoring through `double OnTester()`.
 
 ## Static Safety Automation
@@ -60,10 +66,11 @@ The current GitHub source should be compiled and tested before live or promotion
 - Workflow: `.github/workflows/static-safety.yml`
 - Runs on GitHub Actions for push, pull request, and manual dispatch.
 - Checks:
-  - committed EA source exists and exposes required risk/research inputs
+  - committed EA source exists and exposes required risk/research inputs, including MTF trend-filter inputs
   - forbidden recovery-style concepts are absent from executable source after comment stripping
   - native `OrderCalcProfit` and `OrderCalcMargin` risk-sizing markers are present
   - session filter implementation and root-profile session input pins are present
+  - MTF trend-filter implementation and root-profile MTF input pins are present
   - hard local MT5 launch lock and launch guard are present
   - protected TP 3.80 candidate `.set` files use `InpMaxEquityDrawdownPercent=4.00`
   - stress micro and recent-OOS manifests have expected rows
@@ -77,6 +84,8 @@ The current GitHub source should be compiled and tested before live or promotion
 - Stress micro windows: `2024_Q1`, `2024_Q3`, `2025_Q2`, `2025_Q3`
 - Recent out-of-sample handoff configs committed: `8`
 - Recent out-of-sample windows: `2025_Q4`, `2026_Q1`, `2026_Q2`, `2026_YTD`
+- MTF trend probe handoff configs committed: `4`
+- MTF trend probe: baseline and TP38 unfiltered pairs vs H1 EMA 200 filter on `2026_YTD`
 - Session variant handoff configs committed: `6`
 - Session variant probes: `london_07_16`, `newyork_13_22`, `overlap_13_16` on `2026_YTD`
 - Date range covered by prepared fast checks: `2024.01.01` through `2026.07.02`
