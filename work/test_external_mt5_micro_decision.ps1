@@ -72,10 +72,20 @@ function Invoke-DecisionCase {
    Assert-Equal $overall $ExpectedOverall "$CaseName overall"
 
    $decisions = @(Import-Csv -LiteralPath $outCsv)
-   foreach($window in $ExpectedWindowDecisions.Keys) {
-      $row = $decisions | Where-Object { $_.Window -eq $window } | Select-Object -First 1
-      if($null -eq $row) { throw "$CaseName missing decision row for $window" }
-      Assert-Equal $row.Decision $ExpectedWindowDecisions[$window] "$CaseName $window decision"
+   foreach($key in $ExpectedWindowDecisions.Keys) {
+      $parts = [string]$key -split "\|", 2
+      if($parts.Count -eq 2) {
+         $profile = $parts[0]
+         $window = $parts[1]
+         $row = $decisions | Where-Object { $_.CandidateProfile -eq $profile -and $_.Window -eq $window } | Select-Object -First 1
+         if($null -eq $row) { throw "$CaseName missing decision row for $profile $window" }
+         Assert-Equal $row.Decision $ExpectedWindowDecisions[$key] "$CaseName $profile $window decision"
+      } else {
+         $window = [string]$key
+         $row = $decisions | Where-Object { $_.Window -eq $window } | Select-Object -First 1
+         if($null -eq $row) { throw "$CaseName missing decision row for $window" }
+         Assert-Equal $row.Decision $ExpectedWindowDecisions[$key] "$CaseName $window decision"
+      }
    }
 }
 
@@ -130,6 +140,18 @@ try {
       New-MetricRow "baseline_promoted" "2024_Q1" "MISSING_REPORT" "" ""
    ) -ExpectedOverall "WAITING_FOR_REPORTS" -ExpectedWindowDecisions @{
       "2024_Q1" = "WAITING_FOR_REPORTS"
+   }
+
+   Invoke-DecisionCase -CaseName "multi_candidate_waiting" -Rows @(
+      New-MetricRow "risk12_tp38_sl18" "2024_Q1" "PARSED" "120" "20"
+      New-MetricRow "baseline_dd4" "2024_Q1" "MISSING_REPORT" "" ""
+      New-MetricRow "baseline_promoted" "2024_Q1" "PARSED" "100" "30"
+      New-MetricRow "risk12_tp38_sl18" "2024_Q3" "PARSED" "90" "18"
+      New-MetricRow "baseline_promoted" "2024_Q3" "PARSED" "90" "22"
+   ) -ExpectedOverall "WAITING_FOR_REPORTS" -ExpectedWindowDecisions @{
+      "risk12_tp38_sl18|2024_Q1" = "PASS_WINDOW"
+      "risk12_tp38_sl18|2024_Q3" = "PASS_WINDOW"
+      "baseline_dd4|2024_Q1" = "WAITING_FOR_REPORTS"
    }
 } finally {
    if(Test-Path -LiteralPath $tempRoot) {
