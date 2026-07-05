@@ -61,5 +61,6 @@ Configs use:
 2. Rerun `work/analyze_robust_candidates.ps1`.
 3. Rerun `work/analyze_loss_control.ps1`.
 4. Rerun `work/analyze_promotion_gate.ps1`.
-5. Update `ROBUST_CANDIDATE_RANKING.md`, `LOSS_CONTROL_REPORT.md`, and `PROMOTION_GATE_REPORT.md`.
-6. Promote only if all profit, no-loss, and promotion-gate checks pass.
+5. Rerun `work/audit_profile_inputs.ps1` before trusting any changed `.set` file.
+6. Update `ROBUST_CANDIDATE_RANKING.md`, `LOSS_CONTROL_REPORT.md`, `PROMOTION_GATE_REPORT.md`, and `PROFILE_INPUT_AUDIT.md`.
+7. Promote only if all profit, no-loss, promotion-gate, and profile-input checks pass.
