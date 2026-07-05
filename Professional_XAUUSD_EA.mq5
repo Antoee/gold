@@ -4,7 +4,7 @@
 //| No martingale. No grid. No averaging down. No recovery systems.   |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.00"
+#property version   "1.01"
 #property description "Professional risk-first XAUUSD EA with BOS/sweep entries and ATR exits."
 
 #include <Trade/Trade.mqh>
@@ -85,6 +85,7 @@ double monthlyPeakProfit = 0.0;
 datetime dailyKey = 0;
 datetime weeklyKey = 0;
 datetime monthlyKey = 0;
+int consecutiveLosses = 0;
 
 struct SignalState
 {
@@ -306,6 +307,9 @@ int ApplyAdaptiveBias(const int direction)
 
 bool RiskAllowsNewTrade()
 {
+   if(InpMaxConsecutiveLosses > 0 && consecutiveLosses >= InpMaxConsecutiveLosses)
+      return false;
+
    if(InpMaxEquityDrawdownPercent > 0.0 && startBalance > 0.0)
    {
       double equity = AccountInfoDouble(ACCOUNT_EQUITY);
@@ -472,8 +476,16 @@ void OnTradeTransaction(const MqlTradeTransaction &trans, const MqlTradeRequest 
    if((ENUM_DEAL_ENTRY)HistoryDealGetInteger(deal, DEAL_ENTRY) != DEAL_ENTRY_OUT) return;
 
    double profit = HistoryDealGetDouble(deal, DEAL_PROFIT) + HistoryDealGetDouble(deal, DEAL_SWAP) + HistoryDealGetDouble(deal, DEAL_COMMISSION);
-   if(profit < 0.0 && InpCooldownMinutesAfterLoss > 0)
-      cooldownUntil = TimeCurrent() + InpCooldownMinutesAfterLoss * 60;
+   if(profit < 0.0)
+   {
+      consecutiveLosses++;
+      if(InpCooldownMinutesAfterLoss > 0)
+         cooldownUntil = TimeCurrent() + InpCooldownMinutesAfterLoss * 60;
+   }
+   else
+   {
+      consecutiveLosses = 0;
+   }
 }
 
 void DrawDashboard()
@@ -481,6 +493,7 @@ void DrawDashboard()
    string text = "Professional XAUUSD EA\n";
    text += "Spread: " + IntegerToString(SpreadPoints()) + " pts\n";
    text += "ATR: " + DoubleToString(BufferValue(hATR, 0, 1), _Digits) + "\n";
+   text += "Loss streak: " + IntegerToString(consecutiveLosses) + "\n";
    text += "Daily P/L: " + DoubleToString(PeriodProfit(PERIOD_D1), 2) + "\n";
    text += "Weekly P/L: " + DoubleToString(PeriodProfit(PERIOD_W1), 2) + "\n";
    text += "Monthly P/L: " + DoubleToString(PeriodProfit(PERIOD_MN1), 2);
