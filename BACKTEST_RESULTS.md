@@ -12,7 +12,7 @@ Leverage: `1:100`
 
 ## Current Promoted Robust No-Date Results
 
-The promoted default is now the no-date BOS + liquidity-sweep profile at `1.60%` risk with a `1.80` ATR stop:
+The promoted default is the no-date BOS + liquidity-sweep profile at `1.60%` risk with a `1.80` ATR stop and `3.50` ATR take-profit:
 
 - `InpRiskPercent=1.60`
 - `InpStopATRMultiplier=1.80`
@@ -74,6 +74,20 @@ Split-window aggregate:
 
 Conclusion: increasing risk from `1.50%` to `1.60%` improved full-period profit from `+$521.12` to `+$866.59`, improved monthly/quarter aggregate from `+$540.51` to `+$744.03`, and improved the tested worst monthly/quarter/split window from `-$148.99` to `$0.00`.
 
+## Latest Risk16 Neighborhood Stress Sweep
+
+These are stress-window probes only. They are queued for full validation and are not promoted yet.
+
+Top candidates:
+
+- `risk160_sl18_tp38`: 7 stress windows, total `+$798.00`, worst `$0.00`, best `+$526.51`, 2 profitable, 5 flat, 0 losing.
+- `risk160_sl16_tp38`: 7 stress windows, total `+$798.00`, worst `$0.00`, best `+$526.51`, 2 profitable, 5 flat, 0 losing.
+- `risk170_sl18_tp35`: 7 stress windows, total `+$785.49`, worst `$0.00`, best `+$509.73`, 2 profitable, 5 flat, 0 losing.
+- `risk165_sl18_tp35`: 7 stress windows, total `+$757.10`, worst `$0.00`, best `+$496.66`, 2 profitable, 5 flat, 0 losing.
+- Current promoted baseline `risk160_sl18_tp35`: 7 stress windows, total `+$744.03`, worst `$0.00`, best `+$483.59`, 2 profitable, 5 flat, 0 losing.
+
+Decision: queue the two `TP 3.80` candidates for full monthly, quarterly, yearly, half-year, and full-period validation. Do not promote them based on stress-window improvement alone.
+
 ## Aggressive Date-Block Benchmark
 
 Previous aggressive date-block validation:
@@ -97,6 +111,16 @@ Conclusion: the date-block profile remains the highest-profit historical benchma
 - No-trail reduced the worst quarter but cut total quarterly net too much.
 - Monthly ADX filters reduced profit without improving losing-month count.
 
+## Local MT5 Safety Note
+
+No new local MT5 validation should run while normal PC use is the priority. Local MT5 launch is gated behind `ALLOW_MT5_FOCUS_RISK=1` because `terminal64.exe` can still flash and steal focus on this machine.
+
+The local runner has been patched to attempt a separate hidden Windows desktop launch, but that must be verified in a controlled test before unattended local validation resumes.
+
 ## Next Target
 
-Increase profit from the robust BOS+sweep profile without bringing back losing monthly windows. The next sweeps should focus on conservative entry expansion, exact BOS/sweep definitions, and adding drawdown/profit-factor extraction from reports.
+Increase profit from the robust BOS+sweep profile without bringing back losing monthly windows.
+
+1. Validate `risk160_sl18_tp38` and `risk160_sl16_tp38` across monthly, quarterly, yearly, half-year, and full-period windows.
+2. Keep local MT5 tests blocked until the hidden-desktop runner has been deliberately verified.
+3. Add drawdown/profit-factor extraction from reports, not only final balance.
