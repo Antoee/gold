@@ -82,6 +82,8 @@ Prepared profit-search pack:
 - Next-batch builder: `work/build_next_profit_search_batch.ps1`
 - Promotion packet builder: `work/build_profit_promotion_packet.ps1`
 - Promotion packet outputs: `outputs/promotion_packets/`
+- Coverage audit report: `PROFIT_SEARCH_COVERAGE_AUDIT.md`
+- Coverage audit script: `work/audit_profit_search_coverage.ps1`
 - Contains 16 generated candidate profiles.
 - Phase 1: 128 fast triage configs using `Model=2`.
 - Phase 2: 55 real-tick validation configs using `Model=4`.
@@ -89,6 +91,7 @@ Prepared profit-search pack:
 - Current profit-search ranking status: all 21 profile/phase rows are `MissingEvidence`; no candidate is recommended yet.
 - Current next-batch status: 24 prioritized configs, starting with fast stress-window triage for the baseline and highest-priority TP/SL candidates.
 - Current promotion-packet status: baseline and `tp38_sl18` both correctly report `MISSING_EVIDENCE` because phase-2 reports have not been exported yet.
+- Current coverage audit status: 16 profiles, 5 phase-2 seeds, 1 aggressive-risk candidate (`risk20_tp38_sl18`) kept phase-1 only, with TP/SL, trailing, RR, risk, giveback, breakeven, baseline, and reduced-risk coverage present.
 - Phase 1 is pruning only; candidates still need real-tick phase 2 plus full promotion-gate validation before promotion.
 
 Local MT5 run safety:
