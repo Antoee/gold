@@ -5,7 +5,7 @@ Generated without launching MT5.
 ## GitHub EA Source
 
 - File: `Professional_XAUUSD_EA.mq5`
-- Version: `1.08`
+- Version: `1.09`
 - Status: committed to GitHub as a risk-first, no-martingale/no-grid XAUUSD EA source.
 - Compile status: not locally compiled in this remote-only pass.
 - Purpose: provides the repository with an actual EA source file matching the documented tester input surface and handoff configs.
@@ -13,11 +13,11 @@ Generated without launching MT5.
 ## Source Features Present In GitHub Version
 
 - No martingale, grid, averaging down, or recovery-system logic.
-- Promoted default inputs include `InpRiskPercent=1.60`, `InpStopATRMultiplier=1.80`, `InpTakeProfitATRMultiplier=3.50`, `InpMinimumConfirmations=2`, `InpMinADX=0.0`, `InpUseMTFTrendFilter=false`, `InpUseStructureTrailing=false`, `InpUseATRSpreadGuard=false`, `InpUseBreakEven=false`, and `InpUseTimeExit=false`.
-- Candidate override support includes TP `3.80`, equity drawdown guard `4.00`, confirmation-3 probes, break-even probes, ADX 18 probes, H1 MTF trend probes, structure-trailing probes, ATR-relative spread guard probes, and time-exit probes.
+- Promoted default inputs include `InpRiskPercent=1.60`, `InpStopATRMultiplier=1.80`, `InpTakeProfitATRMultiplier=3.50`, `InpMinimumConfirmations=2`, `InpMinADX=0.0`, `InpUseMTFTrendFilter=false`, `InpUseStructureTrailing=false`, `InpUseATRSpreadGuard=false`, `InpUseBreakEven=false`, `InpUseTimeExit=false`, and `InpUseNewsTimeFilter=false`.
+- Candidate override support includes TP `3.80`, equity drawdown guard `4.00`, confirmation-3 probes, break-even probes, ADX 18 probes, H1 MTF trend probes, structure-trailing probes, ATR-relative spread guard probes, time-exit probes, and optional news-time blackout probes.
 - BOS and liquidity-sweep confirmations.
-- Optional EMA cross, momentum candle, engulfing candle, ADX, ATR, adaptive trend-bias, higher-timeframe EMA trend filter, break-even, ATR trailing, structure trailing, time exit, session/day filter, Friday-evening cutoff, ATR-relative spread guard, and profit giveback guard modules.
-- Risk protections include native `OrderCalcProfit`, `OrderCalcMargin`, minimum-lot over-risk skip, period loss guards, equity drawdown guard, consecutive-loss guard, fixed spread/slippage controls, optional ATR-relative spread controls, cooldown, optional stale-trade close, and one-symbol position management.
+- Optional EMA cross, momentum candle, engulfing candle, ADX, ATR, adaptive trend-bias, higher-timeframe EMA trend filter, break-even, ATR trailing, structure trailing, time exit, session/day filter, Friday-evening cutoff, manual/NFP news-time blackout filter, ATR-relative spread guard, and profit giveback guard modules.
+- Risk protections include native `OrderCalcProfit`, `OrderCalcMargin`, minimum-lot over-risk skip, period loss guards, equity drawdown guard, consecutive-loss guard, fixed spread/slippage controls, optional ATR-relative spread controls, optional scheduled news blackout controls, cooldown, optional stale-trade close, and one-symbol position management.
 - Custom Strategy Tester scoring through `double OnTester()`.
 
 ## Static Safety Automation
