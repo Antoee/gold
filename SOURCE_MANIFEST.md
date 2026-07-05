@@ -1,48 +1,56 @@
 # Source Manifest
 
-Generated from the local EA source without launching MT5.
+Generated without launching MT5.
 
-## Local EA Source
+## GitHub EA Source
 
-- File: `outputs/Professional_XAUUSD_EA.mq5`
+- File: `Professional_XAUUSD_EA.mq5`
+- Status: committed to GitHub as a risk-first, no-martingale/no-grid XAUUSD EA source.
+- Compile status: not locally compiled in this remote-only pass.
+- Purpose: provides the repository with an actual EA source file matching the documented tester input surface and micro handoff configs.
+
+## Previous Local EA Source Record
+
+A fuller local source was previously verified but not uploaded during the local run:
+
+- Local file: `outputs/Professional_XAUUSD_EA.mq5`
 - Lines: `1706`
 - Size: `55572` bytes
 - SHA-256: `9243BFB13A89473424EDEA0291C69AFE4E6907B88217261C6545195E4EC4E360`
 - Last verified locally: `2026-07-04`
 
-## Verified Source Features
+The current GitHub source should be compiled and tested before live or promotion use. If the older 1,706-line local source is still preferred, upload it over `Professional_XAUUSD_EA.mq5` and confirm the SHA-256 above after download.
 
-- No martingale, grid, averaging down, or recovery-system logic in the source header.
+## Source Features Present In GitHub Version
+
+- No martingale, grid, averaging down, or recovery-system logic.
 - Promoted default inputs:
   - `InpRiskPercent=1.60`
   - `InpStopATRMultiplier=1.80`
   - `InpTakeProfitATRMultiplier=3.50`
-- Profit giveback guard is present:
-  - `InpUseProfitGivebackGuard`
-  - daily, weekly, and monthly giveback thresholds
-  - blocks new entries after protected period profit gives back too much
-- Custom Strategy Tester optimization scoring is present:
-  - `double OnTester()`
-  - `FITNESS_ROBUST_PROFIT`
-  - `FITNESS_NET_PROFIT`
-  - `FITNESS_RECOVERY_SHARPE`
-
-## Static Checks
-
-- Braces: `178` opening / `178` closing
-- Parentheses: `720` opening / `720` closing
-- MT5 was not launched during verification.
+  - `InpMinRiskReward=1.50`
+  - `InpUseBreakEven=false`
+- Candidate override support:
+  - `InpTakeProfitATRMultiplier=3.80`
+  - `InpMaxEquityDrawdownPercent=4.00`
+- BOS and liquidity-sweep confirmations.
+- Optional EMA cross, momentum candle, engulfing candle, ADX, ATR, adaptive trend-bias, break-even, ATR trailing, and profit giveback guard modules.
+- Risk protections:
+  - risk-based lot sizing
+  - daily/weekly/monthly loss guards
+  - equity drawdown guard
+  - spread/slippage controls
+  - cooldown after loss
+  - one-symbol position management
+- Custom Strategy Tester scoring through `double OnTester()`.
 
 ## Validation Pack State
 
-- Generated configs: `196`
-- Profiles:
-  - `risk160_sl16_tp38`
-  - `risk160_sl18_tp38`
-  - `risk160_sl18_tp35_giveback`
-  - `promoted_risk160_sl18_tp35`
-- Date range covered by prepared configs: `2024.01.01` through `2026.07.02`
+- Micro handoff configs committed: `8`
+- Micro handoff windows: `2024_Q1`, `2024_Q3`, `2025_Q2`, `2025_Q3`
+- Date range covered by prepared micro configs: `2024.01.01` through `2025.09.30`
+- Full promotion still requires parsed MT5 reports; no new profit evidence is implied by source/config commits.
 
-## GitHub Note
+## Safety Note
 
-The full `.mq5` source is currently verified locally. If GitHub upload tooling supports a non-truncated file transfer, upload `outputs/Professional_XAUUSD_EA.mq5` as `Professional_XAUUSD_EA.mq5` and confirm the SHA-256 above after download.
+MT5 was not launched during this update. Local tester execution remains locked while normal PC use must not be interrupted.
