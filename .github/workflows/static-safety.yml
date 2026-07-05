@@ -23,3 +23,22 @@ jobs:
 
       - name: Run static MQL compile preflight
         run: python work/static_mql_compile_preflight.py
+
+  powershell-validation:
+    name: Report and MT5 safety smoke tests
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run report parser smoke test
+        shell: powershell
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File work\test_report_collector_parser.ps1
+
+      - name: Run external micro-decision smoke test
+        shell: powershell
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File work\test_external_mt5_micro_decision.ps1
+
+      - name: Run MT5 local safety audit
+        shell: powershell
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File work\audit_mt5_local_safety.ps1
