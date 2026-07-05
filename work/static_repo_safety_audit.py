@@ -20,9 +20,18 @@ WARNINGS: list[str] = []
 def fail(message: str) -> None: FAILURES.append(message)
 def warn(message: str) -> None: WARNINGS.append(message)
 
+def repo_path(value: str) -> Path:
+    return ROOT / value.replace("\\", "/")
+
+def rel_path(path: Path) -> str:
+    try:
+        return str(path.relative_to(ROOT)).replace("\\", "/")
+    except ValueError:
+        return str(path).replace("\\", "/")
+
 def read_text(path: Path) -> str:
     if not path.exists():
-        fail(f"Missing required file: {path.relative_to(ROOT)}")
+        fail(f"Missing required file: {rel_path(path)}")
         return ""
     return path.read_text(encoding="utf-8", errors="replace")
 
@@ -107,20 +116,21 @@ def check_profiles() -> None:
             if actual != expected_value: fail(f"{rel} expected {key}={expected_value}, found {actual or '<missing>'}.")
 
 def check_manifest(path: Path, expected_rows: int, label: str) -> None:
-    if not path.exists(): fail(f"Missing {label} manifest: {path.relative_to(ROOT)}"); return
+    if not path.exists(): fail(f"Missing {label} manifest: {rel_path(path)}"); return
     with path.open("r", encoding="utf-8", newline="") as handle: rows = list(csv.DictReader(handle))
     if len(rows) != expected_rows: fail(f"{label} manifest expected {expected_rows} rows, found {len(rows)}.")
     for row in rows:
-        config = ROOT / row.get("HandoffConfig", "")
+        config_value = row.get("HandoffConfig", "")
+        config = repo_path(config_value)
         report = row.get("ExpectedReportName", "")
-        if not config.exists(): fail(f"{label} manifest points at missing config: {config.relative_to(ROOT)}")
+        if not config.exists(): fail(f"{label} manifest points at missing config: {config_value}")
         if not report: fail(f"{label} manifest row missing ExpectedReportName for {row.get('Profile')} {row.get('Window')}")
 
 def check_configs(config_dir: Path, label: str) -> None:
     configs = sorted(config_dir.glob("*.ini"))
-    if not configs: fail(f"No configs found for {label}: {config_dir.relative_to(ROOT)}"); return
+    if not configs: fail(f"No configs found for {label}: {rel_path(config_dir)}"); return
     for config in configs:
-        tester, inputs = parse_ini(config); rel = config.relative_to(ROOT)
+        tester, inputs = parse_ini(config); rel = rel_path(config)
         for key, expected in {"Expert": "Professional_XAUUSD_EA.ex5", "Symbol": "XAUUSD", "Period": "M15", "Model": "2", "Optimization": "0", "Visual": "0", "ReplaceReport": "1", "ShutdownTerminal": "1"}.items():
             actual = tester.get(key, "")
             if actual != expected: fail(f"{rel} expected [Tester] {key}={expected}, found {actual or '<missing>'}.")
