@@ -21,17 +21,25 @@ This project is currently in evidence-gathering mode. Do not promote a new profi
 
 The MT5 terminal used for testing must have `Professional_XAUUSD_EA.ex5` installed in its Experts folder before any handoff config can run. The micro configs reference that compiled expert directly.
 
-I could not verify the EA source at common GitHub paths during this remote-only pass, so do not treat the repo as fully runnable until the EA source/compiled expert is confirmed available in the tester environment.
+The GitHub source is present as `Professional_XAUUSD_EA.mq5`, but it has not been compiled or tested in this remote-only safety pass. Do not treat the repo as fully runnable until the EA source/compiled expert is confirmed available in the tester environment.
 
-## No-Interruption Rule
+## No-Popup Rule
 
-Do not run MT5 tests on the active desktop while normal PC use must remain uninterrupted. Local tester launch is intentionally locked by `work/MT5_LOCAL_LAUNCH_DISABLED.lock` and the helper must refuse to start while that file exists.
+Do not run MT5 tests on the active desktop while normal PC use must remain uninterrupted. Local tester launch is intentionally locked by `work/MT5_LOCAL_LAUNCH_DISABLED.lock`, and guarded helpers must refuse to start while that file exists.
+
+Current policy for this workspace:
+
+1. Do not launch `terminal.exe`, `terminal64.exe`, `metatester.exe`, `metatester64.exe`, `MetaEditor.exe`, or `metaeditor64.exe` from this thread.
+2. If any of those processes are already running and causing focus flashes, stop them only; do not start a replacement tester.
+3. Use `work/stop_mt5_stray_processes.ps1` only as a cleanup tool. It starts no MT5 process.
+4. Run future backtests on a separate Windows VM, spare machine, VPS, or a local window where focus stealing is explicitly acceptable.
+5. Keep `Visual=0`, `ShutdownTerminal=1`, dashboard disabled, and logging low in every tester config.
 
 Preferred options for testing:
 
 1. Run on a separate Windows VM or spare machine.
 2. Run only during a controlled local tester window when focus stealing is acceptable.
-3. Keep `Visual=0`, `ShutdownTerminal=1`, dashboard disabled, and logging low in every tester config.
+3. Import reports into this repo after they are exported.
 
 ## Fast First Pass
 
@@ -106,4 +114,4 @@ Import the reports, rebuild metrics, then refresh:
 
 ## Bottom Line
 
-The fastest safe route is not more unfiltered optimization. It is paired micro validation first, then full handoff validation, then promotion gates. Until those reports exist, keep the current promoted profile.
+The fastest safe route is not more unfiltered optimization on the active desktop. It is paired micro validation on a non-interrupting tester environment, then full handoff validation, then promotion gates. Until those reports exist, keep the current promoted profile.
