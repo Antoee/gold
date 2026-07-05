@@ -176,6 +176,12 @@ For the profit-search pack it scans for reports named like `outputs/profit_searc
 
 The collector extracts net profit, derived final balance, profit factor, expected payoff, trade count, maximal drawdown, and recovery factor when the report provides those fields. It marks missing or unparsed reports explicitly so incomplete validation cannot accidentally look complete.
 
+Before trusting a new report-import session, run the parser smoke test:
+
+- `work/test_report_collector_parser.ps1`
+
+The smoke test creates temporary synthetic MT5-style reports under `work/parser_smoke_tmp/`, runs the real collector, and verifies parsed/derived profit, balance, drawdown, profit factor, trade count, and recovery-factor fields. It does not launch MT5.
+
 ## Profit Search Ranking
 
 `work/analyze_profit_search.ps1` reads `outputs/PROFIT_SEARCH_REPORT_METRICS.csv` and writes:
