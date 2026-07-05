@@ -235,14 +235,24 @@ def check_configs(config_dir: Path, label: str) -> None:
                 fail(f"{rel} expected [Tester] {key}={expected}, found {actual or '<missing>'}.")
 
         profile_name = config.name.lower()
+        parent_name = str(config.parent.parent).lower()
         if "tp38" in profile_name:
             if first_value(inputs.get("InpTakeProfitATRMultiplier", "")) != "3.80":
                 fail(f"{rel} tp38 config must set InpTakeProfitATRMultiplier=3.80.")
             if first_value(inputs.get("InpMaxEquityDrawdownPercent", "")) != "4.00":
                 fail(f"{rel} protected candidate must set InpMaxEquityDrawdownPercent=4.00.")
-        if "session_variant" in str(config.parent.parent).lower() and "tp38" in profile_name:
+        if "session_variant" in parent_name and "tp38" in profile_name:
             if first_value(inputs.get("InpUseSessionFilter", "")) != "true":
                 fail(f"{rel} session candidate must enable InpUseSessionFilter=true.")
+        if "mtf_trend_probe" in parent_name:
+            actual_mtf = first_value(inputs.get("InpUseMTFTrendFilter", ""))
+            expected_mtf = "true" if "h1_mtf" in profile_name else "false"
+            if actual_mtf.lower() != expected_mtf:
+                fail(f"{rel} expected InpUseMTFTrendFilter={expected_mtf}, found {actual_mtf or '<missing>'}.")
+            if first_value(inputs.get("InpMTFTrendTimeframe", "")) != "PERIOD_H1":
+                fail(f"{rel} must pin InpMTFTrendTimeframe=PERIOD_H1.")
+            if first_value(inputs.get("InpMTFTrendEMA", "")) != "200":
+                fail(f"{rel} must pin InpMTFTrendEMA=200.")
         if "baseline_promoted" in profile_name:
             if first_value(inputs.get("InpTakeProfitATRMultiplier", "")) != "3.50":
                 fail(f"{rel} baseline config must set InpTakeProfitATRMultiplier=3.50.")
@@ -258,9 +268,11 @@ def main() -> int:
     check_profiles()
     check_manifest(ROOT / "outputs" / "micro_test_handoff" / "HANDOFF_MANIFEST.csv", 8, "stress micro")
     check_manifest(ROOT / "outputs" / "recent_oos_handoff" / "HANDOFF_MANIFEST.csv", 8, "recent OOS")
+    check_manifest(ROOT / "outputs" / "mtf_trend_probe_handoff" / "HANDOFF_MANIFEST.csv", 4, "MTF trend probe")
     check_manifest(ROOT / "outputs" / "session_variant_handoff" / "HANDOFF_MANIFEST.csv", 6, "session variant")
     check_configs(ROOT / "outputs" / "micro_test_handoff" / "configs", "stress micro")
     check_configs(ROOT / "outputs" / "recent_oos_handoff" / "configs", "recent OOS")
+    check_configs(ROOT / "outputs" / "mtf_trend_probe_handoff" / "configs", "MTF trend probe")
     check_configs(ROOT / "outputs" / "session_variant_handoff" / "configs", "session variant")
 
     print("Static repository safety audit")
