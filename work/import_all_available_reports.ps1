@@ -126,6 +126,8 @@ if(-not $SkipFullProfitSearch) {
 }
 
 if(-not $SkipReadinessRefresh) {
+   if(Test-File "work\build_fast_probe_readiness_snapshot.ps1") { Invoke-Step $rows "Refresh fast-probe readiness snapshot" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_fast_probe_readiness_snapshot.ps1" } "Review outputs\FAST_PROBE_READINESS_SNAPSHOT.md." "Fix fast-probe readiness script inputs." }
+   else { Add-Step $rows "Refresh fast-probe readiness snapshot" "SKIP" "work\build_fast_probe_readiness_snapshot.ps1 not found." "Restore fast-probe readiness builder if needed." }
    if(Test-File "work\build_profit_readiness_snapshot.ps1") { Invoke-Step $rows "Refresh profit readiness snapshot" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_profit_readiness_snapshot.ps1" } "Review outputs\PROFIT_READINESS_SNAPSHOT.md." "Fix readiness script inputs." }
    else { Add-Step $rows "Refresh profit readiness snapshot" "SKIP" "work\build_profit_readiness_snapshot.ps1 not found." "Restore readiness builder if needed." }
 }
