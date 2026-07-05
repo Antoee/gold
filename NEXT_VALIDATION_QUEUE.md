@@ -49,6 +49,8 @@ Offline robust-candidate ranking:
 - Promotion gate script: `work/analyze_promotion_gate.ps1`
 - Profile input audit report: `PROFILE_INPUT_AUDIT.md`
 - Profile input audit script: `work/audit_profile_inputs.ps1`
+- Validation report metrics: `VALIDATION_REPORT_METRICS.md`
+- Validation report collector: `work/collect_validation_results.ps1`
 - The current promoted split profile ranks #1 because it has the strongest multi-window evidence: 9 windows, `+$2,354.65`, worst `$0.00`, 0 losing windows.
 - The next unvalidated candidates are ranked #3 and #4: `risk160_sl16_tp38` and `risk160_sl18_tp38`.
 - Single-period high-profit date-block summaries are treated as benchmark-only by the analyzer because they do not prove start-window robustness.
@@ -64,8 +66,9 @@ Prepared validation pack:
 - Manifest: `work/generated_validation/VALIDATION_MANIFEST.csv`
 - Configs were generated without launching MT5.
 - The pack contains 196 configs: 49 windows for each of the three queued candidates plus the current promoted baseline.
+- Current collector status: 196 expected exported reports, 0 parsed, 196 missing. This is expected until MT5 reports are exported.
 
 Local MT5 run safety:
 
-- Local MT5 launch is disabled unless `ALLOW_MT5_FOCUS_RISK=1` is set and `work\ALLOW_MT5_LOCAL_LAUNCH.unlock` exists.
+- Local MT5 launch is hard-locked in the shared launcher and all legacy MT5 runner scripts unless `ALLOW_MT5_FOCUS_RISK=1` is set and `work\ALLOW_MT5_LOCAL_LAUNCH.unlock` exists.
 - The runner now attempts to launch MT5 on a separate hidden desktop, but this still needs a controlled test before unattended local validation resumes.
