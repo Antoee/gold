@@ -45,6 +45,14 @@ Before selecting configs manually, generate the current prioritized batch:
 
 The batch builder does not launch MT5. It ranks missing or unparsed profit-search configs so limited tester time goes first to fast stress-window pruning, report repairs, and then real-tick promotion evidence.
 
+To package the exact next configs for a safe testing window, run:
+
+- `work/build_next_test_handoff.ps1`
+- Output folder: `outputs/next_test_handoff/`
+- Output archive: `outputs/next_test_handoff.zip`
+
+The handoff builder copies only the currently prioritized batch configs and writes a run-order manifest. It does not launch MT5.
+
 ## Validation Order
 
 1. `risk160_sl16_tp38`
@@ -86,14 +94,15 @@ Configs use:
 3. For profit-search reports, rerun `work/collect_validation_results.ps1 -ManifestPath work\generated_profit_search\PROFIT_SEARCH_CONFIG_MANIFEST.csv -ReportNameTemplate profit_search_{PhaseShort}_{Profile}_{Set}_{Window} -OutResults outputs\PROFIT_SEARCH_REPORT_METRICS.csv -OutSummary outputs\PROFIT_SEARCH_REPORT_SUMMARY.csv -OutMarkdown outputs\PROFIT_SEARCH_REPORT_METRICS.md`.
 4. Rerun `work/analyze_profit_search.ps1`.
 5. Rerun `work/build_next_profit_search_batch.ps1`.
-6. For any promising candidate, rerun `work/build_profit_promotion_packet.ps1 -Profile <profile_name>`.
-7. Rerun `work/audit_profit_search_coverage.ps1` after changing the search pack.
-8. Rerun `work/analyze_robust_candidates.ps1`.
-9. Rerun `work/analyze_loss_control.ps1`.
-10. Rerun `work/analyze_promotion_gate.ps1`.
-11. Rerun `work/audit_profile_inputs.ps1` before trusting any changed `.set` file.
-12. Update `VALIDATION_REPORT_METRICS.md`, `PROFIT_SEARCH_REPORT_METRICS.md`, `PROFIT_SEARCH_RANKING.md`, `NEXT_PROFIT_SEARCH_BATCH.md`, `PROFIT_SEARCH_COVERAGE_AUDIT.md`, `outputs/promotion_packets/*`, `ROBUST_CANDIDATE_RANKING.md`, `LOSS_CONTROL_REPORT.md`, `PROMOTION_GATE_REPORT.md`, and `PROFILE_INPUT_AUDIT.md`.
-13. Promote only if all profit, no-loss, drawdown/profit-factor, promotion-gate, profile-input, and coverage checks pass.
+6. Rerun `work/build_next_test_handoff.ps1` if another batch is needed.
+7. For any promising candidate, rerun `work/build_profit_promotion_packet.ps1 -Profile <profile_name>`.
+8. Rerun `work/audit_profit_search_coverage.ps1` after changing the search pack.
+9. Rerun `work/analyze_robust_candidates.ps1`.
+10. Rerun `work/analyze_loss_control.ps1`.
+11. Rerun `work/analyze_promotion_gate.ps1`.
+12. Rerun `work/audit_profile_inputs.ps1` before trusting any changed `.set` file.
+13. Update `VALIDATION_REPORT_METRICS.md`, `PROFIT_SEARCH_REPORT_METRICS.md`, `PROFIT_SEARCH_RANKING.md`, `NEXT_PROFIT_SEARCH_BATCH.md`, `outputs/next_test_handoff/README.md`, `outputs/next_test_handoff/HANDOFF_MANIFEST.csv`, `PROFIT_SEARCH_COVERAGE_AUDIT.md`, `outputs/promotion_packets/*`, `ROBUST_CANDIDATE_RANKING.md`, `LOSS_CONTROL_REPORT.md`, `PROMOTION_GATE_REPORT.md`, and `PROFILE_INPUT_AUDIT.md`.
+14. Promote only if all profit, no-loss, drawdown/profit-factor, promotion-gate, profile-input, and coverage checks pass.
 
 ## Offline Report Collector
 
@@ -148,3 +157,14 @@ The packet decision is `MISSING_EVIDENCE`, `DO_NOT_PROMOTE`, or `PROMOTION_REVIE
 - `outputs/PROFIT_SEARCH_COVERAGE_AUDIT.md`
 
 Use it after changing the search pack to confirm candidate families and risk bands are intentional. Aggressive-risk candidates should stay phase-1 only unless later evidence justifies deeper real-tick validation.
+
+## Test Handoff
+
+`work/build_next_test_handoff.ps1` reads `outputs/NEXT_PROFIT_SEARCH_BATCH.csv` and writes:
+
+- `outputs/next_test_handoff/README.md`
+- `outputs/next_test_handoff/HANDOFF_MANIFEST.csv`
+- `outputs/next_test_handoff/configs/*.ini`
+- `outputs/next_test_handoff.zip`
+
+Use this when preparing a controlled tester session. The archive is a convenience artifact; the source of truth remains the batch CSV and generated configs.
