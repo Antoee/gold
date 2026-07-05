@@ -4,7 +4,7 @@
 //| No martingale. No grid. No averaging down. No recovery systems.   |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.01"
+#property version   "1.02"
 #property description "Professional risk-first XAUUSD EA with BOS/sweep entries and ATR exits."
 
 #include <Trade/Trade.mqh>
@@ -420,9 +420,12 @@ double CalculateLots(const double entry, const double sl)
       return 0.0;
 
    double moneyPerLot = distance / tickSize * tickValue;
-   double lots = riskMoney / moneyPerLot;
-   lots = MathFloor(lots / step) * step;
-   lots = MathMax(minLot, MathMin(maxLot, lots));
+   double rawLots = riskMoney / moneyPerLot;
+   double lots = MathFloor(rawLots / step) * step;
+   if(lots < minLot)
+      return 0.0;
+
+   lots = MathMin(maxLot, lots);
    return NormalizeDouble(lots, 2);
 }
 
@@ -471,6 +474,7 @@ void OnTradeTransaction(const MqlTradeTransaction &trans, const MqlTradeRequest 
       return;
    ulong deal = trans.deal;
    if(deal == 0) return;
+   if(!HistoryDealSelect(deal)) return;
    if(HistoryDealGetString(deal, DEAL_SYMBOL) != _Symbol) return;
    if((long)HistoryDealGetInteger(deal, DEAL_MAGIC) != InpMagicNumber) return;
    if((ENUM_DEAL_ENTRY)HistoryDealGetInteger(deal, DEAL_ENTRY) != DEAL_ENTRY_OUT) return;
