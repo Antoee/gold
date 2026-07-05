@@ -101,6 +101,19 @@ Current gate result:
 
 Use `work/analyze_promotion_gate.ps1` after every validation run and do not promote any candidate that fails this gate.
 
+## Profile Input Audit Status
+
+The offline profile input audit checks active `.set` files against the EA source so MT5 tester runs do not accidentally reuse cached inputs.
+
+Current audit result:
+
+- `ROBUST_BOS_SWEEP_PROFILE.set`: `PASS`, 35/35 critical inputs pinned.
+- `CANDIDATE_RISK16_SL18_TP38_PROFILE.set`: `PASS`, 35/35 critical inputs pinned.
+- `CANDIDATE_RISK16_SL16_TP38_PROFILE.set`: `PASS`, 35/35 critical inputs pinned.
+- `CANDIDATE_RISK16_SL18_TP35_GIVEBACK_PROFILE.set`: `PASS`, 35/35 critical inputs pinned.
+
+Use `work/audit_profile_inputs.ps1` after changing any `.set` file and before trusting validation output.
+
 ## Optimization Fitness Update
 
 The local EA source now includes an `OnTester()` custom optimization score so future MT5 optimization can rank robust candidates instead of sorting only by raw net profit.
@@ -145,7 +158,7 @@ Conclusion: the date-block profile remains the highest-profit historical benchma
 
 ## Local MT5 Safety Note
 
-No new local MT5 validation should run while normal PC use is the priority. Local MT5 launch is gated behind both `ALLOW_MT5_FOCUS_RISK=1` and `work/ALLOW_MT5_LOCAL_LAUNCH.unlock` because `terminal64.exe` can still flash and steal focus on this machine.
+No new local MT5 validation should run while normal PC use is the priority. Local MT5 launch is hard-locked in the shared launcher and legacy runner scripts behind both `ALLOW_MT5_FOCUS_RISK=1` and `work/ALLOW_MT5_LOCAL_LAUNCH.unlock` because `terminal64.exe` can still flash and steal focus on this machine.
 
 The local runner has been patched to attempt a separate hidden Windows desktop launch, but that must be verified in a controlled test before unattended local validation resumes.
 
@@ -155,4 +168,5 @@ Increase profit from the robust BOS+sweep profile without bringing back losing m
 
 1. Validate `risk160_sl18_tp38`, `risk160_sl16_tp38`, and `risk160_sl18_tp35_giveback` across monthly, quarterly, yearly, half-year, and full-period windows.
 2. Keep local MT5 tests blocked until the hidden-desktop runner has been deliberately verified.
-3. Add drawdown/profit-factor extraction from reports, not only final balance.
+3. Rerun `work/audit_profile_inputs.ps1` after `.set` edits and before trusting validation output.
+4. Add drawdown/profit-factor extraction from reports, not only final balance.
