@@ -24,6 +24,7 @@ The previous date-block profile remains an aggressive research benchmark: full p
 
 ## Included Files
 
+- `SOURCE_MANIFEST.md` - local EA source fingerprint and static verification state.
 - `BACKTEST_RESULTS.md` - detailed validation notes and rejected candidate results.
 - `NEXT_VALIDATION_QUEUE.md` - candidates waiting for full validation before promotion.
 - `NEXT_VALIDATION_RUNBOOK.md` - safe validation order and promotion gate.
