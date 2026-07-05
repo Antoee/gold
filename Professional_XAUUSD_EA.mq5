@@ -4,7 +4,7 @@
 //| No martingale. No grid. No averaging down. No recovery systems.   |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.07"
+#property version   "1.08"
 #property description "Professional risk-first XAUUSD EA with BOS/sweep entries and ATR exits."
 
 #include <Trade/Trade.mqh>
@@ -50,6 +50,8 @@ input bool   InpUseStructureTrailing         = false;
 input int    InpStructureTrailingLookback    = 12;
 input double InpStructureTrailingBufferATR   = 0.20;
 input double InpStructureTrailingTriggerATR  = 1.20;
+input bool   InpUseTimeExit                  = false;
+input int    InpMaxTradeMinutes              = 240;
 
 input double InpMaxDailyLossPercent          = 1.00;
 input double InpMaxWeeklyLossPercent         = 2.50;
@@ -612,6 +614,12 @@ void ManageOpenPosition()
    if((long)PositionGetInteger(POSITION_MAGIC) != InpMagicNumber)
       return;
 
+   if(TimeExitTriggered())
+   {
+      trade.PositionClose(_Symbol);
+      return;
+   }
+
    ENUM_POSITION_TYPE type = (ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
    double openPrice = PositionGetDouble(POSITION_PRICE_OPEN);
    double sl = PositionGetDouble(POSITION_SL);
@@ -649,6 +657,18 @@ void ManageOpenPosition()
 
    if(newSl != sl && newSl > 0.0)
       trade.PositionModify(_Symbol, NormalizeDouble(newSl, _Digits), tp);
+}
+
+bool TimeExitTriggered()
+{
+   if(!InpUseTimeExit || InpMaxTradeMinutes <= 0)
+      return false;
+
+   datetime openTime = (datetime)PositionGetInteger(POSITION_TIME);
+   if(openTime <= 0)
+      return false;
+
+   return (TimeCurrent() - openTime) >= InpMaxTradeMinutes * 60;
 }
 
 double StructureTrailingStop(const ENUM_POSITION_TYPE type, const double atr, const double price)
