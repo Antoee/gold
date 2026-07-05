@@ -28,7 +28,7 @@ Expected current state:
 
 - Optimization guardrails: 16 profiles audited, 16 require promotion review, top score `giveback25_tp38=87`
 - Fast-probe readiness: waiting for exported reports until the fast handoff packs are run/imported
-- Next fast batch: `STRESS_MICRO`, 8 rows, because it is the first pending gate
+- Next fast batch: `STRESS_SMOKE`, 2 rows, because it is the first pending gate
 - Readiness: `NOT_READY`
 - Report import preflight: parser, manifest, guardrails, handoff, and safety pass; reports still missing
 - Handoff integrity: PASS
@@ -48,32 +48,13 @@ Expected current state:
 
 Never promote from phase 1 or a single strong window. A replacement must pass profit, no-loss windows, drawdown/profit-factor checks, promotion gate, optimization guardrails, fast-probe readiness, next-batch selector review, profile-input audit, handoff integrity, local-safety audit, decision matrix, readiness snapshot, report-import preflight, strategy thesis, and coverage checks.
 
-## Optimization Guardrails
-
-`work/build_optimization_guardrail_audit.ps1` reads generated profile `.set` files and the profit-search manifest, then writes:
-
-- `outputs/OPTIMIZATION_GUARDRAIL_AUDIT.csv`
-- `outputs/OPTIMIZATION_GUARDRAIL_AUDIT.md`
-
-It ranks test-eligible candidates while flagging risk and overfit concerns before tester time is spent. Current top test-eligible profiles are `giveback25_tp38`, `giveback35_tp38`, `baseline_promoted`, and `tp38_sl18`; all require promotion review because equity drawdown guard is disabled and adaptive reverse needs walk-forward proof.
-
 ## Fast-Probe Readiness
 
-`work/build_fast_probe_readiness_snapshot.ps1` reads all imported fast-probe decision CSVs and writes:
-
-- `outputs/FAST_PROBE_READINESS_SNAPSHOT.csv`
-- `outputs/FAST_PROBE_READINESS_SNAPSHOT.md`
-
-It summarizes stress micro, recent-OOS, confirmation, break-even, ADX, spread guard, time exit, MTF trend, structure trailing, and session probes. Fast-probe evidence can justify expanding a candidate into broader validation, but it cannot promote a profile by itself.
+`work/build_fast_probe_readiness_snapshot.ps1` reads all imported fast-probe decision CSVs and writes `outputs/FAST_PROBE_READINESS_SNAPSHOT.md`. It summarizes stress smoke, stress micro, recent-OOS, confirmation, break-even, ADX, spread guard, time exit, MTF trend, structure trailing, and session probes. Fast-probe evidence can justify expanding a candidate into broader validation, but it cannot promote a profile by itself.
 
 ## Next Fast Batch Selector
 
-`work/build_next_fast_batch_selector.ps1` reads the fast experiment matrix and readiness snapshot, then writes:
-
-- `outputs/NEXT_FAST_BATCH_SELECTION.csv`
-- `outputs/NEXT_FAST_BATCH_SELECTION.md`
-
-It chooses the first pending or blocking gate in priority order, so tester time is spent on the smallest useful next batch instead of running everything at once.
+`work/build_next_fast_batch_selector.ps1` writes `outputs/NEXT_FAST_BATCH_SELECTION.md`. It chooses the first pending or blocking gate in priority order, so tester time is spent on the smallest useful next batch instead of running everything at once.
 
 ## Local MT5 Safety
 
