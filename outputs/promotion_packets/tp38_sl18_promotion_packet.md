@@ -5,7 +5,12 @@ Generated without launching MT5. This packet uses parsed report metrics only.
 - Decision: **MISSING_EVIDENCE**
 - Profile priority: 2
 - Phase-2 seed: True
-- Overrides: `InpTakeProfitATRMultiplier=3.80`
+- Overrides: `InpMaxEquityDrawdownPercent=4.00;InpTakeProfitATRMultiplier=3.80`
+- Guardrail status: REVIEW_REQUIRED
+- Guardrail score: 90
+- Equity drawdown guard: 4
+- Risk flags: ``
+- Overfit flags: `adaptive_reverse_requires_walk_forward`
 - Phase-1 parsed: 0/8
 - Phase-2 parsed: 0/11
 - Phase-2 total net profit: 0.00
@@ -19,6 +24,8 @@ Generated without launching MT5. This packet uses parsed report metrics only.
 
 | Gate | Status | Evidence | Required |
 |---|---|---|---|
+| Optimization guardrail tracked | PASS | status=REVIEW_REQUIRED, score=90, equity_dd=4, risk_flags=, overfit_flags=adaptive_reverse_requires_walk_forward | Guardrail audit exists and does not reject promotion |
+| Equity drawdown guard active or baseline anchor | PASS | InpMaxEquityDrawdownPercent=4 | Non-baseline candidates must use an equity drawdown guard |
 | Complete phase-2 evidence | FAIL | 0/11 parsed, 11 missing, 0 unparsed | Every phase-2 real-tick report parsed |
 | Full-period profit beats baseline | FAIL | missing full-period phase-2 report | > 866.59 |
 | Split aggregate beats baseline | FAIL | 0.00 | > 2354.65 |
