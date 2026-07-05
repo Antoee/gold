@@ -1,0 +1,5 @@
+Profile,Window,HandoffConfig,ExpectedReportName,Notes
+baseline_promoted,2026_YTD,outputs\breakeven_probe_handoff\configs\001_baseline_promoted_2026_ytd.ini,outputs\breakeven_probe_baseline_promoted_2026_YTD,Baseline promoted profile with break-even disabled
+baseline_promoted_be,2026_YTD,outputs\breakeven_probe_handoff\configs\002_baseline_promoted_be_2026_ytd.ini,outputs\breakeven_probe_baseline_promoted_be_2026_YTD,Promoted profile with break-even enabled at 1.00 ATR plus 0.05 ATR offset
+tp38_sl18,2026_YTD,outputs\breakeven_probe_handoff\configs\003_tp38_sl18_2026_ytd.ini,outputs\breakeven_probe_tp38_sl18_2026_YTD,TP 3.80 candidate with break-even disabled
+tp38_sl18_be,2026_YTD,outputs\breakeven_probe_handoff\configs\004_tp38_sl18_be_2026_ytd.ini,outputs\breakeven_probe_tp38_sl18_be_2026_YTD,TP 3.80 candidate with break-even enabled at 1.00 ATR plus 0.05 ATR offset
