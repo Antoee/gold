@@ -23,9 +23,10 @@ Generated without launching MT5.
 ## Static Safety Automation
 
 - Script: `work/static_repo_safety_audit.py`
+- MQL source preflight: `work/static_mql_compile_preflight.py`
 - Break-even pack audit: `work/static_breakeven_probe_audit.py`
 - Workflow: `.github/workflows/static-safety.yml`
-- Meaning: this is a safety/readiness gate only. It does not compile the EA and does not prove profit.
+- Meaning: these are safety/readiness gates only. They do not compile the EA in MetaEditor and do not prove profit.
 
 ## Validation Pack State
 
