@@ -30,10 +30,13 @@ Prepared profit-search pack:
 - Candidate manifest: `work/generated_profit_search/PROFIT_SEARCH_PROFILES.csv`
 - Config manifest: `work/generated_profit_search/PROFIT_SEARCH_CONFIG_MANIFEST.csv`
 - Metrics report: `PROFIT_SEARCH_REPORT_METRICS.md`
+- Ranking report: `PROFIT_SEARCH_RANKING.md`
+- Ranking script: `work/analyze_profit_search.ps1`
 - Candidate profiles: 16
 - Phase 1: 128 fast triage configs using `Model=2`.
 - Phase 2: 55 real-tick validation configs using `Model=4`.
 - Current collector status: 183 expected exported reports, 0 parsed, 183 missing.
+- Current ranking status: all 21 profile/phase rows are `MissingEvidence`; no candidate is recommended yet.
 - Phase 1 is pruning only; candidates still need real-tick phase 2 plus full promotion-gate validation before promotion.
 
 Local MT5 run safety:
