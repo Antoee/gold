@@ -115,7 +115,7 @@ $safetyFailures = @($safetyRows | Where-Object {
 })
 if($safetyRows.Count -gt 0 -and $safetyFailures.Count -eq 0) {
    Add-Row $rows "Local PC safety" "PASS" `
-      "$($safetyRows.Count) safety checks pass; local launch remains locked unless explicit unlock and env flag are set." `
+      "$($safetyRows.Count) safety checks pass; local launch remains locked unless both MT5 unlock flags and both unlock files are set." `
       "Keep MT5 local launch disabled while the PC is in normal use."
 } elseif($safetyRows.Count -gt 0) {
    Add-Row $rows "Local PC safety" "FAIL" `
