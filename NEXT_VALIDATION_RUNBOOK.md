@@ -86,12 +86,13 @@ Configs use:
 3. For profit-search reports, rerun `work/collect_validation_results.ps1 -ManifestPath work\generated_profit_search\PROFIT_SEARCH_CONFIG_MANIFEST.csv -ReportNameTemplate profit_search_{PhaseShort}_{Profile}_{Set}_{Window} -OutResults outputs\PROFIT_SEARCH_REPORT_METRICS.csv -OutSummary outputs\PROFIT_SEARCH_REPORT_SUMMARY.csv -OutMarkdown outputs\PROFIT_SEARCH_REPORT_METRICS.md`.
 4. Rerun `work/analyze_profit_search.ps1`.
 5. Rerun `work/build_next_profit_search_batch.ps1`.
-6. Rerun `work/analyze_robust_candidates.ps1`.
-7. Rerun `work/analyze_loss_control.ps1`.
-8. Rerun `work/analyze_promotion_gate.ps1`.
-9. Rerun `work/audit_profile_inputs.ps1` before trusting any changed `.set` file.
-10. Update `VALIDATION_REPORT_METRICS.md`, `PROFIT_SEARCH_REPORT_METRICS.md`, `PROFIT_SEARCH_RANKING.md`, `NEXT_PROFIT_SEARCH_BATCH.md`, `ROBUST_CANDIDATE_RANKING.md`, `LOSS_CONTROL_REPORT.md`, `PROMOTION_GATE_REPORT.md`, and `PROFILE_INPUT_AUDIT.md`.
-11. Promote only if all profit, no-loss, drawdown/profit-factor, promotion-gate, and profile-input checks pass.
+6. For any promising candidate, rerun `work/build_profit_promotion_packet.ps1 -Profile <profile_name>`.
+7. Rerun `work/analyze_robust_candidates.ps1`.
+8. Rerun `work/analyze_loss_control.ps1`.
+9. Rerun `work/analyze_promotion_gate.ps1`.
+10. Rerun `work/audit_profile_inputs.ps1` before trusting any changed `.set` file.
+11. Update `VALIDATION_REPORT_METRICS.md`, `PROFIT_SEARCH_REPORT_METRICS.md`, `PROFIT_SEARCH_RANKING.md`, `NEXT_PROFIT_SEARCH_BATCH.md`, `outputs/promotion_packets/*`, `ROBUST_CANDIDATE_RANKING.md`, `LOSS_CONTROL_REPORT.md`, `PROMOTION_GATE_REPORT.md`, and `PROFILE_INPUT_AUDIT.md`.
+12. Promote only if all profit, no-loss, drawdown/profit-factor, promotion-gate, and profile-input checks pass.
 
 ## Offline Report Collector
 
@@ -128,3 +129,12 @@ It ranks phase 1 and phase 2 separately. Phase 1 rows can only become phase-2 ca
 - `outputs/NEXT_PROFIT_SEARCH_BATCH.md`
 
 It skips parsed reports, prioritizes unparsed report repairs, prioritizes fast stress-window pruning, and then ranks real-tick validation windows for promotion evidence.
+
+## Promotion Packet
+
+`work/build_profit_promotion_packet.ps1 -Profile <profile_name>` reads parsed profit-search metrics and writes:
+
+- `outputs/promotion_packets/<profile>_promotion_packet.md`
+- `outputs/promotion_packets/<profile>_promotion_gates.csv`
+
+The packet decision is `MISSING_EVIDENCE`, `DO_NOT_PROMOTE`, or `PROMOTION_REVIEW`. Only `PROMOTION_REVIEW` can be considered for replacing the current default, and it still requires human review for drawdown shape, trade count, data quality, and overfitting risk.
