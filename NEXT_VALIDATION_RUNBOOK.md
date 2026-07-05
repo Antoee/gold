@@ -18,15 +18,17 @@ Run these without launching MT5:
 
 1. `work/build_optimization_guardrail_audit.ps1`
 2. `work/build_fast_probe_readiness_snapshot.ps1`
-3. `work/build_profit_readiness_snapshot.ps1`
-4. `work/build_report_import_preflight.ps1`
-5. `work/audit_handoff_config_integrity.ps1`
-6. `work/audit_mt5_local_safety.ps1`
+3. `work/build_next_fast_batch_selector.ps1`
+4. `work/build_profit_readiness_snapshot.ps1`
+5. `work/build_report_import_preflight.ps1`
+6. `work/audit_handoff_config_integrity.ps1`
+7. `work/audit_mt5_local_safety.ps1`
 
 Expected current state:
 
 - Optimization guardrails: 16 profiles audited, 16 require promotion review, top score `giveback25_tp38=87`
 - Fast-probe readiness: waiting for exported reports until the fast handoff packs are run/imported
+- Next fast batch: `STRESS_MICRO`, 8 rows, because it is the first pending gate
 - Readiness: `NOT_READY`
 - Report import preflight: parser, manifest, guardrails, handoff, and safety pass; reports still missing
 - Handoff integrity: PASS
@@ -35,7 +37,7 @@ Expected current state:
 ## After Reports Are Exported
 
 1. Copy MT5 HTML reports into the expected output folder.
-2. Rerun `work/import_all_available_reports.ps1` to import available reports, rebuild probe decisions, and refresh readiness snapshots.
+2. Rerun `work/import_all_available_reports.ps1` to import available reports, rebuild probe decisions, refresh readiness snapshots, and select the next smallest useful batch.
 3. Rerun `work/analyze_profit_search.ps1` if full profit-search reports changed.
 4. Rerun `work/build_result_import_decision_matrix.ps1` if full profit-search reports changed.
 5. Rerun `work/build_optimization_guardrail_audit.ps1`.
@@ -44,7 +46,7 @@ Expected current state:
 
 ## Promotion Rule
 
-Never promote from phase 1 or a single strong window. A replacement must pass profit, no-loss windows, drawdown/profit-factor checks, promotion gate, optimization guardrails, fast-probe readiness, profile-input audit, handoff integrity, local-safety audit, decision matrix, readiness snapshot, report-import preflight, strategy thesis, and coverage checks.
+Never promote from phase 1 or a single strong window. A replacement must pass profit, no-loss windows, drawdown/profit-factor checks, promotion gate, optimization guardrails, fast-probe readiness, next-batch selector review, profile-input audit, handoff integrity, local-safety audit, decision matrix, readiness snapshot, report-import preflight, strategy thesis, and coverage checks.
 
 ## Optimization Guardrails
 
@@ -63,6 +65,15 @@ It ranks test-eligible candidates while flagging risk and overfit concerns befor
 - `outputs/FAST_PROBE_READINESS_SNAPSHOT.md`
 
 It summarizes stress micro, recent-OOS, confirmation, break-even, ADX, spread guard, time exit, MTF trend, structure trailing, and session probes. Fast-probe evidence can justify expanding a candidate into broader validation, but it cannot promote a profile by itself.
+
+## Next Fast Batch Selector
+
+`work/build_next_fast_batch_selector.ps1` reads the fast experiment matrix and readiness snapshot, then writes:
+
+- `outputs/NEXT_FAST_BATCH_SELECTION.csv`
+- `outputs/NEXT_FAST_BATCH_SELECTION.md`
+
+It chooses the first pending or blocking gate in priority order, so tester time is spent on the smallest useful next batch instead of running everything at once.
 
 ## Local MT5 Safety
 
