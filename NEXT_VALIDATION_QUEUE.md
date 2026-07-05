@@ -88,12 +88,18 @@ Prepared profit-search pack:
 - Profit readiness snapshot: `PROFIT_READINESS_SNAPSHOT.md`
 - Profit readiness script: `work/build_profit_readiness_snapshot.ps1`
 - Promotion packet builder: `work/build_profit_promotion_packet.ps1`
+- Promotion packet outputs: `outputs/promotion_packets/`
 - Coverage audit report: `PROFIT_SEARCH_COVERAGE_AUDIT.md`
+- Coverage audit script: `work/audit_profit_search_coverage.ps1`
 - Next-test handoff folder: `outputs/next_test_handoff/`
 - Next-test handoff archive: `outputs/next_test_handoff.zip`
+- Next-test handoff builder: `work/build_next_test_handoff.ps1`
 - Handoff integrity report: `HANDOFF_CONFIG_INTEGRITY.md`
+- Handoff integrity script: `work/audit_handoff_config_integrity.ps1`
 - MT5 local safety audit report: `MT5_LOCAL_SAFETY_AUDIT.md`
+- MT5 local safety audit script: `work/audit_mt5_local_safety.ps1`
 - Strategy research brief: `STRATEGY_RESEARCH_BRIEF.md`
+- Strategy research brief script: `work/build_strategy_research_brief.ps1`
 - Contains 16 generated candidate profiles.
 - Phase 1: 128 fast triage configs using `Model=2`.
 - Phase 2: 55 real-tick validation configs using `Model=4`.
@@ -103,7 +109,7 @@ Prepared profit-search pack:
 - Current next-batch rationale: 24 phase-1 prune runs only, covering 6 profiles: 5 baseline-anchor runs, 8 evidence-backed TP `3.8` runs, and 11 adjacent TP-expansion runs. No phase-2 run is queued until phase-1 evidence exists.
 - Current result-import decision status: all 21 profile/phase rows are `RunMissingReports`; no profile is ready for phase-2 advancement or promotion-packet review until reports are exported and parsed.
 - Current profit readiness status: `NOT_READY`; keep the current promoted profile because no candidate has enough imported evidence to replace it.
-- Current parser smoke-test status: `REPORT_COLLECTOR_PARSER_SMOKE_PASS`; the offline collector can parse synthetic MT5-style reports and derived fields.
+- Current parser smoke-test status: `REPORT_COLLECTOR_PARSER_SMOKE_PASS`; the offline collector can parse synthetic MT5-style reports, derive fields, and mark incomplete reports as `UNPARSED` rather than usable evidence.
 - Current promotion-packet status: baseline and `tp38_sl18` both correctly report `MISSING_EVIDENCE` because phase-2 reports have not been exported yet.
 - Current coverage audit status: 16 profiles, 5 phase-2 seeds, 1 aggressive-risk candidate (`risk20_tp38_sl18`) kept phase-1 only, with TP/SL, trailing, RR, risk, giveback, breakeven, baseline, and reduced-risk coverage present.
 - Current handoff status: 24 prioritized `.ini` configs copied into `outputs/next_test_handoff/configs/` and zipped for the next safe testing window.
@@ -115,5 +121,5 @@ Prepared profit-search pack:
 Local MT5 run safety:
 
 - Local MT5 launch is hard-locked in the shared launcher and all legacy MT5 runner scripts unless `ALLOW_MT5_FOCUS_RISK=1` is set and `work\ALLOW_MT5_LOCAL_LAUNCH.unlock` exists.
-- No local MT5 run should be started while the PC is in normal use.
+- The runner now attempts to launch MT5 on a separate hidden desktop, but this still needs a controlled test before unattended local validation resumes.
 - A temporary local watchdog can be started with `work/mt5_focus_watchdog.ps1`; it stops `terminal64`, `metatester64`, and `MetaEditor` immediately if anything tries to open them. Stop it with `work/stop_mt5_focus_watchdog.ps1`.
