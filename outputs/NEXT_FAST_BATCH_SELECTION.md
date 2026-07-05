@@ -4,7 +4,7 @@ Offline selector only. No MT5 process was launched.
 
 | Recommendation | Gate | Priority | Rows | Status | Manifest | Reason | Next Action |
 |---|---|---:|---:|---|---|---|---|
-| RUN_NEXT_FAST_BATCH | STRESS_MICRO | 1 | 8 | WAITING_FOR_REPORTS | `outputs\micro_test_handoff\HANDOFF_MANIFEST.csv` | This is the first pending gate in priority order. Running it avoids spending time on lower-priority batches too early. | Run/import stress micro reports first. |
+| RUN_NEXT_FAST_BATCH | STRESS_SMOKE | 1 | 2 | WAITING_FOR_REPORTS | `outputs\stress_smoke_handoff\HANDOFF_MANIFEST.csv` | This is the first pending gate in priority order. Running it avoids spending time on lower-priority batches too early. | Run/import the 2-row stress smoke reports first. |
 
 ## Bottom Line
 
