@@ -8,7 +8,7 @@ Offline snapshot only. No MT5 process was launched.
 | Profit search evidence | WAITING_FOR_REPORTS | 21 of 21 profile/phase rows require missing MT5 reports; 0 rows are rejected. | Import/export the missing reports, then rerun collector, ranking, decision matrix, and promotion packet scripts. |
 | Promotion gate | TRACKED | Promotion gate rows available: 4. Current passing/default-related rows: 1. | Only promote a new candidate if its gate status passes all full, split, quarter, and month evidence checks. |
 | Handoff integrity | PASS | 24 handoff rows checked with no detected failures. | Use the handoff pack only during a controlled non-interrupting tester window. |
-| Local PC safety | PASS | 18 safety checks pass; local launch remains locked unless explicit unlock and env flag are set. | Keep MT5 local launch disabled while the PC is in normal use. |
+| Local PC safety | PASS | 24 safety checks pass; local launch remains locked unless both MT5 unlock flags and both unlock files are set. | Keep MT5 local launch disabled while the PC is in normal use. |
 | Replacement readiness | NOT_READY | No candidate has enough imported evidence to replace the current promoted profile. | Gather reports for the prioritized phase-1 batch without changing the live promoted settings. |
 
 ## Bottom Line
