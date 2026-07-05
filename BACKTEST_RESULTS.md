@@ -12,85 +12,22 @@ Leverage: `1:100`
 
 ## Current Promoted Robust No-Date Results
 
-The promoted default is the no-date BOS + liquidity-sweep profile at `1.60%` risk with a `1.80` ATR stop and `3.50` ATR take-profit:
-
-- `InpRiskPercent=1.60`
-- `InpStopATRMultiplier=1.80`
-- `InpTakeProfitATRMultiplier=3.50`
-- `InpMinRiskReward=1.50`
-- `InpUseDateBuyBlock=false`
-- `InpUseDateBuyBlock2=false`
-- `InpUseDateSellBlock=false`
-- `InpUseEMACrossEntry=false`
-- `InpUseMomentumCandle=false`
-- `InpUseEngulfing=false`
-- `InpUseBOS=true`
-- `InpUseLiquiditySweep=true`
-- `InpMinimumConfirmations=2`
+The promoted default is the no-date BOS + liquidity-sweep profile at `1.60%` risk with a `1.80` ATR stop and `3.50` ATR take-profit.
 
 Full real-tick period `2024.01.01` to `2026.07.02`:
 
 - Final balance: `$1,866.59`
 - Net profit: `+$866.59`
 
-Yearly windows:
+Monthly and quarterly validation:
 
-- `2024`: `+$483.59`
-- `2025`: `+$260.44`
-- `2026 YTD`: `$0.00`
+- Monthly total: `+$744.03`, worst month `$0.00`, 0 losing months.
+- Quarterly total: `+$744.03`, worst quarter `$0.00`, 0 losing quarters.
+- Split aggregate: `+$2,354.65`, worst split window `$0.00`, 0 losing split windows.
 
-Half-year windows:
-
-- `2024 H1`: `$0.00`
-- `2024 H2`: `+$483.59`
-- `2025 H1`: `$0.00`
-- `2025 H2`: `+$260.44`
-- `2026 H1`: `$0.00`
-
-Quarterly windows:
-
-- Quarterly total: `+$744.03`
-- Worst quarter: `$0.00`
-- Profitable quarters: `2`
-- Flat quarters: `8`
-- Losing quarters: `0`
-
-Monthly windows:
-
-- Monthly total: `+$744.03`
-- Worst month: `$0.00`
-- Profitable months: `2`
-- Flat months: `28`
-- Losing months: `0`
-
-Split-window aggregate:
-
-- Total across yearly/half/full windows: `+$2,354.65`
-- Worst split window: `$0.00`
-- Best split window: `+$866.59`
-- Profitable split windows: `5`
-- Flat split windows: `4`
-- Losing split windows: `0`
-
-Conclusion: increasing risk from `1.50%` to `1.60%` improved full-period profit from `+$521.12` to `+$866.59`, improved monthly/quarter aggregate from `+$540.51` to `+$744.03`, and improved the tested worst monthly/quarter/split window from `-$148.99` to `$0.00`.
-
-## Latest Risk16 Neighborhood Stress Sweep
-
-These are stress-window probes only. They are queued for full validation and are not promoted yet.
-
-Top candidates:
-
-- `risk160_sl18_tp38`: 7 stress windows, total `+$798.00`, worst `$0.00`, best `+$526.51`, 2 profitable, 5 flat, 0 losing.
-- `risk160_sl16_tp38`: 7 stress windows, total `+$798.00`, worst `$0.00`, best `+$526.51`, 2 profitable, 5 flat, 0 losing.
-- `risk170_sl18_tp35`: 7 stress windows, total `+$785.49`, worst `$0.00`, best `+$509.73`, 2 profitable, 5 flat, 0 losing.
-- `risk165_sl18_tp35`: 7 stress windows, total `+$757.10`, worst `$0.00`, best `+$496.66`, 2 profitable, 5 flat, 0 losing.
-- Current promoted baseline `risk160_sl18_tp35`: 7 stress windows, total `+$744.03`, worst `$0.00`, best `+$483.59`, 2 profitable, 5 flat, 0 losing.
-
-Decision: queue the two `TP 3.80` candidates for full monthly, quarterly, yearly, half-year, and full-period validation. Do not promote them based on stress-window improvement alone.
+Conclusion: this profile makes much less historical profit than the date-block benchmark, but it is the best validated no-date default so far.
 
 ## Promotion Gate Status
-
-The offline promotion gate requires full, split, quarterly, and monthly evidence before a profile can replace the promoted default. Each set must be profitable, have no losing windows, and have a worst window of at least `$0.00`.
 
 Current gate result:
 
@@ -99,11 +36,7 @@ Current gate result:
 - `risk160_sl16_tp38`: `MISSING_EVIDENCE`, missing full/split/quarter/month validation.
 - `risk160_sl18_tp35_giveback`: `MISSING_EVIDENCE`, missing full/split/quarter/month validation.
 
-Use `work/analyze_promotion_gate.ps1` after every validation run and do not promote any candidate that fails this gate.
-
 ## Profile Input Audit Status
-
-The offline profile input audit checks active `.set` files against the EA source so MT5 tester runs do not accidentally reuse cached inputs.
 
 Current audit result:
 
@@ -112,75 +45,47 @@ Current audit result:
 - `CANDIDATE_RISK16_SL16_TP38_PROFILE.set`: `PASS`, 35/35 critical inputs pinned.
 - `CANDIDATE_RISK16_SL18_TP35_GIVEBACK_PROFILE.set`: `PASS`, 35/35 critical inputs pinned.
 
-Use `work/audit_profile_inputs.ps1` after changing any `.set` file and before trusting validation output.
-
 ## Validation Report Collector Status
 
-Added `work/collect_validation_results.ps1` to parse exported MT5 report files without launching MT5.
+`work/collect_validation_results.ps1` parses exported MT5 report files without launching MT5.
 
-Current collector outputs:
+Current standard validation collector status:
 
-- `VALIDATION_REPORT_METRICS.csv`
-- `VALIDATION_REPORT_SUMMARY.csv`
-- `VALIDATION_REPORT_METRICS.md`
+- Expected reports: 196
+- Parsed reports: 0
+- Missing reports: 196
 
-Current status: 196 expected reports from `work/generated_validation/VALIDATION_MANIFEST.csv`, 0 parsed, 196 missing. This is expected until the prepared validation configs are actually run and MT5 exports reports.
+The collector normalizes net profit, derived final balance, profit factor, expected payoff, total trades, maximal drawdown, and recovery factor when reports exist.
 
-When reports are present, the collector normalizes net profit, derived final balance, profit factor, expected payoff, total trades, maximal drawdown, and recovery factor so candidate promotion can use more than final balance alone.
+## Profit Search Pack Status
 
-## Optimization Fitness Update
+A controlled profit-search pack was generated around the current robust no-date BOS/sweep profile.
 
-The local EA source now includes an `OnTester()` custom optimization score so future MT5 optimization can rank robust candidates instead of sorting only by raw net profit.
+Current generated pack:
 
-Default scoring mode:
+- `work/generated_profit_search/`
+- 16 candidate `.set` profiles.
+- 128 phase-1 fast triage configs using `Model=2`.
+- 55 phase-2 real-tick validation configs using `Model=4`.
+- `PROFIT_SEARCH_REPORT_METRICS.md` currently shows 183 expected reports, 0 parsed, 183 missing.
 
-- `InpTesterFitnessMode=FITNESS_ROBUST_PROFIT`
-- Rewards net profit and profit factor.
-- Penalizes results below `InpTesterMinTrades`.
-- Penalizes results below `InpTesterMinProfitFactor`.
-- Penalizes equity drawdown above `InpTesterMaxDrawdownPercent`.
+This pack searches TP/SL, trailing, risk, break-even, and profit-giveback neighborhoods without adding martingale, grid, averaging down, or date-specific recovery behavior.
 
-Alternate modes:
-
-- `FITNESS_NET_PROFIT`: raw net profit for benchmark comparisons.
-- `FITNESS_RECOVERY_SHARPE`: net profit weighted by recovery factor and Sharpe ratio, then penalized by the same robustness gates.
-
-No new MT5 test was run for this change because local terminal launches are currently blocked to avoid desktop focus issues.
+Phase 1 is for speed only. No candidate should be promoted from phase 1 results alone.
 
 ## Aggressive Date-Block Benchmark
 
-Previous aggressive date-block validation:
-
-- Full period net profit: `+$4,153.12`
-- Quarterly total: `+$1,661.98`
-- Monthly total: `+$1,903.98`
-- Monthly losing windows: `17` out of `30`
-- Worst quarter: `-$206.77`
-- Worst month: `-$83.61`
-
-Conclusion: the date-block profile remains the highest-profit historical benchmark, but it is not the promoted default because it relies on hard-coded date filters and has poor monthly start-window robustness.
-
-## Other Research
-
-- BOS+sweep at `1.50%` risk with `1.80` stop ATR: full period `+$521.12`, monthly `+$540.51`, 1 losing month; previous default.
-- BOS+sweep at `1.50%` risk with `2.20` stop ATR: full period `+$452.75`, monthly `+$487.46`, 1 losing month; older default.
-- BOS+sweep at `2.00%` risk: full period `+$321.72`, zero losing monthly/quarterly/split windows; safer but lower profit than `1.60%`.
-- Momentum+sweep no-date profile: full period `+$664.59`, but still had 17 losing months, so it was not promoted.
-- BOS/sweep variants with `MinimumConfirmations=1`, BOS-only, or sweep-only made more in stress windows but brought back larger losses.
-- No-trail reduced the worst quarter but cut total quarterly net too much.
-- Monthly ADX filters reduced profit without improving losing-month count.
+The previous date-block profile made `+$4,153.12` on the full period, but it used date-specific blocks and had 17 losing months out of 30. It remains a benchmark, not the promoted default.
 
 ## Local MT5 Safety Note
 
-No new local MT5 validation should run while normal PC use is the priority. Local MT5 launch is hard-locked in the shared launcher and legacy runner scripts behind both `ALLOW_MT5_FOCUS_RISK=1` and `work/ALLOW_MT5_LOCAL_LAUNCH.unlock` because `terminal64.exe` can still flash and steal focus on this machine.
-
-The local runner has been patched to attempt a separate hidden Windows desktop launch, but that must be verified in a controlled test before unattended local validation resumes.
+No new local MT5 validation should run while normal PC use is the priority. Local MT5 launch is hard-locked behind both `ALLOW_MT5_FOCUS_RISK=1` and `work/ALLOW_MT5_LOCAL_LAUNCH.unlock` because `terminal64.exe` can still flash and steal focus on this machine.
 
 ## Next Target
 
-Increase profit from the robust BOS+sweep profile without bringing back losing monthly windows.
+Increase profit from the robust BOS/sweep profile without bringing back losing monthly windows.
 
 1. Validate `risk160_sl18_tp38`, `risk160_sl16_tp38`, and `risk160_sl18_tp35_giveback` across monthly, quarterly, yearly, half-year, and full-period windows.
-2. Keep local MT5 tests blocked until the hidden-desktop runner has been deliberately verified.
-3. Rerun `work/audit_profile_inputs.ps1` after `.set` edits and before trusting validation output.
-4. Rerun `work/collect_validation_results.ps1` after MT5 reports are exported so drawdown/profit-factor evidence is included.
+2. Use the profit-search pack to identify higher-profit candidates.
+3. Validate survivors with real ticks and the promotion gate.
+4. Keep local MT5 tests blocked until the hidden-desktop runner has been deliberately verified.
