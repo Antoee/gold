@@ -39,6 +39,7 @@ The current GitHub source should be compiled and tested before live or promotion
   - risk-based lot sizing
   - daily/weekly/monthly loss guards
   - equity drawdown guard
+  - maximum consecutive loss guard through `InpMaxConsecutiveLosses`
   - spread/slippage controls
   - cooldown after loss
   - one-symbol position management
