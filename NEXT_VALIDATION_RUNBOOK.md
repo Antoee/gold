@@ -61,6 +61,14 @@ Before any handoff configs are run, audit their static safety settings:
 
 The integrity audit does not launch MT5. It verifies non-visual tester mode, shutdown-after-test, non-optimization mode, XAUUSD/M15, expected date/model/report names, critical EA inputs, and file hashes for the exact handoff configs.
 
+To audit local PC safety before any MT5-related work, run:
+
+- `work/audit_mt5_local_safety.ps1`
+- Output CSV: `outputs/MT5_LOCAL_SAFETY_AUDIT.csv`
+- Output report: `outputs/MT5_LOCAL_SAFETY_AUDIT.md`
+
+The safety audit does not launch MT5. It verifies the local unlock is absent, `ALLOW_MT5_FOCUS_RISK` is not enabled, no MT5/MetaEditor process is running, all runner scripts source the launch guard, no runner bypasses `Start-MT5Hidden`, the watchdog exists, and handoff config integrity still passes.
+
 To summarize the current strategy thesis before changing parameters, run:
 
 - `work/build_strategy_research_brief.ps1`
@@ -112,15 +120,16 @@ Configs use:
 5. Rerun `work/build_next_profit_search_batch.ps1`.
 6. Rerun `work/build_next_test_handoff.ps1` if another batch is needed.
 7. Rerun `work/audit_handoff_config_integrity.ps1` before any handoff run.
-8. Rerun `work/build_strategy_research_brief.ps1` to keep the strategy thesis current.
-9. For any promising candidate, rerun `work/build_profit_promotion_packet.ps1 -Profile <profile_name>`.
-10. Rerun `work/audit_profit_search_coverage.ps1` after changing the search pack.
-11. Rerun `work/analyze_robust_candidates.ps1`.
-12. Rerun `work/analyze_loss_control.ps1`.
-13. Rerun `work/analyze_promotion_gate.ps1`.
-14. Rerun `work/audit_profile_inputs.ps1` before trusting any changed `.set` file.
-15. Update `VALIDATION_REPORT_METRICS.md`, `PROFIT_SEARCH_REPORT_METRICS.md`, `PROFIT_SEARCH_RANKING.md`, `NEXT_PROFIT_SEARCH_BATCH.md`, `STRATEGY_RESEARCH_BRIEF.md`, `outputs/next_test_handoff/README.md`, `outputs/next_test_handoff/HANDOFF_MANIFEST.csv`, `HANDOFF_CONFIG_INTEGRITY.md`, `PROFIT_SEARCH_COVERAGE_AUDIT.md`, `outputs/promotion_packets/*`, `ROBUST_CANDIDATE_RANKING.md`, `LOSS_CONTROL_REPORT.md`, `PROMOTION_GATE_REPORT.md`, and `PROFILE_INPUT_AUDIT.md`.
-16. Promote only if all profit, no-loss, drawdown/profit-factor, promotion-gate, profile-input, handoff-integrity, strategy-thesis, and coverage checks pass.
+8. Rerun `work/audit_mt5_local_safety.ps1` before any local MT5 work is considered.
+9. Rerun `work/build_strategy_research_brief.ps1` to keep the strategy thesis current.
+10. For any promising candidate, rerun `work/build_profit_promotion_packet.ps1 -Profile <profile_name>`.
+11. Rerun `work/audit_profit_search_coverage.ps1` after changing the search pack.
+12. Rerun `work/analyze_robust_candidates.ps1`.
+13. Rerun `work/analyze_loss_control.ps1`.
+14. Rerun `work/analyze_promotion_gate.ps1`.
+15. Rerun `work/audit_profile_inputs.ps1` before trusting any changed `.set` file.
+16. Update `VALIDATION_REPORT_METRICS.md`, `PROFIT_SEARCH_REPORT_METRICS.md`, `PROFIT_SEARCH_RANKING.md`, `NEXT_PROFIT_SEARCH_BATCH.md`, `STRATEGY_RESEARCH_BRIEF.md`, `MT5_LOCAL_SAFETY_AUDIT.md`, `outputs/next_test_handoff/README.md`, `outputs/next_test_handoff/HANDOFF_MANIFEST.csv`, `HANDOFF_CONFIG_INTEGRITY.md`, `PROFIT_SEARCH_COVERAGE_AUDIT.md`, `outputs/promotion_packets/*`, `ROBUST_CANDIDATE_RANKING.md`, `LOSS_CONTROL_REPORT.md`, `PROMOTION_GATE_REPORT.md`, and `PROFILE_INPUT_AUDIT.md`.
+17. Promote only if all profit, no-loss, drawdown/profit-factor, promotion-gate, profile-input, handoff-integrity, local-safety, strategy-thesis, and coverage checks pass.
 
 ## Offline Report Collector
 
@@ -195,6 +204,15 @@ Use this when preparing a controlled tester session. The archive is a convenienc
 - `outputs/HANDOFF_CONFIG_INTEGRITY.md`
 
 It confirms the handoff configs are static-safe before a controlled run: `Visual=0`, `ShutdownTerminal=1`, `Optimization=0`, `Professional_XAUUSD_EA.ex5`, `XAUUSD`, `M15`, expected dates/models/report names, critical strategy inputs, and SHA256 hashes.
+
+## Local MT5 Safety
+
+`work/audit_mt5_local_safety.ps1` reads local runner scripts and current process/env state, then writes:
+
+- `outputs/MT5_LOCAL_SAFETY_AUDIT.csv`
+- `outputs/MT5_LOCAL_SAFETY_AUDIT.md`
+
+It is a fail-closed preflight for the user's PC usability requirement. Current expected result is `PASS`: no MT5 process running, local unlock absent, focus-risk env flag off, all MT5 runner scripts guarded, no raw terminal launch bypass, watchdog available, and handoff integrity passing.
 
 ## Strategy Research Brief
 
