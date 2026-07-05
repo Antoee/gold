@@ -114,6 +114,20 @@ Current audit result:
 
 Use `work/audit_profile_inputs.ps1` after changing any `.set` file and before trusting validation output.
 
+## Validation Report Collector Status
+
+Added `work/collect_validation_results.ps1` to parse exported MT5 report files without launching MT5.
+
+Current collector outputs:
+
+- `VALIDATION_REPORT_METRICS.csv`
+- `VALIDATION_REPORT_SUMMARY.csv`
+- `VALIDATION_REPORT_METRICS.md`
+
+Current status: 196 expected reports from `work/generated_validation/VALIDATION_MANIFEST.csv`, 0 parsed, 196 missing. This is expected until the prepared validation configs are actually run and MT5 exports reports.
+
+When reports are present, the collector normalizes net profit, derived final balance, profit factor, expected payoff, total trades, maximal drawdown, and recovery factor so candidate promotion can use more than final balance alone.
+
 ## Optimization Fitness Update
 
 The local EA source now includes an `OnTester()` custom optimization score so future MT5 optimization can rank robust candidates instead of sorting only by raw net profit.
@@ -169,4 +183,4 @@ Increase profit from the robust BOS+sweep profile without bringing back losing m
 1. Validate `risk160_sl18_tp38`, `risk160_sl16_tp38`, and `risk160_sl18_tp35_giveback` across monthly, quarterly, yearly, half-year, and full-period windows.
 2. Keep local MT5 tests blocked until the hidden-desktop runner has been deliberately verified.
 3. Rerun `work/audit_profile_inputs.ps1` after `.set` edits and before trusting validation output.
-4. Add drawdown/profit-factor extraction from reports, not only final balance.
+4. Rerun `work/collect_validation_results.ps1` after MT5 reports are exported so drawdown/profit-factor evidence is included.
