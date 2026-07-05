@@ -4,7 +4,7 @@
 //| No martingale. No grid. No averaging down. No recovery systems.   |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.05"
+#property version   "1.06"
 #property description "Professional risk-first XAUUSD EA with BOS/sweep entries and ATR exits."
 
 #include <Trade/Trade.mqh>
@@ -46,6 +46,10 @@ input double InpBreakEvenTriggerATR          = 1.00;
 input double InpBreakEvenOffsetATR           = 0.05;
 input bool   InpUseATRTrailing               = true;
 input double InpTrailingATRMultiplier        = 2.20;
+input bool   InpUseStructureTrailing         = false;
+input int    InpStructureTrailingLookback    = 12;
+input double InpStructureTrailingBufferATR   = 0.20;
+input double InpStructureTrailingTriggerATR  = 1.20;
 
 input double InpMaxDailyLossPercent          = 1.00;
 input double InpMaxWeeklyLossPercent         = 2.50;
@@ -620,8 +624,38 @@ void ManageOpenPosition()
       if(type == POSITION_TYPE_SELL && (newSl == 0.0 || trail < newSl)) newSl = trail;
    }
 
+   if(InpUseStructureTrailing && profitDistance >= atr * InpStructureTrailingTriggerATR)
+   {
+      double structureStop = StructureTrailingStop(type, atr, price);
+      if(type == POSITION_TYPE_BUY && structureStop > 0.0 && structureStop < price && (newSl == 0.0 || structureStop > newSl)) newSl = structureStop;
+      if(type == POSITION_TYPE_SELL && structureStop > 0.0 && structureStop > price && (newSl == 0.0 || structureStop < newSl)) newSl = structureStop;
+   }
+
    if(newSl != sl && newSl > 0.0)
       trade.PositionModify(_Symbol, NormalizeDouble(newSl, _Digits), tp);
+}
+
+double StructureTrailingStop(const ENUM_POSITION_TYPE type, const double atr, const double price)
+{
+   int lookback = InpStructureTrailingLookback;
+   if(lookback < 2) lookback = 2;
+   if(lookback > 100) lookback = 100;
+
+   double buffer = MathMax(0.0, InpStructureTrailingBufferATR) * atr;
+   if(type == POSITION_TYPE_BUY)
+   {
+      double swingLow = LowestLow(1, lookback);
+      double stop = swingLow - buffer;
+      if(stop <= 0.0 || stop >= price)
+         return 0.0;
+      return stop;
+   }
+
+   double swingHigh = HighestHigh(1, lookback);
+   double stop = swingHigh + buffer;
+   if(stop <= price)
+      return 0.0;
+   return stop;
 }
 
 void OnTradeTransaction(const MqlTradeTransaction &trans, const MqlTradeRequest &request, const MqlTradeResult &result)
