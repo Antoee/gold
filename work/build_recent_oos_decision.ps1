@@ -35,6 +35,14 @@ function To-Double {
    return $Default
 }
 
+function Get-DrawdownPercent {
+   param([object]$Row)
+   $value = Get-Value $Row "MaxDrawdownPercent" ""
+   if([string]::IsNullOrWhiteSpace([string]$value)) { $value = Get-Value $Row "EquityDrawdownPercent" "" }
+   if([string]::IsNullOrWhiteSpace([string]$value)) { $value = Get-Value $Row "DrawdownPercent" "" }
+   return To-Double $value
+}
+
 function Find-MetricRow {
    param([object[]]$Rows, [string]$Profile, [string]$Window)
    return $Rows | Where-Object { (Get-Value $_ "Profile") -eq $Profile -and (Get-Value $_ "Window") -eq $Window } | Select-Object -First 1
@@ -55,8 +63,8 @@ foreach($window in $windows) {
    $baselineStatus = Get-Value $baseline "Status" "MISSING_REPORT"
    $candidateNet = To-Double (Get-Value $candidate "NetProfit" "")
    $baselineNet = To-Double (Get-Value $baseline "NetProfit" "")
-   $candidateDd = To-Double (Get-Value $candidate "EquityDrawdownPercent" (Get-Value $candidate "DrawdownPercent" ""))
-   $baselineDd = To-Double (Get-Value $baseline "EquityDrawdownPercent" (Get-Value $baseline "DrawdownPercent" ""))
+   $candidateDd = Get-DrawdownPercent $candidate
+   $baselineDd = Get-DrawdownPercent $baseline
 
    $decision = "WAITING_FOR_REPORTS"
    $reason = "Candidate or baseline report is missing."
