@@ -44,7 +44,8 @@ function Add-Probe {
       return
    }
 
-   $decisionCounts = ($data | Group-Object { Get-Value $_ "Decision" "UNKNOWN" } | Sort-Object Name | ForEach-Object { "$($_.Name)=$($_.Count)" }) -join "; "
+   $decisionRows = @($data | ForEach-Object { [pscustomobject]@{ Decision = (Get-Value $_ "Decision" "UNKNOWN") } })
+   $decisionCounts = ($decisionRows | Group-Object -Property Decision | Sort-Object Name | ForEach-Object { "$($_.Name)=$($_.Count)" }) -join "; "
    $hasRepair = @($data | Where-Object { (Get-Value $_ "Decision") -eq "REPAIR_REPORT" }).Count -gt 0
    $hasWaiting = @($data | Where-Object { (Get-Value $_ "Decision") -eq "WAITING_FOR_REPORTS" }).Count -gt 0
    $hasReview = @($data | Where-Object { (Get-Value $_ "Decision") -like "*REVIEW*" }).Count -gt 0
