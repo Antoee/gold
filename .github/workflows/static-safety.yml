@@ -47,6 +47,10 @@ jobs:
         shell: powershell
         run: powershell -NoProfile -ExecutionPolicy Bypass -File work\test_generate_profit_search_configs.ps1
 
+      - name: Run report import preflight smoke test
+        shell: powershell
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File work\test_report_import_preflight.ps1
+
       - name: Run MT5 local safety audit
         shell: powershell
         run: powershell -NoProfile -ExecutionPolicy Bypass -File work\audit_mt5_local_safety.ps1
