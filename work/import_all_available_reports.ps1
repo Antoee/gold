@@ -3,6 +3,7 @@ param(
    [switch]$SkipMicro,
    [switch]$SkipRecentOos,
    [switch]$SkipConfirmationProbe,
+   [switch]$SkipBreakEvenProbe,
    [switch]$SkipADXFilterProbe,
    [switch]$SkipSpreadGuardProbe,
    [switch]$SkipTimeExitProbe,
@@ -58,6 +59,14 @@ if(-not $SkipConfirmationProbe) {
       Invoke-Step $rows "Import confirmation probe reports" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\collect_validation_results.ps1" -ManifestPath $manifest -ReportDir $ReportDir -ReportNameTemplate "confirmation_probe_{Profile}_{Window}" -OutResults "outputs\CONFIRMATION_PROBE_REPORT_METRICS.csv" -OutSummary "outputs\CONFIRMATION_PROBE_REPORT_SUMMARY.csv" -OutMarkdown "outputs\CONFIRMATION_PROBE_REPORT_METRICS.md" } "Run confirmation decision next." "Check report file names and parser coverage."
       if(Test-File "work\build_confirmation_probe_decision.ps1") { Invoke-Step $rows "Build confirmation probe decision" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_confirmation_probe_decision.ps1" } "Review outputs\CONFIRMATION_PROBE_DECISION.md." "Fix decision script inputs or report metrics." }
    } else { Add-Step $rows "Import confirmation probe reports" "SKIP" "Manifest not found: $manifest" "Create the confirmation handoff before importing confirmation reports." }
+}
+
+if(-not $SkipBreakEvenProbe) {
+   $manifest = "outputs\breakeven_probe_handoff\HANDOFF_MANIFEST.csv"
+   if(Test-File $manifest) {
+      Invoke-Step $rows "Import break-even probe reports" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\collect_validation_results.ps1" -ManifestPath $manifest -ReportDir $ReportDir -ReportNameTemplate "breakeven_probe_{Profile}_{Window}" -OutResults "outputs\BREAKEVEN_PROBE_REPORT_METRICS.csv" -OutSummary "outputs\BREAKEVEN_PROBE_REPORT_SUMMARY.csv" -OutMarkdown "outputs\BREAKEVEN_PROBE_REPORT_METRICS.md" } "Run break-even decision next." "Check report file names and parser coverage."
+      if(Test-File "work\build_breakeven_probe_decision.ps1") { Invoke-Step $rows "Build break-even probe decision" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_breakeven_probe_decision.ps1" } "Review outputs\BREAKEVEN_PROBE_DECISION.md." "Fix decision script inputs or report metrics." }
+   } else { Add-Step $rows "Import break-even probe reports" "SKIP" "Manifest not found: $manifest" "Create the break-even handoff before importing break-even reports." }
 }
 
 if(-not $SkipADXFilterProbe) {
