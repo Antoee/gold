@@ -5,9 +5,11 @@ param(
    [string]$ReadinessPath = "outputs\PROFIT_READINESS_SNAPSHOT.csv",
    [string]$GuardrailPath = "outputs\OPTIMIZATION_GUARDRAIL_AUDIT.csv",
    [string]$HandoffIntegrityPath = "outputs\HANDOFF_CONFIG_INTEGRITY.csv",
-   [string]$MicroHandoffIntegrityPath = "outputs\MICRO_HANDOFF_CONFIG_INTEGRITY.csv",
-   [string]$MicroDecisionPath = "outputs\MICRO_TEST_DECISION.csv",
+   [string]$MicroHandoffIntegrityPath = "outputs\RISK_ADJUSTED_MICRO_HANDOFF_INTEGRITY.csv",
    [string]$SafetyAuditPath = "outputs\MT5_LOCAL_SAFETY_AUDIT.csv",
+   [string]$CompileStatusPath = "outputs\MT5_COMPILE_STATUS.csv",
+   [string]$ExternalPackageAuditPath = "outputs\EXTERNAL_MT5_PACKAGE_AUDIT.csv",
+   [string]$ExternalMicroDecisionPath = "outputs\EXTERNAL_MT5_MICRO_DECISION.csv",
    [string]$BatchPath = "outputs\NEXT_PROFIT_SEARCH_BATCH.csv",
    [string]$PromotionPacketDir = "outputs\promotion_packets",
    [string]$OutCsv = "outputs\REPORT_IMPORT_PREFLIGHT.csv",
@@ -19,8 +21,11 @@ $ErrorActionPreference = "Stop"
 
 function Read-CsvSafe {
    param([string]$Path)
-   if(Test-Path -LiteralPath $Path) { return @(Import-Csv -LiteralPath $Path) }
-   return @()
+   $rows = @()
+   if(Test-Path -LiteralPath $Path) {
+      $rows = @(Import-Csv -LiteralPath $Path)
+   }
+   return ,$rows
 }
 
 function Add-Row {
@@ -47,26 +52,23 @@ function Get-Value {
       [object]$Default = ""
    )
 
-   if($null -eq $Row) { return $Default }
    $property = $Row.PSObject.Properties[$Name]
    if($null -eq $property) { return $Default }
    return $property.Value
 }
 
-function Get-FailureRows {
-   param([object[]]$Rows)
-   return @($Rows | Where-Object { (Get-Value $_ "Passed") -eq "False" -or (Get-Value $_ "Status") -eq "FAIL" })
-}
-
 $rows = New-Object System.Collections.Generic.List[object]
+
 $manifest = Read-CsvSafe $ManifestPath
 $metrics = Read-CsvSafe $MetricsPath
 $decisions = Read-CsvSafe $DecisionMatrixPath
 $readiness = Read-CsvSafe $ReadinessPath
 $guardrail = Read-CsvSafe $GuardrailPath
+$compileStatus = Read-CsvSafe $CompileStatusPath
+$externalPackageAudit = Read-CsvSafe $ExternalPackageAuditPath
+$externalMicroDecision = Read-CsvSafe $ExternalMicroDecisionPath
 $handoff = Read-CsvSafe $HandoffIntegrityPath
 $microHandoff = Read-CsvSafe $MicroHandoffIntegrityPath
-$microDecision = Read-CsvSafe $MicroDecisionPath
 $safety = Read-CsvSafe $SafetyAuditPath
 $batch = Read-CsvSafe $BatchPath
 
@@ -83,14 +85,35 @@ try {
 } catch {
    $parserEvidence = $_.Exception.Message
 }
-Add-Row $rows "Parser smoke" $parserStatus $parserEvidence $(if($parserStatus -eq "PASS") { "Parser can be trusted for import preflight." } else { "Fix parser smoke failure before importing reports." })
+
+Add-Row $rows "Parser smoke" $parserStatus $parserEvidence `
+   $(if($parserStatus -eq "PASS") { "Parser can be trusted for import preflight." } else { "Fix parser smoke failure before importing reports." })
+
+$externalDecisionSmokeStatus = "FAIL"
+$externalDecisionSmokeEvidence = ""
+try {
+   $externalDecisionSmokeOutput = & powershell -NoProfile -ExecutionPolicy Bypass -File "work\test_external_mt5_micro_decision.ps1" 2>&1
+   if(($externalDecisionSmokeOutput | Out-String) -match "EXTERNAL_MT5_MICRO_DECISION_SMOKE_PASS") {
+      $externalDecisionSmokeStatus = "PASS"
+      $externalDecisionSmokeEvidence = "EXTERNAL_MT5_MICRO_DECISION_SMOKE_PASS"
+   } else {
+      $externalDecisionSmokeEvidence = ($externalDecisionSmokeOutput | Out-String).Trim()
+   }
+} catch {
+   $externalDecisionSmokeEvidence = $_.Exception.Message
+}
+
+Add-Row $rows "External micro decision smoke" $externalDecisionSmokeStatus $externalDecisionSmokeEvidence `
+   $(if($externalDecisionSmokeStatus -eq "PASS") { "External micro decision pass/reject/repair/wait logic is covered." } else { "Fix external micro decision smoke failure before trusting returned package reports." })
 
 if($manifest.Count -gt 0) {
    $phase1 = @($manifest | Where-Object { (Get-Value $_ "Phase") -eq "phase1_fast_triage" }).Count
    $phase2 = @($manifest | Where-Object { (Get-Value $_ "Phase") -eq "phase2_real_tick_validation" }).Count
-   Add-Row $rows "Manifest" "PASS" "$($manifest.Count) expected profit-search configs: $phase1 phase-1, $phase2 phase-2." "Use the manifest as the source of truth for expected report names."
+   Add-Row $rows "Manifest" "PASS" "$($manifest.Count) expected profit-search configs: $phase1 phase-1, $phase2 phase-2." `
+      "Use the manifest as the source of truth for expected report names."
 } else {
-   Add-Row $rows "Manifest" "FAIL" "Manifest missing or empty: $ManifestPath" "Regenerate profit-search configs before importing reports."
+   Add-Row $rows "Manifest" "FAIL" "Manifest missing or empty: $ManifestPath" `
+      "Regenerate profit-search configs before importing reports."
 }
 
 if($metrics.Count -gt 0) {
@@ -98,35 +121,43 @@ if($metrics.Count -gt 0) {
    $missing = @($metrics | Where-Object { (Get-Value $_ "Status") -eq "MISSING_REPORT" }).Count
    $unparsed = @($metrics | Where-Object { (Get-Value $_ "Status") -eq "UNPARSED" }).Count
    $status = if($parsed -gt 0 -and $unparsed -eq 0) { "HAS_PARSED_REPORTS" } elseif($unparsed -gt 0) { "HAS_UNPARSED_REPORTS" } else { "WAITING_FOR_REPORTS" }
-   Add-Row $rows "Imported metrics" $status "$parsed parsed, $missing missing, $unparsed unparsed across $($metrics.Count) expected rows." $(if($parsed -gt 0) { "Rerun ranking, decision matrix, readiness snapshot, and promotion packets as needed." } else { "Export/import reports before expecting promotion decisions." })
+   Add-Row $rows "Imported metrics" $status "$parsed parsed, $missing missing, $unparsed unparsed across $($metrics.Count) expected rows." `
+      $(if($parsed -gt 0) { "Rerun ranking, decision matrix, readiness snapshot, and promotion packets as needed." } else { "Export/import reports before expecting promotion decisions." })
 } else {
-   Add-Row $rows "Imported metrics" "FAIL" "Metrics missing or empty: $MetricsPath" "Run work\collect_validation_results.ps1 for the profit-search manifest."
+   Add-Row $rows "Imported metrics" "FAIL" "Metrics missing or empty: $MetricsPath" `
+      "Run work\collect_validation_results.ps1 for the profit-search manifest."
 }
 
 if($decisions.Count -gt 0) {
    $decisionCounts = ($decisions | Group-Object Decision | Sort-Object Name | ForEach-Object { "$($_.Name)=$($_.Count)" }) -join "; "
    $ready = @($decisions | Where-Object { (Get-Value $_ "Decision") -in @("AdvanceToPhase2", "BuildPromotionPacket") }).Count
-   Add-Row $rows "Decision matrix" $(if($ready -gt 0) { "READY_ACTIONS" } else { "NO_READY_ACTIONS" }) $decisionCounts $(if($ready -gt 0) { "Follow decision matrix actions before changing promoted settings." } else { "Continue collecting reports; no candidate action is ready." })
+   Add-Row $rows "Decision matrix" $(if($ready -gt 0) { "READY_ACTIONS" } else { "NO_READY_ACTIONS" }) $decisionCounts `
+      $(if($ready -gt 0) { "Follow decision matrix actions before changing promoted settings." } else { "Continue collecting reports; no candidate action is ready." })
 } else {
-   Add-Row $rows "Decision matrix" "FAIL" "Decision matrix missing or empty: $DecisionMatrixPath" "Run work\build_result_import_decision_matrix.ps1."
+   Add-Row $rows "Decision matrix" "FAIL" "Decision matrix missing or empty: $DecisionMatrixPath" `
+      "Run work\build_result_import_decision_matrix.ps1."
 }
 
 if($readiness.Count -gt 0) {
    $replacement = $readiness | Where-Object { (Get-Value $_ "Area") -eq "Replacement readiness" } | Select-Object -First 1
    $status = if($replacement) { Get-Value $replacement "Status" } else { "UNKNOWN" }
    $evidence = if($replacement) { Get-Value $replacement "Evidence" } else { "Replacement readiness row missing." }
-   Add-Row $rows "Profit readiness" $status $evidence $(if($status -eq "NOT_READY") { "Keep current promoted profile." } else { "Build promotion packet and review all gates." })
+   Add-Row $rows "Profit readiness" $status $evidence `
+      $(if($status -eq "NOT_READY") { "Keep current promoted profile." } else { "Build promotion packet and review all gates." })
 } else {
-   Add-Row $rows "Profit readiness" "FAIL" "Readiness snapshot missing or empty: $ReadinessPath" "Run work\build_profit_readiness_snapshot.ps1."
+   Add-Row $rows "Profit readiness" "FAIL" "Readiness snapshot missing or empty: $ReadinessPath" `
+      "Run work\build_profit_readiness_snapshot.ps1."
 }
 
 if($guardrail.Count -gt 0) {
    $statusCounts = ($guardrail | Group-Object GuardrailStatus | Sort-Object Name | ForEach-Object { "$($_.Name)=$($_.Count)" }) -join "; "
    $top = $guardrail | Sort-Object @{ Expression = { [int]$_.GuardrailScore }; Descending = $true }, Profile | Select-Object -First 1
    $topEvidence = if($top) { "Top score: $($top.Profile)=$($top.GuardrailScore). $statusCounts" } else { $statusCounts }
-   Add-Row $rows "Optimization guardrails" "TRACKED" $topEvidence "Use guardrail status to prioritize tester time and block promotion shortcuts."
+   Add-Row $rows "Optimization guardrails" "TRACKED" $topEvidence `
+      "Use guardrail status to prioritize tester time and block promotion shortcuts."
 } else {
-   Add-Row $rows "Optimization guardrails" "FAIL" "Guardrail audit missing or empty: $GuardrailPath" "Run work\build_optimization_guardrail_audit.ps1."
+   Add-Row $rows "Optimization guardrails" "FAIL" "Guardrail audit missing or empty: $GuardrailPath" `
+      "Run work\build_optimization_guardrail_audit.ps1."
 }
 
 if($batch.Count -gt 0) {
@@ -138,50 +169,88 @@ if($batch.Count -gt 0) {
    $guardrailGate = $packetRows | Where-Object { (Get-Value $_ "Gate") -eq "Optimization guardrail tracked" } | Select-Object -First 1
    $equityGate = $packetRows | Where-Object { (Get-Value $_ "Gate") -eq "Equity drawdown guard active or baseline anchor" } | Select-Object -First 1
    $packetOk = $packetRows.Count -gt 0 -and $null -ne $guardrailGate -and $null -ne $equityGate
-   Add-Row $rows "Promotion packet" $(if($packetOk) { "TRACKED" } else { "FAIL" }) $(if($packetOk) { "Top queued profile $topProfile has promotion gates with guardrail/equity checks." } else { "Missing or stale promotion gates for top queued profile $topProfile." }) $(if($packetOk) { "Refresh packet after importing reports." } else { "Run work\build_profit_promotion_packet.ps1 -Profile $topProfile." })
+   Add-Row $rows "Promotion packet" $(if($packetOk) { "TRACKED" } else { "FAIL" }) `
+      $(if($packetOk) { "Top queued profile $topProfile has promotion gates with guardrail/equity checks." } else { "Missing or stale promotion gates for top queued profile $topProfile." }) `
+      $(if($packetOk) { "Refresh packet after importing reports." } else { "Run work\build_profit_promotion_packet.ps1 -Profile $topProfile." })
 } else {
-   Add-Row $rows "Promotion packet" "FAIL" "Batch missing or empty: $BatchPath" "Run work\build_next_profit_search_batch.ps1."
+   Add-Row $rows "Promotion packet" "FAIL" "Batch missing or empty: $BatchPath" `
+      "Run work\build_next_profit_search_batch.ps1."
 }
 
-$handoffFailures = Get-FailureRows $handoff
+$handoffFailures = @($handoff | Where-Object { (Get-Value $_ "Passed") -eq "False" -or (Get-Value $_ "Status") -eq "FAIL" })
 if($handoff.Count -gt 0 -and $handoffFailures.Count -eq 0) {
-   Add-Row $rows "Handoff integrity" "PASS" "$($handoff.Count) rows checked, 0 failures." "Handoff configs remain statically safe for a controlled tester window."
+   Add-Row $rows "Handoff integrity" "PASS" "$($handoff.Count) rows checked, 0 failures." `
+      "Handoff configs remain statically safe for a controlled tester window."
 } elseif($handoff.Count -gt 0) {
-   Add-Row $rows "Handoff integrity" "FAIL" "$($handoffFailures.Count) failed rows." "Fix handoff integrity before running tests."
+   Add-Row $rows "Handoff integrity" "FAIL" "$($handoffFailures.Count) failed rows." `
+      "Fix handoff integrity before running tests."
 } else {
-   Add-Row $rows "Handoff integrity" "FAIL" "Handoff integrity report missing or empty: $HandoffIntegrityPath" "Run work\audit_handoff_config_integrity.ps1."
+   Add-Row $rows "Handoff integrity" "FAIL" "Handoff integrity report missing or empty: $HandoffIntegrityPath" `
+      "Run work\audit_handoff_config_integrity.ps1."
 }
 
-$microFailures = Get-FailureRows $microHandoff
+$microFailures = @($microHandoff | Where-Object { (Get-Value $_ "Passed") -eq "False" -or (Get-Value $_ "Status") -eq "FAIL" })
 if($microHandoff.Count -gt 0 -and $microFailures.Count -eq 0) {
-   Add-Row $rows "Micro handoff" "PASS" "$($microHandoff.Count) paired stress-window rows prepared." "Use micro handoff first when tester time or desktop focus is constrained."
+   Add-Row $rows "Micro handoff" "PASS" "$($microHandoff.Count) rows checked, 0 failures." `
+      "Use the micro handoff first when tester time is limited."
 } elseif($microHandoff.Count -gt 0) {
-   Add-Row $rows "Micro handoff" "FAIL" "$($microFailures.Count) failed rows." "Fix micro handoff integrity before using the fast test batch."
+   Add-Row $rows "Micro handoff" "FAIL" "$($microFailures.Count) failed rows." `
+      "Fix micro handoff integrity before running quick tests."
 } else {
-   Add-Row $rows "Micro handoff" "MISSING" "Micro handoff report missing or empty: $MicroHandoffIntegrityPath" "Run work\build_micro_test_handoff.ps1 and audit the micro manifest."
+   Add-Row $rows "Micro handoff" "FAIL" "Micro handoff integrity report missing or empty: $MicroHandoffIntegrityPath" `
+      "Run work\build_next_test_handoff.ps1 with outputs\RISK_ADJUSTED_MICRO_BATCH.csv, then audit it with work\audit_handoff_config_integrity.ps1."
 }
 
-if($microDecision.Count -gt 0) {
-   $decisionCounts = ($microDecision | Group-Object Decision | Sort-Object Name | ForEach-Object { "$($_.Name)=$($_.Count)" }) -join "; "
-   $hasFail = @($microDecision | Where-Object { (Get-Value $_ "Decision") -like "FAIL_*" }).Count -gt 0
-   $hasRepair = @($microDecision | Where-Object { (Get-Value $_ "Decision") -eq "REPAIR_REPORT" }).Count -gt 0
-   $hasWaiting = @($microDecision | Where-Object { (Get-Value $_ "Decision") -eq "WAITING_FOR_REPORTS" }).Count -gt 0
-   $hasReview = @($microDecision | Where-Object { (Get-Value $_ "Decision") -eq "REVIEW_DRAWDOWN" }).Count -gt 0
-   $allPass = $microDecision.Count -gt 0 -and @($microDecision | Where-Object { (Get-Value $_ "Decision") -eq "PASS_WINDOW" }).Count -eq $microDecision.Count
-   $status = if($hasFail) { "REJECT_CANDIDATE" } elseif($hasRepair) { "REPAIR_REPORTS" } elseif($hasWaiting) { "WAITING_FOR_REPORTS" } elseif($hasReview) { "REVIEW_DRAWDOWN" } elseif($allPass) { "PASS_MICRO" } else { "REVIEW_REQUIRED" }
-   $next = if($status -eq "PASS_MICRO") { "Proceed to full handoff; do not promote from micro evidence alone." } elseif($status -eq "REJECT_CANDIDATE") { "Keep current promoted profile and deprioritize the candidate." } elseif($status -eq "REPAIR_REPORTS") { "Repair or re-export micro reports." } else { "Complete paired micro report import before spending full-handoff tester time." }
-   Add-Row $rows "Micro decision" $status $decisionCounts $next
-} else {
-   Add-Row $rows "Micro decision" "WAITING_FOR_REPORTS" "No micro decision rows found at $MicroDecisionPath" "Run the micro import workflow after exporting paired reports."
-}
-
-$safetyFailures = Get-FailureRows $safety
+$safetyFailures = @($safety | Where-Object { (Get-Value $_ "Passed") -eq "False" -or (Get-Value $_ "Status") -eq "FAIL" })
 if($safety.Count -gt 0 -and $safetyFailures.Count -eq 0) {
-   Add-Row $rows "Local safety" "PASS" "$($safety.Count) safety checks pass." "Keep local MT5 launch locked while the PC is in normal use."
+   Add-Row $rows "Local safety" "PASS" "$($safety.Count) safety checks pass." `
+      "Keep local MT5 launch locked while the PC is in normal use."
 } elseif($safety.Count -gt 0) {
-   Add-Row $rows "Local safety" "FAIL" "$($safetyFailures.Count) safety failures." "Fix safety audit failures before any MT5-related work."
+   Add-Row $rows "Local safety" "FAIL" "$($safetyFailures.Count) safety failures." `
+      "Fix safety audit failures before any MT5-related work."
 } else {
-   Add-Row $rows "Local safety" "FAIL" "Safety audit missing or empty: $SafetyAuditPath" "Run work\audit_mt5_local_safety.ps1."
+   Add-Row $rows "Local safety" "FAIL" "Safety audit missing or empty: $SafetyAuditPath" `
+      "Run work\audit_mt5_local_safety.ps1."
+}
+
+$compileStatus = @($compileStatus)
+$compileRow = $compileStatus | Select-Object -First 1
+if($compileStatus.Count -gt 0 -and (Get-Value $compileRow "Status") -eq "PASS") {
+   Add-Row $rows "Compile status" "PASS" "$(Get-Value $compileRow "Evidence")" `
+      "Compile proof is clean for this imported log; rerun after every EA source change."
+} elseif($compileStatus.Count -gt 0) {
+   Add-Row $rows "Compile status" "$(Get-Value $compileRow "Status")" "$(Get-Value $compileRow "Evidence")" `
+      "Resolve compile status before importing new tester reports."
+} else {
+   Add-Row $rows "Compile status" "FAIL" "Compile status missing or empty: $CompileStatusPath" `
+      "Run work\import_mt5_compile_log.ps1 against the latest exported MetaEditor log."
+}
+
+$externalPackageFailures = @($externalPackageAudit | Where-Object { (Get-Value $_ "Passed") -eq "False" -or (Get-Value $_ "Status") -eq "FAIL" })
+if($externalPackageAudit.Count -gt 0 -and $externalPackageFailures.Count -eq 0) {
+   Add-Row $rows "External MT5 package" "PASS" "$($externalPackageAudit.Count) package checks pass." `
+      "Use the external package on a non-interrupting MT5 setup."
+} elseif($externalPackageAudit.Count -gt 0) {
+   Add-Row $rows "External MT5 package" "FAIL" "$($externalPackageFailures.Count) package checks failed." `
+      "Rebuild and audit the external MT5 package before running it."
+} else {
+   Add-Row $rows "External MT5 package" "FAIL" "External package audit missing or empty: $ExternalPackageAuditPath" `
+      "Run work\build_external_mt5_validation_package.ps1 and work\test_external_mt5_validation_package.ps1."
+}
+
+if($externalMicroDecision.Count -gt 0) {
+   $decisionCounts = ($externalMicroDecision | Group-Object Decision | Sort-Object Name | ForEach-Object { "$($_.Name)=$($_.Count)" }) -join "; "
+   $hasFail = @($externalMicroDecision | Where-Object { (Get-Value $_ "Decision") -like "FAIL_*" }).Count -gt 0
+   $hasRepair = @($externalMicroDecision | Where-Object { (Get-Value $_ "Decision") -eq "REPAIR_REPORT" }).Count -gt 0
+   $hasWaiting = @($externalMicroDecision | Where-Object { (Get-Value $_ "Decision") -eq "WAITING_FOR_REPORTS" }).Count -gt 0
+   $hasReview = @($externalMicroDecision | Where-Object { (Get-Value $_ "Decision") -eq "REVIEW_DRAWDOWN" }).Count -gt 0
+   $allPass = $externalMicroDecision.Count -gt 0 -and @($externalMicroDecision | Where-Object { (Get-Value $_ "Decision") -eq "PASS_WINDOW" }).Count -eq $externalMicroDecision.Count
+   $status = if($hasFail) { "REJECT_CANDIDATE" } elseif($hasRepair) { "REPAIR_REPORTS" } elseif($hasWaiting) { "WAITING_FOR_REPORTS" } elseif($hasReview) { "REVIEW_DRAWDOWN" } elseif($allPass) { "PASS_MICRO" } else { "REVIEW_REQUIRED" }
+   $next = if($status -eq "PASS_MICRO") { "Proceed to full handoff and phase-2 real ticks; do not promote from micro evidence alone." } elseif($status -eq "REJECT_CANDIDATE") { "Keep current promoted profile and deprioritize the candidate." } elseif($status -eq "REPAIR_REPORTS") { "Repair or re-export external package reports." } else { "Complete external package report import before spending full-handoff tester time." }
+   Add-Row $rows "External micro decision" $status $decisionCounts $next
+} else {
+   Add-Row $rows "External micro decision" "WAITING_FOR_REPORTS" "No external micro decision rows found at $ExternalMicroDecisionPath" `
+      "Run work\import_external_mt5_validation_package_reports.ps1 and work\build_external_mt5_micro_decision.ps1 after reports return."
 }
 
 $blocking = @($rows | Where-Object { $_.Status -in @("FAIL", "HAS_UNPARSED_REPORTS") })
@@ -194,12 +263,21 @@ $report.Add("Offline preflight only. No MT5 process was launched.") | Out-Null
 $report.Add("") | Out-Null
 $report.Add("| Area | Status | Evidence | Next Action |") | Out-Null
 $report.Add("|---|---|---|---|") | Out-Null
-foreach($row in $rows) { $report.Add("| $($row.Area) | $($row.Status) | $($row.Evidence) | $($row.NextAction) |") | Out-Null }
+foreach($row in $rows) {
+   $report.Add("| $($row.Area) | $($row.Status) | $($row.Evidence) | $($row.NextAction) |") | Out-Null
+}
+
 $report.Add("") | Out-Null
 $report.Add("## Bottom Line") | Out-Null
 $report.Add("") | Out-Null
-if($blocking.Count -gt 0) { $report.Add("Preflight has blocking issues. Do not promote or advance candidates until these are resolved.") | Out-Null }
-elseif(@($metrics | Where-Object { (Get-Value $_ "Status") -eq "PARSED" }).Count -eq 0) { $report.Add("The import pipeline is ready, but no profit-search reports have been parsed yet. Keep the current promoted profile.") | Out-Null }
-else { $report.Add("Parsed reports are present. Continue with ranking, decision matrix, readiness snapshot, and promotion packet gates.") | Out-Null }
+if($blocking.Count -gt 0) {
+   $report.Add("Preflight has blocking issues. Do not promote or advance candidates until these are resolved.") | Out-Null
+} elseif(@($metrics | Where-Object { (Get-Value $_ "Status") -eq "PARSED" }).Count -eq 0) {
+   $report.Add("The import pipeline is ready, but no profit-search reports have been parsed yet. Keep the current promoted profile.") | Out-Null
+} else {
+   $report.Add("Parsed reports are present. Continue with ranking, decision matrix, readiness snapshot, and promotion packet gates.") | Out-Null
+}
+
 Set-Content -LiteralPath $OutReport -Value $report -Encoding UTF8
+
 $rows
