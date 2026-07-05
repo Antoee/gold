@@ -87,6 +87,8 @@ Prepared profit-search pack:
 - Next-test handoff folder: `outputs/next_test_handoff/`
 - Next-test handoff archive: `outputs/next_test_handoff.zip`
 - Next-test handoff builder: `work/build_next_test_handoff.ps1`
+- Handoff integrity report: `HANDOFF_CONFIG_INTEGRITY.md`
+- Handoff integrity script: `work/audit_handoff_config_integrity.ps1`
 - Contains 16 generated candidate profiles.
 - Phase 1: 128 fast triage configs using `Model=2`.
 - Phase 2: 55 real-tick validation configs using `Model=4`.
@@ -96,6 +98,7 @@ Prepared profit-search pack:
 - Current promotion-packet status: baseline and `tp38_sl18` both correctly report `MISSING_EVIDENCE` because phase-2 reports have not been exported yet.
 - Current coverage audit status: 16 profiles, 5 phase-2 seeds, 1 aggressive-risk candidate (`risk20_tp38_sl18`) kept phase-1 only, with TP/SL, trailing, RR, risk, giveback, breakeven, baseline, and reduced-risk coverage present.
 - Current handoff status: 24 prioritized `.ini` configs copied into `outputs/next_test_handoff/configs/` and zipped for the next safe testing window.
+- Current handoff integrity status: 24/24 configs pass static checks for `Visual=0`, `ShutdownTerminal=1`, `Optimization=0`, XAUUSD/M15, expected report names, critical EA inputs, and file hashes. Current handoff zip SHA256: `8FE19B8A55A058579F9696C2C8E7B2B47F38F1521EBCA8EB1823A022FD149AE3`.
 - Phase 1 is pruning only; candidates still need real-tick phase 2 plus full promotion-gate validation before promotion.
 
 Local MT5 run safety:
