@@ -7,7 +7,7 @@ Generated without launching MT5.
 - File: `Professional_XAUUSD_EA.mq5`
 - Status: committed to GitHub as a risk-first, no-martingale/no-grid XAUUSD EA source.
 - Compile status: not locally compiled in this remote-only pass.
-- Purpose: provides the repository with an actual EA source file matching the documented tester input surface and micro handoff configs.
+- Purpose: provides the repository with an actual EA source file matching the documented tester input surface and handoff configs.
 
 ## Previous Local EA Source Record
 
@@ -46,11 +46,27 @@ The current GitHub source should be compiled and tested before live or promotion
   - one-symbol position management
 - Custom Strategy Tester scoring through `double OnTester()`.
 
+## Static Safety Automation
+
+- Script: `work/static_repo_safety_audit.py`
+- Workflow: `.github/workflows/static-safety.yml`
+- Runs on GitHub Actions for push, pull request, and manual dispatch.
+- Checks:
+  - committed EA source exists and exposes required risk/research inputs
+  - forbidden recovery-style concepts are absent from executable source after comment stripping
+  - hard local MT5 launch lock and launch guard are present
+  - protected TP 3.80 candidate `.set` files use `InpMaxEquityDrawdownPercent=4.00`
+  - stress micro and recent-OOS manifests have 8 rows each
+  - handoff configs are non-visual, non-optimizing, shutdown after run, and target XAUUSD M15
+- Meaning: this is a safety/readiness gate only. It does not compile the EA and does not prove profit.
+
 ## Validation Pack State
 
-- Micro handoff configs committed: `8`
-- Micro handoff windows: `2024_Q1`, `2024_Q3`, `2025_Q2`, `2025_Q3`
-- Date range covered by prepared micro configs: `2024.01.01` through `2025.09.30`
+- Stress micro handoff configs committed: `8`
+- Stress micro windows: `2024_Q1`, `2024_Q3`, `2025_Q2`, `2025_Q3`
+- Recent out-of-sample handoff configs committed: `8`
+- Recent out-of-sample windows: `2025_Q4`, `2026_Q1`, `2026_Q2`, `2026_YTD`
+- Date range covered by prepared fast checks: `2024.01.01` through `2026.07.02`
 - Full promotion still requires parsed MT5 reports; no new profit evidence is implied by source/config commits.
 
 ## Safety Note
