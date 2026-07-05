@@ -25,13 +25,13 @@ For the consolidated gate rules, use `outputs/FAST_EXPERIMENT_MATRIX.md` and `ou
 
 ## Commands After Reports Exist
 
-All available report packs can be imported with the wrapper:
+Most existing report packs can be imported with the older wrapper:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\work\import_all_available_reports.ps1
 ```
 
-Break-even reports can also be imported directly with:
+Break-even reports use the dedicated importer:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\work\import_breakeven_probe_reports.ps1
