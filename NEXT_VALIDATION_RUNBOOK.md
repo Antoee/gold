@@ -20,21 +20,36 @@ Run these without launching MT5:
 2. `work/build_fast_probe_readiness_snapshot.ps1`
 3. `work/build_next_fast_batch_selector.ps1`
 4. `work/import_mt5_compile_log.ps1` against the latest exported MetaEditor compile log
-5. `work/build_profit_readiness_snapshot.ps1`
-6. `work/build_report_import_preflight.ps1`
-7. `work/audit_handoff_config_integrity.ps1`
-8. `work/audit_mt5_local_safety.ps1`
+5. `work/build_external_mt5_validation_package.ps1`
+6. `work/test_external_mt5_validation_package.ps1`
+7. `work/build_profit_readiness_snapshot.ps1`
+8. `work/build_report_import_preflight.ps1`
+9. `work/audit_handoff_config_integrity.ps1`
+10. `work/audit_mt5_local_safety.ps1`
 
 Expected current state:
 
 - Optimization guardrails: 16 profiles audited, 16 require promotion review
 - Fast-probe readiness: waiting for exported reports until the fast handoff packs are run/imported
 - Next fast batch: `STRESS_SMOKE`, 2 rows, because it is the first pending gate
+- External MT5 package: PASS, 8 micro configs packaged, 17 zip entries
 - Compile status: PASS only when the imported MetaEditor log shows `0 errors, 0 warnings`
 - Readiness: `NOT_READY`
 - Report import preflight: parser, manifest, guardrails, handoff, safety, and compile status pass; reports still missing
 - Handoff integrity: PASS
 - Local safety: PASS, no MT5 processes, unlock files absent, hard local launch lock present
+
+## External MT5 Micro Package
+
+`work/build_external_mt5_validation_package.ps1` creates `outputs/xauusd_micro_validation_package.zip` from `outputs/micro_test_handoff`. It packages:
+
+- 8 paired stress-window configs for `tp38_sl18` versus `baseline_promoted`
+- EA source
+- promoted/candidate `.set` files
+- manifest and expected-report checklist
+- README for the external MT5 machine
+
+`work/test_external_mt5_validation_package.ps1` audits the package offline. Passing this package does not prove profitability; it only makes the next external/non-interrupting MT5 run ready.
 
 ## After Reports Are Exported
 
