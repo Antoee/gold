@@ -29,6 +29,7 @@ The previous date-block profile remains an aggressive research benchmark: full p
 - `NEXT_VALIDATION_QUEUE.md` - candidates waiting for full validation before promotion.
 - `NEXT_VALIDATION_RUNBOOK.md` - safe validation order and promotion gate.
 - `PROMOTION_GATE_REPORT.md` - offline promotion-readiness check for queued profiles.
+- `PROFILE_INPUT_AUDIT.md` - offline check that active `.set` files pin all critical inputs.
 - `ROBUST_CANDIDATE_RANKING.md` - offline robust-candidate ranking from existing CSV results.
 - `LOSS_CONTROL_REPORT.md` - offline loss-control ranking from existing CSV windows.
 - `ROBUST_BOS_SWEEP_PROFILE.set` - promoted robust BOS/sweep MT5 settings profile.
@@ -126,7 +127,8 @@ Local MT5 launch is intentionally safety-gated because `terminal64.exe` can stil
 Next work should focus on increasing profit from the robust no-date profile without bringing back losing monthly windows.
 
 1. Fully validate the queued `3.80` TP candidates and the giveback candidate across monthly, quarterly, yearly, half-year, and full-period windows.
-2. Rerun `work/analyze_promotion_gate.ps1` and promote only candidates that pass full, split, quarterly, and monthly gates.
-3. Test on additional broker/history sources.
-4. Use the custom optimization criterion to rank candidates by robustness, not only raw net profit.
-5. Keep the date-block profile as a benchmark, not the default.
+2. Rerun `work/audit_profile_inputs.ps1` after changing `.set` files so MT5 cannot reuse stale cached inputs unnoticed.
+3. Rerun `work/analyze_promotion_gate.ps1` and promote only candidates that pass full, split, quarterly, and monthly gates.
+4. Test on additional broker/history sources.
+5. Use the custom optimization criterion to rank candidates by robustness, not only raw net profit.
+6. Keep the date-block profile as a benchmark, not the default.
