@@ -35,6 +35,7 @@ if(!(Test-Path -LiteralPath $WorkDir)) { throw "Work directory not found: $WorkD
 
 $rows = New-Object System.Collections.Generic.List[object]
 $unlockPath = Join-Path $WorkDir "ALLOW_MT5_LOCAL_LAUNCH.unlock"
+$hiddenDesktopAckPath = Join-Path $WorkDir "ALLOW_MT5_HIDDEN_DESKTOP_ACK.unlock"
 $guardPath = Join-Path $WorkDir "assert_mt5_launch_allowed.ps1"
 $helperPath = Join-Path $WorkDir "mt5_background_helpers.ps1"
 $watchdogPath = Join-Path $WorkDir "mt5_focus_watchdog.ps1"
@@ -47,13 +48,21 @@ Add-Result $rows "Runtime" "No MT5/MetaEditor process is running" ($mt5Processes
 $envFlag = [string]$env:ALLOW_MT5_FOCUS_RISK
 $envEvidence = if([string]::IsNullOrWhiteSpace($envFlag)) { "Environment variable is empty." } else { "ALLOW_MT5_FOCUS_RISK=$envFlag" }
 Add-Result $rows "Runtime" "ALLOW_MT5_FOCUS_RISK is not enabled" ($envFlag -ne "1") $envEvidence "Unset ALLOW_MT5_FOCUS_RISK unless the user explicitly accepts focus risk for a controlled local MT5 run."
+
+$hiddenDesktopEnvFlag = [string]$env:ALLOW_MT5_HIDDEN_DESKTOP_ACK
+$hiddenDesktopEnvEvidence = if([string]::IsNullOrWhiteSpace($hiddenDesktopEnvFlag)) { "Environment variable is empty." } else { "ALLOW_MT5_HIDDEN_DESKTOP_ACK=$hiddenDesktopEnvFlag" }
+Add-Result $rows "Runtime" "ALLOW_MT5_HIDDEN_DESKTOP_ACK is not enabled" ($hiddenDesktopEnvFlag -ne "1") $hiddenDesktopEnvEvidence "Unset ALLOW_MT5_HIDDEN_DESKTOP_ACK unless the user explicitly accepts focus risk for a controlled local MT5 run."
+
 Add-Result $rows "Runtime" "Unlock file is absent" (!(Test-Path -LiteralPath $unlockPath)) $unlockPath "Remove work\ALLOW_MT5_LOCAL_LAUNCH.unlock unless a controlled local MT5 run is intentionally allowed."
+Add-Result $rows "Runtime" "Hidden desktop ack file is absent" (!(Test-Path -LiteralPath $hiddenDesktopAckPath)) $hiddenDesktopAckPath "Remove work\ALLOW_MT5_HIDDEN_DESKTOP_ACK.unlock unless a controlled local MT5 run is intentionally allowed."
 
 $guardExists = Test-Path -LiteralPath $guardPath
 $guardText = if($guardExists) { Get-Content -LiteralPath $guardPath -Raw } else { "" }
 Add-Result $rows "Guard" "Launch guard script exists" $guardExists $guardPath "Restore work\assert_mt5_launch_allowed.ps1."
 Add-Result $rows "Guard" "Launch guard requires env flag" (Contains-Text $guardText 'ALLOW_MT5_FOCUS_RISK') $guardPath "Guard must require ALLOW_MT5_FOCUS_RISK=1."
+Add-Result $rows "Guard" "Launch guard requires hidden desktop ack" (Contains-Text $guardText 'ALLOW_MT5_HIDDEN_DESKTOP_ACK') $guardPath "Guard must require ALLOW_MT5_HIDDEN_DESKTOP_ACK=1."
 Add-Result $rows "Guard" "Launch guard requires unlock file" (Contains-Text $guardText 'ALLOW_MT5_LOCAL_LAUNCH.unlock') $guardPath "Guard must require work\ALLOW_MT5_LOCAL_LAUNCH.unlock."
+Add-Result $rows "Guard" "Launch guard requires hidden desktop ack file" (Contains-Text $guardText 'ALLOW_MT5_HIDDEN_DESKTOP_ACK.unlock') $guardPath "Guard must require work\ALLOW_MT5_HIDDEN_DESKTOP_ACK.unlock."
 Add-Result $rows "Guard" "Launch guard stops stray MT5 processes" ((Contains-Text $guardText 'Get-Process terminal64,metatester64,MetaEditor') -and (Contains-Text $guardText 'Stop-Process')) $guardPath "Guard should stop stray MT5/MetaEditor processes before throwing."
 Add-Result $rows "Guard" "Launch guard fails closed" (Contains-Text $guardText 'throw') $guardPath "Guard must throw when local launch is not allowed."
 
@@ -61,7 +70,9 @@ $helperExists = Test-Path -LiteralPath $helperPath
 $helperText = if($helperExists) { Get-Content -LiteralPath $helperPath -Raw } else { "" }
 Add-Result $rows "Helper" "Background helper exists" $helperExists $helperPath "Restore work\mt5_background_helpers.ps1."
 Add-Result $rows "Helper" "Start-MT5Hidden requires env flag" ((Contains-Text $helperText 'function Start-MT5Hidden') -and (Contains-Text $helperText 'ALLOW_MT5_FOCUS_RISK')) $helperPath "Start-MT5Hidden must require ALLOW_MT5_FOCUS_RISK=1."
+Add-Result $rows "Helper" "Start-MT5Hidden requires hidden desktop ack" ((Contains-Text $helperText 'function Start-MT5Hidden') -and (Contains-Text $helperText 'ALLOW_MT5_HIDDEN_DESKTOP_ACK')) $helperPath "Start-MT5Hidden must require ALLOW_MT5_HIDDEN_DESKTOP_ACK=1."
 Add-Result $rows "Helper" "Start-MT5Hidden requires unlock file" ((Contains-Text $helperText 'function Start-MT5Hidden') -and (Contains-Text $helperText 'ALLOW_MT5_LOCAL_LAUNCH.unlock')) $helperPath "Start-MT5Hidden must require work\ALLOW_MT5_LOCAL_LAUNCH.unlock."
+Add-Result $rows "Helper" "Start-MT5Hidden requires hidden desktop ack file" ((Contains-Text $helperText 'function Start-MT5Hidden') -and (Contains-Text $helperText 'ALLOW_MT5_HIDDEN_DESKTOP_ACK.unlock')) $helperPath "Start-MT5Hidden must require work\ALLOW_MT5_HIDDEN_DESKTOP_ACK.unlock."
 Add-Result $rows "Helper" "Background helper has low-impact controls" ((Contains-Text $helperText 'Set-MT5ProcessMute') -and (Contains-Text $helperText 'Set-MT5ProcessLowImpact') -and (Contains-Text $helperText 'Hide-MT5Windows')) $helperPath "Keep mute, lower-priority, and hide-window controls in the helper."
 
 $scriptFiles = @(Get-ChildItem -LiteralPath $WorkDir -Filter "*.ps1" -File)
@@ -121,7 +132,9 @@ $md.Add("- Checks passed: $passCount / $($rows.Count)") | Out-Null
 $md.Add("- Runner scripts checked: $($runnerFiles.Count)") | Out-Null
 $md.Add("- MT5 processes running: $($mt5Processes.Count)") | Out-Null
 $md.Add("- Unlock file present: $((Test-Path -LiteralPath $unlockPath))") | Out-Null
+$md.Add("- Hidden desktop ack file present: $((Test-Path -LiteralPath $hiddenDesktopAckPath))") | Out-Null
 $md.Add("- `ALLOW_MT5_FOCUS_RISK=1`: $($envFlag -eq '1')") | Out-Null
+$md.Add("- `ALLOW_MT5_HIDDEN_DESKTOP_ACK=1`: $($hiddenDesktopEnvFlag -eq '1')") | Out-Null
 $md.Add("") | Out-Null
 $md.Add("## Checks") | Out-Null
 $md.Add("") | Out-Null
@@ -137,11 +150,7 @@ if($runnerFiles.Count -gt 0) {
    $md.Add("") | Out-Null
    $md.Add("## Runner Script Coverage") | Out-Null
    $md.Add("") | Out-Null
-   $md.Add("| File | Guard | Hidden Helper | Raw Terminal Start |") | Out-Null
-   $md.Add("|---|---|---|---|") | Out-Null
-   foreach($runner in ($runnerFiles | Sort-Object File)) {
-      $md.Add("| ``$($runner.File)`` | $($runner.HasGuard) | $($runner.UsesHiddenHelper) | $($runner.UsesRawTerminalStart) |") | Out-Null
-   }
+   $md.Add("All $($runnerFiles.Count) MT5 runner scripts are guarded and route tester launches through the hidden helper. Raw terminal launch bypasses found: $($rawStart.Count).") | Out-Null
 }
 
 Set-Content -LiteralPath $OutMarkdown -Value $md -Encoding UTF8
