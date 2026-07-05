@@ -1,0 +1,4 @@
+"Session","CandidateProfile","BaselineProfile","CandidateStatus","BaselineStatus","CandidateNetProfit","BaselineNetProfit","NetProfitDelta","CandidateDrawdownPercent","BaselineDrawdownPercent","Decision","Reason"
+"london_07_16","tp38_sl18_london_07_16","baseline_promoted_london_pair","MISSING_REPORT","MISSING_REPORT","0","0","0","0","0","WAITING_FOR_REPORTS","Candidate or baseline report is missing."
+"newyork_13_22","tp38_sl18_newyork_13_22","baseline_promoted_newyork_pair","MISSING_REPORT","MISSING_REPORT","0","0","0","0","0","WAITING_FOR_REPORTS","Candidate or baseline report is missing."
+"overlap_13_16","tp38_sl18_overlap_13_16","baseline_promoted_overlap_pair","MISSING_REPORT","MISSING_REPORT","0","0","0","0","0","WAITING_FOR_REPORTS","Candidate or baseline report is missing."
