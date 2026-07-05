@@ -44,6 +44,28 @@ Decision rule:
 - If `tp38_sl18` loses any paired stress window, keep the current promoted profile and deprioritize it.
 - If `tp38_sl18` matches or improves every paired stress window, continue to the full 24-config handoff.
 
+## Micro Import Workflow
+
+After the 8 micro reports are exported into `outputs`, parse and compare them with:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\work\collect_validation_results.ps1 -ManifestPath "outputs\micro_test_handoff\HANDOFF_MANIFEST.csv" -ReportDir "outputs" -ReportNameTemplate "profit_search_{PhaseShort}_{Profile}_{Set}_{Window}" -OutResults "outputs\MICRO_TEST_REPORT_METRICS.csv" -OutSummary "outputs\MICRO_TEST_REPORT_SUMMARY.csv" -OutMarkdown "outputs\MICRO_TEST_REPORT_METRICS.md"
+powershell -NoProfile -ExecutionPolicy Bypass -File .\work\build_micro_test_decision.ps1
+```
+
+Review:
+
+- `outputs/MICRO_TEST_REPORT_METRICS.csv`
+- `outputs/MICRO_TEST_DECISION.md`
+
+Micro outcomes:
+
+- `WAITING_FOR_REPORTS`: finish exporting the paired reports.
+- `REPAIR_REPORTS`: re-export or fix parser coverage.
+- `REJECT_CANDIDATE`: keep the promoted baseline and stop spending tester time on this candidate.
+- `REVIEW_DRAWDOWN`: inspect drawdown before allowing the candidate into the full handoff.
+- `PASS_MICRO`: continue to the full 24-config handoff, not promotion.
+
 ## Full Handoff After Micro Pass
 
 Use the full handoff only after the micro pass is clean:
