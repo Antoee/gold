@@ -4,10 +4,28 @@ Offline tracking artifact. This record does not launch MT5.
 
 - Manifest: `outputs\micro_test_handoff\HANDOFF_MANIFEST.csv`
 - Configs expected: 8
-- Passed: 8
+- Config files committed: 8
+- Passed static intent checks: 8
 - Failed: 0
 - Top candidate: `tp38_sl18`
 - Baseline anchor: `baseline_promoted`
+
+## Static Intent Checks
+
+The committed configs are intended to use:
+
+- `Expert=Professional_XAUUSD_EA.ex5`
+- `Symbol=XAUUSD`
+- `Period=M15`
+- `Model=2`
+- `Optimization=0`
+- `Visual=0`
+- `ReplaceReport=1`
+- `ShutdownTerminal=1`
+- candidate `InpTakeProfitATRMultiplier=3.80`
+- candidate `InpMaxEquityDrawdownPercent=4.00`
+- baseline `InpTakeProfitATRMultiplier=3.50`
+- baseline `InpMaxEquityDrawdownPercent=0.00`
 
 ## Paired Stress Windows
 
