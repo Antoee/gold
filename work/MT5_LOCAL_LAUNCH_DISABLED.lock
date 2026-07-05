@@ -1,3 +1,5 @@
-Local MT5/tester launch is disabled because it can still steal focus on this PC.
+Local MT5/tester launch is disabled because terminal/metatester windows can still flash and steal focus on this PC.
 
-Do not remove this file while the user needs normal PC usage protected.
+This file is an intentional hard lock. Guarded runner scripts must refuse to launch MT5 while it exists, and they should stop stray terminal/metatester/MetaEditor processes before failing.
+
+Do not remove this file while the user needs normal PC usage protected. Only remove it for a controlled test on a VM, spare machine, or a local window where focus stealing is explicitly acceptable.
