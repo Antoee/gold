@@ -28,13 +28,13 @@ This matrix keeps tester time focused on the shortest gates that can reject a ca
 
 ## Import Shortcut
 
-After reports exist, use:
+Most existing report packs can be imported with the older wrapper:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\work\import_all_available_reports.ps1
 ```
 
-Break-even reports can also be imported directly with:
+Break-even reports use the dedicated importer:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\work\import_breakeven_probe_reports.ps1
