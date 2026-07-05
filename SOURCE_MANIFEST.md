@@ -5,7 +5,7 @@ Generated without launching MT5.
 ## GitHub EA Source
 
 - File: `Professional_XAUUSD_EA.mq5`
-- Version: `1.06`
+- Version: `1.07`
 - Status: committed to GitHub as a risk-first, no-martingale/no-grid XAUUSD EA source.
 - Compile status: not locally compiled in this remote-only pass.
 - Purpose: provides the repository with an actual EA source file matching the documented tester input surface and handoff configs.
@@ -13,11 +13,12 @@ Generated without launching MT5.
 ## Source Features Present In GitHub Version
 
 - No martingale, grid, averaging down, or recovery-system logic.
-- Promoted default inputs include `InpRiskPercent=1.60`, `InpStopATRMultiplier=1.80`, `InpTakeProfitATRMultiplier=3.50`, `InpUseMTFTrendFilter=false`, and `InpUseStructureTrailing=false`.
-- Candidate override support includes TP `3.80`, equity drawdown guard `4.00`, H1 MTF trend probes, and structure-trailing probes.
+- Promoted default inputs include `InpRiskPercent=1.60`, `InpStopATRMultiplier=1.80`, `InpTakeProfitATRMultiplier=3.50`, `InpUseMTFTrendFilter=false`, `InpUseStructureTrailing=false`, and `InpUseATRSpreadGuard=false`.
+- Candidate override support includes TP `3.80`, equity drawdown guard `4.00`, H1 MTF trend probes, structure-trailing probes, and ATR-relative spread guard probes.
 - BOS and liquidity-sweep confirmations.
-- Optional EMA cross, momentum candle, engulfing candle, ADX, ATR, adaptive trend-bias, higher-timeframe EMA trend filter, break-even, ATR trailing, structure trailing, session/day filter, Friday-evening cutoff, and profit giveback guard modules.
-- Risk protections include native `OrderCalcProfit`, `OrderCalcMargin`, minimum-lot over-risk skip, period loss guards, equity drawdown guard, consecutive-loss guard, spread/slippage controls, cooldown, and one-symbol position management.
+- Optional EMA cross, momentum candle, engulfing candle, ADX, ATR, adaptive trend-bias, higher-timeframe EMA trend filter, break-even, ATR trailing, structure trailing, session/day filter, Friday-evening cutoff, ATR-relative spread guard, and profit giveback guard modules.
+- Risk protections include native `OrderCalcProfit`, `OrderCalcMargin`, minimum-lot over-risk skip, period loss guards, equity drawdown guard, consecutive-loss guard, fixed spread/slippage controls, optional ATR-relative spread controls, cooldown, and one-symbol position management.
+- ATR spread guard controls: `InpUseATRSpreadGuard`, `InpMaxSpreadATRPercent`.
 - Structure trailing controls: `InpUseStructureTrailing`, `InpStructureTrailingLookback`, `InpStructureTrailingBufferATR`, `InpStructureTrailingTriggerATR`.
 - MTF trend controls: `InpUseMTFTrendFilter`, `InpMTFTrendTimeframe`, `InpMTFTrendEMA`.
 - Custom Strategy Tester scoring through `double OnTester()`.
@@ -26,13 +27,14 @@ Generated without launching MT5.
 
 - Script: `work/static_repo_safety_audit.py`
 - Workflow: `.github/workflows/static-safety.yml`
-- Checks source risk/research inputs, forbidden recovery terms, native risk sizing markers, MTF/structure trailing implementation markers, profile input pins, local MT5 launch lock, and non-visual handoff config safety.
+- Checks source risk/research inputs, forbidden recovery terms, native risk sizing markers, ATR spread guard, MTF/structure trailing implementation markers, profile input pins, local MT5 launch lock, and non-visual handoff config safety.
 - Meaning: this is a safety/readiness gate only. It does not compile the EA and does not prove profit.
 
 ## Validation Pack State
 
 - Stress micro handoff configs committed: `8`
 - Recent out-of-sample handoff configs committed: `8`
+- ATR spread guard probe handoff configs committed: `4`
 - MTF trend probe handoff configs committed: `4`
 - Structure trailing probe handoff configs committed: `4`
 - Session variant handoff configs committed: `6`
