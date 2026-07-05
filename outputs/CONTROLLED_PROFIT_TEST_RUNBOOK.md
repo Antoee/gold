@@ -7,7 +7,7 @@ This project is currently in evidence-gathering mode. Do not promote a new profi
 - Current promoted profile: `risk1p6_sl18_tp35` / `ROBUST_BOS_SWEEP_PROFILE.set`
 - Known full-period result, 2024-01-01 to 2026-07-02: `+$866.59`
 - Known split aggregate: `+$2354.65`
-- Known validation outcome: zero losing split windows in the existing promoted evidence
+- Known validation outcome: zero losing split windows in the existing evidence
 
 ## Current Candidate
 
@@ -16,6 +16,12 @@ This project is currently in evidence-gathering mode. Do not promote a new profi
 - Risk guard: `InpMaxEquityDrawdownPercent=4.00`
 - Promotion packet status: `MISSING_EVIDENCE`
 - Promotion is blocked until reports are parsed and every gate passes.
+
+## Test Prerequisite
+
+The MT5 terminal used for testing must have `Professional_XAUUSD_EA.ex5` installed in its Experts folder before any handoff config can run. The micro configs reference that compiled expert directly.
+
+I could not verify the EA source at common GitHub paths during this remote-only pass, so do not treat the repo as fully runnable until the EA source/compiled expert is confirmed available in the tester environment.
 
 ## No-Interruption Rule
 
@@ -32,6 +38,7 @@ Preferred options for testing:
 Use the micro handoff first:
 
 - Manifest: `outputs/micro_test_handoff/HANDOFF_MANIFEST.csv`
+- Configs: `outputs/micro_test_handoff/configs/*.ini`
 - Candidate/baseline pairs: 8 rows total
 - Windows:
   - `2024_Q1`
