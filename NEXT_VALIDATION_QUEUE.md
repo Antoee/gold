@@ -80,6 +80,8 @@ Prepared profit-search pack:
 - Next-batch report: `NEXT_PROFIT_SEARCH_BATCH.md`
 - Next-batch CSV: `NEXT_PROFIT_SEARCH_BATCH.csv`
 - Next-batch builder: `work/build_next_profit_search_batch.ps1`
+- Next-batch rationale report: `PROFIT_SEARCH_BATCH_RATIONALE.md`
+- Next-batch rationale script: `work/build_profit_search_batch_rationale.ps1`
 - Promotion packet builder: `work/build_profit_promotion_packet.ps1`
 - Promotion packet outputs: `outputs/promotion_packets/`
 - Coverage audit report: `PROFIT_SEARCH_COVERAGE_AUDIT.md`
@@ -99,6 +101,7 @@ Prepared profit-search pack:
 - Current profit-search collector status: 183 expected exported reports, 0 parsed, 183 missing.
 - Current profit-search ranking status: all 21 profile/phase rows are `MissingEvidence`; no candidate is recommended yet.
 - Current next-batch status: 24 prioritized configs, starting with fast stress-window triage for the baseline and highest-priority TP/SL candidates.
+- Current next-batch rationale: 24 phase-1 prune runs only, covering 6 profiles: 5 baseline-anchor runs, 8 evidence-backed TP `3.8` runs, and 11 adjacent TP-expansion runs. No phase-2 run is queued until phase-1 evidence exists.
 - Current promotion-packet status: baseline and `tp38_sl18` both correctly report `MISSING_EVIDENCE` because phase-2 reports have not been exported yet.
 - Current coverage audit status: 16 profiles, 5 phase-2 seeds, 1 aggressive-risk candidate (`risk20_tp38_sl18`) kept phase-1 only, with TP/SL, trailing, RR, risk, giveback, breakeven, baseline, and reduced-risk coverage present.
 - Current handoff status: 24 prioritized `.ini` configs copied into `outputs/next_test_handoff/configs/` and zipped for the next safe testing window.
