@@ -37,6 +37,7 @@ Generated without launching MT5.
 - ADX filter probe handoff configs committed: `4`
 - ATR spread guard probe handoff configs committed: `4`
 - Time exit probe handoff configs committed: `4`
+- News filter probe handoff configs committed: `4`
 - MTF trend probe handoff configs committed: `4`
 - Structure trailing probe handoff configs committed: `4`
 - Session variant handoff configs committed: `6`
