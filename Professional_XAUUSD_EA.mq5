@@ -4,7 +4,7 @@
 //| No martingale. No grid. No averaging down. No recovery systems.   |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.04"
+#property version   "1.05"
 #property description "Professional risk-first XAUUSD EA with BOS/sweep entries and ATR exits."
 
 #include <Trade/Trade.mqh>
@@ -25,6 +25,9 @@ input int    InpMinimumConfirmations         = 2;
 
 input bool   InpUseAdaptiveReverse           = true;
 input double InpAdaptiveSlopeThresholdPts    = 500.0;
+input bool   InpUseMTFTrendFilter            = false;
+input ENUM_TIMEFRAMES InpMTFTrendTimeframe   = PERIOD_H1;
+input int    InpMTFTrendEMA                  = 200;
 
 input int    InpFastEMA                      = 20;
 input int    InpSlowEMA                      = 50;
@@ -86,6 +89,7 @@ CTrade trade;
 int hFastEMA = INVALID_HANDLE;
 int hSlowEMA = INVALID_HANDLE;
 int hTrendEMA = INVALID_HANDLE;
+int hMTFTrendEMA = INVALID_HANDLE;
 int hATR = INVALID_HANDLE;
 int hADX = INVALID_HANDLE;
 datetime lastBarTime = 0;
@@ -121,8 +125,12 @@ int OnInit()
    hTrendEMA = iMA(_Symbol, PERIOD_CURRENT, InpTrendEMA, 0, MODE_EMA, PRICE_CLOSE);
    hATR = iATR(_Symbol, PERIOD_CURRENT, InpATRPeriod);
    hADX = iADX(_Symbol, PERIOD_CURRENT, InpADXPeriod);
+   if(InpUseMTFTrendFilter)
+      hMTFTrendEMA = iMA(_Symbol, InpMTFTrendTimeframe, InpMTFTrendEMA, 0, MODE_EMA, PRICE_CLOSE);
 
    if(hFastEMA == INVALID_HANDLE || hSlowEMA == INVALID_HANDLE || hTrendEMA == INVALID_HANDLE || hATR == INVALID_HANDLE || hADX == INVALID_HANDLE)
+      return INIT_FAILED;
+   if(InpUseMTFTrendFilter && hMTFTrendEMA == INVALID_HANDLE)
       return INIT_FAILED;
 
    startBalance = AccountInfoDouble(ACCOUNT_BALANCE);
@@ -135,6 +143,8 @@ void OnDeinit(const int reason)
    IndicatorRelease(hFastEMA);
    IndicatorRelease(hSlowEMA);
    IndicatorRelease(hTrendEMA);
+   if(hMTFTrendEMA != INVALID_HANDLE)
+      IndicatorRelease(hMTFTrendEMA);
    IndicatorRelease(hATR);
    IndicatorRelease(hADX);
    Comment("");
@@ -311,14 +321,67 @@ SignalState BuildSignal()
       s.sellScore = 0;
    }
 
+   ApplyMTFTrendFilter(s);
+
    return s;
+}
+
+void ApplyMTFTrendFilter(SignalState &s)
+{
+   if(!InpUseMTFTrendFilter)
+      return;
+
+   int bias = HigherTimeframeTrendBias();
+   if(bias > 0)
+   {
+      s.sellScore = 0;
+      s.sellReason = "";
+      AppendReason(s.buyReason, "mtf_trend");
+   }
+   else if(bias < 0)
+   {
+      s.buyScore = 0;
+      s.buyReason = "";
+      AppendReason(s.sellReason, "mtf_trend");
+   }
+   else
+   {
+      s.buyScore = 0;
+      s.sellScore = 0;
+      s.buyReason = "";
+      s.sellReason = "";
+   }
+}
+
+int HigherTimeframeTrendBias()
+{
+   if(!InpUseMTFTrendFilter)
+      return 0;
+   if(hMTFTrendEMA == INVALID_HANDLE)
+      return 0;
+
+   double ema = BufferValue(hMTFTrendEMA, 0, 1);
+   double close = iClose(_Symbol, InpMTFTrendTimeframe, 1);
+   if(ema <= 0.0 || close <= 0.0)
+      return 0;
+   if(close > ema)
+      return 1;
+   if(close < ema)
+      return -1;
+   return 0;
 }
 
 void AddScore(int &score, string &reason, const string tag)
 {
    score++;
+   AppendReason(reason, tag);
+}
+
+void AppendReason(string &reason, const string tag)
+{
+   if(tag == "") return;
    if(reason == "") reason = tag;
-   else reason += "+" + tag;
+   else if(StringFind(reason, tag) < 0) reason += "+" + tag;
 }
 
 double HighestHigh(const int startShift, const int count)
