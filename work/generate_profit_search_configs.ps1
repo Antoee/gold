@@ -142,6 +142,9 @@ $phase2Windows = @(
 )
 
 $baseSettings = Read-Settings -Path $basePath
+$protectedRiskOverrides = [ordered]@{
+   InpMaxEquityDrawdownPercent = "4.00"
+}
 $profileManifest = New-Object System.Collections.Generic.List[object]
 $configManifest = New-Object System.Collections.Generic.List[object]
 
@@ -149,6 +152,11 @@ foreach($candidate in ($candidates | Sort-Object Priority)) {
    $settings = [ordered]@{}
    foreach($key in $baseSettings.Keys) {
       $settings[$key] = $baseSettings[$key]
+   }
+   if($candidate.Name -ne "baseline_promoted") {
+      foreach($override in $protectedRiskOverrides.GetEnumerator()) {
+         Set-SettingValue -Settings $settings -Name $override.Key -Value ([string]$override.Value)
+      }
    }
    foreach($override in $candidate.Overrides.GetEnumerator()) {
       Set-SettingValue -Settings $settings -Name $override.Key -Value ([string]$override.Value)
@@ -163,7 +171,12 @@ foreach($candidate in ($candidates | Sort-Object Priority)) {
       Profile = $candidate.Name
       Phase2Seed = $candidate.Phase2
       Settings = $profilePath.Replace($RepoRoot + "\", "")
-      Overrides = (($candidate.Overrides.GetEnumerator() | Sort-Object Key | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join ";")
+      Overrides = (@(
+         if($candidate.Name -ne "baseline_promoted") {
+            $protectedRiskOverrides.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }
+         }
+         $candidate.Overrides.GetEnumerator() | Sort-Object Key | ForEach-Object { "$($_.Key)=$($_.Value)" }
+      ) -join ";")
    }) | Out-Null
 
    foreach($window in $phase1Windows) {
@@ -238,7 +251,9 @@ $readme = @(
    '- `PROFIT_SEARCH_CONFIG_MANIFEST.csv`',
    '- `profiles/*.set`',
    '',
-   'Local MT5 launch remains locked unless `ALLOW_MT5_FOCUS_RISK=1` and `work\ALLOW_MT5_LOCAL_LAUNCH.unlock` are both deliberately set.'
+   'Non-baseline profit-search candidates include `InpMaxEquityDrawdownPercent=4.00` based on prior weak-quarter drawdown guard research. The baseline profile remains unchanged as a comparison anchor.',
+   '',
+   'Local MT5 launch remains hard-locked by `work\MT5_LOCAL_LAUNCH_DISABLED.lock` unless the user explicitly permits local MT5 testing again.'
 )
 Set-Content -LiteralPath (Join-Path $outputRoot "README.md") -Value $readme -Encoding UTF8
 
