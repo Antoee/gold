@@ -98,7 +98,7 @@ $criticalInputs = [ordered]@{
    InpMaxDailyLossPercent = "1.00"
    InpMaxWeeklyLossPercent = "2.50"
    InpMaxMonthlyLossPercent = "4.00"
-   InpMaxEquityDrawdownPercent = "0.00"
+   InpMaxEquityDrawdownPercent = $null
    InpShowDashboard = "false"
    InpDashboardInTester = "false"
    InpLogLevel = "0"
@@ -140,6 +140,9 @@ foreach($item in $manifest) {
    foreach($inputName in $criticalInputs.Keys) {
       $actual = Get-InputValue -Values $values -Name $inputName
       $expected = $criticalInputs[$inputName]
+      if($inputName -eq "InpMaxEquityDrawdownPercent") {
+         $expected = if([string]$item.Profile -eq "baseline_promoted") { "0.00" } else { "4.00" }
+      }
       $exists = $null -ne $actual
       $matches = $exists -and (($null -eq $expected) -or ($actual -eq $expected))
       $expectedLabel = if($null -eq $expected) { "present" } else { $expected }
