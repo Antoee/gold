@@ -1,0 +1,5 @@
+Profile,Window,FromDate,ToDate,HandoffConfig,ExpectedReportName,PairGroup,Notes
+baseline_promoted,2026_YTD,2026.01.01,2026.07.02,outputs/spread_guard_probe_handoff/configs/001_baseline_promoted_2026_ytd.ini,outputs\spread_probe_baseline_promoted_2026_YTD,baseline,Guard off baseline.
+baseline_promoted_atr_spread_guard,2026_YTD,2026.01.01,2026.07.02,outputs/spread_guard_probe_handoff/configs/002_baseline_promoted_atr_spread_guard_2026_ytd.ini,outputs\spread_probe_baseline_promoted_atr_spread_guard_2026_YTD,baseline,Guard on baseline.
+tp38_sl18,2026_YTD,2026.01.01,2026.07.02,outputs/spread_guard_probe_handoff/configs/003_tp38_sl18_2026_ytd.ini,outputs\spread_probe_tp38_sl18_2026_YTD,tp38,Guard off TP38 candidate.
+tp38_sl18_atr_spread_guard,2026_YTD,2026.01.01,2026.07.02,outputs/spread_guard_probe_handoff/configs/004_tp38_sl18_atr_spread_guard_2026_ytd.ini,outputs\spread_probe_tp38_sl18_atr_spread_guard_2026_YTD,tp38,Guard on TP38 candidate.
