@@ -50,6 +50,15 @@ $manifestRows = @(
       Window = "full"
       From = "2024.01.01"
       To = "2026.07.02"
+   },
+   [pscustomobject]@{
+      Priority = 3
+      Phase = "phase1_fast_triage"
+      Profile = "bad_report"
+      Set = "stress"
+      Window = "missing_profit"
+      From = "2025.01.01"
+      To = "2025.03.31"
    }
 )
 
@@ -77,8 +86,20 @@ $balanceOnlyReport = @"
 </body></html>
 "@
 
+$badReport = @"
+<html><body>
+<table>
+<tr><td>Symbol</td><td>XAUUSD</td></tr>
+<tr><td>Period</td><td>M15</td></tr>
+<tr><td>Total Trades:</td><td>9</td></tr>
+<tr><td>Profit Factor:</td><td>not available</td></tr>
+</table>
+</body></html>
+"@
+
 Set-Content -LiteralPath (Join-Path $reportsDir "validation_fixture_profile_stress_2024_Q1.htm") -Value $fullReport -Encoding UTF8
 Set-Content -LiteralPath (Join-Path $reportsDir "validation_balance_only_split_full.html") -Value $balanceOnlyReport -Encoding UTF8
+Set-Content -LiteralPath (Join-Path $reportsDir "validation_bad_report_stress_missing_profit.htm") -Value $badReport -Encoding UTF8
 
 $collector = Join-Path $resolvedRepo "work\collect_validation_results.ps1"
 $outResults = "results.csv"
@@ -97,8 +118,9 @@ $outMarkdown = "metrics.md"
 $results = Import-Csv -LiteralPath (Join-Path $tempRoot $outResults)
 $first = $results | Where-Object Profile -eq "fixture_profile" | Select-Object -First 1
 $second = $results | Where-Object Profile -eq "balance_only" | Select-Object -First 1
+$bad = $results | Where-Object Profile -eq "bad_report" | Select-Object -First 1
 
-if($null -eq $first -or $null -eq $second) {
+if($null -eq $first -or $null -eq $second -or $null -eq $bad) {
    throw "Expected parser smoke rows were not produced."
 }
 
@@ -115,5 +137,18 @@ Assert-Equal $second.NetProfit "777.77" "Second derived net profit"
 Assert-Equal $second.Balance "1777.77" "Second final balance"
 Assert-Equal $second.MaxDrawdownMoney "33.3" "Second max drawdown"
 Assert-Equal $second.RecoveryFactor "23.3565" "Second recovery factor"
+
+Assert-Equal $bad.Status "UNPARSED" "Bad report status"
+Assert-Equal $bad.NetProfit "" "Bad report net profit"
+Assert-Equal $bad.Balance "" "Bad report balance"
+
+$summary = Import-Csv -LiteralPath (Join-Path $tempRoot $outSummary)
+$badSummary = $summary | Where-Object Profile -eq "bad_report" | Select-Object -First 1
+if($null -eq $badSummary) {
+   throw "Expected bad-report summary row was not produced."
+}
+Assert-Equal $badSummary.ReportsParsed "0" "Bad report summary parsed count"
+Assert-Equal $badSummary.UnparsedReports "1" "Bad report summary unparsed count"
+Assert-Equal $badSummary.EvidenceComplete "False" "Bad report evidence completeness"
 
 "REPORT_COLLECTOR_PARSER_SMOKE_PASS"
