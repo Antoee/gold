@@ -65,7 +65,7 @@ def check_source() -> None:
         "InpRiskPercent", "InpMinRiskReward", "InpStopATRMultiplier", "InpTakeProfitATRMultiplier",
         "InpMaxDailyLossPercent", "InpMaxWeeklyLossPercent", "InpMaxMonthlyLossPercent", "InpMaxEquityDrawdownPercent",
         "InpMaxConsecutiveLosses", "InpCooldownMinutesAfterLoss", "InpMaxSpreadPoints", "InpUseATRSpreadGuard", "InpMaxSpreadATRPercent", "InpSlippagePoints",
-        "InpUseTimeExit", "InpMaxTradeMinutes", "InpUseSessionFilter", "InpSessionStartHour", "InpSessionEndHour", "InpAllowMonday", "InpAllowTuesday",
+        "InpMinADX", "InpUseTimeExit", "InpMaxTradeMinutes", "InpUseSessionFilter", "InpSessionStartHour", "InpSessionEndHour", "InpAllowMonday", "InpAllowTuesday",
         "InpAllowWednesday", "InpAllowThursday", "InpAllowFriday", "InpAllowSunday", "InpDisableFridayEvening", "InpFridayCutoffHour",
         "InpUseBOS", "InpUseLiquiditySweep", "InpMinimumConfirmations", "InpUseATRTrailing",
         "InpUseStructureTrailing", "InpStructureTrailingLookback", "InpStructureTrailingBufferATR", "InpStructureTrailingTriggerATR",
@@ -75,7 +75,7 @@ def check_source() -> None:
     input_names = set(re.findall(r"^\s*input\s+(?:bool|int|long|double|string|datetime|ENUM_TIMEFRAMES)\s+(Inp[A-Za-z0-9_]+)\s*=", source, flags=re.M))
     for name in required_inputs:
         if name not in input_names: fail(f"EA source missing required risk/research input: {name}")
-    for term in ["OrderCalcProfit", "OrderCalcMargin", "HistoryDealSelect", "TradingSessionAllowsNewTrade", "TimeToStruct", "OnTester", "consecutiveLosses", "ATRSpreadAllowsTrade", "TimeExitTriggered", "ApplyMTFTrendFilter", "HigherTimeframeTrendBias", "MTFTrendAllowsDirection", "StructureTrailingStop"]:
+    for term in ["OrderCalcProfit", "OrderCalcMargin", "HistoryDealSelect", "TradingSessionAllowsNewTrade", "TimeToStruct", "OnTester", "consecutiveLosses", "ATRSpreadAllowsTrade", "TimeExitTriggered", "ApplyMTFTrendFilter", "HigherTimeframeTrendBias", "MTFTrendAllowsDirection", "StructureTrailingStop", "InpMinADX"]:
         if term not in source: fail(f"EA source missing expected safety/analytics implementation marker: {term}")
 
 def check_hard_lock() -> None:
@@ -88,14 +88,15 @@ def check_hard_lock() -> None:
 def check_profiles() -> None:
     base_session = {"InpUseSessionFilter": "false", "InpSessionStartHour": "0", "InpSessionEndHour": "24", "InpAllowMonday": "true", "InpAllowTuesday": "true", "InpAllowWednesday": "true", "InpAllowThursday": "true", "InpAllowFriday": "true", "InpAllowSunday": "false", "InpDisableFridayEvening": "false", "InpFridayCutoffHour": "20"}
     base_mtf = {"InpUseMTFTrendFilter": "false", "InpMTFTrendTimeframe": "PERIOD_H1", "InpMTFTrendEMA": "200"}
+    base_adx = {"InpMinADX": "0.0"}
     base_structure = {"InpUseStructureTrailing": "false", "InpStructureTrailingLookback": "12", "InpStructureTrailingBufferATR": "0.20", "InpStructureTrailingTriggerATR": "1.20"}
     base_spread = {"InpMaxSpreadPoints": "350", "InpUseATRSpreadGuard": "false", "InpMaxSpreadATRPercent": "8.0"}
     base_time = {"InpUseTimeExit": "false", "InpMaxTradeMinutes": "240"}
     expected = {
-        "ROBUST_BOS_SWEEP_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.50", "InpRiskPercent": "1.60", **base_session, **base_mtf, **base_structure, **base_spread, **base_time},
-        "CANDIDATE_RISK16_SL18_TP38_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.80", "InpMaxEquityDrawdownPercent": "4.00", **base_session, **base_mtf, **base_structure, **base_spread, **base_time},
-        "CANDIDATE_RISK16_SL16_TP38_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.80", "InpMaxEquityDrawdownPercent": "4.00", **base_session, **base_mtf, **base_structure, **base_spread, **base_time},
-        "CANDIDATE_RISK16_SL18_TP35_GIVEBACK_PROFILE.set": {"InpUseProfitGivebackGuard": "true", **base_session, **base_mtf, **base_structure, **base_spread, **base_time},
+        "ROBUST_BOS_SWEEP_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.50", "InpRiskPercent": "1.60", **base_session, **base_mtf, **base_adx, **base_structure, **base_spread, **base_time},
+        "CANDIDATE_RISK16_SL18_TP38_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.80", "InpMaxEquityDrawdownPercent": "4.00", **base_session, **base_mtf, **base_adx, **base_structure, **base_spread, **base_time},
+        "CANDIDATE_RISK16_SL16_TP38_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.80", "InpMaxEquityDrawdownPercent": "4.00", **base_session, **base_mtf, **base_adx, **base_structure, **base_spread, **base_time},
+        "CANDIDATE_RISK16_SL18_TP35_GIVEBACK_PROFILE.set": {"InpUseProfitGivebackGuard": "true", **base_session, **base_mtf, **base_adx, **base_structure, **base_spread, **base_time},
     }
     for rel, required in expected.items():
         values = parse_set(ROOT / rel)
@@ -125,6 +126,9 @@ def check_configs(config_dir: Path, label: str) -> None:
         if "tp38" in profile_name:
             if first_value(inputs.get("InpTakeProfitATRMultiplier", "")) != "3.80": fail(f"{rel} tp38 config must set InpTakeProfitATRMultiplier=3.80.")
             if first_value(inputs.get("InpMaxEquityDrawdownPercent", "")) != "4.00": fail(f"{rel} protected candidate must set InpMaxEquityDrawdownPercent=4.00.")
+        if "adx_filter_probe" in parent_name:
+            actual_adx = first_value(inputs.get("InpMinADX", "")); expected_adx = "18.0" if "adx18" in profile_name else "0.0"
+            if actual_adx != expected_adx: fail(f"{rel} expected InpMinADX={expected_adx}, found {actual_adx or '<missing>'}.")
         if "session_variant" in parent_name and "tp38" in profile_name and first_value(inputs.get("InpUseSessionFilter", "")) != "true": fail(f"{rel} session candidate must enable InpUseSessionFilter=true.")
         if "mtf_trend_probe" in parent_name:
             actual_mtf = first_value(inputs.get("InpUseMTFTrendFilter", "")); expected_mtf = "true" if "h1_mtf" in profile_name else "false"
@@ -153,6 +157,7 @@ def main() -> int:
     check_source(); check_hard_lock(); check_profiles()
     check_manifest(ROOT / "outputs" / "micro_test_handoff" / "HANDOFF_MANIFEST.csv", 8, "stress micro")
     check_manifest(ROOT / "outputs" / "recent_oos_handoff" / "HANDOFF_MANIFEST.csv", 8, "recent OOS")
+    check_manifest(ROOT / "outputs" / "adx_filter_probe_handoff" / "HANDOFF_MANIFEST.csv", 4, "ADX filter probe")
     check_manifest(ROOT / "outputs" / "spread_guard_probe_handoff" / "HANDOFF_MANIFEST.csv", 4, "ATR spread guard probe")
     check_manifest(ROOT / "outputs" / "time_exit_probe_handoff" / "HANDOFF_MANIFEST.csv", 4, "time exit probe")
     check_manifest(ROOT / "outputs" / "mtf_trend_probe_handoff" / "HANDOFF_MANIFEST.csv", 4, "MTF trend probe")
@@ -160,6 +165,7 @@ def main() -> int:
     check_manifest(ROOT / "outputs" / "session_variant_handoff" / "HANDOFF_MANIFEST.csv", 6, "session variant")
     check_configs(ROOT / "outputs" / "micro_test_handoff" / "configs", "stress micro")
     check_configs(ROOT / "outputs" / "recent_oos_handoff" / "configs", "recent OOS")
+    check_configs(ROOT / "outputs" / "adx_filter_probe_handoff" / "configs", "ADX filter probe")
     check_configs(ROOT / "outputs" / "spread_guard_probe_handoff" / "configs", "ATR spread guard probe")
     check_configs(ROOT / "outputs" / "time_exit_probe_handoff" / "configs", "time exit probe")
     check_configs(ROOT / "outputs" / "mtf_trend_probe_handoff" / "configs", "MTF trend probe")
