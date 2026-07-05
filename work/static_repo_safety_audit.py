@@ -83,7 +83,7 @@ def check_hard_lock() -> None:
     text = read_text(ROOT / "work" / "MT5_LOCAL_LAUNCH_DISABLED.lock")
     if "hard lock" not in text.lower(): fail("MT5 local launch lock exists but does not describe itself as a hard lock.")
     guard = read_text(ROOT / "work" / "assert_mt5_launch_allowed.ps1")
-    for term in ["MT5_LOCAL_LAUNCH_DISABLED.lock", "ALLOW_MT5_FOCUS_RISK", "ALLOW_MT5_HIDDEN_DESKTOP_ACK", "Stop-Process"]:
+    for term in ["MT5_LOCAL_LAUNCH_DISABLED.lock", "ALLOW_MT5_FOCUS_RISK", "ALLOW_MT5_HIDDEN_DESKTOP_ACK", "Stop-Process", "Get-CimInstance", "mt5ExcludeNameRegex"]:
         if term not in guard: fail(f"Launch guard missing required term: {term}")
 
 def check_profiles() -> None:
@@ -165,6 +165,7 @@ def check_configs(config_dir: Path, label: str) -> None:
 
 def main() -> int:
     check_source(); check_hard_lock(); check_profiles()
+    check_manifest(ROOT / "outputs" / "stress_smoke_handoff" / "HANDOFF_MANIFEST.csv", 2, "stress smoke")
     check_manifest(ROOT / "outputs" / "micro_test_handoff" / "HANDOFF_MANIFEST.csv", 8, "stress micro")
     check_manifest(ROOT / "outputs" / "recent_oos_handoff" / "HANDOFF_MANIFEST.csv", 8, "recent OOS")
     check_manifest(ROOT / "outputs" / "confirmation_probe_handoff" / "HANDOFF_MANIFEST.csv", 4, "confirmation probe")
@@ -175,6 +176,7 @@ def main() -> int:
     check_manifest(ROOT / "outputs" / "mtf_trend_probe_handoff" / "HANDOFF_MANIFEST.csv", 4, "MTF trend probe")
     check_manifest(ROOT / "outputs" / "structure_trailing_probe_handoff" / "HANDOFF_MANIFEST.csv", 4, "structure trailing probe")
     check_manifest(ROOT / "outputs" / "session_variant_handoff" / "HANDOFF_MANIFEST.csv", 6, "session variant")
+    check_configs(ROOT / "outputs" / "stress_smoke_handoff" / "configs", "stress smoke")
     check_configs(ROOT / "outputs" / "micro_test_handoff" / "configs", "stress micro")
     check_configs(ROOT / "outputs" / "recent_oos_handoff" / "configs", "recent OOS")
     check_configs(ROOT / "outputs" / "confirmation_probe_handoff" / "configs", "confirmation probe")
