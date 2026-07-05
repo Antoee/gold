@@ -17,23 +17,28 @@ Current evidence:
 Run these without launching MT5:
 
 1. `work/build_optimization_guardrail_audit.ps1`
-2. `work/build_fast_probe_readiness_snapshot.ps1`
-3. `work/build_next_fast_batch_selector.ps1`
-4. `work/import_mt5_compile_log.ps1` against the latest exported MetaEditor compile log
-5. `work/build_external_mt5_validation_package.ps1`
-6. `work/test_external_mt5_validation_package.ps1`
-7. `work/import_external_mt5_validation_package_reports.ps1`
-8. `work/test_external_mt5_micro_decision.ps1`
-9. `work/build_external_mt5_micro_decision.ps1`
-10. `work/build_external_validation_readiness.ps1`
-11. `work/build_profit_readiness_snapshot.ps1`
-12. `work/build_report_import_preflight.ps1`
-13. `work/audit_handoff_config_integrity.ps1`
-14. `work/audit_mt5_local_safety.ps1`
+2. `work/build_risk_adjusted_micro_batch.ps1`
+3. `work/build_next_test_handoff.ps1 -BatchCsv outputs\RISK_ADJUSTED_MICRO_BATCH.csv -OutDir outputs\risk_adjusted_micro_handoff -ZipPath outputs\risk_adjusted_micro_handoff.zip`
+4. `work/audit_handoff_config_integrity.ps1 -ManifestPath outputs\risk_adjusted_micro_handoff\HANDOFF_MANIFEST.csv -OutCsv outputs\RISK_ADJUSTED_MICRO_HANDOFF_INTEGRITY.csv -OutMarkdown outputs\RISK_ADJUSTED_MICRO_HANDOFF_INTEGRITY.md -ZipPath outputs\risk_adjusted_micro_handoff.zip`
+5. `work/build_fast_probe_readiness_snapshot.ps1`
+6. `work/build_next_fast_batch_selector.ps1`
+7. `work/import_mt5_compile_log.ps1` against the latest exported MetaEditor compile log
+8. `work/build_external_mt5_validation_package.ps1`
+9. `work/test_external_mt5_validation_package.ps1`
+10. `work/import_external_mt5_validation_package_reports.ps1`
+11. `work/test_external_mt5_micro_decision.ps1`
+12. `work/build_external_mt5_micro_decision.ps1`
+13. `work/build_external_validation_readiness.ps1`
+14. `work/build_profit_readiness_snapshot.ps1`
+15. `work/build_report_import_preflight.ps1`
+16. `work/audit_handoff_config_integrity.ps1`
+17. `work/audit_mt5_local_safety.ps1`
 
 Expected current state:
 
 - Optimization guardrails: 16 profiles audited, 16 require promotion review
+- Risk-adjusted micro batch: 12 rows selected from 183 configs, with baseline anchors plus `tp38_sl18` and `giveback25_tp38` stress windows
+- Risk-adjusted micro handoff integrity: PASS, 12 configs checked, 12 passed
 - Fast-probe readiness: waiting for exported reports until the fast handoff packs are run/imported
 - Next fast batch: `STRESS_SMOKE`, 2 rows, because it is the first pending gate
 - External MT5 package: PASS, 8 micro configs packaged, 17 zip entries
@@ -44,6 +49,26 @@ Expected current state:
 - Report import preflight: parser, manifest, guardrails, handoff, safety, and compile status pass; reports still missing
 - Handoff integrity: PASS
 - Local safety: PASS, no MT5 processes, unlock files absent, hard local launch lock present
+
+## Risk-Adjusted Micro Batch
+
+`work/build_risk_adjusted_micro_batch.ps1` writes `outputs/RISK_ADJUSTED_MICRO_BATCH.csv` and `outputs/RISK_ADJUSTED_MICRO_BATCH.md` without launching MT5. It is the first choice when tester time is limited because it:
+
+- repairs unparsed reports before adding more runs
+- includes same-window baseline anchors for fair comparison
+- prioritizes cheap phase-1 stress windows
+- caps rows per profile so one idea cannot consume the whole testing window
+- penalizes higher risk, far TP extensions, tighter stops, and promotion-rejected profiles
+
+The current local selection is 12 runs: 5 `baseline_promoted` anchors, 4 `tp38_sl18` stress windows, and 3 `giveback25_tp38` stress windows. The handoff package is built with:
+
+`work/build_next_test_handoff.ps1 -BatchCsv outputs\RISK_ADJUSTED_MICRO_BATCH.csv -OutDir outputs\risk_adjusted_micro_handoff -ZipPath outputs\risk_adjusted_micro_handoff.zip`
+
+Audit it with:
+
+`work/audit_handoff_config_integrity.ps1 -ManifestPath outputs\risk_adjusted_micro_handoff\HANDOFF_MANIFEST.csv -OutCsv outputs\RISK_ADJUSTED_MICRO_HANDOFF_INTEGRITY.csv -OutMarkdown outputs\RISK_ADJUSTED_MICRO_HANDOFF_INTEGRITY.md -ZipPath outputs\risk_adjusted_micro_handoff.zip`
+
+This batch can only produce triage evidence. Never promote from it alone.
 
 ## External MT5 Micro Package
 
@@ -66,7 +91,7 @@ Expected current state:
 5. Run `work/build_external_mt5_micro_decision.ps1`.
 6. Run `work/build_external_validation_readiness.ps1`.
 7. If external validation readiness is `READY_FOR_FULL_VALIDATION`, continue to the full handoff and phase-2 real-tick validation.
-8. If broader profit-search reports changed, rerun `work/import_all_available_reports.ps1`, `work/analyze_profit_search.ps1`, `work/build_result_import_decision_matrix.ps1`, `work/build_optimization_guardrail_audit.ps1`, and `work/build_report_import_preflight.ps1`.
+8. If broader profit-search reports changed, rerun `work/import_all_available_reports.ps1`, `work/analyze_profit_search.ps1`, `work/build_result_import_decision_matrix.ps1`, `work/build_optimization_guardrail_audit.ps1`, `work/build_risk_adjusted_micro_batch.ps1`, and `work/build_report_import_preflight.ps1`.
 9. Build promotion packets only for candidates with complete evidence.
 
 ## Promotion Rule
