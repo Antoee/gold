@@ -8,12 +8,13 @@ This matrix keeps tester time focused on the shortest gates that can reject a ca
 |---:|---|---:|---|---|---|
 | 1 | `STRESS_MICRO` | 8 | Does `tp38_sl18` survive known stress windows? | No losses, parsed reports, candidate >= baseline in every pair | Run recent-OOS |
 | 2 | `RECENT_OOS` | 8 | Does `tp38_sl18` stay robust on 2025 Q4 and 2026 data? | No losses, parsed reports, candidate >= baseline in every pair | Run full handoff |
-| 3 | `SPREAD_GUARD_PROBE` | 4 | Does ATR-relative spread filtering improve 2026 behavior? | Candidate >= paired unguarded profile and non-negative | Expand passing spread-guard profile |
-| 4 | `TIME_EXIT_PROBE` | 4 | Does a 240-minute stale-trade exit improve 2026 behavior? | Candidate >= paired no-time-exit profile and non-negative | Expand passing time-exit profile |
-| 5 | `MTF_TREND_PROBE` | 4 | Does H1 EMA 200 filtering help? | Candidate >= paired unfiltered profile and non-negative | Expand passing MTF profile |
-| 6 | `STRUCTURE_TRAIL_PROBE` | 4 | Does structure trailing protect winners? | Candidate >= paired unfiltered profile and non-negative | Expand passing structure-trailing profile |
-| 7 | `SESSION_PROBE` | 6 | Does session filtering improve 2026 behavior? | Candidate >= paired baseline and non-negative | Expand passing session profile |
-| 8 | `FULL_HANDOFF` | 24 | Does a survivor beat the promoted baseline broadly? | Full net > `$866.59`, split aggregate > `$2354.65`, no losing required window | Build promotion packet |
+| 3 | `ADX_FILTER_PROBE` | 4 | Does ADX 18 filtering improve 2026 behavior? | Candidate >= paired no-ADX profile and non-negative | Expand passing ADX profile |
+| 4 | `SPREAD_GUARD_PROBE` | 4 | Does ATR-relative spread filtering improve 2026 behavior? | Candidate >= paired unguarded profile and non-negative | Expand passing spread-guard profile |
+| 5 | `TIME_EXIT_PROBE` | 4 | Does a 240-minute stale-trade exit improve 2026 behavior? | Candidate >= paired no-time-exit profile and non-negative | Expand passing time-exit profile |
+| 6 | `MTF_TREND_PROBE` | 4 | Does H1 EMA 200 filtering help? | Candidate >= paired unfiltered profile and non-negative | Expand passing MTF profile |
+| 7 | `STRUCTURE_TRAIL_PROBE` | 4 | Does structure trailing protect winners? | Candidate >= paired unfiltered profile and non-negative | Expand passing structure-trailing profile |
+| 8 | `SESSION_PROBE` | 6 | Does session filtering improve 2026 behavior? | Candidate >= paired baseline and non-negative | Expand passing session profile |
+| 9 | `FULL_HANDOFF` | 24 | Does a survivor beat the promoted baseline broadly? | Full net > `$866.59`, split aggregate > `$2354.65`, no losing required window | Build promotion packet |
 
 ## Rules
 
