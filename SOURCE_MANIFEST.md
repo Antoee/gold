@@ -5,7 +5,7 @@ Generated without launching MT5.
 ## GitHub EA Source
 
 - File: `Professional_XAUUSD_EA.mq5`
-- Version: `1.03`
+- Version: `1.04`
 - Status: committed to GitHub as a risk-first, no-martingale/no-grid XAUUSD EA source.
 - Compile status: not locally compiled in this remote-only pass.
 - Purpose: provides the repository with an actual EA source file matching the documented tester input surface and handoff configs.
@@ -35,7 +35,7 @@ The current GitHub source should be compiled and tested before live or promotion
   - `InpTakeProfitATRMultiplier=3.80`
   - `InpMaxEquityDrawdownPercent=4.00`
 - BOS and liquidity-sweep confirmations.
-- Optional EMA cross, momentum candle, engulfing candle, ADX, ATR, adaptive trend-bias, break-even, ATR trailing, and profit giveback guard modules.
+- Optional EMA cross, momentum candle, engulfing candle, ADX, ATR, adaptive trend-bias, break-even, ATR trailing, session/day filter, Friday-evening cutoff, and profit giveback guard modules.
 - Risk protections:
   - risk-based lot sizing
   - native `OrderCalcProfit` loss-per-lot sizing with tick-value fallback
@@ -47,6 +47,11 @@ The current GitHub source should be compiled and tested before live or promotion
   - spread/slippage controls
   - cooldown after loss
   - one-symbol position management
+- Session controls:
+  - `InpUseSessionFilter`
+  - `InpSessionStartHour` / `InpSessionEndHour`
+  - weekday toggles for Monday through Friday plus Sunday
+  - `InpDisableFridayEvening` and `InpFridayCutoffHour`
 - Custom Strategy Tester scoring through `double OnTester()`.
 
 ## Static Safety Automation
@@ -58,6 +63,7 @@ The current GitHub source should be compiled and tested before live or promotion
   - committed EA source exists and exposes required risk/research inputs
   - forbidden recovery-style concepts are absent from executable source after comment stripping
   - native `OrderCalcProfit` and `OrderCalcMargin` risk-sizing markers are present
+  - session filter implementation and root-profile session input pins are present
   - hard local MT5 launch lock and launch guard are present
   - protected TP 3.80 candidate `.set` files use `InpMaxEquityDrawdownPercent=4.00`
   - stress micro and recent-OOS manifests have 8 rows each
