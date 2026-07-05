@@ -60,6 +60,16 @@ Current promoted defaults include:
 - EMA cross, momentum candle, and engulfing confirmations disabled.
 - BOS and liquidity sweep enabled with `InpMinimumConfirmations=2`.
 
+## Optimization Scoring
+
+The local EA source includes an `OnTester()` custom optimization score for MT5 Strategy Tester.
+
+- Default mode is `FITNESS_ROBUST_PROFIT`, which rewards net profit and profit factor while penalizing low trade count and excessive equity drawdown.
+- `FITNESS_NET_PROFIT` is available when raw-profit sorting is needed for comparison.
+- `FITNESS_RECOVERY_SHARPE` is available for research passes that should emphasize recovery factor and Sharpe ratio.
+- The promoted and queued `.set` profiles pin these optimizer inputs.
+- This does not change live trade behavior; it only changes the custom criterion returned to MT5 Strategy Tester optimization.
+
 ## Latest Research
 
 Queued candidates from the latest risk/stop/target neighborhood stress sweep:
@@ -99,5 +109,5 @@ Next work should focus on increasing profit from the robust no-date profile with
 
 1. Fully validate the queued `3.80` TP candidates across monthly, quarterly, yearly, half-year, and full-period windows.
 2. Test on additional broker/history sources.
-3. Add drawdown/profit-factor extraction from reports, not only final balance.
+3. Use the custom optimization criterion to rank candidates by robustness, not only raw net profit.
 4. Keep the date-block profile as a benchmark, not the default.
