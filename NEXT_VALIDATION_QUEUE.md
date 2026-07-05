@@ -47,6 +47,7 @@ Prepared profit-search pack:
 - Ranking report: `PROFIT_SEARCH_RANKING.md`
 - Result-import decision matrix: `RESULT_IMPORT_DECISION_MATRIX.md`
 - Profit readiness snapshot: `PROFIT_READINESS_SNAPSHOT.md`
+- Fast-probe readiness snapshot: `FAST_PROBE_READINESS_SNAPSHOT.md`
 - Optimization guardrail audit: `OPTIMIZATION_GUARDRAIL_AUDIT.md`
 - Report import preflight: `REPORT_IMPORT_PREFLIGHT.md`
 - Handoff integrity report: `HANDOFF_CONFIG_INTEGRITY.md`
@@ -59,6 +60,7 @@ Prepared profit-search pack:
 - Current profit-search ranking status: all 21 profile/phase rows are `MissingEvidence`; no candidate is recommended yet.
 - Current next-batch status: 24 prioritized configs, starting with fast stress-window triage for the baseline and highest-priority TP/SL candidates.
 - Current result-import decision status: all 21 profile/phase rows are `RunMissingReports`; no profile is ready for phase-2 advancement or promotion-packet review until reports are exported and parsed.
+- Current fast-probe readiness status: waiting for exported fast-probe reports; no probe can promote a profile by itself.
 - Current profit readiness status: `NOT_READY`; keep the current promoted profile because no candidate has enough imported evidence to replace it.
 - Current optimization guardrail status: 16 profiles audited, all 16 are test-eligible but require promotion review; top score is `giveback25_tp38=87`. Guardrails must be checked before spending tester time or building promotion packets.
 - Current report-import preflight status: parser, manifest, optimization guardrails, handoff, and local safety checks pass; imported metrics are still `WAITING_FOR_REPORTS`.
