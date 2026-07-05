@@ -27,7 +27,7 @@ Pass only if each break-even candidate:
 After reports exist, import them with:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\work\import_all_available_reports.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\work\import_breakeven_probe_reports.ps1
 ```
 
 This wrapper imports exported reports only and does not launch MT5.
