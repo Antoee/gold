@@ -17,6 +17,16 @@ This project is currently in evidence-gathering mode. Do not promote a new profi
 - Promotion packet status: `MISSING_EVIDENCE`
 - Promotion is blocked until reports are parsed and every gate passes.
 
+## New Research Axis
+
+EA source version `1.05` adds an optional higher-timeframe EMA trend filter:
+
+- `InpUseMTFTrendFilter`
+- `InpMTFTrendTimeframe`
+- `InpMTFTrendEMA`
+
+The promoted root profiles keep this disabled. The four-run MTF trend probe tests H1 EMA 200 filtering on 2026 YTD before any broader validation spend.
+
 ## Test Prerequisite
 
 The MT5 terminal used for testing must have `Professional_XAUUSD_EA.ex5` installed in its Experts folder before any handoff config can run. The configs reference that compiled expert directly.
@@ -44,8 +54,9 @@ Fastest safe order:
 1. Static safety audit through GitHub Actions.
 2. Stress micro handoff.
 3. Recent out-of-sample handoff through 2026.
-4. Optional session-variant probe.
-5. Full 24-config handoff only after the fast gates pass.
+4. Optional MTF trend probe.
+5. Optional session-variant probe.
+6. Full 24-config handoff only after the fast gates pass.
 
 Do not run a larger batch if a smaller gate already rejects the candidate.
 
@@ -77,6 +88,22 @@ Decision rule:
 - If `tp38_sl18` loses any recent-OOS paired window, keep the current promoted profile and deprioritize it.
 - If `tp38_sl18` matches or improves every paired recent-OOS window, continue to the full 24-config handoff.
 - Do not promote from recent-OOS evidence alone.
+
+## MTF Trend Probe
+
+The MTF trend probe is optional and small. It tests whether the H1 EMA 200 filter deserves broader validation.
+
+- Manifest: `outputs/mtf_trend_probe_handoff/HANDOFF_MANIFEST.csv`
+- Configs: `outputs/mtf_trend_probe_handoff/configs/*.ini`
+- Rows: 4 total
+- Window: `2026_YTD`
+- Candidates: `baseline_promoted_h1_mtf`, `tp38_sl18_h1_mtf`
+
+Decision rule:
+
+- If an H1 MTF candidate loses or underperforms its unfiltered pair, do not spend more tester time on that filter.
+- If an H1 MTF candidate beats its unfiltered pair and stays profitable, expand it into stress micro and recent-OOS validation.
+- Do not promote from the MTF probe alone.
 
 ## Session Variant Probe
 
@@ -129,4 +156,4 @@ After imports, refresh:
 
 ## Bottom Line
 
-The fastest safe route is not more unfiltered optimization on the active desktop. It is static safety, paired stress micro validation, recent out-of-sample validation through 2026, optional session probing, then full handoff validation and promotion gates. Until those reports exist, keep the current promoted profile.
+The fastest safe route is not more unfiltered optimization on the active desktop. It is static safety, paired stress micro validation, recent out-of-sample validation through 2026, optional MTF/session probes, then full handoff validation and promotion gates. Until those reports exist, keep the current promoted profile.
