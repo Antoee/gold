@@ -42,8 +42,13 @@ A candidate should not replace the promoted profile unless it improves profit wh
 1. Export MT5 report files into `outputs/`.
 2. Rerun `work/collect_validation_results.ps1` for the standard validation pack.
 3. Rerun the profit-search collector command locally for `work/generated_profit_search/PROFIT_SEARCH_CONFIG_MANIFEST.csv`.
-4. Rerun `work/analyze_robust_candidates.ps1`.
-5. Rerun `work/analyze_loss_control.ps1`.
-6. Rerun `work/analyze_promotion_gate.ps1`.
-7. Rerun `work/audit_profile_inputs.ps1` before trusting any changed `.set` file.
-8. Promote only if all profit, no-loss, drawdown/profit-factor, promotion-gate, and profile-input checks pass.
+4. Rerun `work/analyze_profit_search.ps1`.
+5. Rerun `work/analyze_robust_candidates.ps1`.
+6. Rerun `work/analyze_loss_control.ps1`.
+7. Rerun `work/analyze_promotion_gate.ps1`.
+8. Rerun `work/audit_profile_inputs.ps1` before trusting any changed `.set` file.
+9. Promote only if all profit, no-loss, drawdown/profit-factor, promotion-gate, and profile-input checks pass.
+
+## Profit Search Ranking
+
+`work/analyze_profit_search.ps1` writes `PROFIT_SEARCH_RANKING.md`. Phase-1 rows can only become phase-2 candidates. A replacement profile needs complete phase-2 real-tick evidence, net profit above the baseline target, zero losing windows, non-negative worst window, and drawdown/profit-factor review.
