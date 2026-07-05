@@ -100,21 +100,22 @@ New-Item -ItemType Directory -Force -Path $profileRoot, $phase1Root, $phase2Root
 $candidates = @(
    [pscustomobject]@{ Priority = 1;  Name = "baseline_promoted";               Phase2 = $true;  Overrides = @{} },
    [pscustomobject]@{ Priority = 2;  Name = "baseline_dd4";                    Phase2 = $true;  Overrides = @{} },
-   [pscustomobject]@{ Priority = 3;  Name = "tp38_sl18";                       Phase2 = $true;  Overrides = @{ InpTakeProfitATRMultiplier = "3.80" } },
-   [pscustomobject]@{ Priority = 4;  Name = "tp42_sl18";                       Phase2 = $true;  Overrides = @{ InpTakeProfitATRMultiplier = "4.20" } },
-   [pscustomobject]@{ Priority = 5;  Name = "tp38_sl16";                       Phase2 = $true;  Overrides = @{ InpStopATRMultiplier = "1.60"; InpTakeProfitATRMultiplier = "3.80" } },
-   [pscustomobject]@{ Priority = 6;  Name = "tp42_sl16";                       Phase2 = $true;  Overrides = @{ InpStopATRMultiplier = "1.60"; InpTakeProfitATRMultiplier = "4.20" } },
-   [pscustomobject]@{ Priority = 7;  Name = "tp45_sl18";                       Phase2 = $false; Overrides = @{ InpTakeProfitATRMultiplier = "4.50" } },
-   [pscustomobject]@{ Priority = 8;  Name = "tp38_sl20";                       Phase2 = $false; Overrides = @{ InpStopATRMultiplier = "2.00"; InpTakeProfitATRMultiplier = "3.80" } },
-   [pscustomobject]@{ Priority = 9;  Name = "trail14_tp38";                    Phase2 = $false; Overrides = @{ InpTakeProfitATRMultiplier = "3.80"; InpTrailATRMultiplier = "1.40" } },
-   [pscustomobject]@{ Priority = 10; Name = "trail18_tp38";                    Phase2 = $false; Overrides = @{ InpTakeProfitATRMultiplier = "3.80"; InpTrailATRMultiplier = "1.80" } },
-   [pscustomobject]@{ Priority = 11; Name = "rr18_tp42";                       Phase2 = $false; Overrides = @{ InpMinRiskReward = "1.80"; InpTakeProfitATRMultiplier = "4.20" } },
-   [pscustomobject]@{ Priority = 12; Name = "risk18_tp38_sl18";                Phase2 = $false; Overrides = @{ InpRiskPercent = "1.80"; InpTakeProfitATRMultiplier = "3.80" } },
-   [pscustomobject]@{ Priority = 13; Name = "risk20_tp38_sl18";                Phase2 = $false; Overrides = @{ InpRiskPercent = "2.00"; InpTakeProfitATRMultiplier = "3.80" } },
-   [pscustomobject]@{ Priority = 14; Name = "risk14_tp42_sl16";                Phase2 = $false; Overrides = @{ InpRiskPercent = "1.40"; InpStopATRMultiplier = "1.60"; InpTakeProfitATRMultiplier = "4.20" } },
-   [pscustomobject]@{ Priority = 15; Name = "giveback25_tp38";                 Phase2 = $false; Overrides = @{ InpTakeProfitATRMultiplier = "3.80"; InpUseProfitGivebackGuard = "true"; InpDailyProfitGivebackPercent = "25.0"; InpWeeklyProfitGivebackPercent = "25.0"; InpMonthlyProfitGivebackPercent = "25.0" } },
-   [pscustomobject]@{ Priority = 16; Name = "giveback35_tp38";                 Phase2 = $false; Overrides = @{ InpTakeProfitATRMultiplier = "3.80"; InpUseProfitGivebackGuard = "true" } },
-   [pscustomobject]@{ Priority = 17; Name = "be12_tp38";                       Phase2 = $false; Overrides = @{ InpTakeProfitATRMultiplier = "3.80"; InpUseBreakEven = "true"; InpBreakEvenTriggerR = "1.20"; InpBreakEvenBufferPoints = "20" } }
+   [pscustomobject]@{ Priority = 3;  Name = "risk12_tp38_sl18";                Phase2 = $true;  Overrides = @{ InpRiskPercent = "1.20"; InpTakeProfitATRMultiplier = "3.80" } },
+   [pscustomobject]@{ Priority = 4;  Name = "tp38_sl18";                       Phase2 = $true;  Overrides = @{ InpTakeProfitATRMultiplier = "3.80" } },
+   [pscustomobject]@{ Priority = 5;  Name = "tp42_sl18";                       Phase2 = $true;  Overrides = @{ InpTakeProfitATRMultiplier = "4.20" } },
+   [pscustomobject]@{ Priority = 6;  Name = "tp38_sl16";                       Phase2 = $true;  Overrides = @{ InpStopATRMultiplier = "1.60"; InpTakeProfitATRMultiplier = "3.80" } },
+   [pscustomobject]@{ Priority = 7;  Name = "tp42_sl16";                       Phase2 = $true;  Overrides = @{ InpStopATRMultiplier = "1.60"; InpTakeProfitATRMultiplier = "4.20" } },
+   [pscustomobject]@{ Priority = 8;  Name = "tp45_sl18";                       Phase2 = $false; Overrides = @{ InpTakeProfitATRMultiplier = "4.50" } },
+   [pscustomobject]@{ Priority = 9;  Name = "tp38_sl20";                       Phase2 = $false; Overrides = @{ InpStopATRMultiplier = "2.00"; InpTakeProfitATRMultiplier = "3.80" } },
+   [pscustomobject]@{ Priority = 10; Name = "trail14_tp38";                    Phase2 = $false; Overrides = @{ InpTakeProfitATRMultiplier = "3.80"; InpTrailATRMultiplier = "1.40" } },
+   [pscustomobject]@{ Priority = 11; Name = "trail18_tp38";                    Phase2 = $false; Overrides = @{ InpTakeProfitATRMultiplier = "3.80"; InpTrailATRMultiplier = "1.80" } },
+   [pscustomobject]@{ Priority = 12; Name = "rr18_tp42";                       Phase2 = $false; Overrides = @{ InpMinRiskReward = "1.80"; InpTakeProfitATRMultiplier = "4.20" } },
+   [pscustomobject]@{ Priority = 13; Name = "risk18_tp38_sl18";                Phase2 = $false; Overrides = @{ InpRiskPercent = "1.80"; InpTakeProfitATRMultiplier = "3.80" } },
+   [pscustomobject]@{ Priority = 14; Name = "risk20_tp38_sl18";                Phase2 = $false; Overrides = @{ InpRiskPercent = "2.00"; InpTakeProfitATRMultiplier = "3.80" } },
+   [pscustomobject]@{ Priority = 15; Name = "risk14_tp42_sl16";                Phase2 = $false; Overrides = @{ InpRiskPercent = "1.40"; InpStopATRMultiplier = "1.60"; InpTakeProfitATRMultiplier = "4.20" } },
+   [pscustomobject]@{ Priority = 16; Name = "giveback25_tp38";                 Phase2 = $false; Overrides = @{ InpTakeProfitATRMultiplier = "3.80"; InpUseProfitGivebackGuard = "true"; InpDailyProfitGivebackPercent = "25.0"; InpWeeklyProfitGivebackPercent = "25.0"; InpMonthlyProfitGivebackPercent = "25.0" } },
+   [pscustomobject]@{ Priority = 17; Name = "giveback35_tp38";                 Phase2 = $false; Overrides = @{ InpTakeProfitATRMultiplier = "3.80"; InpUseProfitGivebackGuard = "true" } },
+   [pscustomobject]@{ Priority = 18; Name = "be12_tp38";                       Phase2 = $false; Overrides = @{ InpTakeProfitATRMultiplier = "3.80"; InpUseBreakEven = "true"; InpBreakEvenTriggerR = "1.20"; InpBreakEvenBufferPoints = "20" } }
 )
 
 $phase1Windows = @(
@@ -244,7 +245,7 @@ $readme = @(
    '',
    '- Folder: `phase2_real_tick_validation/`',
    '- Model: `4`, real ticks.',
-   '- Purpose: deeper validation for baseline plus the highest-priority TP/SL candidates.',
+   '- Purpose: deeper validation for baseline plus the highest-priority TP/SL and lower-risk capital-protection candidates.',
    '',
    '## Files',
    '',
@@ -252,7 +253,7 @@ $readme = @(
    '- `PROFIT_SEARCH_CONFIG_MANIFEST.csv`',
    '- `profiles/*.set`',
    '',
-   '`baseline_promoted` remains unchanged as a comparison anchor. `baseline_dd4` changes only `InpMaxEquityDrawdownPercent=4.00` so drawdown protection can be tested without changing entry or exit logic. Other non-baseline profit-search candidates also include `InpMaxEquityDrawdownPercent=4.00` based on prior weak-quarter drawdown guard research.',
+   '`baseline_promoted` remains unchanged as a comparison anchor. `baseline_dd4` changes only `InpMaxEquityDrawdownPercent=4.00` so drawdown protection can be tested without changing entry or exit logic. `risk12_tp38_sl18` keeps the protected drawdown guard, lowers `InpRiskPercent` to 1.20, and expands TP to 3.80 ATR for a capital-protection/upside test. Other non-baseline profit-search candidates also include `InpMaxEquityDrawdownPercent=4.00` based on prior weak-quarter drawdown guard research.',
    '',
    'Local MT5 launch remains hard-locked by `work\MT5_LOCAL_LAUNCH_DISABLED.lock` unless the user explicitly permits local MT5 testing again.'
 )
