@@ -24,6 +24,7 @@ The previous date-block profile remains an aggressive research benchmark: full p
 
 ## Included Files
 
+- `AGENTS.md` - no-local-execution policy for Codex work in this repo while active desktop focus must be protected.
 - `Professional_XAUUSD_EA.mq5` - GitHub EA source for the modular XAUUSD MT5 Expert Advisor; compile/test status still needs controlled verification.
 - `SOURCE_MANIFEST.md` - EA source fingerprint and static verification state.
 - `BACKTEST_RESULTS.md` - detailed validation notes and rejected candidate results.
@@ -38,6 +39,7 @@ The previous date-block profile remains an aggressive research benchmark: full p
 - `outputs/recent_oos_handoff/` - 8-config paired recent out-of-sample handoff for 2025_Q4 and 2026 freshness checks.
 - `work/MT5_LOCAL_LAUNCH_DISABLED.lock` - active hard lock that prevents guarded local MT5 launches.
 - `work/stop_mt5_stray_processes.ps1` - cleanup-only helper for stopping already-running MT5/MetaTester/MetaEditor processes.
+- `work/stop_mt5_stray_processes_hidden.vbs` - no-window wrapper for the cleanup helper; starts no MT5 process.
 - `ROBUST_BOS_SWEEP_PROFILE.set` - promoted robust BOS/sweep MT5 settings profile.
 - `CANDIDATE_RISK16_SL18_TP38_PROFILE.set` - queued candidate: risk `1.60`, stop ATR `1.80`, TP ATR `3.80`, equity drawdown guard `4.00%`.
 - `CANDIDATE_RISK16_SL16_TP38_PROFILE.set` - queued candidate: risk `1.60`, stop ATR `1.60`, TP ATR `3.80`, equity drawdown guard `4.00%`.
@@ -134,12 +136,14 @@ Rejected or non-promoted paths:
 
 Local MT5 launch is intentionally hard-locked because terminal/metatester windows can still flash and steal focus on this PC.
 
-- Do not run local MT5 tests from this active desktop while normal PC use must remain uninterrupted.
+- Do not run local shell commands, MT5 tests, MetaEditor, MetaTester, or helper launchers from this active desktop while normal PC use must remain uninterrupted.
+- `AGENTS.md` records this no-local-execution rule for future Codex work in the repo.
 - `work/MT5_LOCAL_LAUNCH_DISABLED.lock` must stay in place. Guarded scripts refuse to launch MT5 while it exists.
 - The launch guard and background helper stop `terminal`, `terminal64`, `metatester`, `metatester64`, `MetaEditor`, and `metaeditor64` before failing closed.
 - `work/stop_mt5_stray_processes.ps1` is cleanup-only. It starts no tester process.
+- `work/stop_mt5_stray_processes_hidden.vbs` runs that cleanup hidden, without a visible PowerShell window.
 - Future backtests should run on a Windows VM, spare machine, VPS, or a deliberate controlled local session where focus stealing is acceptable.
-- Until exported reports are available from a non-interrupting tester environment, repository/documentation/offline analysis work can continue without launching MT5.
+- Until exported reports are available from a non-interrupting tester environment, repository/documentation/offline analysis work can continue through GitHub/API only.
 
 ## Research Direction
 
