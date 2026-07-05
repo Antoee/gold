@@ -126,6 +126,9 @@ def check_configs(config_dir: Path, label: str) -> None:
         if "tp38" in profile_name:
             if first_value(inputs.get("InpTakeProfitATRMultiplier", "")) != "3.80": fail(f"{rel} tp38 config must set InpTakeProfitATRMultiplier=3.80.")
             if first_value(inputs.get("InpMaxEquityDrawdownPercent", "")) != "4.00": fail(f"{rel} protected candidate must set InpMaxEquityDrawdownPercent=4.00.")
+        if "confirmation_probe" in parent_name:
+            actual_confirm = first_value(inputs.get("InpMinimumConfirmations", "")); expected_confirm = "3" if "confirm3" in profile_name else "2"
+            if actual_confirm != expected_confirm: fail(f"{rel} expected InpMinimumConfirmations={expected_confirm}, found {actual_confirm or '<missing>'}.")
         if "adx_filter_probe" in parent_name:
             actual_adx = first_value(inputs.get("InpMinADX", "")); expected_adx = "18.0" if "adx18" in profile_name else "0.0"
             if actual_adx != expected_adx: fail(f"{rel} expected InpMinADX={expected_adx}, found {actual_adx or '<missing>'}.")
@@ -157,6 +160,7 @@ def main() -> int:
     check_source(); check_hard_lock(); check_profiles()
     check_manifest(ROOT / "outputs" / "micro_test_handoff" / "HANDOFF_MANIFEST.csv", 8, "stress micro")
     check_manifest(ROOT / "outputs" / "recent_oos_handoff" / "HANDOFF_MANIFEST.csv", 8, "recent OOS")
+    check_manifest(ROOT / "outputs" / "confirmation_probe_handoff" / "HANDOFF_MANIFEST.csv", 4, "confirmation probe")
     check_manifest(ROOT / "outputs" / "adx_filter_probe_handoff" / "HANDOFF_MANIFEST.csv", 4, "ADX filter probe")
     check_manifest(ROOT / "outputs" / "spread_guard_probe_handoff" / "HANDOFF_MANIFEST.csv", 4, "ATR spread guard probe")
     check_manifest(ROOT / "outputs" / "time_exit_probe_handoff" / "HANDOFF_MANIFEST.csv", 4, "time exit probe")
@@ -165,6 +169,7 @@ def main() -> int:
     check_manifest(ROOT / "outputs" / "session_variant_handoff" / "HANDOFF_MANIFEST.csv", 6, "session variant")
     check_configs(ROOT / "outputs" / "micro_test_handoff" / "configs", "stress micro")
     check_configs(ROOT / "outputs" / "recent_oos_handoff" / "configs", "recent OOS")
+    check_configs(ROOT / "outputs" / "confirmation_probe_handoff" / "configs", "confirmation probe")
     check_configs(ROOT / "outputs" / "adx_filter_probe_handoff" / "configs", "ADX filter probe")
     check_configs(ROOT / "outputs" / "spread_guard_probe_handoff" / "configs", "ATR spread guard probe")
     check_configs(ROOT / "outputs" / "time_exit_probe_handoff" / "configs", "time exit probe")
