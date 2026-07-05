@@ -7,6 +7,7 @@ This deliverable is a first professional scaffold for an MT5 XAUUSD Expert Advis
 - `Professional_XAUUSD_EA.mq5` - MT5 Expert Advisor source.
 - `README_Professional_XAUUSD_EA.md` - this guide.
 - `BACKTEST_RESULTS.md` - current validation notes.
+- `PROMOTION_GATE_REPORT.md` - offline promotion readiness check for queued profiles.
 - `ADAPTIVE_REAL_TICK_WINDOWS.csv` - latest adaptive real-tick split results.
 - `ADAPTIVE_REAL_TICK_SUMMARY.csv` - latest adaptive real-tick summary.
 - `REAL_TICK_WINDOW_RESULTS.csv` - promoted default split-window validation.
@@ -187,7 +188,8 @@ Optimization scoring:
 3. Export the Strategy Tester report.
 4. Run the exact same settings on an out-of-sample window.
 5. Disable one confirmation/filter at a time to identify which modules add value.
-6. Optimize narrow ranges only after the default behavior is understood.
+6. Rerun `work\analyze_promotion_gate.ps1` before promoting any candidate.
+7. Optimize narrow ranges only after the default behavior is understood.
 
 ## Recommended Optimization Order
 
