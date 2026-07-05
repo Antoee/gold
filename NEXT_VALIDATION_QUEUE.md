@@ -38,6 +38,14 @@ Offline robust-candidate ranking:
 - The next unvalidated candidates are ranked #3 and #4: `risk160_sl16_tp38` and `risk160_sl18_tp38`.
 - Single-period high-profit date-block summaries are treated as benchmark-only by the analyzer because they do not prove start-window robustness.
 
+Prepared validation pack:
+
+- Runbook: `NEXT_VALIDATION_RUNBOOK.md`
+- Generated configs: `work/generated_validation/`
+- Manifest: `work/generated_validation/VALIDATION_MANIFEST.csv`
+- Configs were generated without launching MT5.
+- The pack contains 147 configs: 49 windows for each of the two queued candidates plus the current promoted baseline.
+
 Local MT5 run safety:
 
 - Local MT5 launch is disabled unless `ALLOW_MT5_FOCUS_RISK=1` is set.
