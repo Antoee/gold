@@ -18,13 +18,6 @@ Generated without launching MT5.
 - BOS and liquidity-sweep confirmations.
 - Optional EMA cross, momentum candle, engulfing candle, ADX, ATR, adaptive trend-bias, higher-timeframe EMA trend filter, break-even, ATR trailing, structure trailing, time exit, session/day filter, Friday-evening cutoff, ATR-relative spread guard, and profit giveback guard modules.
 - Risk protections include native `OrderCalcProfit`, `OrderCalcMargin`, minimum-lot over-risk skip, period loss guards, equity drawdown guard, consecutive-loss guard, fixed spread/slippage controls, optional ATR-relative spread controls, cooldown, optional stale-trade close, and one-symbol position management.
-- Confirmation control: `InpMinimumConfirmations`.
-- ADX filter control: `InpMinADX`.
-- Break-even controls: `InpUseBreakEven`, `InpBreakEvenTriggerATR`, `InpBreakEvenOffsetATR`.
-- Time exit controls: `InpUseTimeExit`, `InpMaxTradeMinutes`.
-- ATR spread guard controls: `InpUseATRSpreadGuard`, `InpMaxSpreadATRPercent`.
-- Structure trailing controls: `InpUseStructureTrailing`, `InpStructureTrailingLookback`, `InpStructureTrailingBufferATR`, `InpStructureTrailingTriggerATR`.
-- MTF trend controls: `InpUseMTFTrendFilter`, `InpMTFTrendTimeframe`, `InpMTFTrendEMA`.
 - Custom Strategy Tester scoring through `double OnTester()`.
 
 ## Static Safety Automation
@@ -32,11 +25,11 @@ Generated without launching MT5.
 - Script: `work/static_repo_safety_audit.py`
 - Break-even pack audit: `work/static_breakeven_probe_audit.py`
 - Workflow: `.github/workflows/static-safety.yml`
-- Checks source risk/research inputs, forbidden recovery terms, native risk sizing markers, confirmation strictness pinning, break-even pinning, ADX filter pinning, time exit, ATR spread guard, MTF/structure trailing implementation markers, profile input pins, local MT5 launch lock, and non-visual handoff config safety.
 - Meaning: this is a safety/readiness gate only. It does not compile the EA and does not prove profit.
 
 ## Validation Pack State
 
+- Stress smoke handoff configs committed: `2`
 - Stress micro handoff configs committed: `8`
 - Recent out-of-sample handoff configs committed: `8`
 - Confirmation strictness probe handoff configs committed: `4`
@@ -48,10 +41,8 @@ Generated without launching MT5.
 - Structure trailing probe handoff configs committed: `4`
 - Session variant handoff configs committed: `6`
 - Fast-probe readiness builder committed: `work/build_fast_probe_readiness_snapshot.ps1`
-- Fast-probe readiness output target: `outputs/FAST_PROBE_READINESS_SNAPSHOT.md`
 - Next fast batch selector committed: `work/build_next_fast_batch_selector.ps1`
-- Next fast batch output target: `outputs/NEXT_FAST_BATCH_SELECTION.md`
-- Current next fast batch: `STRESS_MICRO` (`8` rows) until exported reports change readiness.
+- Current next fast batch: `STRESS_SMOKE` (`2` rows) until exported reports change readiness.
 - Date range covered by prepared fast checks: `2024.01.01` through `2026.07.02`
 - Full promotion still requires parsed MT5 reports; no new profit evidence is implied by source/config/report-script commits.
 
