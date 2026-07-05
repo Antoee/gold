@@ -4,7 +4,7 @@
 //| No martingale. No grid. No averaging down. No recovery systems.   |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.06"
+#property version   "1.07"
 #property description "Professional risk-first XAUUSD EA with BOS/sweep entries and ATR exits."
 
 #include <Trade/Trade.mqh>
@@ -58,6 +58,8 @@ input double InpMaxEquityDrawdownPercent     = 0.00;
 input int    InpMaxConsecutiveLosses         = 4;
 input int    InpCooldownMinutesAfterLoss     = 90;
 input int    InpMaxSpreadPoints              = 350;
+input bool   InpUseATRSpreadGuard            = false;
+input double InpMaxSpreadATRPercent          = 8.0;
 input int    InpSlippagePoints               = 50;
 
 input bool   InpUseSessionFilter             = false;
@@ -178,6 +180,8 @@ void OnTick()
    double atr = BufferValue(hATR, 0, 1);
    if(atr <= 0.0)
       return;
+   if(!ATRSpreadAllowsTrade(atr))
+      return;
 
    SignalState signal = BuildSignal();
    int direction = 0;
@@ -226,6 +230,18 @@ double BufferValue(const int handle, const int buffer, const int shift)
 int SpreadPoints()
 {
    return (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD);
+}
+
+bool ATRSpreadAllowsTrade(const double atr)
+{
+   if(!InpUseATRSpreadGuard)
+      return true;
+   if(atr <= 0.0 || _Point <= 0.0)
+      return false;
+
+   double spreadPrice = SpreadPoints() * _Point;
+   double spreadPercent = 100.0 * spreadPrice / atr;
+   return spreadPercent <= InpMaxSpreadATRPercent;
 }
 
 bool TradingSessionAllowsNewTrade()
