@@ -70,9 +70,20 @@ Current promoted defaults include:
 - Weekly loss limit: `2.50%`.
 - Monthly loss limit: `4.00%`.
 - Date buy/sell blocks disabled.
+- Session filter disabled by default; root profiles pin 0-24 hours, weekdays allowed, Sunday off only if the filter is enabled, and Friday evening cutoff disabled.
 - EMA cross, momentum candle, and engulfing confirmations disabled.
 - BOS and liquidity sweep enabled with `InpMinimumConfirmations=2`.
 - Profit giveback guard disabled by default.
+
+## Session Filter
+
+The EA source includes an optional session/day filter for controlled research passes.
+
+- `InpUseSessionFilter` enables hour/day filtering.
+- `InpSessionStartHour` and `InpSessionEndHour` define the allowed server-time window and support overnight sessions.
+- `InpAllowMonday` through `InpAllowFriday` plus `InpAllowSunday` control allowed trading days.
+- `InpDisableFridayEvening` and `InpFridayCutoffHour` can block late-Friday entries.
+- The promoted profile keeps this disabled until a candidate passes proper out-of-sample validation.
 
 ## Profit Giveback Guard
 
@@ -135,9 +146,10 @@ Local MT5 launch is intentionally hard-locked because terminal/metatester window
 Next work should focus on increasing profit from the robust no-date profile without bringing back losing monthly windows.
 
 1. Run the paired stress micro handoff, then the recent out-of-sample handoff through 2026, before spending time on the full validation queue.
-2. Fully validate surviving `3.80` TP candidates and the giveback candidate across monthly, quarterly, yearly, half-year, and full-period windows on a non-interrupting tester environment.
-3. Rerun `work/audit_profile_inputs.ps1` after changing `.set` files so MT5 cannot reuse stale cached inputs unnoticed.
-4. Rerun `work/analyze_promotion_gate.ps1` and promote only candidates that pass full, split, quarterly, and monthly gates.
-5. Test on additional broker/history sources.
-6. Use the custom optimization criterion to rank candidates by robustness, not only raw net profit.
-7. Keep the date-block profile as a benchmark, not the default.
+2. Test session-filter variants such as London, New York, and London/New York overlap only as paired out-of-sample candidates, not as promotion shortcuts.
+3. Fully validate surviving `3.80` TP candidates and the giveback candidate across monthly, quarterly, yearly, half-year, and full-period windows on a non-interrupting tester environment.
+4. Rerun `work/audit_profile_inputs.ps1` after changing `.set` files so MT5 cannot reuse stale cached inputs unnoticed.
+5. Rerun `work/analyze_promotion_gate.ps1` and promote only candidates that pass full, split, quarterly, and monthly gates.
+6. Test on additional broker/history sources.
+7. Use the custom optimization criterion to rank candidates by robustness, not only raw net profit.
+8. Keep the date-block profile as a benchmark, not the default.
