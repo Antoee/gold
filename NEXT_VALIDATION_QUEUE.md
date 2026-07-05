@@ -38,91 +38,35 @@ Candidate 3: `risk160_sl18_tp35_giveback`
 - Minimum period profit before protection: `0.50%`
 - Status: needs full loss-control validation before promotion
 
-Offline robust-candidate ranking:
-
-- Local generated ranking file: `ROBUST_CANDIDATE_RANKING.csv`
-- GitHub report file: `ROBUST_CANDIDATE_RANKING.md`
-- Regeneration script: `work/analyze_robust_candidates.ps1`
-- Loss-control report: `LOSS_CONTROL_REPORT.md`
-- Loss-control script: `work/analyze_loss_control.ps1`
-- Promotion gate report: `PROMOTION_GATE_REPORT.md`
-- Promotion gate script: `work/analyze_promotion_gate.ps1`
-- Profile input audit report: `PROFILE_INPUT_AUDIT.md`
-- Profile input audit script: `work/audit_profile_inputs.ps1`
-- Validation report metrics: `VALIDATION_REPORT_METRICS.md`
-- Validation report collector: `work/collect_validation_results.ps1`
-- Validation parser smoke test: `work/test_report_collector_parser.ps1`
-- The current promoted split profile ranks #1 because it has the strongest multi-window evidence: 9 windows, `+$2,354.65`, worst `$0.00`, 0 losing windows.
-- The next unvalidated candidates are ranked #3 and #4: `risk160_sl16_tp38` and `risk160_sl18_tp38`.
-- Single-period high-profit date-block summaries are treated as benchmark-only by the analyzer because they do not prove start-window robustness.
-- For the updated goal, no-date candidates with zero losing windows rank above higher-profit date-block benchmarks.
-- Profit giveback guard candidates should be judged primarily by whether they preserve or improve zero-loss windows without reducing full-period profit too much.
-- Current promotion gate result: only `promoted_risk160_sl18_tp35` passes. All queued candidates still need full, split, quarter, and month evidence.
-- Current profile input audit result: all four active `.set` files pass with 35/35 critical inputs pinned and no duplicate or unknown inputs.
-
-Prepared validation pack:
-
-- Runbook: `NEXT_VALIDATION_RUNBOOK.md`
-- Generated configs: `work/generated_validation/`
-- Manifest: `work/generated_validation/VALIDATION_MANIFEST.csv`
-- Configs were generated without launching MT5.
-- The pack contains 196 configs: 49 windows for each of the three queued candidates plus the current promoted baseline.
-- Current collector status: 196 expected exported reports, 0 parsed, 196 missing. This is expected until MT5 reports are exported.
-
 Prepared profit-search pack:
 
 - Generator: `work/generate_profit_search_configs.ps1`
 - Generated configs: `work/generated_profit_search/`
-- Candidate manifest: `work/generated_profit_search/PROFIT_SEARCH_PROFILES.csv`
 - Config manifest: `work/generated_profit_search/PROFIT_SEARCH_CONFIG_MANIFEST.csv`
 - Metrics report: `PROFIT_SEARCH_REPORT_METRICS.md`
 - Ranking report: `PROFIT_SEARCH_RANKING.md`
-- Ranking script: `work/analyze_profit_search.ps1`
-- Next-batch report: `NEXT_PROFIT_SEARCH_BATCH.md`
-- Next-batch CSV: `NEXT_PROFIT_SEARCH_BATCH.csv`
-- Next-batch builder: `work/build_next_profit_search_batch.ps1`
-- Next-batch rationale report: `PROFIT_SEARCH_BATCH_RATIONALE.md`
-- Next-batch rationale script: `work/build_profit_search_batch_rationale.ps1`
 - Result-import decision matrix: `RESULT_IMPORT_DECISION_MATRIX.md`
-- Result-import decision script: `work/build_result_import_decision_matrix.ps1`
 - Profit readiness snapshot: `PROFIT_READINESS_SNAPSHOT.md`
-- Profit readiness script: `work/build_profit_readiness_snapshot.ps1`
+- Optimization guardrail audit: `OPTIMIZATION_GUARDRAIL_AUDIT.md`
 - Report import preflight: `REPORT_IMPORT_PREFLIGHT.md`
-- Report import preflight script: `work/build_report_import_preflight.ps1`
-- Promotion packet builder: `work/build_profit_promotion_packet.ps1`
-- Promotion packet outputs: `outputs/promotion_packets/`
-- Coverage audit report: `PROFIT_SEARCH_COVERAGE_AUDIT.md`
-- Coverage audit script: `work/audit_profit_search_coverage.ps1`
-- Next-test handoff folder: `outputs/next_test_handoff/`
-- Next-test handoff archive: `outputs/next_test_handoff.zip`
-- Next-test handoff builder: `work/build_next_test_handoff.ps1`
 - Handoff integrity report: `HANDOFF_CONFIG_INTEGRITY.md`
-- Handoff integrity script: `work/audit_handoff_config_integrity.ps1`
 - MT5 local safety audit report: `MT5_LOCAL_SAFETY_AUDIT.md`
-- MT5 local safety audit script: `work/audit_mt5_local_safety.ps1`
 - Strategy research brief: `STRATEGY_RESEARCH_BRIEF.md`
-- Strategy research brief script: `work/build_strategy_research_brief.ps1`
 - Contains 16 generated candidate profiles.
 - Phase 1: 128 fast triage configs using `Model=2`.
 - Phase 2: 55 real-tick validation configs using `Model=4`.
 - Current profit-search collector status: 183 expected exported reports, 0 parsed, 183 missing.
 - Current profit-search ranking status: all 21 profile/phase rows are `MissingEvidence`; no candidate is recommended yet.
 - Current next-batch status: 24 prioritized configs, starting with fast stress-window triage for the baseline and highest-priority TP/SL candidates.
-- Current next-batch rationale: 24 phase-1 prune runs only, covering 6 profiles: 5 baseline-anchor runs, 8 evidence-backed TP `3.8` runs, and 11 adjacent TP-expansion runs. No phase-2 run is queued until phase-1 evidence exists.
 - Current result-import decision status: all 21 profile/phase rows are `RunMissingReports`; no profile is ready for phase-2 advancement or promotion-packet review until reports are exported and parsed.
 - Current profit readiness status: `NOT_READY`; keep the current promoted profile because no candidate has enough imported evidence to replace it.
-- Current parser smoke-test status: `REPORT_COLLECTOR_PARSER_SMOKE_PASS`; the offline collector can parse synthetic MT5-style reports, derive fields, and mark incomplete reports as `UNPARSED` rather than usable evidence.
-- Current report-import preflight status: parser, manifest, handoff, and local safety checks pass; imported metrics are still `WAITING_FOR_REPORTS`.
-- Current promotion-packet status: baseline and `tp38_sl18` both correctly report `MISSING_EVIDENCE` because phase-2 reports have not been exported yet.
-- Current coverage audit status: 16 profiles, 5 phase-2 seeds, 1 aggressive-risk candidate (`risk20_tp38_sl18`) kept phase-1 only, with TP/SL, trailing, RR, risk, giveback, breakeven, baseline, and reduced-risk coverage present.
-- Current handoff status: 24 prioritized `.ini` configs copied into `outputs/next_test_handoff/configs/` and zipped for the next safe testing window.
-- Current handoff integrity status: 24/24 configs pass static checks for `Visual=0`, `ShutdownTerminal=1`, `Optimization=0`, XAUUSD/M15, expected report names, critical EA inputs, and file hashes. Current handoff zip SHA256: `8FE19B8A55A058579F9696C2C8E7B2B47F38F1521EBCA8EB1823A022FD149AE3`.
-- Current local MT5 safety audit: PASS, 18/18 checks, 56 runner scripts guarded, 0 raw terminal-launch bypasses, no MT5/MetaEditor process running, unlock absent, focus-risk env flag off, watchdog stopped but script available.
-- Current strategy research brief: keep `risk1p6_sl18_tp35` promoted, prioritize TP `3.8` with SL `1.6` to `1.8` as the next evidence-backed profit search, treat momentum+sweep as research-only because it has one losing split window, and keep date-block logic benchmark-only until a general regime rule explains it.
+- Current optimization guardrail status: 16 profiles audited, all 16 are test-eligible but require promotion review; top score is `giveback25_tp38=87`. Guardrails must be checked before spending tester time or building promotion packets.
+- Current report-import preflight status: parser, manifest, optimization guardrails, handoff, and local safety checks pass; imported metrics are still `WAITING_FOR_REPORTS`.
+- Current local MT5 safety audit: PASS, 24/24 checks, 56 runner scripts guarded, 0 raw terminal-launch bypasses, no MT5/MetaEditor process running, both unlock files absent, both MT5 unlock env flags off, watchdog stopped but script available.
 - Phase 1 is pruning only; candidates still need real-tick phase 2 plus full promotion-gate validation before promotion.
 
 Local MT5 run safety:
 
-- Local MT5 launch is hard-locked in the shared launcher and all legacy MT5 runner scripts unless `ALLOW_MT5_FOCUS_RISK=1` is set and `work\ALLOW_MT5_LOCAL_LAUNCH.unlock` exists.
+- Local MT5 launch is hard-locked in the shared launcher and all legacy MT5 runner scripts unless both `ALLOW_MT5_FOCUS_RISK=1` and `ALLOW_MT5_HIDDEN_DESKTOP_ACK=1` are set and both `work\ALLOW_MT5_LOCAL_LAUNCH.unlock` and `work\ALLOW_MT5_HIDDEN_DESKTOP_ACK.unlock` exist.
 - The runner now attempts to launch MT5 on a separate hidden desktop, but this still needs a controlled test before unattended local validation resumes.
 - A temporary local watchdog can be started with `work/mt5_focus_watchdog.ps1`; it stops `terminal64`, `metatester64`, and `MetaEditor` immediately if anything tries to open them. Stop it with `work/stop_mt5_focus_watchdog.ps1`.
