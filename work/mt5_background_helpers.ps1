@@ -1,5 +1,7 @@
 $ErrorActionPreference = "Stop"
 
+$script:MT5ProcessNames = @("terminal", "terminal64", "metatester", "metatester64", "MetaEditor", "metaeditor64")
+
 if(-not ("Mt5Safe.HiddenProcess" -as [type])) {
 Add-Type -TypeDefinition @"
 using System;
@@ -115,7 +117,7 @@ namespace Mt5Safe {
 }
 
 function Stop-MT5LocalProcesses {
-   Get-Process terminal64,metatester64,MetaEditor -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+   Get-Process -Name $script:MT5ProcessNames -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
 }
 
 function Set-MT5ProcessMute {
@@ -124,14 +126,14 @@ function Set-MT5ProcessMute {
 }
 
 function Set-MT5ProcessLowImpact {
-   $processes = Get-Process terminal64,metatester64,MetaEditor -ErrorAction SilentlyContinue
+   $processes = Get-Process -Name $script:MT5ProcessNames -ErrorAction SilentlyContinue
    foreach($process in $processes) {
       try { $process.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::BelowNormal } catch {}
    }
 }
 
 function Hide-MT5Windows {
-   try { [Mt5Safe.WindowControl]::HideProcessWindows(@("terminal64", "metatester64", "MetaEditor")) | Out-Null } catch {}
+   try { [Mt5Safe.WindowControl]::HideProcessWindows($script:MT5ProcessNames) | Out-Null } catch {}
 }
 
 function Set-MT5BackgroundSafe {
