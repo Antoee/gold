@@ -1,0 +1,22 @@
+name: Static Safety Audit
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  static-safety:
+    name: EA static safety checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run static repository safety audit
+        run: python work/static_repo_safety_audit.py
