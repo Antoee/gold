@@ -3,6 +3,7 @@ param(
    [string]$PromotionGatePath = "outputs\PROMOTION_GATE_STATUS.csv",
    [string]$GuardrailPath = "outputs\OPTIMIZATION_GUARDRAIL_AUDIT.csv",
    [string]$HandoffIntegrityPath = "outputs\HANDOFF_CONFIG_INTEGRITY.csv",
+   [string]$MicroDecisionPath = "outputs\MICRO_TEST_DECISION.csv",
    [string]$SafetyAuditPath = "outputs\MT5_LOCAL_SAFETY_AUDIT.csv",
    [string]$OutCsv = "outputs\PROFIT_READINESS_SNAPSHOT.csv",
    [string]$OutReport = "outputs\PROFIT_READINESS_SNAPSHOT.md"
@@ -24,6 +25,7 @@ function Add-Row {
 
 function Get-Value {
    param([object]$Row, [string]$Name, [object]$Default = "")
+   if($null -eq $Row) { return $Default }
    $property = $Row.PSObject.Properties[$Name]
    if($null -eq $property) { return $Default }
    return $property.Value
@@ -33,6 +35,7 @@ $decisionRows = Read-CsvSafe $DecisionMatrixPath
 $promotionRows = Read-CsvSafe $PromotionGatePath
 $guardrailRows = Read-CsvSafe $GuardrailPath
 $handoffRows = Read-CsvSafe $HandoffIntegrityPath
+$microDecisionRows = Read-CsvSafe $MicroDecisionPath
 $safetyRows = Read-CsvSafe $SafetyAuditPath
 $rows = New-Object System.Collections.Generic.List[object]
 
@@ -48,6 +51,20 @@ if($decisionRows.Count -eq 0) {
    Add-Row $rows "Profit search evidence" "READY_FOR_REVIEW" "$($readyDecisions.Count) profile/phase rows are ready for phase-2 advancement or promotion-packet review." "Follow RESULT_IMPORT_DECISION_MATRIX.md before changing the promoted default."
 } else {
    Add-Row $rows "Profit search evidence" "WAITING_FOR_REPORTS" "$($missingDecisions.Count) of $($decisionRows.Count) profile/phase rows require missing MT5 reports; $($rejectDecisions.Count) rows are rejected." "Import/export the missing reports, then rerun collector, ranking, decision matrix, and promotion packet scripts."
+}
+
+if($microDecisionRows.Count -gt 0) {
+   $decisionCounts = ($microDecisionRows | Group-Object Decision | Sort-Object Name | ForEach-Object { "$($_.Name)=$($_.Count)" }) -join "; "
+   $hasFail = @($microDecisionRows | Where-Object { (Get-Value $_ "Decision") -like "FAIL_*" }).Count -gt 0
+   $hasRepair = @($microDecisionRows | Where-Object { (Get-Value $_ "Decision") -eq "REPAIR_REPORT" }).Count -gt 0
+   $hasWaiting = @($microDecisionRows | Where-Object { (Get-Value $_ "Decision") -eq "WAITING_FOR_REPORTS" }).Count -gt 0
+   $hasReview = @($microDecisionRows | Where-Object { (Get-Value $_ "Decision") -eq "REVIEW_DRAWDOWN" }).Count -gt 0
+   $allPass = $microDecisionRows.Count -gt 0 -and @($microDecisionRows | Where-Object { (Get-Value $_ "Decision") -eq "PASS_WINDOW" }).Count -eq $microDecisionRows.Count
+   $microStatus = if($hasFail) { "REJECT_CANDIDATE" } elseif($hasRepair) { "REPAIR_REPORTS" } elseif($hasWaiting) { "WAITING_FOR_REPORTS" } elseif($hasReview) { "REVIEW_DRAWDOWN" } elseif($allPass) { "PASS_MICRO" } else { "REVIEW_REQUIRED" }
+   $microNext = if($microStatus -eq "PASS_MICRO") { "Continue to full handoff; micro evidence alone cannot promote." } elseif($microStatus -eq "REJECT_CANDIDATE") { "Keep current promoted profile and stop spending tester time on this candidate." } elseif($microStatus -eq "REPAIR_REPORTS") { "Repair or re-export paired micro reports." } else { "Complete paired micro report import before running the full handoff." }
+   Add-Row $rows "Micro decision" $microStatus $decisionCounts $microNext
+} else {
+   Add-Row $rows "Micro decision" "WAITING_FOR_REPORTS" "No micro decision CSV found at $MicroDecisionPath." "Run the micro handoff, import reports, then run work\build_micro_test_decision.ps1."
 }
 
 $passingPromotion = @($promotionRows | Where-Object { (Get-Value $_ "Decision") -eq "PASS" -or (Get-Value $_ "Status") -eq "PASS" -or (Get-Value $_ "PromotionStatus") -eq "PASS" -or (Get-Value $_ "Profile") -eq "promoted_risk160_sl18_tp35" })
@@ -85,8 +102,9 @@ if($safetyRows.Count -gt 0 -and $safetyFailures.Count -eq 0) {
    Add-Row $rows "Local PC safety" "MISSING_REPORT" "No local safety CSV found at $SafetyAuditPath." "Run work\audit_mt5_local_safety.ps1."
 }
 
-$replacementReady = $readyDecisions.Count -gt 0 -and $safetyFailures.Count -eq 0
-Add-Row $rows "Replacement readiness" $(if($replacementReady) { "REVIEW_REQUIRED" } else { "NOT_READY" }) $(if($replacementReady) { "At least one result row is ready for deeper review, but promotion still requires packet and human review." } else { "No candidate has enough imported evidence to replace the current promoted profile." }) $(if($replacementReady) { "Build promotion packets for ready candidates." } else { "Gather reports for the prioritized phase-1 batch without changing the live promoted settings." })
+$microPassed = $microDecisionRows.Count -gt 0 -and @($microDecisionRows | Where-Object { (Get-Value $_ "Decision") -eq "PASS_WINDOW" }).Count -eq $microDecisionRows.Count
+$replacementReady = $readyDecisions.Count -gt 0 -and $safetyFailures.Count -eq 0 -and $microPassed
+Add-Row $rows "Replacement readiness" $(if($replacementReady) { "REVIEW_REQUIRED" } else { "NOT_READY" }) $(if($replacementReady) { "Micro gate and at least one result row are ready for deeper review, but promotion still requires packet and human review." } else { "No candidate has enough imported evidence to replace the current promoted profile." }) $(if($replacementReady) { "Build promotion packets for ready candidates." } else { "Gather paired micro reports first, then full validation if the micro gate passes." })
 
 $rows | Export-Csv -LiteralPath $OutCsv -NoTypeInformation
 $report = New-Object System.Collections.Generic.List[string]
@@ -100,6 +118,6 @@ foreach($row in $rows) { $report.Add("| $($row.Area) | $($row.Status) | $($row.E
 $report.Add("") | Out-Null
 $report.Add("## Bottom Line") | Out-Null
 $report.Add("") | Out-Null
-if($replacementReady) { $report.Add("A candidate may be ready for deeper review, but no automatic promotion should happen until the promotion packet and full gate pass.") | Out-Null } else { $report.Add("Keep the current promoted profile. The next profit improvement is blocked by missing exported reports, not by EA code changes.") | Out-Null }
+if($replacementReady) { $report.Add("A candidate may be ready for deeper review, but no automatic promotion should happen until the promotion packet and full gate pass.") | Out-Null } else { $report.Add("Keep the current promoted profile. The next profit improvement is blocked by missing exported micro reports, not by EA code changes.") | Out-Null }
 Set-Content -LiteralPath $OutReport -Value $report -Encoding UTF8
 $rows
