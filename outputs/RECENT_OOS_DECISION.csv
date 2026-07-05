@@ -1,0 +1,5 @@
+"Window","CandidateProfile","BaselineProfile","CandidateStatus","BaselineStatus","CandidateNetProfit","BaselineNetProfit","NetProfitDelta","CandidateDrawdownPercent","BaselineDrawdownPercent","Decision","Reason"
+"2025_Q4","tp38_sl18","baseline_promoted","MISSING_REPORT","MISSING_REPORT","0","0","0","0","0","WAITING_FOR_REPORTS","Candidate or baseline report is missing."
+"2026_Q1","tp38_sl18","baseline_promoted","MISSING_REPORT","MISSING_REPORT","0","0","0","0","0","WAITING_FOR_REPORTS","Candidate or baseline report is missing."
+"2026_Q2","tp38_sl18","baseline_promoted","MISSING_REPORT","MISSING_REPORT","0","0","0","0","0","WAITING_FOR_REPORTS","Candidate or baseline report is missing."
+"2026_YTD","tp38_sl18","baseline_promoted","MISSING_REPORT","MISSING_REPORT","0","0","0","0","0","WAITING_FOR_REPORTS","Candidate or baseline report is missing."
