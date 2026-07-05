@@ -8,6 +8,7 @@ This deliverable is a first professional scaffold for an MT5 XAUUSD Expert Advis
 - `README_Professional_XAUUSD_EA.md` - this guide.
 - `BACKTEST_RESULTS.md` - current validation notes.
 - `PROMOTION_GATE_REPORT.md` - offline promotion readiness check for queued profiles.
+- `PROFILE_INPUT_AUDIT.md` - offline check that active `.set` files pin all critical inputs.
 - `ADAPTIVE_REAL_TICK_WINDOWS.csv` - latest adaptive real-tick split results.
 - `ADAPTIVE_REAL_TICK_SUMMARY.csv` - latest adaptive real-tick summary.
 - `REAL_TICK_WINDOW_RESULTS.csv` - promoted default split-window validation.
@@ -34,7 +35,7 @@ The automation scripts in `work/` are configured for background testing:
 - Dashboard rendering is disabled in tester configs.
 - MT5/tester audio sessions are muted while the scripts run.
 
-Local MT5 launch is currently safety-gated because `terminal64.exe` can still flash and steal focus on this PC. Do not run local MT5 scripts unless both of these are deliberately set after a controlled test:
+Local MT5 launch is currently hard-locked because `terminal64.exe` can still flash and steal focus on this PC. The shared launcher and legacy MT5 runner scripts refuse to start unless both of these are deliberately set after a controlled test:
 
 - `ALLOW_MT5_FOCUS_RISK=1`
 - `work\ALLOW_MT5_LOCAL_LAUNCH.unlock`
@@ -188,8 +189,9 @@ Optimization scoring:
 3. Export the Strategy Tester report.
 4. Run the exact same settings on an out-of-sample window.
 5. Disable one confirmation/filter at a time to identify which modules add value.
-6. Rerun `work\analyze_promotion_gate.ps1` before promoting any candidate.
-7. Optimize narrow ranges only after the default behavior is understood.
+6. Rerun `work\audit_profile_inputs.ps1` after changing any `.set` file.
+7. Rerun `work\analyze_promotion_gate.ps1` before promoting any candidate.
+8. Optimize narrow ranges only after the default behavior is understood.
 
 ## Recommended Optimization Order
 
