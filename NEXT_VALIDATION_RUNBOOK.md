@@ -30,13 +30,15 @@ The promoted profile is included as a baseline comparison so reruns can detect h
 
 ## Promotion Gate
 
-A candidate should not replace the promoted profile unless it improves profit while preserving robustness:
+A candidate should not replace the promoted profile unless it improves profit while preserving the no-loss robustness target:
 
 - Full-period net profit greater than `+$866.59`.
 - Split aggregate greater than `+$2,354.65`.
 - Monthly/quarter aggregate greater than `+$744.03`.
 - Worst monthly, quarterly, and split window at least `$0.00`.
 - Zero losing monthly, quarterly, and split windows.
+- Gross loss across monthly, quarterly, and split windows must be `$0.00`.
+- Any date-block or calendar-specific rule stays a benchmark only unless it is replaced by a general market-regime rule.
 
 ## Tester Settings
 
@@ -54,5 +56,6 @@ Configs use:
 
 1. Export or parse result CSVs.
 2. Rerun `work/analyze_robust_candidates.ps1`.
-3. Update `ROBUST_CANDIDATE_RANKING.md`.
-4. Promote only if all promotion gates pass.
+3. Rerun `work/analyze_loss_control.ps1`.
+4. Update `ROBUST_CANDIDATE_RANKING.md` and `LOSS_CONTROL_REPORT.md`.
+5. Promote only if all profit and no-loss gates pass.
