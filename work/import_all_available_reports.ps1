@@ -1,0 +1,159 @@
+param(
+   [string]$ReportDir = "outputs",
+   [switch]$SkipMicro,
+   [switch]$SkipRecentOos,
+   [switch]$SkipSessionVariant,
+   [switch]$SkipFullProfitSearch,
+   [switch]$SkipReadinessRefresh
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+function Add-Step {
+   param(
+      [System.Collections.Generic.List[object]]$Rows,
+      [string]$Step,
+      [string]$Status,
+      [string]$Evidence,
+      [string]$NextAction
+   )
+   $Rows.Add([pscustomobject]@{
+      Step = $Step
+      Status = $Status
+      Evidence = $Evidence
+      NextAction = $NextAction
+   }) | Out-Null
+}
+
+function Invoke-Step {
+   param(
+      [System.Collections.Generic.List[object]]$Rows,
+      [string]$Step,
+      [scriptblock]$Body,
+      [string]$PassAction = "Continue.",
+      [string]$FailAction = "Fix the failed step and rerun this wrapper."
+   )
+   try {
+      $output = & $Body 2>&1
+      $evidence = ($output | Out-String).Trim()
+      if([string]::IsNullOrWhiteSpace($evidence)) { $evidence = "Completed without console output." }
+      Add-Step $Rows $Step "PASS" $evidence $PassAction
+   } catch {
+      Add-Step $Rows $Step "FAIL" $_.Exception.Message $FailAction
+   }
+}
+
+function Test-File {
+   param([string]$Path)
+   return Test-Path -LiteralPath $Path -PathType Leaf
+}
+
+$rows = New-Object System.Collections.Generic.List[object]
+
+Add-Step $rows "Start" "INFO" "Offline report import wrapper. No MT5 process is launched by this script." "Process available exported reports only."
+
+if(-not $SkipMicro) {
+   $manifest = "outputs\micro_test_handoff\HANDOFF_MANIFEST.csv"
+   if(Test-File $manifest) {
+      Invoke-Step $rows "Import stress micro reports" {
+         powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\collect_validation_results.ps1" -ManifestPath $manifest -ReportDir $ReportDir -ReportNameTemplate "profit_search_{PhaseShort}_{Profile}_{Set}_{Window}" -OutResults "outputs\MICRO_TEST_REPORT_METRICS.csv" -OutSummary "outputs\MICRO_TEST_REPORT_SUMMARY.csv" -OutMarkdown "outputs\MICRO_TEST_REPORT_METRICS.md"
+      } "Run micro decision next." "Check report file names and parser coverage."
+      if(Test-File "work\build_micro_test_decision.ps1") {
+         Invoke-Step $rows "Build stress micro decision" {
+            powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_micro_test_decision.ps1"
+         } "Review outputs\MICRO_TEST_DECISION.md." "Fix decision script inputs or report metrics."
+      }
+   } else {
+      Add-Step $rows "Import stress micro reports" "SKIP" "Manifest not found: $manifest" "Create the micro handoff before importing micro reports."
+   }
+}
+
+if(-not $SkipRecentOos) {
+   $manifest = "outputs\recent_oos_handoff\HANDOFF_MANIFEST.csv"
+   if(Test-File $manifest) {
+      Invoke-Step $rows "Import recent-OOS reports" {
+         powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\collect_validation_results.ps1" -ManifestPath $manifest -ReportDir $ReportDir -ReportNameTemplate "recent_oos_{Profile}_{Window}" -OutResults "outputs\RECENT_OOS_REPORT_METRICS.csv" -OutSummary "outputs\RECENT_OOS_REPORT_SUMMARY.csv" -OutMarkdown "outputs\RECENT_OOS_REPORT_METRICS.md"
+      } "Run recent-OOS decision next." "Check report file names and parser coverage."
+      if(Test-File "work\build_recent_oos_decision.ps1") {
+         Invoke-Step $rows "Build recent-OOS decision" {
+            powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_recent_oos_decision.ps1"
+         } "Review outputs\RECENT_OOS_DECISION.md." "Fix decision script inputs or report metrics."
+      }
+   } else {
+      Add-Step $rows "Import recent-OOS reports" "SKIP" "Manifest not found: $manifest" "Create the recent-OOS handoff before importing recent reports."
+   }
+}
+
+if(-not $SkipSessionVariant) {
+   $manifest = "outputs\session_variant_handoff\HANDOFF_MANIFEST.csv"
+   if(Test-File $manifest) {
+      Invoke-Step $rows "Import session-variant reports" {
+         powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\collect_validation_results.ps1" -ManifestPath $manifest -ReportDir $ReportDir -ReportNameTemplate "session_variant_{Profile}_{Window}" -OutResults "outputs\SESSION_VARIANT_REPORT_METRICS.csv" -OutSummary "outputs\SESSION_VARIANT_REPORT_SUMMARY.csv" -OutMarkdown "outputs\SESSION_VARIANT_REPORT_METRICS.md"
+      } "Run session decision next." "Check report file names and parser coverage."
+      if(Test-File "work\build_session_variant_decision.ps1") {
+         Invoke-Step $rows "Build session-variant decision" {
+            powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_session_variant_decision.ps1"
+         } "Review outputs\SESSION_VARIANT_DECISION.md." "Fix decision script inputs or report metrics."
+      }
+   } else {
+      Add-Step $rows "Import session-variant reports" "SKIP" "Manifest not found: $manifest" "Create the session handoff before importing session reports."
+   }
+}
+
+if(-not $SkipFullProfitSearch) {
+   $manifest = "work\generated_profit_search\PROFIT_SEARCH_CONFIG_MANIFEST.csv"
+   if(Test-File $manifest) {
+      Invoke-Step $rows "Import full profit-search reports" {
+         powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\collect_validation_results.ps1" -ManifestPath $manifest -ReportDir $ReportDir -ReportNameTemplate "profit_search_{PhaseShort}_{Profile}_{Set}_{Window}" -OutResults "outputs\PROFIT_SEARCH_REPORT_METRICS.csv" -OutSummary "outputs\PROFIT_SEARCH_REPORT_SUMMARY.csv" -OutMarkdown "outputs\PROFIT_SEARCH_REPORT_METRICS.md"
+      } "Rebuild result-import decision matrix if reports parsed." "Check full profit-search report names and manifest."
+      if(Test-File "work\build_result_import_decision_matrix.ps1") {
+         Invoke-Step $rows "Build result-import decision matrix" {
+            powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_result_import_decision_matrix.ps1"
+         } "Review outputs\RESULT_IMPORT_DECISION_MATRIX.md." "Fix decision matrix inputs."
+      }
+   } else {
+      Add-Step $rows "Import full profit-search reports" "SKIP" "Manifest not found: $manifest" "Generate or restore full profit-search manifest before importing full reports."
+   }
+}
+
+if(-not $SkipReadinessRefresh) {
+   if(Test-File "work\build_profit_readiness_snapshot.ps1") {
+      Invoke-Step $rows "Refresh profit readiness snapshot" {
+         powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_profit_readiness_snapshot.ps1"
+      } "Review outputs\PROFIT_READINESS_SNAPSHOT.md." "Fix readiness script inputs."
+   } else {
+      Add-Step $rows "Refresh profit readiness snapshot" "SKIP" "work\build_profit_readiness_snapshot.ps1 not found." "Restore readiness builder if needed."
+   }
+}
+
+$outCsv = "outputs\REPORT_IMPORT_REBUILD_SUMMARY.csv"
+$outMd = "outputs\REPORT_IMPORT_REBUILD_SUMMARY.md"
+$rows | Export-Csv -LiteralPath $outCsv -NoTypeInformation
+
+$md = New-Object System.Collections.Generic.List[string]
+$md.Add("# Report Import Rebuild Summary") | Out-Null
+$md.Add("") | Out-Null
+$md.Add("Offline wrapper summary. No MT5 process was launched.") | Out-Null
+$md.Add("") | Out-Null
+$md.Add("| Step | Status | Evidence | Next Action |") | Out-Null
+$md.Add("|---|---|---|---|") | Out-Null
+foreach($row in $rows) {
+   $evidence = ([string]$row.Evidence) -replace '\|', '/'
+   $evidence = $evidence -replace "`r?`n", "<br>"
+   $next = ([string]$row.NextAction) -replace '\|', '/'
+   $md.Add("| $($row.Step) | $($row.Status) | $evidence | $next |") | Out-Null
+}
+$md.Add("") | Out-Null
+$md.Add("## Bottom Line") | Out-Null
+$md.Add("") | Out-Null
+if(@($rows | Where-Object { $_.Status -eq "FAIL" }).Count -gt 0) {
+   $md.Add("One or more import/rebuild steps failed. Fix those before making a candidate decision.") | Out-Null
+} else {
+   $md.Add("Available reports were imported and available decision/readiness files were rebuilt. Review the generated decision reports before spending more tester time.") | Out-Null
+}
+Set-Content -LiteralPath $outMd -Value $md -Encoding UTF8
+
+$rows
+
+if(@($rows | Where-Object { $_.Status -eq "FAIL" }).Count -gt 0) { exit 1 }
