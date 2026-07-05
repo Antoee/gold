@@ -105,6 +105,17 @@ def check_source() -> None:
         "InpCooldownMinutesAfterLoss",
         "InpMaxSpreadPoints",
         "InpSlippagePoints",
+        "InpUseSessionFilter",
+        "InpSessionStartHour",
+        "InpSessionEndHour",
+        "InpAllowMonday",
+        "InpAllowTuesday",
+        "InpAllowWednesday",
+        "InpAllowThursday",
+        "InpAllowFriday",
+        "InpAllowSunday",
+        "InpDisableFridayEvening",
+        "InpFridayCutoffHour",
         "InpUseBOS",
         "InpUseLiquiditySweep",
         "InpMinimumConfirmations",
@@ -123,6 +134,8 @@ def check_source() -> None:
         "OrderCalcProfit",
         "OrderCalcMargin",
         "HistoryDealSelect",
+        "TradingSessionAllowsNewTrade",
+        "TimeToStruct",
         "OnTester",
         "consecutiveLosses",
     ]
@@ -144,10 +157,24 @@ def check_hard_lock() -> None:
 
 
 def check_profiles() -> None:
+    base_session = {
+        "InpUseSessionFilter": "false",
+        "InpSessionStartHour": "0",
+        "InpSessionEndHour": "24",
+        "InpAllowMonday": "true",
+        "InpAllowTuesday": "true",
+        "InpAllowWednesday": "true",
+        "InpAllowThursday": "true",
+        "InpAllowFriday": "true",
+        "InpAllowSunday": "false",
+        "InpDisableFridayEvening": "false",
+        "InpFridayCutoffHour": "20",
+    }
     expected = {
-        "ROBUST_BOS_SWEEP_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.50", "InpRiskPercent": "1.60"},
-        "CANDIDATE_RISK16_SL18_TP38_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.80", "InpMaxEquityDrawdownPercent": "4.00"},
-        "CANDIDATE_RISK16_SL16_TP38_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.80", "InpMaxEquityDrawdownPercent": "4.00"},
+        "ROBUST_BOS_SWEEP_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.50", "InpRiskPercent": "1.60", **base_session},
+        "CANDIDATE_RISK16_SL18_TP38_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.80", "InpMaxEquityDrawdownPercent": "4.00", **base_session},
+        "CANDIDATE_RISK16_SL16_TP38_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.80", "InpMaxEquityDrawdownPercent": "4.00", **base_session},
+        "CANDIDATE_RISK16_SL18_TP35_GIVEBACK_PROFILE.set": {"InpUseProfitGivebackGuard": "true", **base_session},
     }
     for rel, required in expected.items():
         values = parse_set(ROOT / rel)
