@@ -5,6 +5,7 @@ param(
    [string]$HandoffIntegrityPath = "outputs\HANDOFF_CONFIG_INTEGRITY.csv",
    [string]$MicroDecisionPath = "outputs\MICRO_TEST_DECISION.csv",
    [string]$SafetyAuditPath = "outputs\MT5_LOCAL_SAFETY_AUDIT.csv",
+   [string]$CompileStatusPath = "outputs\MT5_COMPILE_STATUS.csv",
    [string]$OutCsv = "outputs\PROFIT_READINESS_SNAPSHOT.csv",
    [string]$OutReport = "outputs\PROFIT_READINESS_SNAPSHOT.md"
 )
@@ -37,6 +38,7 @@ $guardrailRows = Read-CsvSafe $GuardrailPath
 $handoffRows = Read-CsvSafe $HandoffIntegrityPath
 $microDecisionRows = Read-CsvSafe $MicroDecisionPath
 $safetyRows = Read-CsvSafe $SafetyAuditPath
+$compileRows = Read-CsvSafe $CompileStatusPath
 $rows = New-Object System.Collections.Generic.List[object]
 
 $readyDecisions = @($decisionRows | Where-Object { $_.Decision -in @("AdvanceToPhase2", "BuildPromotionPacket") })
@@ -102,9 +104,20 @@ if($safetyRows.Count -gt 0 -and $safetyFailures.Count -eq 0) {
    Add-Row $rows "Local PC safety" "MISSING_REPORT" "No local safety CSV found at $SafetyAuditPath." "Run work\audit_mt5_local_safety.ps1."
 }
 
+$compileRows = @($compileRows)
+$compileRow = $compileRows | Select-Object -First 1
+$compilePassed = $compileRows.Count -gt 0 -and (Get-Value $compileRow "Status") -eq "PASS"
+if($compilePassed) {
+   Add-Row $rows "Compile status" "PASS" "$(Get-Value $compileRow "Evidence")" "Compile proof is clean for this imported log; rerun after every EA source change."
+} elseif($compileRows.Count -gt 0) {
+   Add-Row $rows "Compile status" "$(Get-Value $compileRow "Status")" "$(Get-Value $compileRow "Evidence")" "Resolve compile status before spending tester time."
+} else {
+   Add-Row $rows "Compile status" "MISSING_REPORT" "No compile status CSV found at $CompileStatusPath." "Run work\import_mt5_compile_log.ps1 against the latest exported MetaEditor log."
+}
+
 $microPassed = $microDecisionRows.Count -gt 0 -and @($microDecisionRows | Where-Object { (Get-Value $_ "Decision") -eq "PASS_WINDOW" }).Count -eq $microDecisionRows.Count
-$replacementReady = $readyDecisions.Count -gt 0 -and $safetyFailures.Count -eq 0 -and $microPassed
-Add-Row $rows "Replacement readiness" $(if($replacementReady) { "REVIEW_REQUIRED" } else { "NOT_READY" }) $(if($replacementReady) { "Micro gate and at least one result row are ready for deeper review, but promotion still requires packet and human review." } else { "No candidate has enough imported evidence to replace the current promoted profile." }) $(if($replacementReady) { "Build promotion packets for ready candidates." } else { "Gather paired micro reports first, then full validation if the micro gate passes." })
+$replacementReady = $readyDecisions.Count -gt 0 -and $safetyFailures.Count -eq 0 -and $microPassed -and $compilePassed
+Add-Row $rows "Replacement readiness" $(if($replacementReady) { "REVIEW_REQUIRED" } else { "NOT_READY" }) $(if($replacementReady) { "Micro gate, compile status, and at least one result row are ready for deeper review, but promotion still requires packet and human review." } else { "No candidate has enough imported evidence to replace the current promoted profile." }) $(if($replacementReady) { "Build promotion packets for ready candidates." } else { "Gather paired micro reports first, then full validation if the micro and compile gates pass." })
 
 $rows | Export-Csv -LiteralPath $OutCsv -NoTypeInformation
 $report = New-Object System.Collections.Generic.List[string]
