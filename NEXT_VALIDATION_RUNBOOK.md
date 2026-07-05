@@ -6,29 +6,25 @@ No MT5 process should be launched from this workspace until the hidden-desktop l
 
 Generated configs live under:
 
-- `work/generated_validation/risk160_sl16_tp38`
-- `work/generated_validation/risk160_sl18_tp38`
-- `work/generated_validation/risk160_sl18_tp35_giveback`
-- `work/generated_validation/promoted_risk160_sl18_tp35`
+- `work/generated_validation/`
 
-Manifest:
+The standard pack contains 196 configs: 49 windows for each queued candidate plus the current promoted baseline.
 
-- `work/generated_validation/VALIDATION_MANIFEST.csv`
+## Profit Search Pack
 
-Each profile has:
+Additional profit-search configs live under:
 
-- 9 split windows: yearly, half-year, 2026 YTD, and full period.
-- 10 quarterly windows from 2024 Q1 through 2026 Q2.
-- 30 monthly windows from 2024-01 through 2026-06.
+- `work/generated_profit_search/`
 
-## Validation Order
+This pack searches for more profit around the current robust no-date BOS/sweep profile while preserving the no-martingale, no-grid, no-averaging-down rules.
 
-1. `risk160_sl16_tp38`
-2. `risk160_sl18_tp38`
-3. `risk160_sl18_tp35_giveback`
-4. `promoted_risk160_sl18_tp35`
+It contains:
 
-The promoted profile is included as a baseline comparison so reruns can detect history or broker-data changes.
+- 16 candidate `.set` profiles.
+- 128 phase-1 fast triage configs using `Model=2`.
+- 55 phase-2 real-tick validation configs using `Model=4`.
+
+Phase 1 is only a cheap pruning pass. Never promote from phase 1 alone. Any candidate that looks better must pass phase-2 real ticks and then the full promotion gate.
 
 ## Promotion Gate
 
@@ -39,39 +35,15 @@ A candidate should not replace the promoted profile unless it improves profit wh
 - Monthly/quarter aggregate greater than `+$744.03`.
 - Worst monthly, quarterly, and split window at least `$0.00`.
 - Zero losing monthly, quarterly, and split windows.
-- Gross loss across monthly, quarterly, and split windows must be `$0.00`.
-- Any date-block or calendar-specific rule stays a benchmark only unless it is replaced by a general market-regime rule.
-- Profit giveback variants must prove they reduce losses or preserve zero-loss windows without cutting too much full-period profit.
-
-## Tester Settings
-
-Configs use:
-
-- XAUUSD M15.
-- Real ticks, `Model=4`.
-- Deposit `$1,000`.
-- Leverage `1:100`.
-- Visual mode off.
-- Dashboard off.
-- `OptimizationCriterion=6`, MetaTrader 5 custom max, using the EA `OnTester()` score.
+- Drawdown and profit factor must be reviewed from exported MT5 reports.
 
 ## After Running
 
-1. Export MT5 report files for each generated config into `outputs/`.
-2. Rerun `work/collect_validation_results.ps1` to produce normalized report metrics.
-3. Rerun `work/analyze_robust_candidates.ps1`.
-4. Rerun `work/analyze_loss_control.ps1`.
-5. Rerun `work/analyze_promotion_gate.ps1`.
-6. Rerun `work/audit_profile_inputs.ps1` before trusting any changed `.set` file.
-7. Update `VALIDATION_REPORT_METRICS.md`, `ROBUST_CANDIDATE_RANKING.md`, `LOSS_CONTROL_REPORT.md`, `PROMOTION_GATE_REPORT.md`, and `PROFILE_INPUT_AUDIT.md`.
+1. Export MT5 report files into `outputs/`.
+2. Rerun `work/collect_validation_results.ps1` for the standard validation pack.
+3. Rerun the profit-search collector command locally for `work/generated_profit_search/PROFIT_SEARCH_CONFIG_MANIFEST.csv`.
+4. Rerun `work/analyze_robust_candidates.ps1`.
+5. Rerun `work/analyze_loss_control.ps1`.
+6. Rerun `work/analyze_promotion_gate.ps1`.
+7. Rerun `work/audit_profile_inputs.ps1` before trusting any changed `.set` file.
 8. Promote only if all profit, no-loss, drawdown/profit-factor, promotion-gate, and profile-input checks pass.
-
-## Offline Report Collector
-
-`work/collect_validation_results.ps1` reads `work/generated_validation/VALIDATION_MANIFEST.csv`, scans for exported MT5 reports named like `outputs/validation_<profile>_<set>_<window>.htm`, and writes:
-
-- `outputs/VALIDATION_REPORT_METRICS.csv`
-- `outputs/VALIDATION_REPORT_SUMMARY.csv`
-- `outputs/VALIDATION_REPORT_METRICS.md`
-
-The collector extracts net profit, derived final balance, profit factor, expected payoff, trade count, maximal drawdown, and recovery factor when the report provides those fields. It marks missing or unparsed reports explicitly so incomplete validation cannot accidentally look complete.
