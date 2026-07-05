@@ -66,7 +66,8 @@ The current GitHub source should be compiled and tested before live or promotion
   - session filter implementation and root-profile session input pins are present
   - hard local MT5 launch lock and launch guard are present
   - protected TP 3.80 candidate `.set` files use `InpMaxEquityDrawdownPercent=4.00`
-  - stress micro and recent-OOS manifests have 8 rows each
+  - stress micro and recent-OOS manifests have expected rows
+  - session-variant manifest has 6 rows and session candidate configs enable `InpUseSessionFilter=true`
   - handoff configs are non-visual, non-optimizing, shutdown after run, and target XAUUSD M15
 - Meaning: this is a safety/readiness gate only. It does not compile the EA and does not prove profit.
 
@@ -76,6 +77,8 @@ The current GitHub source should be compiled and tested before live or promotion
 - Stress micro windows: `2024_Q1`, `2024_Q3`, `2025_Q2`, `2025_Q3`
 - Recent out-of-sample handoff configs committed: `8`
 - Recent out-of-sample windows: `2025_Q4`, `2026_Q1`, `2026_Q2`, `2026_YTD`
+- Session variant handoff configs committed: `6`
+- Session variant probes: `london_07_16`, `newyork_13_22`, `overlap_13_16` on `2026_YTD`
 - Date range covered by prepared fast checks: `2024.01.01` through `2026.07.02`
 - Full promotion still requires parsed MT5 reports; no new profit evidence is implied by source/config commits.
 
