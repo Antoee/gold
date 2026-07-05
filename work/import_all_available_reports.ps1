@@ -8,6 +8,7 @@ param(
    [switch]$SkipADXFilterProbe,
    [switch]$SkipSpreadGuardProbe,
    [switch]$SkipTimeExitProbe,
+   [switch]$SkipNewsFilterProbe,
    [switch]$SkipMTFTrendProbe,
    [switch]$SkipStructureTrailingProbe,
    [switch]$SkipSessionVariant,
@@ -48,6 +49,7 @@ $probeBlocks = @(
    @{ Skip=$SkipADXFilterProbe; Manifest="outputs\adx_filter_probe_handoff\HANDOFF_MANIFEST.csv"; Step="ADX filter probe"; Template="adx_probe_{Profile}_{Window}"; Out="ADX_FILTER_PROBE"; Decision="work\build_adx_filter_probe_decision.ps1" },
    @{ Skip=$SkipSpreadGuardProbe; Manifest="outputs\spread_guard_probe_handoff\HANDOFF_MANIFEST.csv"; Step="ATR spread guard probe"; Template="spread_probe_{Profile}_{Window}"; Out="SPREAD_GUARD_PROBE"; Decision="work\build_spread_guard_probe_decision.ps1" },
    @{ Skip=$SkipTimeExitProbe; Manifest="outputs\time_exit_probe_handoff\HANDOFF_MANIFEST.csv"; Step="time-exit probe"; Template="time_exit_probe_{Profile}_{Window}"; Out="TIME_EXIT_PROBE"; Decision="work\build_time_exit_probe_decision.ps1" },
+   @{ Skip=$SkipNewsFilterProbe; Manifest="outputs\news_filter_probe_handoff\HANDOFF_MANIFEST.csv"; Step="news-filter probe"; Template="news_filter_probe_{Profile}_{Window}"; Out="NEWS_FILTER_PROBE"; Decision="work\build_news_filter_probe_decision.ps1" },
    @{ Skip=$SkipMTFTrendProbe; Manifest="outputs\mtf_trend_probe_handoff\HANDOFF_MANIFEST.csv"; Step="MTF trend probe"; Template="mtf_probe_{Profile}_{Window}"; Out="MTF_TREND_PROBE"; Decision="work\build_mtf_trend_probe_decision.ps1" },
    @{ Skip=$SkipStructureTrailingProbe; Manifest="outputs\structure_trailing_probe_handoff\HANDOFF_MANIFEST.csv"; Step="structure trailing probe"; Template="structure_probe_{Profile}_{Window}"; Out="STRUCTURE_TRAILING_PROBE"; Decision="work\build_structure_trailing_probe_decision.ps1" },
    @{ Skip=$SkipSessionVariant; Manifest="outputs\session_variant_handoff\HANDOFF_MANIFEST.csv"; Step="session-variant"; Template="session_variant_{Profile}_{Window}"; Out="SESSION_VARIANT"; Decision="work\build_session_variant_decision.ps1" }
