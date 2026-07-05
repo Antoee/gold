@@ -49,6 +49,9 @@ Generated without launching MT5.
 - Session variant handoff configs committed: `6`
 - Fast-probe readiness builder committed: `work/build_fast_probe_readiness_snapshot.ps1`
 - Fast-probe readiness output target: `outputs/FAST_PROBE_READINESS_SNAPSHOT.md`
+- Next fast batch selector committed: `work/build_next_fast_batch_selector.ps1`
+- Next fast batch output target: `outputs/NEXT_FAST_BATCH_SELECTION.md`
+- Current next fast batch: `STRESS_MICRO` (`8` rows) until exported reports change readiness.
 - Date range covered by prepared fast checks: `2024.01.01` through `2026.07.02`
 - Full promotion still requires parsed MT5 reports; no new profit evidence is implied by source/config/report-script commits.
 
