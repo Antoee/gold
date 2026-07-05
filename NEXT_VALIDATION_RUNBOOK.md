@@ -1,6 +1,6 @@
 # Next Validation Runbook
 
-No MT5 process should be launched from this workspace until the hidden-desktop launcher is deliberately verified and `ALLOW_MT5_FOCUS_RISK=1` is set.
+No MT5 process should be launched from this workspace until the hidden-desktop launcher is deliberately verified. Local launch now requires both `ALLOW_MT5_FOCUS_RISK=1` and an explicit `work\ALLOW_MT5_LOCAL_LAUNCH.unlock` file.
 
 ## Prepared Validation Pack
 
@@ -8,6 +8,7 @@ Generated configs live under:
 
 - `work/generated_validation/risk160_sl16_tp38`
 - `work/generated_validation/risk160_sl18_tp38`
+- `work/generated_validation/risk160_sl18_tp35_giveback`
 - `work/generated_validation/promoted_risk160_sl18_tp35`
 
 Manifest:
@@ -24,7 +25,8 @@ Each profile has:
 
 1. `risk160_sl16_tp38`
 2. `risk160_sl18_tp38`
-3. `promoted_risk160_sl18_tp35`
+3. `risk160_sl18_tp35_giveback`
+4. `promoted_risk160_sl18_tp35`
 
 The promoted profile is included as a baseline comparison so reruns can detect history or broker-data changes.
 
@@ -39,6 +41,7 @@ A candidate should not replace the promoted profile unless it improves profit wh
 - Zero losing monthly, quarterly, and split windows.
 - Gross loss across monthly, quarterly, and split windows must be `$0.00`.
 - Any date-block or calendar-specific rule stays a benchmark only unless it is replaced by a general market-regime rule.
+- Profit giveback variants must prove they reduce losses or preserve zero-loss windows without cutting too much full-period profit.
 
 ## Tester Settings
 
