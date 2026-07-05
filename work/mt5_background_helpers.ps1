@@ -114,20 +114,24 @@ namespace Mt5Safe {
 "@
 }
 
+function Stop-MT5LocalProcesses {
+   Get-Process terminal64,metatester64,MetaEditor -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+}
+
 function Set-MT5ProcessMute {
    param([bool]$Muted = $true)
-   # Audio muting is best-effort. The local workspace version includes the full audio-session implementation.
+   # Audio muting is best-effort. The local workspace version can add the full audio-session implementation.
 }
 
 function Set-MT5ProcessLowImpact {
-   $processes = Get-Process terminal64,metatester64 -ErrorAction SilentlyContinue
+   $processes = Get-Process terminal64,metatester64,MetaEditor -ErrorAction SilentlyContinue
    foreach($process in $processes) {
       try { $process.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::BelowNormal } catch {}
    }
 }
 
 function Hide-MT5Windows {
-   try { [Mt5Safe.WindowControl]::HideProcessWindows(@("terminal64", "metatester64")) | Out-Null } catch {}
+   try { [Mt5Safe.WindowControl]::HideProcessWindows(@("terminal64", "metatester64", "MetaEditor")) | Out-Null } catch {}
 }
 
 function Set-MT5BackgroundSafe {
@@ -144,10 +148,19 @@ function Start-MT5Hidden {
 
    $unlockFile = Join-Path $PSScriptRoot "ALLOW_MT5_LOCAL_LAUNCH.unlock"
    $hiddenDesktopAckFile = Join-Path $PSScriptRoot "ALLOW_MT5_HIDDEN_DESKTOP_ACK.unlock"
+   $hardLockFile = Join-Path $PSScriptRoot "MT5_LOCAL_LAUNCH_DISABLED.lock"
+
+   if(Test-Path -LiteralPath $hardLockFile) {
+      Stop-MT5LocalProcesses
+      throw "MT5 local tester launch is hard-locked because terminal64 can still steal focus on this PC. No tester process was started. Remove work\MT5_LOCAL_LAUNCH_DISABLED.lock only after the user explicitly allows local MT5 testing again."
+   }
+
    if($env:ALLOW_MT5_FOCUS_RISK -ne "1" -or $env:ALLOW_MT5_HIDDEN_DESKTOP_ACK -ne "1") {
+      Stop-MT5LocalProcesses
       throw "MT5 local tester launch is disabled because terminal64 can still steal focus on this PC. Set ALLOW_MT5_FOCUS_RISK=1 and ALLOW_MT5_HIDDEN_DESKTOP_ACK=1 only when the user explicitly allows local MT5 to run."
    }
    if(!(Test-Path -LiteralPath $unlockFile) -or !(Test-Path -LiteralPath $hiddenDesktopAckFile)) {
+      Stop-MT5LocalProcesses
       throw "MT5 local tester launch is disabled. Create work\ALLOW_MT5_LOCAL_LAUNCH.unlock and work\ALLOW_MT5_HIDDEN_DESKTOP_ACK.unlock only after verifying the launcher will not affect normal PC use."
    }
 
