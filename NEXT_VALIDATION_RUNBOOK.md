@@ -12,9 +12,19 @@ Current evidence:
 - Split aggregate: `+$2,354.65`, worst `$0.00`, 0 losing windows
 - Monthly/quarter aggregate: `+$744.03`, worst `$0.00`, 0 losing windows
 
+## One-Command Offline Refresh
+
+Preferred after any EA, config, report-import, or exported-report change:
+
+`work/refresh_offline_validation_state.ps1`
+
+This is an offline refresh only. It does not launch MT5, MetaEditor, Strategy Tester, or the watchdog. Its child PowerShell steps run hidden, write logs under `outputs/offline_refresh_logs/`, and rebuild the profit-search configs, imported report metrics, ranking, guardrails, decision matrix, next batch, risk-adjusted micro batch and handoff, handoff audit, top-profile promotion packet, readiness snapshot, report-import preflight, and local MT5 safety audit.
+
+Expected current result: `PASS`, 13 steps, replacement still `NOT_READY` until reports return.
+
 ## Offline Preflight Order
 
-Run these without launching MT5:
+The one-command refresh above is the preferred path. If you need to debug a specific stage manually, run these without launching MT5:
 
 1. `work/build_optimization_guardrail_audit.ps1`
 2. `work/build_risk_adjusted_micro_batch.ps1`
@@ -91,8 +101,8 @@ This batch can only produce triage evidence. Never promote from it alone.
 4. Run `work/test_external_mt5_micro_decision.ps1`.
 5. Run `work/build_external_mt5_micro_decision.ps1`.
 6. Run `work/build_external_validation_readiness.ps1`.
-7. If external validation readiness is `READY_FOR_FULL_VALIDATION`, continue to the full handoff and phase-2 real-tick validation.
-8. If broader profit-search reports changed, rerun `work/import_all_available_reports.ps1`, `work/analyze_profit_search.ps1`, `work/build_result_import_decision_matrix.ps1`, `work/build_optimization_guardrail_audit.ps1`, `work/build_risk_adjusted_micro_batch.ps1`, and `work/build_report_import_preflight.ps1`.
+7. Run `work/refresh_offline_validation_state.ps1` to rebuild all offline state with hidden child processes.
+8. If external validation readiness is `READY_FOR_FULL_VALIDATION`, continue to the full handoff and phase-2 real-tick validation.
 9. Build promotion packets only for candidates with complete evidence.
 
 ## Promotion Rule
