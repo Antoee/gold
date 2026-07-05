@@ -1,4 +1,6 @@
 "Gate","Status","Evidence","Required"
+"Optimization guardrail tracked","PASS","status=REVIEW_REQUIRED, score=90, equity_dd=4, risk_flags=, overfit_flags=adaptive_reverse_requires_walk_forward","Guardrail audit exists and does not reject promotion"
+"Equity drawdown guard active or baseline anchor","PASS","InpMaxEquityDrawdownPercent=4","Non-baseline candidates must use an equity drawdown guard"
 "Complete phase-2 evidence","FAIL","0/11 parsed, 11 missing, 0 unparsed","Every phase-2 real-tick report parsed"
 "Full-period profit beats baseline","FAIL","missing full-period phase-2 report","> 866.59"
 "Split aggregate beats baseline","FAIL","0.00","> 2354.65"
