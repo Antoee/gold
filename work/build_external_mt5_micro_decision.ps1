@@ -36,66 +36,74 @@ if(!(Test-Path -LiteralPath $MetricsPath)) {
 $metrics = @(Import-Csv -LiteralPath $MetricsPath)
 if($metrics.Count -eq 0) { throw "Metrics CSV has no rows: $MetricsPath" }
 
+$candidateProfiles = @()
 if([string]::IsNullOrWhiteSpace($CandidateProfile)) {
-   $candidateProfiles = @($metrics | Where-Object { (Get-Value $_ "Profile") -ne $BaselineProfile } | Select-Object -ExpandProperty Profile -Unique)
-   if($candidateProfiles.Count -ne 1) {
-      throw "Could not infer a single candidate profile. Candidates found: $($candidateProfiles -join ', ')"
+   $candidateProfiles = @($metrics | Where-Object { (Get-Value $_ "Profile") -ne $BaselineProfile } | Select-Object -ExpandProperty Profile -Unique | Sort-Object)
+   if($candidateProfiles.Count -eq 0) {
+      throw "Could not infer any candidate profiles. Metrics only contain baseline '$BaselineProfile'."
    }
-   $CandidateProfile = [string]$candidateProfiles[0]
+} else {
+   $candidateProfiles = @($CandidateProfile)
 }
 
-$windows = @($metrics | Select-Object -ExpandProperty Window -Unique | Sort-Object)
 $rows = New-Object System.Collections.Generic.List[object]
 
-foreach($window in $windows) {
-   $candidate = $metrics | Where-Object { (Get-Value $_ "Profile") -eq $CandidateProfile -and (Get-Value $_ "Window") -eq $window } | Select-Object -First 1
-   $baseline = $metrics | Where-Object { (Get-Value $_ "Profile") -eq $BaselineProfile -and (Get-Value $_ "Window") -eq $window } | Select-Object -First 1
+foreach($candidateProfileName in $candidateProfiles) {
+   $candidateWindows = @($metrics |
+      Where-Object { (Get-Value $_ "Profile") -eq $candidateProfileName } |
+      Select-Object -ExpandProperty Window -Unique |
+      Sort-Object)
 
-   $candidateStatus = Get-Value $candidate "Status" "MISSING_REPORT"
-   $baselineStatus = Get-Value $baseline "Status" "MISSING_REPORT"
-   $candidateProfit = To-DoubleOrNull (Get-Value $candidate "NetProfit")
-   $baselineProfit = To-DoubleOrNull (Get-Value $baseline "NetProfit")
-   $candidateDrawdown = To-DoubleOrNull (Get-Value $candidate "MaxDrawdownMoney")
-   $baselineDrawdown = To-DoubleOrNull (Get-Value $baseline "MaxDrawdownMoney")
-   $delta = if($null -ne $candidateProfit -and $null -ne $baselineProfit) { $candidateProfit - $baselineProfit } else { $null }
-   $drawdownDelta = if($null -ne $candidateDrawdown -and $null -ne $baselineDrawdown) { $candidateDrawdown - $baselineDrawdown } else { $null }
+   foreach($window in $candidateWindows) {
+      $candidate = $metrics | Where-Object { (Get-Value $_ "Profile") -eq $candidateProfileName -and (Get-Value $_ "Window") -eq $window } | Select-Object -First 1
+      $baseline = $metrics | Where-Object { (Get-Value $_ "Profile") -eq $BaselineProfile -and (Get-Value $_ "Window") -eq $window } | Select-Object -First 1
 
-   $decision = "WAITING_FOR_REPORTS"
-   $reason = "Candidate or baseline report is missing/unparsed."
-   if($candidateStatus -eq "PARSED" -and $baselineStatus -eq "PARSED") {
-      if($candidateProfit -lt 0) {
-         $decision = "FAIL_CANDIDATE_LOSS"
-         $reason = "Candidate lost money in this stress window."
-      } elseif($candidateProfit -lt $baselineProfit) {
-         $decision = "FAIL_UNDERPERFORM_BASELINE"
-         $reason = "Candidate net profit is below the promoted baseline on the same window."
-      } elseif($null -ne $drawdownDelta -and $drawdownDelta -gt 0 -and $candidateProfit -le $baselineProfit) {
-         $decision = "REVIEW_DRAWDOWN"
-         $reason = "Candidate did not improve profit and has higher drawdown."
-      } else {
-         $decision = "PASS_WINDOW"
-         $reason = "Candidate matches or improves baseline without losing money."
+      $candidateStatus = Get-Value $candidate "Status" "MISSING_REPORT"
+      $baselineStatus = Get-Value $baseline "Status" "MISSING_REPORT"
+      $candidateProfit = To-DoubleOrNull (Get-Value $candidate "NetProfit")
+      $baselineProfit = To-DoubleOrNull (Get-Value $baseline "NetProfit")
+      $candidateDrawdown = To-DoubleOrNull (Get-Value $candidate "MaxDrawdownMoney")
+      $baselineDrawdown = To-DoubleOrNull (Get-Value $baseline "MaxDrawdownMoney")
+      $delta = if($null -ne $candidateProfit -and $null -ne $baselineProfit) { $candidateProfit - $baselineProfit } else { $null }
+      $drawdownDelta = if($null -ne $candidateDrawdown -and $null -ne $baselineDrawdown) { $candidateDrawdown - $baselineDrawdown } else { $null }
+
+      $decision = "WAITING_FOR_REPORTS"
+      $reason = "Candidate or baseline report is missing/unparsed."
+      if($candidateStatus -eq "PARSED" -and $baselineStatus -eq "PARSED") {
+         if($candidateProfit -lt 0) {
+            $decision = "FAIL_CANDIDATE_LOSS"
+            $reason = "Candidate lost money in this stress window."
+         } elseif($candidateProfit -lt $baselineProfit) {
+            $decision = "FAIL_UNDERPERFORM_BASELINE"
+            $reason = "Candidate net profit is below the promoted baseline on the same window."
+         } elseif($null -ne $drawdownDelta -and $drawdownDelta -gt 0 -and $candidateProfit -le $baselineProfit) {
+            $decision = "REVIEW_DRAWDOWN"
+            $reason = "Candidate did not improve profit and has higher drawdown."
+         } else {
+            $decision = "PASS_WINDOW"
+            $reason = "Candidate matches or improves baseline without losing money."
+         }
+      } elseif($candidateStatus -eq "UNPARSED" -or $baselineStatus -eq "UNPARSED") {
+         $decision = "REPAIR_REPORT"
+         $reason = "At least one report exists but could not be parsed."
       }
-   } elseif($candidateStatus -eq "UNPARSED" -or $baselineStatus -eq "UNPARSED") {
-      $decision = "REPAIR_REPORT"
-      $reason = "At least one report exists but could not be parsed."
-   }
 
-   $rows.Add([pscustomobject]@{
-      Window = $window
-      CandidateProfile = $CandidateProfile
-      BaselineProfile = $BaselineProfile
-      CandidateStatus = $candidateStatus
-      BaselineStatus = $baselineStatus
-      CandidateNetProfit = Format-Num $candidateProfit
-      BaselineNetProfit = Format-Num $baselineProfit
-      NetProfitDelta = Format-Num $delta
-      CandidateDrawdown = Format-Num $candidateDrawdown
-      BaselineDrawdown = Format-Num $baselineDrawdown
-      DrawdownDelta = Format-Num $drawdownDelta
-      Decision = $decision
-      Reason = $reason
-   }) | Out-Null
+      $rows.Add([pscustomobject]@{
+         Window = $window
+         CandidateProfile = $candidateProfileName
+         BaselineProfile = $BaselineProfile
+         CandidateStatus = $candidateStatus
+         BaselineStatus = $baselineStatus
+         CandidateNetProfit = Format-Num $candidateProfit
+         BaselineNetProfit = Format-Num $baselineProfit
+         NetProfitDelta = Format-Num $delta
+         CandidateDrawdown = Format-Num $candidateDrawdown
+         BaselineDrawdown = Format-Num $baselineDrawdown
+         DrawdownDelta = Format-Num $drawdownDelta
+         Decision = $decision
+         Reason = $reason
+      }) | Out-Null
+   }
 }
 
 $rows | Export-Csv -LiteralPath $OutCsv -NoTypeInformation
@@ -113,15 +121,15 @@ $md.Add("") | Out-Null
 $md.Add("Offline decision only. This script does not launch MT5.") | Out-Null
 $md.Add("") | Out-Null
 $md.Add("- Overall: **$overall**") | Out-Null
-$md.Add("- Candidate: ``$CandidateProfile``") | Out-Null
+$md.Add("- Candidates: ``$($candidateProfiles -join '`, `')``") | Out-Null
 $md.Add("- Baseline: ``$BaselineProfile``") | Out-Null
 $md.Add("- Windows checked: $($rows.Count)") | Out-Null
 $md.Add("") | Out-Null
-$md.Add("| Window | Decision | Candidate Net | Baseline Net | Delta | Candidate DD | Baseline DD | Reason |") | Out-Null
-$md.Add("|---|---|---:|---:|---:|---:|---:|---|") | Out-Null
+$md.Add("| Candidate | Window | Decision | Candidate Net | Baseline Net | Delta | Candidate DD | Baseline DD | Reason |") | Out-Null
+$md.Add("|---|---|---|---:|---:|---:|---:|---:|---|") | Out-Null
 foreach($row in $rows) {
    $reason = ([string]$row.Reason) -replace '\|', '/'
-   $md.Add("| $($row.Window) | $($row.Decision) | $($row.CandidateNetProfit) | $($row.BaselineNetProfit) | $($row.NetProfitDelta) | $($row.CandidateDrawdown) | $($row.BaselineDrawdown) | $reason |") | Out-Null
+   $md.Add("| ``$($row.CandidateProfile)`` | $($row.Window) | $($row.Decision) | $($row.CandidateNetProfit) | $($row.BaselineNetProfit) | $($row.NetProfitDelta) | $($row.CandidateDrawdown) | $($row.BaselineDrawdown) | $reason |") | Out-Null
 }
 $md.Add("") | Out-Null
 $md.Add("## Next Action") | Out-Null
@@ -139,7 +147,7 @@ Set-Content -LiteralPath $OutMarkdown -Value $md -Encoding UTF8
 
 [pscustomobject]@{
    Overall = $overall
-   CandidateProfile = $CandidateProfile
+   CandidateProfile = ($candidateProfiles -join ";")
    BaselineProfile = $BaselineProfile
    Windows = $rows.Count
    OutCsv = $OutCsv
