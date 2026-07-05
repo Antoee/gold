@@ -17,14 +17,16 @@ Current evidence:
 Run these without launching MT5:
 
 1. `work/build_optimization_guardrail_audit.ps1`
-2. `work/build_profit_readiness_snapshot.ps1`
-3. `work/build_report_import_preflight.ps1`
-4. `work/audit_handoff_config_integrity.ps1`
-5. `work/audit_mt5_local_safety.ps1`
+2. `work/build_fast_probe_readiness_snapshot.ps1`
+3. `work/build_profit_readiness_snapshot.ps1`
+4. `work/build_report_import_preflight.ps1`
+5. `work/audit_handoff_config_integrity.ps1`
+6. `work/audit_mt5_local_safety.ps1`
 
 Expected current state:
 
 - Optimization guardrails: 16 profiles audited, 16 require promotion review, top score `giveback25_tp38=87`
+- Fast-probe readiness: waiting for exported reports until the fast handoff packs are run/imported
 - Readiness: `NOT_READY`
 - Report import preflight: parser, manifest, guardrails, handoff, and safety pass; reports still missing
 - Handoff integrity: PASS
@@ -33,17 +35,16 @@ Expected current state:
 ## After Reports Are Exported
 
 1. Copy MT5 HTML reports into the expected output folder.
-2. Rerun `work/collect_validation_results.ps1` for the profit-search manifest.
-3. Rerun `work/analyze_profit_search.ps1`.
-4. Rerun `work/build_result_import_decision_matrix.ps1`.
+2. Rerun `work/import_all_available_reports.ps1` to import available reports, rebuild probe decisions, and refresh readiness snapshots.
+3. Rerun `work/analyze_profit_search.ps1` if full profit-search reports changed.
+4. Rerun `work/build_result_import_decision_matrix.ps1` if full profit-search reports changed.
 5. Rerun `work/build_optimization_guardrail_audit.ps1`.
-6. Rerun `work/build_profit_readiness_snapshot.ps1`.
-7. Rerun `work/build_report_import_preflight.ps1`.
-8. Build promotion packets only for candidates with complete evidence.
+6. Rerun `work/build_report_import_preflight.ps1`.
+7. Build promotion packets only for candidates with complete evidence.
 
 ## Promotion Rule
 
-Never promote from phase 1 or a single strong window. A replacement must pass profit, no-loss windows, drawdown/profit-factor checks, promotion gate, optimization guardrails, profile-input audit, handoff integrity, local-safety audit, decision matrix, readiness snapshot, report-import preflight, strategy thesis, and coverage checks.
+Never promote from phase 1 or a single strong window. A replacement must pass profit, no-loss windows, drawdown/profit-factor checks, promotion gate, optimization guardrails, fast-probe readiness, profile-input audit, handoff integrity, local-safety audit, decision matrix, readiness snapshot, report-import preflight, strategy thesis, and coverage checks.
 
 ## Optimization Guardrails
 
@@ -53,6 +54,15 @@ Never promote from phase 1 or a single strong window. A replacement must pass pr
 - `outputs/OPTIMIZATION_GUARDRAIL_AUDIT.md`
 
 It ranks test-eligible candidates while flagging risk and overfit concerns before tester time is spent. Current top test-eligible profiles are `giveback25_tp38`, `giveback35_tp38`, `baseline_promoted`, and `tp38_sl18`; all require promotion review because equity drawdown guard is disabled and adaptive reverse needs walk-forward proof.
+
+## Fast-Probe Readiness
+
+`work/build_fast_probe_readiness_snapshot.ps1` reads all imported fast-probe decision CSVs and writes:
+
+- `outputs/FAST_PROBE_READINESS_SNAPSHOT.csv`
+- `outputs/FAST_PROBE_READINESS_SNAPSHOT.md`
+
+It summarizes stress micro, recent-OOS, confirmation, break-even, ADX, spread guard, time exit, MTF trend, structure trailing, and session probes. Fast-probe evidence can justify expanding a candidate into broader validation, but it cannot promote a profile by itself.
 
 ## Local MT5 Safety
 
