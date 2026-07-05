@@ -26,9 +26,13 @@ The previous date-block profile remains an aggressive research benchmark: full p
 
 - `BACKTEST_RESULTS.md` - detailed validation notes and rejected candidate results.
 - `NEXT_VALIDATION_QUEUE.md` - candidates waiting for full validation before promotion.
+- `NEXT_VALIDATION_RUNBOOK.md` - safe validation order and promotion gate.
+- `ROBUST_CANDIDATE_RANKING.md` - offline robust-candidate ranking from existing CSV results.
+- `LOSS_CONTROL_REPORT.md` - offline loss-control ranking from existing CSV windows.
 - `ROBUST_BOS_SWEEP_PROFILE.set` - promoted robust BOS/sweep MT5 settings profile.
 - `CANDIDATE_RISK16_SL18_TP38_PROFILE.set` - queued candidate: risk `1.60`, stop ATR `1.80`, TP ATR `3.80`.
 - `CANDIDATE_RISK16_SL16_TP38_PROFILE.set` - queued candidate: risk `1.60`, stop ATR `1.60`, TP ATR `3.80`.
+- `CANDIDATE_RISK16_SL18_TP35_GIVEBACK_PROFILE.set` - queued loss-control candidate with the profit giveback guard enabled.
 - `RISK16_NEIGHBORHOOD_SUMMARY.csv` - latest stress-window sweep summary around the promoted profile.
 - `BOS_SWEEP_WINDOWS_risk1p6_sl18_tp35.csv` - promoted robust profile quarterly/monthly windows.
 - `BOS_SWEEP_WINDOW_SUMMARY_risk1p6_sl18_tp35.csv` - promoted robust profile quarterly/monthly summary.
@@ -59,6 +63,17 @@ Current promoted defaults include:
 - Date buy/sell blocks disabled.
 - EMA cross, momentum candle, and engulfing confirmations disabled.
 - BOS and liquidity sweep enabled with `InpMinimumConfirmations=2`.
+- Profit giveback guard disabled by default.
+
+## Profit Giveback Guard
+
+The local EA source includes an optional profit giveback guard for loss-control research.
+
+- `InpUseProfitGivebackGuard` enables or disables the module.
+- The guard tracks daily, weekly, and monthly peak closed profit.
+- It blocks new entries if current period profit gives back too much of that peak.
+- It does not close existing positions by itself.
+- The promoted profile keeps it disabled; `CANDIDATE_RISK16_SL18_TP35_GIVEBACK_PROFILE.set` enables it for validation.
 
 ## Optimization Scoring
 
@@ -76,6 +91,7 @@ Queued candidates from the latest risk/stop/target neighborhood stress sweep:
 
 - `risk160_sl18_tp38`: stress-window total `+$798.00`, worst `$0.00`, 2 profitable, 5 flat, 0 losing. Needs full monthly/quarter/split validation before promotion.
 - `risk160_sl16_tp38`: stress-window total `+$798.00`, worst `$0.00`, 2 profitable, 5 flat, 0 losing. Needs full monthly/quarter/split validation before promotion.
+- `risk160_sl18_tp35_giveback`: same core as the promoted profile, with the profit giveback guard enabled. Needs full loss-control validation before promotion.
 
 Best no-date profiles found so far:
 
@@ -96,18 +112,18 @@ Rejected or non-promoted paths:
 
 ## Background Testing Safety
 
-Local MT5 launch is now intentionally safety-gated because `terminal64.exe` can still flash and steal focus on this PC.
+Local MT5 launch is intentionally safety-gated because `terminal64.exe` can still flash and steal focus on this PC.
 
-- Local MT5 tests should not be run unless `ALLOW_MT5_FOCUS_RISK=1` is set.
+- Local MT5 tests should not be run unless `ALLOW_MT5_FOCUS_RISK=1` is set and `work\ALLOW_MT5_LOCAL_LAUNCH.unlock` exists.
 - The local runner attempts to start MT5 on a separate hidden Windows desktop named `MT5BacktestDesktop`.
 - That hidden-desktop runner still needs a controlled test before unattended local validation resumes.
-- Until then, repository/documentation work can continue without launching MT5.
+- Until then, repository/documentation/offline analysis work can continue without launching MT5.
 
 ## Research Direction
 
 Next work should focus on increasing profit from the robust no-date profile without bringing back losing monthly windows.
 
-1. Fully validate the queued `3.80` TP candidates across monthly, quarterly, yearly, half-year, and full-period windows.
+1. Fully validate the queued `3.80` TP candidates and the giveback candidate across monthly, quarterly, yearly, half-year, and full-period windows.
 2. Test on additional broker/history sources.
 3. Use the custom optimization criterion to rank candidates by robustness, not only raw net profit.
 4. Keep the date-block profile as a benchmark, not the default.
