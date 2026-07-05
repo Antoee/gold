@@ -13,10 +13,11 @@ For the consolidated gate rules, use `outputs/FAST_EXPERIMENT_MATRIX.md` and `ou
 | 1 | STATIC_SAFETY | Static repository audit | 1 | Proceed to stress micro if static safety passes. | Fix source/config safety before tester work. |
 | 2 | STRESS_MICRO | `tp38_sl18` vs baseline stress windows | 8 | Proceed to recent-OOS only if all paired stress windows pass. | Reject or deprioritize `tp38_sl18`. |
 | 3 | RECENT_OOS | `tp38_sl18` vs baseline recent freshness | 8 | Proceed to full handoff only if all recent-OOS windows pass. | Reject or deprioritize `tp38_sl18`. |
-| 4 | MTF_TREND_PROBE | H1 200 EMA trend filter probe | 4 | Expand only passing MTF candidates into stress/recent-OOS validation. | Stop spending tester time on failed MTF variants. |
-| 5 | STRUCTURE_TRAIL_PROBE | Structure trailing stop probe | 4 | Expand only passing structure-trailing candidates into stress/recent-OOS validation. | Stop spending tester time on failed structure-trailing variants. |
-| 6 | SESSION_PROBE | `tp38_sl18` session variants vs unfiltered baseline | 6 | Expand only passing session candidates into stress/recent-OOS validation. | Stop spending tester time on failed session variants. |
-| 7 | FULL_HANDOFF | Full candidate validation | 24 | Build promotion packet only if all gates pass. | Keep current promoted baseline. |
+| 4 | SPREAD_GUARD_PROBE | ATR-relative spread guard probe | 4 | Expand only passing spread-guard candidates into stress/recent-OOS validation. | Stop spending tester time on failed spread-guard variants. |
+| 5 | MTF_TREND_PROBE | H1 200 EMA trend filter probe | 4 | Expand only passing MTF candidates into stress/recent-OOS validation. | Stop spending tester time on failed MTF variants. |
+| 6 | STRUCTURE_TRAIL_PROBE | Structure trailing stop probe | 4 | Expand only passing structure-trailing candidates into stress/recent-OOS validation. | Stop spending tester time on failed structure-trailing variants. |
+| 7 | SESSION_PROBE | `tp38_sl18` session variants vs unfiltered baseline | 6 | Expand only passing session candidates into stress/recent-OOS validation. | Stop spending tester time on failed session variants. |
+| 8 | FULL_HANDOFF | Full candidate validation | 24 | Build promotion packet only if all gates pass. | Keep current promoted baseline. |
 
 ## Commands After Reports Exist
 
