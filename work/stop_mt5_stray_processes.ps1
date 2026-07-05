@@ -1,45 +1,27 @@
 $ErrorActionPreference = "Stop"
 
-# Cleanup-only helper. It starts nothing and only targets MT5-family processes.
-$processNamePatterns = @(
-   "terminal",
-   "terminal64",
-   "metatester",
-   "metatester64",
-   "metaeditor",
-   "metaeditor64"
-)
+# Cleanup-only helper. It starts nothing and only targets MT5-family executable processes.
+$targetNameRegex = '^(terminal64|terminal|metatester64|metatester|metaeditor64|metaeditor)\.exe$'
+$targetPathRegex = '\\(MetaTrader|MT5|MetaQuotes|MQL5)\\|terminal64\.exe$|terminal\.exe$|metatester64\.exe$|metatester\.exe$|metaeditor64\.exe$|metaeditor\.exe$'
+$excludeNameRegex = '^(powershell|pwsh|cmd|conhost|OpenAI|Codex|Code|WindowsTerminal)\.exe$'
 
 $targetRows = New-Object System.Collections.Generic.List[object]
 
-foreach($name in $processNamePatterns) {
-   foreach($process in @(Get-Process -Name $name -ErrorAction SilentlyContinue)) {
-      $targetRows.Add([pscustomobject]@{
-         Id = $process.Id
-         Name = $process.ProcessName
-         Source = "Get-Process"
-         CommandLine = ""
-      }) | Out-Null
-   }
-}
-
-# Some brokers rename installs or child tester processes. Use WMI/CIM as a second pass,
-# still scoped to MetaTrader/MT5 executable names or paths.
 try {
    $cimProcesses = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
-      $_.Name -match '^(terminal64|terminal|metatester64|metatester|metaeditor64|metaeditor)\.exe$' -or
-      $_.ExecutablePath -match 'MetaTrader|MT5|MetaQuotes' -or
-      $_.CommandLine -match 'MetaTrader|MT5|MetaQuotes|terminal64\.exe|metaeditor64\.exe|metatester64\.exe'
+      $_.Name -notmatch $excludeNameRegex -and (
+         $_.Name -match $targetNameRegex -or
+         ([string]$_.ExecutablePath) -match $targetPathRegex
+      )
    })
+
    foreach($process in $cimProcesses) {
-      if(-not ($targetRows | Where-Object { $_.Id -eq [int]$process.ProcessId })) {
-         $targetRows.Add([pscustomobject]@{
-            Id = [int]$process.ProcessId
-            Name = [string]$process.Name
-            Source = "CIM"
-            CommandLine = [string]$process.CommandLine
-         }) | Out-Null
-      }
+      $targetRows.Add([pscustomobject]@{
+         Id = [int]$process.ProcessId
+         Name = [string]$process.Name
+         Source = "CIM"
+         ExecutablePath = [string]$process.ExecutablePath
+      }) | Out-Null
    }
 } catch {}
 
@@ -55,11 +37,16 @@ foreach($target in $targetRows) {
 }
 
 $remaining = New-Object System.Collections.Generic.List[object]
-foreach($name in $processNamePatterns) {
-   foreach($process in @(Get-Process -Name $name -ErrorAction SilentlyContinue)) {
-      $remaining.Add([pscustomobject]@{ Id = $process.Id; Name = $process.ProcessName }) | Out-Null
+try {
+   foreach($process in @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
+      $_.Name -notmatch $excludeNameRegex -and (
+         $_.Name -match $targetNameRegex -or
+         ([string]$_.ExecutablePath) -match $targetPathRegex
+      )
+   })) {
+      $remaining.Add([pscustomobject]@{ Id = [int]$process.ProcessId; Name = [string]$process.Name; ExecutablePath = [string]$process.ExecutablePath }) | Out-Null
    }
-}
+} catch {}
 
 $result = [pscustomobject]@{
    Action = "Stop MT5 stray processes only"
