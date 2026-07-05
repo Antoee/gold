@@ -1,6 +1,6 @@
 param(
    [int]$MonitorSeconds = 0,
-   [int]$PollMilliseconds = 25,
+   [int]$PollMilliseconds = 50,
    [switch]$StopProcesses = $true
 )
 
@@ -11,9 +11,6 @@ $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
 $logPath = Join-Path $PSScriptRoot "mt5_focus_watchdog.log"
 $stopFile = Join-Path $PSScriptRoot "STOP_MT5_FOCUS_WATCHDOG"
-$targetNameRegex = '^(terminal64|terminal|metatester64|metatester|metaeditor64|metaeditor)\.exe$'
-$targetPathRegex = '\\(MetaTrader|MT5|MetaQuotes|MQL5)\\|terminal64\.exe$|terminal\.exe$|metatester64\.exe$|metatester\.exe$|metaeditor64\.exe$|metaeditor\.exe$'
-$excludeNameRegex = '^(powershell|pwsh|cmd|conhost|OpenAI|Codex|Code|WindowsTerminal)\.exe$'
 $processNames = @("terminal", "terminal64", "metatester", "metatester64", "MetaEditor", "metaeditor64")
 
 if(-not ("Mt5Safe.WatchdogWindowControl" -as [type])) {
@@ -58,12 +55,7 @@ namespace Mt5Safe {
 }
 
 function Get-MT5WatchdogTargets {
-   @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
-      $_.Name -notmatch $excludeNameRegex -and (
-         $_.Name -match $targetNameRegex -or
-         ([string]$_.ExecutablePath) -match $targetPathRegex
-      )
-   })
+   @(Get-Process -Name $processNames -ErrorAction SilentlyContinue)
 }
 
 function Invoke-MT5WatchdogPass {
@@ -76,10 +68,10 @@ function Invoke-MT5WatchdogPass {
    if($StopProcesses) {
       foreach($target in $targets) {
          try {
-            Stop-Process -Id ([int]$target.ProcessId) -Force -ErrorAction Stop
+            Stop-Process -Id ([int]$target.Id) -Force -ErrorAction Stop
             $stopped++
          } catch {
-            $errors.Add("Could not stop $($target.Name):$($target.ProcessId): $($_.Exception.Message)") | Out-Null
+            $errors.Add("Could not stop $($target.ProcessName):$($target.Id): $($_.Exception.Message)") | Out-Null
          }
       }
    }
