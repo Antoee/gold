@@ -89,6 +89,8 @@ Prepared profit-search pack:
 - Next-test handoff builder: `work/build_next_test_handoff.ps1`
 - Handoff integrity report: `HANDOFF_CONFIG_INTEGRITY.md`
 - Handoff integrity script: `work/audit_handoff_config_integrity.ps1`
+- Strategy research brief: `STRATEGY_RESEARCH_BRIEF.md`
+- Strategy research brief script: `work/build_strategy_research_brief.ps1`
 - Contains 16 generated candidate profiles.
 - Phase 1: 128 fast triage configs using `Model=2`.
 - Phase 2: 55 real-tick validation configs using `Model=4`.
@@ -99,6 +101,7 @@ Prepared profit-search pack:
 - Current coverage audit status: 16 profiles, 5 phase-2 seeds, 1 aggressive-risk candidate (`risk20_tp38_sl18`) kept phase-1 only, with TP/SL, trailing, RR, risk, giveback, breakeven, baseline, and reduced-risk coverage present.
 - Current handoff status: 24 prioritized `.ini` configs copied into `outputs/next_test_handoff/configs/` and zipped for the next safe testing window.
 - Current handoff integrity status: 24/24 configs pass static checks for `Visual=0`, `ShutdownTerminal=1`, `Optimization=0`, XAUUSD/M15, expected report names, critical EA inputs, and file hashes. Current handoff zip SHA256: `8FE19B8A55A058579F9696C2C8E7B2B47F38F1521EBCA8EB1823A022FD149AE3`.
+- Current strategy research brief: keep `risk1p6_sl18_tp35` promoted, prioritize TP `3.8` with SL `1.6` to `1.8` as the next evidence-backed profit search, treat momentum+sweep as research-only because it has one losing split window, and keep date-block logic benchmark-only until a general regime rule explains it.
 - Phase 1 is pruning only; candidates still need real-tick phase 2 plus full promotion-gate validation before promotion.
 
 Local MT5 run safety:
