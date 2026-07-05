@@ -195,6 +195,9 @@ void OnTick()
    if(InpUseAdaptiveReverse)
       direction = ApplyAdaptiveBias(direction);
 
+   if(!MTFTrendAllowsDirection(direction))
+      return;
+
    OpenTrade(direction, atr, reason);
 }
 
@@ -369,6 +372,16 @@ int HigherTimeframeTrendBias()
    if(close < ema)
       return -1;
    return 0;
+}
+
+bool MTFTrendAllowsDirection(const int direction)
+{
+   if(!InpUseMTFTrendFilter)
+      return true;
+   int bias = HigherTimeframeTrendBias();
+   if(bias == 0 || direction == 0)
+      return false;
+   return direction == bias;
 }
 
 void AddScore(int &score, string &reason, const string tag)
