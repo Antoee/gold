@@ -1,0 +1,5 @@
+"Window","CandidateProfile","BaselineProfile","CandidateStatus","BaselineStatus","CandidateNetProfit","BaselineNetProfit","ProfitDelta","CandidateMaxDrawdown","BaselineMaxDrawdown","CandidateProfitFactor","BaselineProfitFactor","Decision","Reason"
+"2024_Q1","tp38_sl18","baseline_promoted","MISSING_REPORT","MISSING_REPORT","","","","","","","","WAITING_FOR_REPORTS","Candidate and baseline reports must both parse before judging this window."
+"2024_Q3","tp38_sl18","baseline_promoted","MISSING_REPORT","MISSING_REPORT","","","","","","","","WAITING_FOR_REPORTS","Candidate and baseline reports must both parse before judging this window."
+"2025_Q2","tp38_sl18","baseline_promoted","MISSING_REPORT","MISSING_REPORT","","","","","","","","WAITING_FOR_REPORTS","Candidate and baseline reports must both parse before judging this window."
+"2025_Q3","tp38_sl18","baseline_promoted","MISSING_REPORT","MISSING_REPORT","","","","","","","","WAITING_FOR_REPORTS","Candidate and baseline reports must both parse before judging this window."
