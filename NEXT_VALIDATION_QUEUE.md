@@ -29,6 +29,14 @@ Candidate 2: `risk160_sl16_tp38`
 - Stress-window result: `+$798.00`, worst window `$0.00`, 0 losing windows
 - Status: needs full monthly/quarter/split validation before promotion
 
+Offline robust-candidate ranking:
+
+- Ranking file: `ROBUST_CANDIDATE_RANKING.csv`
+- Report file: `ROBUST_CANDIDATE_RANKING.md`
+- The current promoted split profile ranks #1 because it has the strongest multi-window evidence: 9 windows, `+$2,354.65`, worst `$0.00`, 0 losing windows.
+- The next unvalidated candidates are ranked #3 and #4: `risk160_sl16_tp38` and `risk160_sl18_tp38`.
+- Single-period high-profit date-block summaries are treated as benchmark-only by the analyzer because they do not prove start-window robustness.
+
 Local MT5 run safety:
 
 - Local MT5 launch is disabled unless `ALLOW_MT5_FOCUS_RISK=1` is set.
