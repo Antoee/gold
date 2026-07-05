@@ -4,7 +4,7 @@
 //| No martingale. No grid. No averaging down. No recovery systems.   |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.08"
+#property version   "1.09"
 #property description "Professional risk-first XAUUSD EA with BOS/sweep entries and ATR exits."
 
 #include <Trade/Trade.mqh>
@@ -75,6 +75,17 @@ input bool   InpAllowFriday                  = true;
 input bool   InpAllowSunday                  = false;
 input bool   InpDisableFridayEvening         = false;
 input int    InpFridayCutoffHour             = 20;
+
+input bool   InpUseNewsTimeFilter            = false;
+input int    InpNewsBlockBeforeMinutes       = 60;
+input int    InpNewsBlockAfterMinutes        = 60;
+input bool   InpUseNFPFridayBlock            = false;
+input int    InpNFPWeekOfMonth               = 1;
+input int    InpNFPStartHour                 = 12;
+input int    InpNFPEndHour                   = 16;
+input string InpNewsEventTime1               = "";
+input string InpNewsEventTime2               = "";
+input string InpNewsEventTime3               = "";
 
 input bool   InpUseProfitGivebackGuard       = false;
 input double InpDailyProfitGivebackPercent   = 35.0;
@@ -171,6 +182,8 @@ void OnTick()
    if(PositionSelect(_Symbol))
       return;
    if(!TradingSessionAllowsNewTrade())
+      return;
+   if(!NewsTimeAllowsNewTrade())
       return;
    if(!RiskAllowsNewTrade())
       return;
@@ -280,6 +293,70 @@ bool TradingSessionAllowsNewTrade()
    if(startHour < endHour)
       return now.hour >= startHour && now.hour < endHour;
    return now.hour >= startHour || now.hour < endHour;
+}
+
+bool NewsTimeAllowsNewTrade()
+{
+   if(!InpUseNewsTimeFilter)
+      return true;
+
+   datetime now = TimeCurrent();
+   if(InpUseNFPFridayBlock && NFPFridayWindowBlocked(now))
+      return false;
+   if(ManualNewsWindowBlocked(now, InpNewsEventTime1))
+      return false;
+   if(ManualNewsWindowBlocked(now, InpNewsEventTime2))
+      return false;
+   if(ManualNewsWindowBlocked(now, InpNewsEventTime3))
+      return false;
+
+   return true;
+}
+
+bool ManualNewsWindowBlocked(const datetime now, const string eventTimeText)
+{
+   string value = eventTimeText;
+   StringTrimLeft(value);
+   StringTrimRight(value);
+   if(value == "")
+      return false;
+
+   datetime eventTime = StringToTime(value);
+   if(eventTime <= 0)
+      return false;
+
+   int beforeMinutes = MathMax(0, InpNewsBlockBeforeMinutes);
+   int afterMinutes = MathMax(0, InpNewsBlockAfterMinutes);
+   return now >= eventTime - beforeMinutes * 60 && now <= eventTime + afterMinutes * 60;
+}
+
+bool NFPFridayWindowBlocked(const datetime now)
+{
+   MqlDateTime parts;
+   TimeToStruct(now, parts);
+   if(parts.day_of_week != 5)
+      return false;
+
+   int targetWeek = InpNFPWeekOfMonth;
+   if(targetWeek < 1) targetWeek = 1;
+   if(targetWeek > 5) targetWeek = 5;
+
+   int weekOfMonth = ((parts.day - 1) / 7) + 1;
+   if(weekOfMonth != targetWeek)
+      return false;
+
+   int startHour = InpNFPStartHour;
+   int endHour = InpNFPEndHour;
+   if(startHour < 0) startHour = 0;
+   if(startHour > 23) startHour = 23;
+   if(endHour < 0) endHour = 0;
+   if(endHour > 24) endHour = 24;
+   if(startHour == endHour)
+      return true;
+
+   if(startHour < endHour)
+      return parts.hour >= startHour && parts.hour < endHour;
+   return parts.hour >= startHour || parts.hour < endHour;
 }
 
 SignalState BuildSignal()
