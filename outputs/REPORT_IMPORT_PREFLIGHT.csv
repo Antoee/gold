@@ -8,4 +8,5 @@
 "Promotion packet","TRACKED","Top queued profile tp38_sl18 has promotion gates with guardrail/equity checks.","Refresh packet after importing reports."
 "Handoff integrity","PASS","24 rows checked, 0 failures.","Handoff configs remain statically safe for a controlled tester window."
 "Micro handoff","PASS","8 paired stress-window rows prepared for tp38_sl18 vs baseline_promoted.","Use micro handoff first when tester time or desktop focus is constrained."
+"Micro decision","WAITING_FOR_REPORTS","WAITING_FOR_REPORTS=4","Complete paired micro report import before spending full-handoff tester time."
 "Local safety","PASS","27 safety checks pass.","Keep local MT5 launch locked while the PC is in normal use."
