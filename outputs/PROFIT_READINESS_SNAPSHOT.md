@@ -5,6 +5,7 @@ Offline snapshot only. No MT5 process was launched.
 | Area | Status | Evidence | Next Action |
 |---|---|---|---|
 | Promoted profile | KEEP_CURRENT | Current promoted profile remains risk1p6_sl18_tp35: full-period +866.59, split aggregate +2354.65, monthly/quarter aggregate +744.03, zero losing validation windows in existing evidence. | Do not replace until a candidate passes phase-2 real ticks plus the full promotion gate. |
+| Next test priority | READY | Consolidated queue exists at `outputs/NEXT_TEST_PRIORITY_QUEUE.md` and `outputs/NEXT_TEST_PRIORITY_QUEUE.csv`. | Follow the queue order and stop early if a smaller gate rejects the candidate. |
 | Static safety automation | CONFIGURED | GitHub Actions workflow `.github/workflows/static-safety.yml` runs `work/static_repo_safety_audit.py` on push, pull request, and manual dispatch. | Use the Actions result as a repository safety gate before spending tester time; it does not prove profit. |
 | Profit search evidence | WAITING_FOR_REPORTS | Current candidate evidence is incomplete; imported report metrics are still missing. | Import/export the missing reports, then rerun collector, ranking, decision matrix, and promotion packet scripts. |
 | Micro decision | WAITING_FOR_REPORTS | WAITING_FOR_REPORTS=4 | Complete paired stress micro report import before running recent-OOS and full handoff tests. |
@@ -18,4 +19,4 @@ Offline snapshot only. No MT5 process was launched.
 
 ## Bottom Line
 
-Keep the current promoted profile. The repository now has a remote static safety workflow plus a small session-filter probe, but the next profit improvement is still blocked by missing exported MT5 reports. Fastest safe order: static safety, stress micro, recent out-of-sample through 2026, optional session probe, then full validation.
+Keep the current promoted profile. The next tester work is organized in `outputs/NEXT_TEST_PRIORITY_QUEUE.md`, but the next profit improvement is still blocked by missing exported MT5 reports.
