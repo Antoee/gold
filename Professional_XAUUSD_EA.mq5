@@ -4,7 +4,7 @@
 //| No martingale. No grid. No averaging down. No recovery systems.   |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.03"
+#property version   "1.04"
 #property description "Professional risk-first XAUUSD EA with BOS/sweep entries and ATR exits."
 
 #include <Trade/Trade.mqh>
@@ -52,6 +52,18 @@ input int    InpMaxConsecutiveLosses         = 4;
 input int    InpCooldownMinutesAfterLoss     = 90;
 input int    InpMaxSpreadPoints              = 350;
 input int    InpSlippagePoints               = 50;
+
+input bool   InpUseSessionFilter             = false;
+input int    InpSessionStartHour             = 0;
+input int    InpSessionEndHour               = 24;
+input bool   InpAllowMonday                  = true;
+input bool   InpAllowTuesday                 = true;
+input bool   InpAllowWednesday               = true;
+input bool   InpAllowThursday                = true;
+input bool   InpAllowFriday                  = true;
+input bool   InpAllowSunday                  = false;
+input bool   InpDisableFridayEvening         = false;
+input int    InpFridayCutoffHour             = 20;
 
 input bool   InpUseProfitGivebackGuard       = false;
 input double InpDailyProfitGivebackPercent   = 35.0;
@@ -140,6 +152,8 @@ void OnTick()
 
    if(PositionSelect(_Symbol))
       return;
+   if(!TradingSessionAllowsNewTrade())
+      return;
    if(!RiskAllowsNewTrade())
       return;
    if(SpreadPoints() > InpMaxSpreadPoints)
@@ -195,6 +209,42 @@ double BufferValue(const int handle, const int buffer, const int shift)
 int SpreadPoints()
 {
    return (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD);
+}
+
+bool TradingSessionAllowsNewTrade()
+{
+   if(!InpUseSessionFilter && !InpDisableFridayEvening)
+      return true;
+
+   MqlDateTime now;
+   TimeToStruct(TimeCurrent(), now);
+
+   if(InpDisableFridayEvening && now.day_of_week == 5 && now.hour >= InpFridayCutoffHour)
+      return false;
+
+   if(!InpUseSessionFilter)
+      return true;
+
+   if(now.day_of_week == 0 && !InpAllowSunday) return false;
+   if(now.day_of_week == 1 && !InpAllowMonday) return false;
+   if(now.day_of_week == 2 && !InpAllowTuesday) return false;
+   if(now.day_of_week == 3 && !InpAllowWednesday) return false;
+   if(now.day_of_week == 4 && !InpAllowThursday) return false;
+   if(now.day_of_week == 5 && !InpAllowFriday) return false;
+   if(now.day_of_week == 6) return false;
+
+   int startHour = InpSessionStartHour;
+   int endHour = InpSessionEndHour;
+   if(startHour < 0) startHour = 0;
+   if(startHour > 23) startHour = 23;
+   if(endHour < 0) endHour = 0;
+   if(endHour > 24) endHour = 24;
+   if(startHour == endHour)
+      return true;
+
+   if(startHour < endHour)
+      return now.hour >= startHour && now.hour < endHour;
+   return now.hour >= startHour || now.hour < endHour;
 }
 
 SignalState BuildSignal()
