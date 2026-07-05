@@ -39,6 +39,10 @@ jobs:
         shell: powershell
         run: powershell -NoProfile -ExecutionPolicy Bypass -File work\test_external_mt5_micro_decision.ps1
 
+      - name: Run risk-adjusted micro-batch smoke test
+        shell: powershell
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File work\test_risk_adjusted_micro_batch.ps1
+
       - name: Run MT5 local safety audit
         shell: powershell
         run: powershell -NoProfile -ExecutionPolicy Bypass -File work\audit_mt5_local_safety.ps1
