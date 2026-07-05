@@ -72,6 +72,7 @@ try {
    $manifestRows = @(
       New-ManifestRow 1 "baseline_promoted" "stress" "2024_Q1"
       New-ManifestRow 1 "baseline_promoted" "stress" "2024_Q3"
+      New-ManifestRow 2 "baseline_dd4" "stress" "2024_Q1"
       New-ManifestRow 2 "tp38_sl18" "stress" "2024_Q1"
       New-ManifestRow 2 "tp38_sl18" "stress" "2024_Q3"
       New-ManifestRow 3 "giveback25_tp38" "stress" "2024_Q1"
@@ -94,6 +95,7 @@ try {
 
    @(
       [pscustomobject]@{ Priority = 1; Profile = "baseline_promoted"; Phase2Seed = "True"; Settings = ""; Overrides = "" }
+      [pscustomobject]@{ Priority = 2; Profile = "baseline_dd4"; Phase2Seed = "True"; Settings = ""; Overrides = "InpMaxEquityDrawdownPercent=4.00" }
       [pscustomobject]@{ Priority = 2; Profile = "tp38_sl18"; Phase2Seed = "True"; Settings = ""; Overrides = "" }
       [pscustomobject]@{ Priority = 3; Profile = "giveback25_tp38"; Phase2Seed = "False"; Settings = ""; Overrides = "" }
       [pscustomobject]@{ Priority = 20; Profile = "risk20_tp38_sl18"; Phase2Seed = "False"; Settings = ""; Overrides = "" }
@@ -102,6 +104,7 @@ try {
 
    @(
       [pscustomobject]@{ Profile = "baseline_promoted"; GuardrailStatus = "REVIEW_REQUIRED"; GuardrailScore = 82; RiskPercent = 1.6; UsesGivebackGuard = "False"; RiskFlags = ""; OverfitFlags = "adaptive_reverse_requires_walk_forward" }
+      [pscustomobject]@{ Profile = "baseline_dd4"; GuardrailStatus = "REVIEW_REQUIRED"; GuardrailScore = 90; RiskPercent = 1.6; UsesGivebackGuard = "False"; RiskFlags = ""; OverfitFlags = "adaptive_reverse_requires_walk_forward" }
       [pscustomobject]@{ Profile = "tp38_sl18"; GuardrailStatus = "REVIEW_REQUIRED"; GuardrailScore = 90; RiskPercent = 1.6; UsesGivebackGuard = "False"; RiskFlags = ""; OverfitFlags = "" }
       [pscustomobject]@{ Profile = "giveback25_tp38"; GuardrailStatus = "REVIEW_REQUIRED"; GuardrailScore = 95; RiskPercent = 1.6; UsesGivebackGuard = "True"; RiskFlags = ""; OverfitFlags = "" }
       [pscustomobject]@{ Profile = "risk20_tp38_sl18"; GuardrailStatus = "REVIEW_REQUIRED"; GuardrailScore = 90; RiskPercent = 2.0; UsesGivebackGuard = "False"; RiskFlags = "risk_percent_above_promoted"; OverfitFlags = "" }
@@ -125,6 +128,9 @@ try {
    Assert-Equal $rows[0].Role "Repair" "Repair role"
    if(@($rows | Where-Object { $_.Profile -eq "baseline_promoted" }).Count -lt 1) {
       throw "Expected baseline anchor in selected rows."
+   }
+   if(@($rows | Where-Object { $_.Profile -eq "baseline_dd4" }).Count -lt 1) {
+      throw "Expected baseline_dd4 risk-control candidate in selected rows."
    }
    if(@($rows | Where-Object { $_.Profile -eq "tp38_sl18" }).Count -lt 1) {
       throw "Expected tp38_sl18 in selected rows."
