@@ -77,6 +77,14 @@ To summarize the current strategy thesis before changing parameters, run:
 
 The research brief does not launch MT5. It distills existing evidence into promoted defaults, promising unpromoted candidates, research-only clues, and benchmark-only ideas.
 
+To explain why the current next batch deserves scarce tester time, run:
+
+- `work/build_profit_search_batch_rationale.ps1`
+- Output CSV: `outputs/PROFIT_SEARCH_BATCH_RATIONALE.csv`
+- Output report: `outputs/PROFIT_SEARCH_BATCH_RATIONALE.md`
+
+The batch rationale does not launch MT5. It classifies each queued config by baseline anchor, evidence-backed upside, adjacent upside, risk-control variant, or other research role, and repeats that phase-1 runs are prune-only.
+
 ## Validation Order
 
 1. `risk160_sl16_tp38`
@@ -122,14 +130,15 @@ Configs use:
 7. Rerun `work/audit_handoff_config_integrity.ps1` before any handoff run.
 8. Rerun `work/audit_mt5_local_safety.ps1` before any local MT5 work is considered.
 9. Rerun `work/build_strategy_research_brief.ps1` to keep the strategy thesis current.
-10. For any promising candidate, rerun `work/build_profit_promotion_packet.ps1 -Profile <profile_name>`.
-11. Rerun `work/audit_profit_search_coverage.ps1` after changing the search pack.
-12. Rerun `work/analyze_robust_candidates.ps1`.
-13. Rerun `work/analyze_loss_control.ps1`.
-14. Rerun `work/analyze_promotion_gate.ps1`.
-15. Rerun `work/audit_profile_inputs.ps1` before trusting any changed `.set` file.
-16. Update `VALIDATION_REPORT_METRICS.md`, `PROFIT_SEARCH_REPORT_METRICS.md`, `PROFIT_SEARCH_RANKING.md`, `NEXT_PROFIT_SEARCH_BATCH.md`, `STRATEGY_RESEARCH_BRIEF.md`, `MT5_LOCAL_SAFETY_AUDIT.md`, `outputs/next_test_handoff/README.md`, `outputs/next_test_handoff/HANDOFF_MANIFEST.csv`, `HANDOFF_CONFIG_INTEGRITY.md`, `PROFIT_SEARCH_COVERAGE_AUDIT.md`, `outputs/promotion_packets/*`, `ROBUST_CANDIDATE_RANKING.md`, `LOSS_CONTROL_REPORT.md`, `PROMOTION_GATE_REPORT.md`, and `PROFILE_INPUT_AUDIT.md`.
-17. Promote only if all profit, no-loss, drawdown/profit-factor, promotion-gate, profile-input, handoff-integrity, local-safety, strategy-thesis, and coverage checks pass.
+10. Rerun `work/build_profit_search_batch_rationale.ps1` after the next batch changes.
+11. For any promising candidate, rerun `work/build_profit_promotion_packet.ps1 -Profile <profile_name>`.
+12. Rerun `work/audit_profit_search_coverage.ps1` after changing the search pack.
+13. Rerun `work/analyze_robust_candidates.ps1`.
+14. Rerun `work/analyze_loss_control.ps1`.
+15. Rerun `work/analyze_promotion_gate.ps1`.
+16. Rerun `work/audit_profile_inputs.ps1` before trusting any changed `.set` file.
+17. Update `VALIDATION_REPORT_METRICS.md`, `PROFIT_SEARCH_REPORT_METRICS.md`, `PROFIT_SEARCH_RANKING.md`, `NEXT_PROFIT_SEARCH_BATCH.md`, `PROFIT_SEARCH_BATCH_RATIONALE.md`, `STRATEGY_RESEARCH_BRIEF.md`, `MT5_LOCAL_SAFETY_AUDIT.md`, `outputs/next_test_handoff/README.md`, `outputs/next_test_handoff/HANDOFF_MANIFEST.csv`, `HANDOFF_CONFIG_INTEGRITY.md`, `PROFIT_SEARCH_COVERAGE_AUDIT.md`, `outputs/promotion_packets/*`, `ROBUST_CANDIDATE_RANKING.md`, `LOSS_CONTROL_REPORT.md`, `PROMOTION_GATE_REPORT.md`, and `PROFILE_INPUT_AUDIT.md`.
+18. Promote only if all profit, no-loss, drawdown/profit-factor, promotion-gate, profile-input, handoff-integrity, local-safety, batch-rationale, strategy-thesis, and coverage checks pass.
 
 ## Offline Report Collector
 
@@ -222,3 +231,12 @@ It is a fail-closed preflight for the user's PC usability requirement. Current e
 - `outputs/STRATEGY_RESEARCH_BRIEF.md`
 
 It keeps parameter changes tied to evidence. Current thesis: keep `risk1p6_sl18_tp35` promoted, prioritize TP `3.8` / SL `1.6` to `1.8` for the next profit search, treat momentum+sweep as research-only, and keep date-block logic benchmark-only unless it can be explained by a general regime rule.
+
+## Batch Rationale
+
+`work/build_profit_search_batch_rationale.ps1` reads the current next-batch CSV, generated profile manifest, coverage audit, and strategy brief, then writes:
+
+- `outputs/PROFIT_SEARCH_BATCH_RATIONALE.csv`
+- `outputs/PROFIT_SEARCH_BATCH_RATIONALE.md`
+
+It explains each queued run before tester time is spent. Current batch shape: 24 phase-1 prune runs, 5 baseline anchors, 8 evidence-backed TP `3.8` runs, and 11 adjacent TP-expansion runs. No candidate can be promoted from this rationale or phase-1 evidence alone.
