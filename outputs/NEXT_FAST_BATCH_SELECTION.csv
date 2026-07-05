@@ -1,2 +1,2 @@
 Recommendation,Gate,Priority,Rows,Manifest,Status,Reason,NextAction
-RUN_NEXT_FAST_BATCH,STRESS_MICRO,1,8,outputs\micro_test_handoff\HANDOFF_MANIFEST.csv,WAITING_FOR_REPORTS,This is the first pending gate in priority order. Running it avoids spending time on lower-priority batches too early.,Run/import stress micro reports first.
+RUN_NEXT_FAST_BATCH,STRESS_SMOKE,1,2,outputs\stress_smoke_handoff\HANDOFF_MANIFEST.csv,WAITING_FOR_REPORTS,This is the first pending gate in priority order. Running it avoids spending time on lower-priority batches too early.,Run/import the 2-row stress smoke reports first.
