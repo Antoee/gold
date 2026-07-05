@@ -50,7 +50,7 @@ Never promote from phase 1 or a single strong window. A replacement must pass pr
 
 ## Fast-Probe Readiness
 
-`work/build_fast_probe_readiness_snapshot.ps1` reads all imported fast-probe decision CSVs and writes `outputs/FAST_PROBE_READINESS_SNAPSHOT.md`. It summarizes stress smoke, stress micro, recent-OOS, confirmation, break-even, ADX, spread guard, time exit, MTF trend, structure trailing, and session probes. Fast-probe evidence can justify expanding a candidate into broader validation, but it cannot promote a profile by itself.
+`work/build_fast_probe_readiness_snapshot.ps1` reads all imported fast-probe decision CSVs and writes `outputs/FAST_PROBE_READINESS_SNAPSHOT.md`. It summarizes stress smoke, stress micro, recent-OOS, confirmation, break-even, ADX, spread guard, time exit, news filter, MTF trend, structure trailing, and session probes. Fast-probe evidence can justify expanding a candidate into broader validation, but it cannot promote a profile by itself.
 
 ## Next Fast Batch Selector
 
