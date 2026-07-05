@@ -171,6 +171,16 @@ def check_configs(config_dir: Path, label: str) -> None:
             actual_time = first_value(inputs.get("InpUseTimeExit", "")); expected_time = "true" if "time_exit" in profile_name else "false"
             if actual_time.lower() != expected_time: fail(f"{rel} expected InpUseTimeExit={expected_time}, found {actual_time or '<missing>'}.")
             if first_value(inputs.get("InpMaxTradeMinutes", "")) != "240": fail(f"{rel} must pin InpMaxTradeMinutes=240.")
+        if "news_filter_probe" in parent_name:
+            actual_news = first_value(inputs.get("InpUseNewsTimeFilter", "")); expected_news = "true" if "news_filter" in profile_name else "false"
+            if actual_news.lower() != expected_news: fail(f"{rel} expected InpUseNewsTimeFilter={expected_news}, found {actual_news or '<missing>'}.")
+            actual_nfp = first_value(inputs.get("InpUseNFPFridayBlock", "")); expected_nfp = "true" if "news_filter" in profile_name else "false"
+            if actual_nfp.lower() != expected_nfp: fail(f"{rel} expected InpUseNFPFridayBlock={expected_nfp}, found {actual_nfp or '<missing>'}.")
+            if first_value(inputs.get("InpNewsBlockBeforeMinutes", "")) != "60": fail(f"{rel} must pin InpNewsBlockBeforeMinutes=60.")
+            if first_value(inputs.get("InpNewsBlockAfterMinutes", "")) != "60": fail(f"{rel} must pin InpNewsBlockAfterMinutes=60.")
+            if first_value(inputs.get("InpNFPWeekOfMonth", "")) != "1": fail(f"{rel} must pin InpNFPWeekOfMonth=1.")
+            if first_value(inputs.get("InpNFPStartHour", "")) != "12": fail(f"{rel} must pin InpNFPStartHour=12.")
+            if first_value(inputs.get("InpNFPEndHour", "")) != "16": fail(f"{rel} must pin InpNFPEndHour=16.")
         if "baseline_promoted" in profile_name and first_value(inputs.get("InpTakeProfitATRMultiplier", "")) != "3.50": fail(f"{rel} baseline config must set InpTakeProfitATRMultiplier=3.50.")
         if first_value(inputs.get("InpShowDashboard", "false")).lower() != "false": fail(f"{rel} must disable dashboard for non-interrupting tester use.")
         if first_value(inputs.get("InpDashboardInTester", "false")).lower() != "false": fail(f"{rel} must disable tester dashboard for non-interrupting tester use.")
@@ -185,6 +195,7 @@ def main() -> int:
     check_manifest(ROOT / "outputs" / "adx_filter_probe_handoff" / "HANDOFF_MANIFEST.csv", 4, "ADX filter probe")
     check_manifest(ROOT / "outputs" / "spread_guard_probe_handoff" / "HANDOFF_MANIFEST.csv", 4, "ATR spread guard probe")
     check_manifest(ROOT / "outputs" / "time_exit_probe_handoff" / "HANDOFF_MANIFEST.csv", 4, "time exit probe")
+    check_manifest(ROOT / "outputs" / "news_filter_probe_handoff" / "HANDOFF_MANIFEST.csv", 4, "news filter probe")
     check_manifest(ROOT / "outputs" / "mtf_trend_probe_handoff" / "HANDOFF_MANIFEST.csv", 4, "MTF trend probe")
     check_manifest(ROOT / "outputs" / "structure_trailing_probe_handoff" / "HANDOFF_MANIFEST.csv", 4, "structure trailing probe")
     check_manifest(ROOT / "outputs" / "session_variant_handoff" / "HANDOFF_MANIFEST.csv", 6, "session variant")
@@ -196,6 +207,7 @@ def main() -> int:
     check_configs(ROOT / "outputs" / "adx_filter_probe_handoff" / "configs", "ADX filter probe")
     check_configs(ROOT / "outputs" / "spread_guard_probe_handoff" / "configs", "ATR spread guard probe")
     check_configs(ROOT / "outputs" / "time_exit_probe_handoff" / "configs", "time exit probe")
+    check_configs(ROOT / "outputs" / "news_filter_probe_handoff" / "configs", "news filter probe")
     check_configs(ROOT / "outputs" / "mtf_trend_probe_handoff" / "configs", "MTF trend probe")
     check_configs(ROOT / "outputs" / "structure_trailing_probe_handoff" / "configs", "structure trailing probe")
     check_configs(ROOT / "outputs" / "session_variant_handoff" / "configs", "session variant")
