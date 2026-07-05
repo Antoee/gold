@@ -22,6 +22,10 @@ The committed configs are intended to use:
 - `Visual=0`
 - `ReplaceReport=1`
 - `ShutdownTerminal=1`
+- `InpRiskPercent=1.60`
+- `InpMinRiskReward=1.50`
+- `InpStopATRMultiplier=1.80`
+- `InpUseBreakEven=false`
 - candidate `InpTakeProfitATRMultiplier=3.80`
 - candidate `InpMaxEquityDrawdownPercent=4.00`
 - baseline `InpTakeProfitATRMultiplier=3.50`
