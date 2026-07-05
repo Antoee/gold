@@ -3,6 +3,7 @@ param(
    [switch]$SkipMicro,
    [switch]$SkipRecentOos,
    [switch]$SkipSpreadGuardProbe,
+   [switch]$SkipTimeExitProbe,
    [switch]$SkipMTFTrendProbe,
    [switch]$SkipStructureTrailingProbe,
    [switch]$SkipSessionVariant,
@@ -55,6 +56,14 @@ if(-not $SkipSpreadGuardProbe) {
       Invoke-Step $rows "Import ATR spread guard probe reports" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\collect_validation_results.ps1" -ManifestPath $manifest -ReportDir $ReportDir -ReportNameTemplate "spread_probe_{Profile}_{Window}" -OutResults "outputs\SPREAD_GUARD_PROBE_REPORT_METRICS.csv" -OutSummary "outputs\SPREAD_GUARD_PROBE_REPORT_SUMMARY.csv" -OutMarkdown "outputs\SPREAD_GUARD_PROBE_REPORT_METRICS.md" } "Run ATR spread guard decision next." "Check report file names and parser coverage."
       if(Test-File "work\build_spread_guard_probe_decision.ps1") { Invoke-Step $rows "Build ATR spread guard probe decision" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_spread_guard_probe_decision.ps1" } "Review outputs\SPREAD_GUARD_PROBE_DECISION.md." "Fix decision script inputs or report metrics." }
    } else { Add-Step $rows "Import ATR spread guard probe reports" "SKIP" "Manifest not found: $manifest" "Create the ATR spread guard handoff before importing spread guard reports." }
+}
+
+if(-not $SkipTimeExitProbe) {
+   $manifest = "outputs\time_exit_probe_handoff\HANDOFF_MANIFEST.csv"
+   if(Test-File $manifest) {
+      Invoke-Step $rows "Import time-exit probe reports" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\collect_validation_results.ps1" -ManifestPath $manifest -ReportDir $ReportDir -ReportNameTemplate "time_exit_probe_{Profile}_{Window}" -OutResults "outputs\TIME_EXIT_PROBE_REPORT_METRICS.csv" -OutSummary "outputs\TIME_EXIT_PROBE_REPORT_SUMMARY.csv" -OutMarkdown "outputs\TIME_EXIT_PROBE_REPORT_METRICS.md" } "Run time-exit decision next." "Check report file names and parser coverage."
+      if(Test-File "work\build_time_exit_probe_decision.ps1") { Invoke-Step $rows "Build time-exit probe decision" { powershell -NoProfile -ExecutionPolicy Bypass -File ".\work\build_time_exit_probe_decision.ps1" } "Review outputs\TIME_EXIT_PROBE_DECISION.md." "Fix decision script inputs or report metrics." }
+   } else { Add-Step $rows "Import time-exit probe reports" "SKIP" "Manifest not found: $manifest" "Create the time-exit handoff before importing time-exit reports." }
 }
 
 if(-not $SkipMTFTrendProbe) {
