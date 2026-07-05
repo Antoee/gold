@@ -24,7 +24,8 @@ The previous date-block profile remains an aggressive research benchmark: full p
 
 ## Included Files
 
-- `SOURCE_MANIFEST.md` - local EA source fingerprint and static verification state.
+- `Professional_XAUUSD_EA.mq5` - GitHub EA source for the modular XAUUSD MT5 Expert Advisor; compile/test status still needs controlled verification.
+- `SOURCE_MANIFEST.md` - EA source fingerprint and static verification state.
 - `BACKTEST_RESULTS.md` - detailed validation notes and rejected candidate results.
 - `NEXT_VALIDATION_QUEUE.md` - candidates waiting for full validation before promotion.
 - `NEXT_VALIDATION_RUNBOOK.md` - safe validation order and promotion gate.
@@ -32,6 +33,10 @@ The previous date-block profile remains an aggressive research benchmark: full p
 - `PROFILE_INPUT_AUDIT.md` - offline check that active `.set` files pin all critical inputs.
 - `ROBUST_CANDIDATE_RANKING.md` - offline robust-candidate ranking from existing CSV results.
 - `LOSS_CONTROL_REPORT.md` - offline loss-control ranking from existing CSV windows.
+- `outputs/CONTROLLED_PROFIT_TEST_RUNBOOK.md` - no-popup testing policy and current validation workflow.
+- `outputs/micro_test_handoff/` - 8-config paired micro handoff for fast candidate-vs-baseline validation.
+- `work/MT5_LOCAL_LAUNCH_DISABLED.lock` - active hard lock that prevents guarded local MT5 launches.
+- `work/stop_mt5_stray_processes.ps1` - cleanup-only helper for stopping already-running MT5/MetaTester/MetaEditor processes.
 - `ROBUST_BOS_SWEEP_PROFILE.set` - promoted robust BOS/sweep MT5 settings profile.
 - `CANDIDATE_RISK16_SL18_TP38_PROFILE.set` - queued candidate: risk `1.60`, stop ATR `1.80`, TP ATR `3.80`.
 - `CANDIDATE_RISK16_SL16_TP38_PROFILE.set` - queued candidate: risk `1.60`, stop ATR `1.60`, TP ATR `3.80`.
@@ -70,7 +75,7 @@ Current promoted defaults include:
 
 ## Profit Giveback Guard
 
-The local EA source includes an optional profit giveback guard for loss-control research.
+The EA source includes an optional profit giveback guard for loss-control research.
 
 - `InpUseProfitGivebackGuard` enables or disables the module.
 - The guard tracks daily, weekly, and monthly peak closed profit.
@@ -80,7 +85,7 @@ The local EA source includes an optional profit giveback guard for loss-control 
 
 ## Optimization Scoring
 
-The local EA source includes an `OnTester()` custom optimization score for MT5 Strategy Tester.
+The EA source includes an `OnTester()` custom optimization score for MT5 Strategy Tester.
 
 - Default mode is `FITNESS_ROBUST_PROFIT`, which rewards net profit and profit factor while penalizing low trade count and excessive equity drawdown.
 - `FITNESS_NET_PROFIT` is available when raw-profit sorting is needed for comparison.
@@ -115,18 +120,20 @@ Rejected or non-promoted paths:
 
 ## Background Testing Safety
 
-Local MT5 launch is intentionally safety-gated because `terminal64.exe` can still flash and steal focus on this PC.
+Local MT5 launch is intentionally hard-locked because terminal/metatester windows can still flash and steal focus on this PC.
 
-- Local MT5 tests should not be run unless `ALLOW_MT5_FOCUS_RISK=1` is set and `work\ALLOW_MT5_LOCAL_LAUNCH.unlock` exists.
-- The local runner attempts to start MT5 on a separate hidden Windows desktop named `MT5BacktestDesktop`.
-- That hidden-desktop runner still needs a controlled test before unattended local validation resumes.
-- Until then, repository/documentation/offline analysis work can continue without launching MT5.
+- Do not run local MT5 tests from this active desktop while normal PC use must remain uninterrupted.
+- `work/MT5_LOCAL_LAUNCH_DISABLED.lock` must stay in place. Guarded scripts refuse to launch MT5 while it exists.
+- The launch guard and background helper stop `terminal`, `terminal64`, `metatester`, `metatester64`, `MetaEditor`, and `metaeditor64` before failing closed.
+- `work/stop_mt5_stray_processes.ps1` is cleanup-only. It starts no tester process.
+- Future backtests should run on a Windows VM, spare machine, VPS, or a deliberate controlled local session where focus stealing is acceptable.
+- Until exported reports are available from a non-interrupting tester environment, repository/documentation/offline analysis work can continue without launching MT5.
 
 ## Research Direction
 
 Next work should focus on increasing profit from the robust no-date profile without bringing back losing monthly windows.
 
-1. Fully validate the queued `3.80` TP candidates and the giveback candidate across monthly, quarterly, yearly, half-year, and full-period windows.
+1. Fully validate the queued `3.80` TP candidates and the giveback candidate across monthly, quarterly, yearly, half-year, and full-period windows on a non-interrupting tester environment.
 2. Rerun `work/audit_profile_inputs.ps1` after changing `.set` files so MT5 cannot reuse stale cached inputs unnoticed.
 3. Rerun `work/analyze_promotion_gate.ps1` and promote only candidates that pass full, split, quarterly, and monthly gates.
 4. Test on additional broker/history sources.
