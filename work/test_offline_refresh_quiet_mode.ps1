@@ -42,4 +42,15 @@ $metaEditorExe = "MetaEditor" + ".exe"
 Assert-True (!(Contains-Text $text $terminalExe)) "Offline refresh must not reference $terminalExe."
 Assert-True (!(Contains-Text $text $metaEditorExe)) "Offline refresh must not reference $metaEditorExe."
 
+$externalImportPath = Join-Path $RepoRoot "work\import_external_mt5_validation_package_reports.ps1"
+Assert-True (Test-Path -LiteralPath $externalImportPath) "External package report importer is missing."
+
+$externalImportText = Get-Content -LiteralPath $externalImportPath -Raw
+Assert-True (Contains-Text $externalImportText "Start-Process") "External report importer must launch collector through Start-Process."
+Assert-True (Contains-Text $externalImportText "-WindowStyle Hidden") "External report importer child PowerShell process must run hidden."
+Assert-True (Contains-Text $externalImportText "-RedirectStandardOutput") "External report importer should capture child stdout to logs."
+Assert-True (Contains-Text $externalImportText "-RedirectStandardError") "External report importer should capture child stderr to logs."
+Assert-True (!(Contains-Text $externalImportText "& powershell")) "External report importer must not invoke powershell directly."
+Assert-True (!(Contains-Text $externalImportText "powershell -NoProfile")) "External report importer must not use direct visible powershell -NoProfile calls."
+
 "OFFLINE_REFRESH_QUIET_MODE_SMOKE_PASS"
