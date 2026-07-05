@@ -1,6 +1,6 @@
 param(
-   [int]$MonitorSeconds = 0,
-   [int]$PollMilliseconds = 50,
+   [int]$MonitorSeconds = 5,
+   [int]$PollMilliseconds = 250,
    [switch]$StopProcesses = $true
 )
 
@@ -8,6 +8,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 # Cleanup-only watchdog. It starts nothing and only targets MT5-family executable processes.
+# Default mode is intentionally bounded so it cannot remain resident during normal PC use.
 $repo = Split-Path -Parent $PSScriptRoot
 $logPath = Join-Path $PSScriptRoot "mt5_focus_watchdog.log"
 $stopFile = Join-Path $PSScriptRoot "STOP_MT5_FOCUS_WATCHDOG"
