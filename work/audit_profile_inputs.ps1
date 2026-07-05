@@ -1,6 +1,6 @@
 param(
-   [string]$SourcePath = "outputs\Professional_XAUUSD_EA.mq5",
-   [string]$OutputsDir = "outputs",
+   [string]$SourcePath = "Professional_XAUUSD_EA.mq5",
+   [string]$ProfileDir = ".",
    [string]$OutCsv = "outputs\PROFILE_INPUT_AUDIT.csv",
    [string]$OutReport = "outputs\PROFILE_INPUT_AUDIT.md"
 )
@@ -11,8 +11,8 @@ $ErrorActionPreference = "Stop"
 if(!(Test-Path -LiteralPath $SourcePath)) {
    throw "EA source not found: $SourcePath"
 }
-if(!(Test-Path -LiteralPath $OutputsDir)) {
-   throw "Outputs directory not found: $OutputsDir"
+if(!(Test-Path -LiteralPath $ProfileDir)) {
+   throw "Profile directory not found: $ProfileDir"
 }
 
 $criticalInputs = @(
@@ -101,7 +101,7 @@ $profileFiles = @(
    "CANDIDATE_RISK16_SL18_TP38_PROFILE.set",
    "CANDIDATE_RISK16_SL16_TP38_PROFILE.set",
    "CANDIDATE_RISK16_SL18_TP35_GIVEBACK_PROFILE.set"
-) | ForEach-Object { Join-Path $OutputsDir $_ } | Where-Object { Test-Path -LiteralPath $_ }
+) | ForEach-Object { Join-Path $ProfileDir $_ } | Where-Object { Test-Path -LiteralPath $_ }
 
 $rows = New-Object System.Collections.Generic.List[object]
 $valueRows = New-Object System.Collections.Generic.List[object]
@@ -143,9 +143,10 @@ $rows | Export-Csv -LiteralPath $OutCsv -NoTypeInformation
 $report = New-Object System.Collections.Generic.List[string]
 $report.Add("# Profile Input Audit") | Out-Null
 $report.Add("") | Out-Null
-$report.Add("Generated from the local EA source and active `.set` profiles. No MT5 process was launched.") | Out-Null
+$report.Add("Generated from the committed EA source and active root `.set` profiles. No MT5 process was launched.") | Out-Null
 $report.Add("") | Out-Null
 $report.Add("- EA source: ``$SourcePath``") | Out-Null
+$report.Add("- Profile directory: ``$ProfileDir``") | Out-Null
 $report.Add("- Source inputs discovered: " + $sourceNames.Count) | Out-Null
 $report.Add("- Critical inputs required per active profile: " + $criticalInputs.Count) | Out-Null
 $report.Add("") | Out-Null
