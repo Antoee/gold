@@ -65,7 +65,7 @@ def check_source() -> None:
         "InpRiskPercent", "InpMinRiskReward", "InpStopATRMultiplier", "InpTakeProfitATRMultiplier",
         "InpMaxDailyLossPercent", "InpMaxWeeklyLossPercent", "InpMaxMonthlyLossPercent", "InpMaxEquityDrawdownPercent",
         "InpMaxConsecutiveLosses", "InpCooldownMinutesAfterLoss", "InpMaxSpreadPoints", "InpUseATRSpreadGuard", "InpMaxSpreadATRPercent", "InpSlippagePoints",
-        "InpUseSessionFilter", "InpSessionStartHour", "InpSessionEndHour", "InpAllowMonday", "InpAllowTuesday",
+        "InpUseTimeExit", "InpMaxTradeMinutes", "InpUseSessionFilter", "InpSessionStartHour", "InpSessionEndHour", "InpAllowMonday", "InpAllowTuesday",
         "InpAllowWednesday", "InpAllowThursday", "InpAllowFriday", "InpAllowSunday", "InpDisableFridayEvening", "InpFridayCutoffHour",
         "InpUseBOS", "InpUseLiquiditySweep", "InpMinimumConfirmations", "InpUseATRTrailing",
         "InpUseStructureTrailing", "InpStructureTrailingLookback", "InpStructureTrailingBufferATR", "InpStructureTrailingTriggerATR",
@@ -75,7 +75,7 @@ def check_source() -> None:
     input_names = set(re.findall(r"^\s*input\s+(?:bool|int|long|double|string|datetime|ENUM_TIMEFRAMES)\s+(Inp[A-Za-z0-9_]+)\s*=", source, flags=re.M))
     for name in required_inputs:
         if name not in input_names: fail(f"EA source missing required risk/research input: {name}")
-    for term in ["OrderCalcProfit", "OrderCalcMargin", "HistoryDealSelect", "TradingSessionAllowsNewTrade", "TimeToStruct", "OnTester", "consecutiveLosses", "ATRSpreadAllowsTrade", "ApplyMTFTrendFilter", "HigherTimeframeTrendBias", "MTFTrendAllowsDirection", "StructureTrailingStop"]:
+    for term in ["OrderCalcProfit", "OrderCalcMargin", "HistoryDealSelect", "TradingSessionAllowsNewTrade", "TimeToStruct", "OnTester", "consecutiveLosses", "ATRSpreadAllowsTrade", "TimeExitTriggered", "ApplyMTFTrendFilter", "HigherTimeframeTrendBias", "MTFTrendAllowsDirection", "StructureTrailingStop"]:
         if term not in source: fail(f"EA source missing expected safety/analytics implementation marker: {term}")
 
 def check_hard_lock() -> None:
@@ -90,11 +90,12 @@ def check_profiles() -> None:
     base_mtf = {"InpUseMTFTrendFilter": "false", "InpMTFTrendTimeframe": "PERIOD_H1", "InpMTFTrendEMA": "200"}
     base_structure = {"InpUseStructureTrailing": "false", "InpStructureTrailingLookback": "12", "InpStructureTrailingBufferATR": "0.20", "InpStructureTrailingTriggerATR": "1.20"}
     base_spread = {"InpMaxSpreadPoints": "350", "InpUseATRSpreadGuard": "false", "InpMaxSpreadATRPercent": "8.0"}
+    base_time = {"InpUseTimeExit": "false", "InpMaxTradeMinutes": "240"}
     expected = {
-        "ROBUST_BOS_SWEEP_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.50", "InpRiskPercent": "1.60", **base_session, **base_mtf, **base_structure, **base_spread},
-        "CANDIDATE_RISK16_SL18_TP38_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.80", "InpMaxEquityDrawdownPercent": "4.00", **base_session, **base_mtf, **base_structure, **base_spread},
-        "CANDIDATE_RISK16_SL16_TP38_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.80", "InpMaxEquityDrawdownPercent": "4.00", **base_session, **base_mtf, **base_structure, **base_spread},
-        "CANDIDATE_RISK16_SL18_TP35_GIVEBACK_PROFILE.set": {"InpUseProfitGivebackGuard": "true", **base_session, **base_mtf, **base_structure, **base_spread},
+        "ROBUST_BOS_SWEEP_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.50", "InpRiskPercent": "1.60", **base_session, **base_mtf, **base_structure, **base_spread, **base_time},
+        "CANDIDATE_RISK16_SL18_TP38_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.80", "InpMaxEquityDrawdownPercent": "4.00", **base_session, **base_mtf, **base_structure, **base_spread, **base_time},
+        "CANDIDATE_RISK16_SL16_TP38_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.80", "InpMaxEquityDrawdownPercent": "4.00", **base_session, **base_mtf, **base_structure, **base_spread, **base_time},
+        "CANDIDATE_RISK16_SL18_TP35_GIVEBACK_PROFILE.set": {"InpUseProfitGivebackGuard": "true", **base_session, **base_mtf, **base_structure, **base_spread, **base_time},
     }
     for rel, required in expected.items():
         values = parse_set(ROOT / rel)
@@ -140,6 +141,10 @@ def check_configs(config_dir: Path, label: str) -> None:
             actual_spread = first_value(inputs.get("InpUseATRSpreadGuard", "")); expected_spread = "true" if "atr_spread_guard" in profile_name else "false"
             if actual_spread.lower() != expected_spread: fail(f"{rel} expected InpUseATRSpreadGuard={expected_spread}, found {actual_spread or '<missing>'}.")
             if first_value(inputs.get("InpMaxSpreadATRPercent", "")) != "8.0": fail(f"{rel} must pin InpMaxSpreadATRPercent=8.0.")
+        if "time_exit_probe" in parent_name:
+            actual_time = first_value(inputs.get("InpUseTimeExit", "")); expected_time = "true" if "time_exit" in profile_name else "false"
+            if actual_time.lower() != expected_time: fail(f"{rel} expected InpUseTimeExit={expected_time}, found {actual_time or '<missing>'}.")
+            if first_value(inputs.get("InpMaxTradeMinutes", "")) != "240": fail(f"{rel} must pin InpMaxTradeMinutes=240.")
         if "baseline_promoted" in profile_name and first_value(inputs.get("InpTakeProfitATRMultiplier", "")) != "3.50": fail(f"{rel} baseline config must set InpTakeProfitATRMultiplier=3.50.")
         if first_value(inputs.get("InpShowDashboard", "false")).lower() != "false": fail(f"{rel} must disable dashboard for non-interrupting tester use.")
         if first_value(inputs.get("InpDashboardInTester", "false")).lower() != "false": fail(f"{rel} must disable tester dashboard for non-interrupting tester use.")
@@ -149,12 +154,14 @@ def main() -> int:
     check_manifest(ROOT / "outputs" / "micro_test_handoff" / "HANDOFF_MANIFEST.csv", 8, "stress micro")
     check_manifest(ROOT / "outputs" / "recent_oos_handoff" / "HANDOFF_MANIFEST.csv", 8, "recent OOS")
     check_manifest(ROOT / "outputs" / "spread_guard_probe_handoff" / "HANDOFF_MANIFEST.csv", 4, "ATR spread guard probe")
+    check_manifest(ROOT / "outputs" / "time_exit_probe_handoff" / "HANDOFF_MANIFEST.csv", 4, "time exit probe")
     check_manifest(ROOT / "outputs" / "mtf_trend_probe_handoff" / "HANDOFF_MANIFEST.csv", 4, "MTF trend probe")
     check_manifest(ROOT / "outputs" / "structure_trailing_probe_handoff" / "HANDOFF_MANIFEST.csv", 4, "structure trailing probe")
     check_manifest(ROOT / "outputs" / "session_variant_handoff" / "HANDOFF_MANIFEST.csv", 6, "session variant")
     check_configs(ROOT / "outputs" / "micro_test_handoff" / "configs", "stress micro")
     check_configs(ROOT / "outputs" / "recent_oos_handoff" / "configs", "recent OOS")
     check_configs(ROOT / "outputs" / "spread_guard_probe_handoff" / "configs", "ATR spread guard probe")
+    check_configs(ROOT / "outputs" / "time_exit_probe_handoff" / "configs", "time exit probe")
     check_configs(ROOT / "outputs" / "mtf_trend_probe_handoff" / "configs", "MTF trend probe")
     check_configs(ROOT / "outputs" / "structure_trailing_probe_handoff" / "configs", "structure trailing probe")
     check_configs(ROOT / "outputs" / "session_variant_handoff" / "configs", "session variant")
