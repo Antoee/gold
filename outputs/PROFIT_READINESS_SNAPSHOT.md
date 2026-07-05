@@ -5,6 +5,7 @@ Offline snapshot only. No MT5 process was launched.
 | Area | Status | Evidence | Next Action |
 |---|---|---|---|
 | Promoted profile | KEEP_CURRENT | Current promoted profile remains risk1p6_sl18_tp35: full-period +866.59, split aggregate +2354.65, monthly/quarter aggregate +744.03, zero losing validation windows in existing evidence. | Do not replace until a candidate passes phase-2 real ticks plus the full promotion gate. |
+| Static safety automation | CONFIGURED | GitHub Actions workflow `.github/workflows/static-safety.yml` runs `work/static_repo_safety_audit.py` on push, pull request, and manual dispatch. | Use the Actions result as a repository safety gate before spending tester time; it does not prove profit. |
 | Profit search evidence | WAITING_FOR_REPORTS | Current candidate evidence is incomplete; imported report metrics are still missing. | Import/export the missing reports, then rerun collector, ranking, decision matrix, and promotion packet scripts. |
 | Micro decision | WAITING_FOR_REPORTS | WAITING_FOR_REPORTS=4 | Complete paired stress micro report import before running recent-OOS and full handoff tests. |
 | Recent OOS handoff | WAITING_FOR_REPORTS | Recent out-of-sample pack prepared for 2025_Q4, 2026_Q1, 2026_Q2, and 2026_YTD candidate-vs-baseline checks. | Run only after stress micro passes; reject the candidate if it loses any recent-OOS paired window. |
@@ -16,4 +17,4 @@ Offline snapshot only. No MT5 process was launched.
 
 ## Bottom Line
 
-Keep the current promoted profile. The next profit improvement is blocked by missing exported reports, with the fastest safe order now: stress micro, recent out-of-sample through 2026, then full validation.
+Keep the current promoted profile. The repository now has a remote static safety workflow, but the next profit improvement is still blocked by missing exported MT5 reports. Fastest safe order: static safety, stress micro, recent out-of-sample through 2026, then full validation.
