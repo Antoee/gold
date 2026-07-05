@@ -230,6 +230,9 @@ def check_configs(config_dir: Path, label: str) -> None:
                 fail(f"{rel} tp38 config must set InpTakeProfitATRMultiplier=3.80.")
             if first_value(inputs.get("InpMaxEquityDrawdownPercent", "")) != "4.00":
                 fail(f"{rel} protected candidate must set InpMaxEquityDrawdownPercent=4.00.")
+        if "session_variant" in str(config.parent.parent).lower() and "tp38" in profile_name:
+            if first_value(inputs.get("InpUseSessionFilter", "")) != "true":
+                fail(f"{rel} session candidate must enable InpUseSessionFilter=true.")
         if "baseline_promoted" in profile_name:
             if first_value(inputs.get("InpTakeProfitATRMultiplier", "")) != "3.50":
                 fail(f"{rel} baseline config must set InpTakeProfitATRMultiplier=3.50.")
@@ -245,8 +248,10 @@ def main() -> int:
     check_profiles()
     check_manifest(ROOT / "outputs" / "micro_test_handoff" / "HANDOFF_MANIFEST.csv", 8, "stress micro")
     check_manifest(ROOT / "outputs" / "recent_oos_handoff" / "HANDOFF_MANIFEST.csv", 8, "recent OOS")
+    check_manifest(ROOT / "outputs" / "session_variant_handoff" / "HANDOFF_MANIFEST.csv", 6, "session variant")
     check_configs(ROOT / "outputs" / "micro_test_handoff" / "configs", "stress micro")
     check_configs(ROOT / "outputs" / "recent_oos_handoff" / "configs", "recent OOS")
+    check_configs(ROOT / "outputs" / "session_variant_handoff" / "configs", "session variant")
 
     print("Static repository safety audit")
     print(f"Warnings: {len(WARNINGS)}")
