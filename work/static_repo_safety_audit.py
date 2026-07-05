@@ -77,6 +77,7 @@ def check_source() -> None:
         "InpMaxConsecutiveLosses", "InpCooldownMinutesAfterLoss", "InpMaxSpreadPoints", "InpUseATRSpreadGuard", "InpMaxSpreadATRPercent", "InpSlippagePoints",
         "InpMinADX", "InpUseTimeExit", "InpMaxTradeMinutes", "InpUseSessionFilter", "InpSessionStartHour", "InpSessionEndHour", "InpAllowMonday", "InpAllowTuesday",
         "InpAllowWednesday", "InpAllowThursday", "InpAllowFriday", "InpAllowSunday", "InpDisableFridayEvening", "InpFridayCutoffHour",
+        "InpUseNewsTimeFilter", "InpNewsBlockBeforeMinutes", "InpNewsBlockAfterMinutes", "InpUseNFPFridayBlock", "InpNFPWeekOfMonth", "InpNFPStartHour", "InpNFPEndHour", "InpNewsEventTime1", "InpNewsEventTime2", "InpNewsEventTime3",
         "InpUseBOS", "InpUseLiquiditySweep", "InpMinimumConfirmations", "InpUseATRTrailing",
         "InpUseStructureTrailing", "InpStructureTrailingLookback", "InpStructureTrailingBufferATR", "InpStructureTrailingTriggerATR",
         "InpUseProfitGivebackGuard", "InpUseMTFTrendFilter", "InpMTFTrendTimeframe", "InpMTFTrendEMA",
@@ -85,7 +86,7 @@ def check_source() -> None:
     input_names = set(re.findall(r"^\s*input\s+(?:bool|int|long|double|string|datetime|ENUM_TIMEFRAMES)\s+(Inp[A-Za-z0-9_]+)\s*=", source, flags=re.M))
     for name in required_inputs:
         if name not in input_names: fail(f"EA source missing required risk/research input: {name}")
-    for term in ["OrderCalcProfit", "OrderCalcMargin", "HistoryDealSelect", "TradingSessionAllowsNewTrade", "TimeToStruct", "OnTester", "consecutiveLosses", "ATRSpreadAllowsTrade", "TimeExitTriggered", "ApplyMTFTrendFilter", "HigherTimeframeTrendBias", "MTFTrendAllowsDirection", "StructureTrailingStop", "InpMinADX", "InpUseBreakEven", "InpBreakEvenTriggerATR"]:
+    for term in ["OrderCalcProfit", "OrderCalcMargin", "HistoryDealSelect", "TradingSessionAllowsNewTrade", "NewsTimeAllowsNewTrade", "ManualNewsWindowBlocked", "NFPFridayWindowBlocked", "TimeToStruct", "OnTester", "consecutiveLosses", "ATRSpreadAllowsTrade", "TimeExitTriggered", "ApplyMTFTrendFilter", "HigherTimeframeTrendBias", "MTFTrendAllowsDirection", "StructureTrailingStop", "InpMinADX", "InpUseBreakEven", "InpBreakEvenTriggerATR"]:
         if term not in source: fail(f"EA source missing expected safety/analytics implementation marker: {term}")
 
 def check_hard_lock() -> None:
@@ -97,6 +98,7 @@ def check_hard_lock() -> None:
 
 def check_profiles() -> None:
     base_session = {"InpUseSessionFilter": "false", "InpSessionStartHour": "0", "InpSessionEndHour": "24", "InpAllowMonday": "true", "InpAllowTuesday": "true", "InpAllowWednesday": "true", "InpAllowThursday": "true", "InpAllowFriday": "true", "InpAllowSunday": "false", "InpDisableFridayEvening": "false", "InpFridayCutoffHour": "20"}
+    base_news = {"InpUseNewsTimeFilter": "false", "InpNewsBlockBeforeMinutes": "60", "InpNewsBlockAfterMinutes": "60", "InpUseNFPFridayBlock": "false", "InpNFPWeekOfMonth": "1", "InpNFPStartHour": "12", "InpNFPEndHour": "16", "InpNewsEventTime1": "", "InpNewsEventTime2": "", "InpNewsEventTime3": ""}
     base_mtf = {"InpUseMTFTrendFilter": "false", "InpMTFTrendTimeframe": "PERIOD_H1", "InpMTFTrendEMA": "200"}
     base_adx = {"InpMinADX": "0.0"}
     base_structure = {"InpUseStructureTrailing": "false", "InpStructureTrailingLookback": "12", "InpStructureTrailingBufferATR": "0.20", "InpStructureTrailingTriggerATR": "1.20"}
@@ -104,10 +106,10 @@ def check_profiles() -> None:
     base_time = {"InpUseTimeExit": "false", "InpMaxTradeMinutes": "240"}
     base_breakeven = {"InpUseBreakEven": "false", "InpBreakEvenTriggerATR": "1.00", "InpBreakEvenOffsetATR": "0.05"}
     expected = {
-        "ROBUST_BOS_SWEEP_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.50", "InpRiskPercent": "1.60", **base_session, **base_mtf, **base_adx, **base_structure, **base_spread, **base_time, **base_breakeven},
-        "CANDIDATE_RISK16_SL18_TP38_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.80", "InpMaxEquityDrawdownPercent": "4.00", **base_session, **base_mtf, **base_adx, **base_structure, **base_spread, **base_time, **base_breakeven},
-        "CANDIDATE_RISK16_SL16_TP38_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.80", "InpMaxEquityDrawdownPercent": "4.00", **base_session, **base_mtf, **base_adx, **base_structure, **base_spread, **base_time, **base_breakeven},
-        "CANDIDATE_RISK16_SL18_TP35_GIVEBACK_PROFILE.set": {"InpUseProfitGivebackGuard": "true", **base_session, **base_mtf, **base_adx, **base_structure, **base_spread, **base_time, **base_breakeven},
+        "ROBUST_BOS_SWEEP_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.50", "InpRiskPercent": "1.60", **base_session, **base_news, **base_mtf, **base_adx, **base_structure, **base_spread, **base_time, **base_breakeven},
+        "CANDIDATE_RISK16_SL18_TP38_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.80", "InpMaxEquityDrawdownPercent": "4.00", **base_session, **base_news, **base_mtf, **base_adx, **base_structure, **base_spread, **base_time, **base_breakeven},
+        "CANDIDATE_RISK16_SL16_TP38_PROFILE.set": {"InpTakeProfitATRMultiplier": "3.80", "InpMaxEquityDrawdownPercent": "4.00", **base_session, **base_news, **base_mtf, **base_adx, **base_structure, **base_spread, **base_time, **base_breakeven},
+        "CANDIDATE_RISK16_SL18_TP35_GIVEBACK_PROFILE.set": {"InpUseProfitGivebackGuard": "true", **base_session, **base_news, **base_mtf, **base_adx, **base_structure, **base_spread, **base_time, **base_breakeven},
     }
     for rel, required in expected.items():
         values = parse_set(ROOT / rel)
