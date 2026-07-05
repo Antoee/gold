@@ -22,10 +22,13 @@ Run these without launching MT5:
 4. `work/import_mt5_compile_log.ps1` against the latest exported MetaEditor compile log
 5. `work/build_external_mt5_validation_package.ps1`
 6. `work/test_external_mt5_validation_package.ps1`
-7. `work/build_profit_readiness_snapshot.ps1`
-8. `work/build_report_import_preflight.ps1`
-9. `work/audit_handoff_config_integrity.ps1`
-10. `work/audit_mt5_local_safety.ps1`
+7. `work/import_external_mt5_validation_package_reports.ps1`
+8. `work/build_external_mt5_micro_decision.ps1`
+9. `work/build_external_validation_readiness.ps1`
+10. `work/build_profit_readiness_snapshot.ps1`
+11. `work/build_report_import_preflight.ps1`
+12. `work/audit_handoff_config_integrity.ps1`
+13. `work/audit_mt5_local_safety.ps1`
 
 Expected current state:
 
@@ -33,6 +36,7 @@ Expected current state:
 - Fast-probe readiness: waiting for exported reports until the fast handoff packs are run/imported
 - Next fast batch: `STRESS_SMOKE`, 2 rows, because it is the first pending gate
 - External MT5 package: PASS, 8 micro configs packaged, 17 zip entries
+- External validation readiness: `WAITING_FOR_REPORTS` until the four paired micro reports return
 - Compile status: PASS only when the imported MetaEditor log shows `0 errors, 0 warnings`
 - Readiness: `NOT_READY`
 - Report import preflight: parser, manifest, guardrails, handoff, safety, and compile status pass; reports still missing
@@ -49,7 +53,7 @@ Expected current state:
 - manifest and expected-report checklist
 - README for the external MT5 machine
 
-`work/test_external_mt5_validation_package.ps1` audits the package offline. Passing this package does not prove profitability; it only makes the next external/non-interrupting MT5 run ready.
+`work/test_external_mt5_validation_package.ps1` audits the package offline. `work/build_external_validation_readiness.ps1` summarizes compile, package, and micro-decision state into one external-readiness snapshot. Passing the package does not prove profitability; it only makes the next external/non-interrupting MT5 run ready.
 
 ## After Reports Are Exported
 
@@ -57,9 +61,10 @@ Expected current state:
 2. Import the latest MetaEditor compile log with `work/import_mt5_compile_log.ps1`.
 3. Run `work/import_external_mt5_validation_package_reports.ps1`.
 4. Run `work/build_external_mt5_micro_decision.ps1`.
-5. If the micro decision is `PASS_MICRO`, continue to the full handoff and phase-2 real-tick validation.
-6. If broader profit-search reports changed, rerun `work/import_all_available_reports.ps1`, `work/analyze_profit_search.ps1`, `work/build_result_import_decision_matrix.ps1`, `work/build_optimization_guardrail_audit.ps1`, and `work/build_report_import_preflight.ps1`.
-7. Build promotion packets only for candidates with complete evidence.
+5. Run `work/build_external_validation_readiness.ps1`.
+6. If external validation readiness is `READY_FOR_FULL_VALIDATION`, continue to the full handoff and phase-2 real-tick validation.
+7. If broader profit-search reports changed, rerun `work/import_all_available_reports.ps1`, `work/analyze_profit_search.ps1`, `work/build_result_import_decision_matrix.ps1`, `work/build_optimization_guardrail_audit.ps1`, and `work/build_report_import_preflight.ps1`.
+8. Build promotion packets only for candidates with complete evidence.
 
 ## Promotion Rule
 
