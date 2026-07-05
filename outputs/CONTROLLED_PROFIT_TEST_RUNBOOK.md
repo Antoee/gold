@@ -19,7 +19,7 @@ This project is currently in evidence-gathering mode. Do not promote a new profi
 
 ## Test Prerequisite
 
-The MT5 terminal used for testing must have `Professional_XAUUSD_EA.ex5` installed in its Experts folder before any handoff config can run. The micro configs reference that compiled expert directly.
+The MT5 terminal used for testing must have `Professional_XAUUSD_EA.ex5` installed in its Experts folder before any handoff config can run. The configs reference that compiled expert directly.
 
 The GitHub source is present as `Professional_XAUUSD_EA.mq5`, but it has not been compiled or tested in this remote-only safety pass. Do not treat the repo as fully runnable until the EA source/compiled expert is confirmed available in the tester environment.
 
@@ -35,51 +35,33 @@ Current policy for this workspace:
 4. Run future backtests on a separate Windows VM, spare machine, VPS, or a local window where focus stealing is explicitly acceptable.
 5. Keep `Visual=0`, `ShutdownTerminal=1`, dashboard disabled, and logging low in every tester config.
 
-Preferred options for testing:
+## Priority Queue
 
-1. Run on a separate Windows VM or spare machine.
-2. Run only during a controlled local tester window when focus stealing is acceptable.
-3. Import reports into this repo after they are exported.
+Use `outputs/NEXT_TEST_PRIORITY_QUEUE.md` as the source of truth for what to run next.
 
-## Fast First Pass
+Fastest safe order:
+
+1. Static safety audit through GitHub Actions.
+2. Stress micro handoff.
+3. Recent out-of-sample handoff through 2026.
+4. Optional session-variant probe.
+5. Full 24-config handoff only after the fast gates pass.
+
+Do not run a larger batch if a smaller gate already rejects the candidate.
+
+## Stress Micro
 
 Use the stress micro handoff first:
 
 - Manifest: `outputs/micro_test_handoff/HANDOFF_MANIFEST.csv`
 - Configs: `outputs/micro_test_handoff/configs/*.ini`
 - Candidate/baseline pairs: 8 rows total
-- Windows:
-  - `2024_Q1`
-  - `2024_Q3`
-  - `2025_Q2`
-  - `2025_Q3`
+- Windows: `2024_Q1`, `2024_Q3`, `2025_Q2`, `2025_Q3`
 
 Decision rule:
 
 - If `tp38_sl18` loses any paired stress window, keep the current promoted profile and deprioritize it.
 - If `tp38_sl18` matches or improves every paired stress window, continue to the recent out-of-sample pack before the full 24-config handoff.
-
-## Micro Import Workflow
-
-After the 8 micro reports are exported into `outputs`, parse and compare them with:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\work\collect_validation_results.ps1 -ManifestPath "outputs\micro_test_handoff\HANDOFF_MANIFEST.csv" -ReportDir "outputs" -ReportNameTemplate "profit_search_{PhaseShort}_{Profile}_{Set}_{Window}" -OutResults "outputs\MICRO_TEST_REPORT_METRICS.csv" -OutSummary "outputs\MICRO_TEST_REPORT_SUMMARY.csv" -OutMarkdown "outputs\MICRO_TEST_REPORT_METRICS.md"
-powershell -NoProfile -ExecutionPolicy Bypass -File .\work\build_micro_test_decision.ps1
-```
-
-Review:
-
-- `outputs/MICRO_TEST_REPORT_METRICS.csv`
-- `outputs/MICRO_TEST_DECISION.md`
-
-Micro outcomes:
-
-- `WAITING_FOR_REPORTS`: finish exporting the paired reports.
-- `REPAIR_REPORTS`: re-export or fix parser coverage.
-- `REJECT_CANDIDATE`: keep the promoted baseline and stop spending tester time on this candidate.
-- `REVIEW_DRAWDOWN`: inspect drawdown before allowing the candidate into recent-OOS and full handoff testing.
-- `PASS_MICRO`: continue to the recent out-of-sample pack, not promotion.
 
 ## Recent Out-of-Sample Pack
 
@@ -88,11 +70,7 @@ After the stress micro pass is clean, run the recent-OOS pack to check late-2025
 - Manifest: `outputs/recent_oos_handoff/HANDOFF_MANIFEST.csv`
 - Configs: `outputs/recent_oos_handoff/configs/*.ini`
 - Candidate/baseline pairs: 8 rows total
-- Windows:
-  - `2025_Q4`
-  - `2026_Q1`
-  - `2026_Q2`
-  - `2026_YTD`
+- Windows: `2025_Q4`, `2026_Q1`, `2026_Q2`, `2026_YTD`
 
 Decision rule:
 
@@ -100,15 +78,25 @@ Decision rule:
 - If `tp38_sl18` matches or improves every paired recent-OOS window, continue to the full 24-config handoff.
 - Do not promote from recent-OOS evidence alone.
 
-Import command after reports are exported:
+## Session Variant Probe
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\work\collect_validation_results.ps1 -ManifestPath "outputs\recent_oos_handoff\HANDOFF_MANIFEST.csv" -ReportDir "outputs" -ReportNameTemplate "recent_oos_{Profile}_{Window}" -OutResults "outputs\RECENT_OOS_REPORT_METRICS.csv" -OutSummary "outputs\RECENT_OOS_REPORT_SUMMARY.csv" -OutMarkdown "outputs\RECENT_OOS_REPORT_METRICS.md"
-```
+The session probe is optional and small. It should be used only to decide whether session filtering deserves a broader validation batch.
 
-## Full Handoff After Micro And Recent-OOS Pass
+- Manifest: `outputs/session_variant_handoff/HANDOFF_MANIFEST.csv`
+- Configs: `outputs/session_variant_handoff/configs/*.ini`
+- Candidate/baseline pairs: 6 rows total
+- Window: `2026_YTD`
+- Candidate sessions: London `07-16`, New York `13-22`, overlap `13-16`
 
-Use the full handoff only after both fast checks are clean:
+Decision rule:
+
+- If a session candidate loses or underperforms its paired unfiltered baseline, do not spend more tester time on that session.
+- If a session candidate beats its paired baseline and stays profitable, expand it into stress micro and recent-OOS validation.
+- Do not promote from the session probe alone.
+
+## Full Handoff After Fast Gates
+
+Use the full handoff only after the relevant fast checks are clean:
 
 - Manifest: `outputs/next_test_handoff/HANDOFF_MANIFEST.csv`
 - Expected rows: 24
@@ -129,7 +117,9 @@ A candidate may only move from `MISSING_EVIDENCE` to promotion review after all 
 
 ## After Reports Are Exported
 
-Import the reports, rebuild metrics, then refresh:
+Import commands for each fast pack are listed in `outputs/NEXT_TEST_PRIORITY_QUEUE.md`.
+
+After imports, refresh:
 
 - `outputs/PROFIT_SEARCH_REPORT_METRICS.csv`
 - `outputs/RESULT_IMPORT_DECISION_MATRIX.csv`
@@ -139,4 +129,4 @@ Import the reports, rebuild metrics, then refresh:
 
 ## Bottom Line
 
-The fastest safe route is not more unfiltered optimization on the active desktop. It is paired stress micro validation on a non-interrupting tester environment, then recent out-of-sample validation through 2026, then full handoff validation, then promotion gates. Until those reports exist, keep the current promoted profile.
+The fastest safe route is not more unfiltered optimization on the active desktop. It is static safety, paired stress micro validation, recent out-of-sample validation through 2026, optional session probing, then full handoff validation and promotion gates. Until those reports exist, keep the current promoted profile.
