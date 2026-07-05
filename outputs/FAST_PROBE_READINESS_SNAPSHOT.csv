@@ -7,6 +7,7 @@ BREAKEVEN_PROBE,WAITING_FOR_REPORTS,0,missing=outputs\BREAKEVEN_PROBE_DECISION.c
 ADX_FILTER_PROBE,WAITING_FOR_REPORTS,0,missing=outputs\ADX_FILTER_PROBE_DECISION.csv,Run/import ADX filter probe reports.
 SPREAD_GUARD_PROBE,WAITING_FOR_REPORTS,0,missing=outputs\SPREAD_GUARD_PROBE_DECISION.csv,Run/import ATR spread guard probe reports.
 TIME_EXIT_PROBE,WAITING_FOR_REPORTS,0,missing=outputs\TIME_EXIT_PROBE_DECISION.csv,Run/import time-exit probe reports.
+NEWS_FILTER_PROBE,WAITING_FOR_REPORTS,0,missing=outputs\NEWS_FILTER_PROBE_DECISION.csv,Run/import news-filter probe reports.
 MTF_TREND_PROBE,WAITING_FOR_REPORTS,0,missing=outputs\MTF_TREND_PROBE_DECISION.csv,Run/import MTF trend probe reports.
 STRUCTURE_TRAIL_PROBE,WAITING_FOR_REPORTS,0,missing=outputs\STRUCTURE_TRAILING_PROBE_DECISION.csv,Run/import structure trailing probe reports.
 SESSION_PROBE,WAITING_FOR_REPORTS,0,missing=outputs\SESSION_VARIANT_DECISION.csv,Run/import session variant reports.
