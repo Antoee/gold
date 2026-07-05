@@ -1,6 +1,6 @@
 # Next Validation Runbook
 
-No MT5 process should be launched from this workspace until the hidden-desktop launcher is deliberately verified. Local launch now requires both `ALLOW_MT5_FOCUS_RISK=1` and an explicit `work\ALLOW_MT5_LOCAL_LAUNCH.unlock` file.
+No MT5 process should be launched from this workspace until the hidden-desktop launcher is deliberately verified. Local launch is hard-locked in the shared launcher and all legacy MT5 runner scripts. It requires both `ALLOW_MT5_FOCUS_RISK=1` and an explicit `work\ALLOW_MT5_LOCAL_LAUNCH.unlock` file.
 
 ## Prepared Validation Pack
 
@@ -57,10 +57,21 @@ Configs use:
 
 ## After Running
 
-1. Export or parse result CSVs.
-2. Rerun `work/analyze_robust_candidates.ps1`.
-3. Rerun `work/analyze_loss_control.ps1`.
-4. Rerun `work/analyze_promotion_gate.ps1`.
-5. Rerun `work/audit_profile_inputs.ps1` before trusting any changed `.set` file.
-6. Update `ROBUST_CANDIDATE_RANKING.md`, `LOSS_CONTROL_REPORT.md`, `PROMOTION_GATE_REPORT.md`, and `PROFILE_INPUT_AUDIT.md`.
-7. Promote only if all profit, no-loss, promotion-gate, and profile-input checks pass.
+1. Export MT5 report files for each generated config into `outputs/`.
+2. Rerun `work/collect_validation_results.ps1` to produce normalized report metrics.
+3. Rerun `work/analyze_robust_candidates.ps1`.
+4. Rerun `work/analyze_loss_control.ps1`.
+5. Rerun `work/analyze_promotion_gate.ps1`.
+6. Rerun `work/audit_profile_inputs.ps1` before trusting any changed `.set` file.
+7. Update `VALIDATION_REPORT_METRICS.md`, `ROBUST_CANDIDATE_RANKING.md`, `LOSS_CONTROL_REPORT.md`, `PROMOTION_GATE_REPORT.md`, and `PROFILE_INPUT_AUDIT.md`.
+8. Promote only if all profit, no-loss, drawdown/profit-factor, promotion-gate, and profile-input checks pass.
+
+## Offline Report Collector
+
+`work/collect_validation_results.ps1` reads `work/generated_validation/VALIDATION_MANIFEST.csv`, scans for exported MT5 reports named like `outputs/validation_<profile>_<set>_<window>.htm`, and writes:
+
+- `outputs/VALIDATION_REPORT_METRICS.csv`
+- `outputs/VALIDATION_REPORT_SUMMARY.csv`
+- `outputs/VALIDATION_REPORT_METRICS.md`
+
+The collector extracts net profit, derived final balance, profit factor, expected payoff, trade count, maximal drawdown, and recovery factor when the report provides those fields. It marks missing or unparsed reports explicitly so incomplete validation cannot accidentally look complete.
