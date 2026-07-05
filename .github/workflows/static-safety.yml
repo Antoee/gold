@@ -20,3 +20,6 @@ jobs:
 
       - name: Run static repository safety audit
         run: python work/static_repo_safety_audit.py
+
+      - name: Run static MQL compile preflight
+        run: python work/static_mql_compile_preflight.py
