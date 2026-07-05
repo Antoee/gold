@@ -5,6 +5,7 @@ param(
    [string]$ReadinessPath = "outputs\PROFIT_READINESS_SNAPSHOT.csv",
    [string]$GuardrailPath = "outputs\OPTIMIZATION_GUARDRAIL_AUDIT.csv",
    [string]$HandoffIntegrityPath = "outputs\HANDOFF_CONFIG_INTEGRITY.csv",
+   [string]$MicroHandoffIntegrityPath = "outputs\MICRO_HANDOFF_CONFIG_INTEGRITY.csv",
    [string]$SafetyAuditPath = "outputs\MT5_LOCAL_SAFETY_AUDIT.csv",
    [string]$BatchPath = "outputs\NEXT_PROFIT_SEARCH_BATCH.csv",
    [string]$PromotionPacketDir = "outputs\promotion_packets",
@@ -45,9 +46,15 @@ function Get-Value {
       [object]$Default = ""
    )
 
+   if($null -eq $Row) { return $Default }
    $property = $Row.PSObject.Properties[$Name]
    if($null -eq $property) { return $Default }
    return $property.Value
+}
+
+function Get-FailureRows {
+   param([object[]]$Rows)
+   return @($Rows | Where-Object { (Get-Value $_ "Passed") -eq "False" -or (Get-Value $_ "Status") -eq "FAIL" })
 }
 
 $rows = New-Object System.Collections.Generic.List[object]
@@ -57,6 +64,7 @@ $decisions = Read-CsvSafe $DecisionMatrixPath
 $readiness = Read-CsvSafe $ReadinessPath
 $guardrail = Read-CsvSafe $GuardrailPath
 $handoff = Read-CsvSafe $HandoffIntegrityPath
+$microHandoff = Read-CsvSafe $MicroHandoffIntegrityPath
 $safety = Read-CsvSafe $SafetyAuditPath
 $batch = Read-CsvSafe $BatchPath
 
@@ -133,7 +141,7 @@ if($batch.Count -gt 0) {
    Add-Row $rows "Promotion packet" "FAIL" "Batch missing or empty: $BatchPath" "Run work\build_next_profit_search_batch.ps1."
 }
 
-$handoffFailures = @($handoff | Where-Object { (Get-Value $_ "Passed") -eq "False" -or (Get-Value $_ "Status") -eq "FAIL" })
+$handoffFailures = Get-FailureRows $handoff
 if($handoff.Count -gt 0 -and $handoffFailures.Count -eq 0) {
    Add-Row $rows "Handoff integrity" "PASS" "$($handoff.Count) rows checked, 0 failures." "Handoff configs remain statically safe for a controlled tester window."
 } elseif($handoff.Count -gt 0) {
@@ -142,7 +150,16 @@ if($handoff.Count -gt 0 -and $handoffFailures.Count -eq 0) {
    Add-Row $rows "Handoff integrity" "FAIL" "Handoff integrity report missing or empty: $HandoffIntegrityPath" "Run work\audit_handoff_config_integrity.ps1."
 }
 
-$safetyFailures = @($safety | Where-Object { (Get-Value $_ "Passed") -eq "False" -or (Get-Value $_ "Status") -eq "FAIL" })
+$microFailures = Get-FailureRows $microHandoff
+if($microHandoff.Count -gt 0 -and $microFailures.Count -eq 0) {
+   Add-Row $rows "Micro handoff" "PASS" "$($microHandoff.Count) paired stress-window rows prepared." "Use micro handoff first when tester time or desktop focus is constrained."
+} elseif($microHandoff.Count -gt 0) {
+   Add-Row $rows "Micro handoff" "FAIL" "$($microFailures.Count) failed rows." "Fix micro handoff integrity before using the fast test batch."
+} else {
+   Add-Row $rows "Micro handoff" "MISSING" "Micro handoff report missing or empty: $MicroHandoffIntegrityPath" "Run work\build_micro_test_handoff.ps1 and audit the micro manifest."
+}
+
+$safetyFailures = Get-FailureRows $safety
 if($safety.Count -gt 0 -and $safetyFailures.Count -eq 0) {
    Add-Row $rows "Local safety" "PASS" "$($safety.Count) safety checks pass." "Keep local MT5 launch locked while the PC is in normal use."
 } elseif($safety.Count -gt 0) {
