@@ -47,8 +47,10 @@ Generated without launching MT5.
 - MTF trend probe handoff configs committed: `4`
 - Structure trailing probe handoff configs committed: `4`
 - Session variant handoff configs committed: `6`
+- Fast-probe readiness builder committed: `work/build_fast_probe_readiness_snapshot.ps1`
+- Fast-probe readiness output target: `outputs/FAST_PROBE_READINESS_SNAPSHOT.md`
 - Date range covered by prepared fast checks: `2024.01.01` through `2026.07.02`
-- Full promotion still requires parsed MT5 reports; no new profit evidence is implied by source/config commits.
+- Full promotion still requires parsed MT5 reports; no new profit evidence is implied by source/config/report-script commits.
 
 ## Previous Local EA Source Record
 
