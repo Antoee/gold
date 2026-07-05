@@ -119,6 +119,14 @@ $readme.Add("3. Run each config in configs\ with MT5 Strategy Tester.") | Out-Nu
 $readme.Add("4. Export each report using the ExpectedReportName from EXPECTED_REPORTS.csv.") | Out-Null
 $readme.Add("5. Copy reports and the compile log back to the main workspace for offline import.") | Out-Null
 $readme.Add("") | Out-Null
+$readme.Add("## Return Import") | Out-Null
+$readme.Add("") | Out-Null
+$readme.Add("After reports are copied back into outputs\external_mt5_validation_package\reports_here, run these from the main workspace:") | Out-Null
+$readme.Add("") | Out-Null
+$readme.Add("1. work\import_mt5_compile_log.ps1 against the returned compile log.") | Out-Null
+$readme.Add("2. work\import_external_mt5_validation_package_reports.ps1") | Out-Null
+$readme.Add("3. work\build_external_mt5_micro_decision.ps1") | Out-Null
+$readme.Add("") | Out-Null
 $readme.Add("## Batch") | Out-Null
 $readme.Add("") | Out-Null
 $readme.Add("| Rank | Profile | Window | From | To | Config | Expected Report |") | Out-Null
