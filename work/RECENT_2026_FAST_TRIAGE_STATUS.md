@@ -11,25 +11,23 @@ Updated: 2026-07-06
 
 ## Latest Risk-Code Change
 
-Added optional Volatility Risk Scaling:
+Added optional Spread Risk Scaling:
 
-- `InpUseVolatilityRiskScaling`
-- `InpVolatilityRiskLookbackBars`
-- `InpVolatilityRiskStartRatio`
-- `InpVolatilityRiskFullRatio`
-- `InpMinVolatilityRiskMultiplier`
-- `VolatilityRiskMultiplier()` compares current ATR to recent average ATR and scales position risk down when volatility is elevated.
-- `OpenSignal()` now combines quality, session, day-of-week, directional-loss, and volatility risk multipliers before lot sizing.
-- Entry logging adds `Volatility risk x...` when enabled.
+- `InpUseSpreadRiskScaling`
+- `InpSpreadRiskStartPoints`
+- `InpMinSpreadRiskMultiplier`
+- `SpreadRiskMultiplier()` compares current spread to the configured start point and the hard maximum spread guard, then scales position risk down as spread gets worse.
+- `OpenSignal()` now combines quality, session, day-of-week, directional-loss, volatility, and spread risk multipliers before lot sizing.
+- Entry logging adds `Spread risk x...` when enabled.
 
-This changes risk logic instead of only changing settings. The goal is to keep good setups eligible while cutting exposure during unusually volatile gold conditions, where slippage, stop-outs, and fast reversals are more likely. It is disabled in the robust base profile and enabled only in strict research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
+This changes risk logic instead of only changing settings. The goal is to keep otherwise valid setups eligible while cutting exposure when XAUUSD spread conditions are deteriorating but have not yet reached the hard no-trade spread limit. It is disabled in the robust base profile and enabled only in strict research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables Volatility Risk Scaling with lookback `24`, start ratio `1.25`, full ratio `1.80`, and minimum risk multiplier `0.55`.
-- `pa_full_confluence` enables a stricter version with lookback `30`, start ratio `1.20`, full ratio `1.70`, and minimum risk multiplier `0.45`.
+- `weighted_quality_confluence` enables Spread Risk Scaling from `120.0` points with minimum risk multiplier `0.60`.
+- `pa_full_confluence` enables a stricter version from `100.0` points with minimum risk multiplier `0.50`.
 - Generated configs confirmed the module is enabled in strict price-action research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -45,15 +43,15 @@ This changes risk logic instead of only changing settings. The goal is to keep g
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `C573910FDBE4A80859B3112BB481E19857179FFF39C9FCB4BD84F651B288F164`
-- `Professional_XAUUSD_EA.mq5`: `C573910FDBE4A80859B3112BB481E19857179FFF39C9FCB4BD84F651B288F164`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `C573910FDBE4A80859B3112BB481E19857179FFF39C9FCB4BD84F651B288F164`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `BF4124C149B93B824D2B72D0690FA8481D4ACFCADCBEDF9DE3C52FC3BFB2469B`
+- `outputs\Professional_XAUUSD_EA.mq5`: `FCB0B3A905A76654595E5C48B107FDE8A10BE084F22AC0A6E4749553F636D2C5`
+- `Professional_XAUUSD_EA.mq5`: `FCB0B3A905A76654595E5C48B107FDE8A10BE084F22AC0A6E4749553F636D2C5`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `FCB0B3A905A76654595E5C48B107FDE8A10BE084F22AC0A6E4749553F636D2C5`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `16947CECD73E8E1647B26AD686ADFB1806D9177105ECB8F858FAA070C7F4FDC3`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `E75400FABFF6F8660802122A75148355CE4F308D48D6F34CD2E95A43C6A60998`
-- `work\test_price_action_strategy_modules.ps1`: `020ADD1FFAB147E4FA4F89D92479FF7B45E5A43F433A8798C66FF3858C1CF650`
-- `work\test_price_action_strategy_batch.ps1`: `79571C97C15323EED06CEFE944D7DC511BD5B0E4C1B2AF043F05190EC793EB4E`
-- `work\build_price_action_strategy_batch.ps1`: `D57B723FA12F710EAAD4875E25B63B581E722BE31793E6E4850136441CF4ECEA`
+- `outputs\xauusd_micro_validation_package.zip`: `0107FBF517B10F8E737C09B63D883A87EF1984BF1937E3605D8C18A3D2B1CCC0`
+- `work\test_price_action_strategy_modules.ps1`: `A67F704AB8910E35A0B30CE096591CB3E8E65B1BA28FFD463972E0F671B2BD98`
+- `work\test_price_action_strategy_batch.ps1`: `08B75CEB0833AFF8504A0E7F6C68F0C373A81278C70FEC5BECB572430670FCBA`
+- `work\build_price_action_strategy_batch.ps1`: `57B8BE2A550F9FAD42B0FCF97A1AFC58855617BEAE7D216672C5A99DDC66D3FC`
 
 ## Background-Safety Note
 
