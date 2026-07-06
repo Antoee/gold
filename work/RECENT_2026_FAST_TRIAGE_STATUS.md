@@ -13,7 +13,20 @@ Updated locally on 2026-07-06.
 ## Current EA Source
 
 - Canonical source: `outputs/Professional_XAUUSD_EA.mq5`.
-- Current synced source SHA256: `9572DF05C96A045CB3DD9AEAED99043483DE8C99F900D00272CEE5E71CDB8866`.
+- Current synced source SHA256: `09A0B04987B80D1CF1B33CB434FFB42FA9CBDEE7C2A20D813DFA92B231526415`.
+
+## Entry Shock Guard Addition
+
+Added an optional entry shock guard so the entry engine can reject setups immediately after oversized or low-body signal candles:
+
+- `InpUseEntryShockGuard=false` by default.
+- `InpMaxEntryCandleATR=2.20`.
+- `InpMinEntryBodyPercent=30.0`.
+- When enabled, the entry engine rejects a setup if the most recent closed signal candle range is too large versus ATR or has too little body relative to total range.
+- Rejected setups log the internal reason `Entry shock reject;`.
+- This is strategy/risk-control code intended to avoid chasing XAUUSD spike candles, poor fills, and immediate liquidity reversals.
+
+The `weighted_quality_confluence` and `pa_full_confluence` research profiles now enable entry shock guard for fast-triage testing.
 
 ## Stagnation Exit Addition
 
@@ -26,7 +39,7 @@ Added an optional stagnation exit so the position manager can close trades that 
 - Exit logs use event `exit`, bias `stagnation`, and reason `stagnation exit`.
 - This is strategy/risk-control code intended to reduce dead-time exposure and slow loss drift, not a settings-only change.
 
-The `weighted_quality_confluence` and `pa_full_confluence` research profiles now enable stagnation exit for fast-triage testing.
+The `weighted_quality_confluence` and `pa_full_confluence` research profiles enable stagnation exit for fast-triage testing.
 
 ## Reversal-Pressure Exit Addition
 
@@ -74,6 +87,7 @@ The `orderblock_fvg_retest` and `weighted_quality_confluence` research profiles 
 The EA includes optional, independently configurable strategy modules for actual price-action, market-state, tick-tape, intermarket confirmation, weighted setup-quality logic, profit targeting, profit protection, and early loss control:
 
 - CHoCH, BOS, breakout retests, FVG, order-block retest, liquidity sweep, previous/session levels, session sweeps, opening-range breakouts, VWAP, candle anatomy, market phase, RSI, MACD, Bollinger, and tick microstructure confirmations.
+- Entry shock guard.
 - Correlated-market confirmation.
 - Weighted entry-quality score.
 - Quality-based risk scaling.
@@ -108,6 +122,11 @@ Fast research batch for actual strategy-code variants:
 - Estimated tester runtime: about 10.5 minutes before platform overhead.
 - Handoff zip: `outputs/price_action_strategy_handoff.zip`.
 - Parallel lanes zip: `outputs/price_action_parallel_lanes.zip`.
+
+Research profiles with entry shock guard enabled:
+
+- `weighted_quality_confluence`.
+- `pa_full_confluence`.
 
 Research profiles with stagnation exit enabled:
 
@@ -158,15 +177,15 @@ Research profiles with breakout retest enabled:
 
 ## Hashes
 
-- EA source: `9572DF05C96A045CB3DD9AEAED99043483DE8C99F900D00272CEE5E71CDB8866`.
-- Base profile: `1B447C513BAE318AE6224AA47D2725502E2A1E38AF0E80ADEB719F703D35749F`.
+- EA source: `09A0B04987B80D1CF1B33CB434FFB42FA9CBDEE7C2A20D813DFA92B231526415`.
+- Base profile: `599E016E16405049888B89BF588B511E6154F85BEE48E4D4302F6E4C1682CCD1`.
 - Price-action batch CSV: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`.
-- Price-action handoff zip: `D27A463B68A5442DC9C7173F6E66E0B50C513964986F323552545C15DD041613`.
-- Price-action parallel lanes zip: `8100E700E981BEBE3E1835F5519249FA24B16E5D2607D89A280844C4137A2D7A`.
-- External validation package zip: `93F83EAAE116AB28617C5DC76EE77261A6B2B3222438A60CE95419948B5208A2`.
-- Price-action modules smoke: `8402F0E2EAB0006AF5EA31BF9A9F5F55190D0815C848F0C89EB57AE517B5683F`.
-- Price-action batch smoke: `D284BC77964A564D8DA87E87E509C6BF14837333EC5B7DE3CEDE4D773DA71630`.
-- Price-action batch builder: `A536EF7077C3BB0A4B5991E636D8F83C5F225D808B4175CA69B92BCD0F3E6DB5`.
+- Price-action handoff zip: `5DB12D586173B3C6BD8354A35728A1F533E689F33F3FD94961C3CB0ADFFFAF33`.
+- Price-action parallel lanes zip: `8344E80DEE238F7ED07F720B432F5C1EF595511DD3687E243234CE6D3C597F59`.
+- External validation package zip: `953F2B135FC0CD0BE40D4B9223DC8DB35B32F2C3AE4AB10E42F205DE4FBF20F4`.
+- Price-action modules smoke: `AB6AE2F38C54D824BA07C0862D705D8F7B81470D46E562B1DEF692604F273E8E`.
+- Price-action batch smoke: `532FE808D03C9AEFCB521B7BD2D270BE66FC5C0C2C0E6601B196700EC814BEC5`.
+- Price-action batch builder: `82187003C86592BB8396099DB9126BD6FFD5FA80AA102AB59F56A42E5F346535`.
 
 ## GitHub Source Caveat
 
