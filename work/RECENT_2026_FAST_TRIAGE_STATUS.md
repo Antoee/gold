@@ -11,24 +11,23 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional MFE failure exit:
+Added optional RSI exhaustion guard:
 
-- `InpUseMFEFailureExit`
-- `InpMFEFailureBars`
-- `InpMFEFailureMinMFER`
-- `InpMFEFailureMaxCurrentR`
-- `CPositionManager::Manage()` now tracks max favorable R and can close trades that fail to achieve enough favorable excursion after a configurable number of bars.
-- Exit logs use `mfe_failure` / `MFE failure exit`.
+- `InpUseRSIExhaustionGuard`
+- `InpRSIBuyMax`
+- `InpRSISellMin`
+- `CEntryEngine::RSIExhaustionAllows()` blocks buy entries when RSI is too high and sell entries when RSI is too low.
+- `CEntryEngine::Build()` now rejects exhausted entries with `RSI exhaustion reject;` before counting confirmations.
 
-This is a position-management/risk module from the requested strategy-code expansion. It is intended to remove trades that are not working after enough time, without increasing risk or adding any recovery logic.
+This is an indicator/risk module from the requested strategy-code expansion. It is intended to reduce late chase entries into overextended RSI conditions without increasing risk or adding any recovery logic.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables MFE failure exit after `18` bars if max favorable R stays below `0.35` and current R is no better than `0.05`.
-- `pa_full_confluence` enables MFE failure exit after `20` bars if max favorable R stays below `0.40` and current R is no better than `0.05`.
-- Generated configs confirmed the module is enabled in those strict profiles and pinned disabled in the robust base profile.
+- `indicator_phase_filter` enables RSI exhaustion protection with buy max `72.0` and sell min `28.0`.
+- `pa_full_confluence` enables RSI exhaustion protection with buy max `70.0` and sell min `30.0`.
+- Generated configs confirmed the module is enabled in those profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
 
@@ -43,16 +42,16 @@ This is a position-management/risk module from the requested strategy-code expan
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `83C770058DA540301B8241BE853CFABB780DBD174C0AAD95B2BDE625EEAE7EDF`
-- `Professional_XAUUSD_EA.mq5`: `83C770058DA540301B8241BE853CFABB780DBD174C0AAD95B2BDE625EEAE7EDF`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `6BDCF7B22C46AB282AE70A13D1F4EF013B3DEEC58F5DCA849964D78E82602F89`
+- `outputs\Professional_XAUUSD_EA.mq5`: `2C43986D32E2BF752349471EDB1CB5BAAE399DA3FD6BA019F526D8892141DAC0`
+- `Professional_XAUUSD_EA.mq5`: `2C43986D32E2BF752349471EDB1CB5BAAE399DA3FD6BA019F526D8892141DAC0`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `EF5178A0B51FF29B7D5C133764D6376E1A42DAFF4952E666E4562FFBE5674384`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\price_action_strategy_handoff.zip`: `EA68B91177C119337D271C5697C1CDBBC827AD09A30C8DAAAAE1A7DE2C931605`
-- `outputs\price_action_parallel_lanes.zip`: `1919DD299DD18426313FF67E0ABC64DA0177D8E64E2E06A149F645C34CB7F3BC`
-- `outputs\xauusd_micro_validation_package.zip`: `CBBEECB572BA3A3170BBEA27C80E56BEC996B3FB1086F5B15B1E3D9963AB44FA`
-- `work\test_price_action_strategy_modules.ps1`: `0188F5024F29E0883F5DCED4EDD6B7F986D04D9A7C7DCB65E468DC8B219D9A68`
+- `outputs\price_action_strategy_handoff.zip`: `99130B4E1FEADA9AFD9C1EFFBBB0107EA5F4526D5F16A2F6FAECE0A8344DACAB`
+- `outputs\price_action_parallel_lanes.zip`: `5D1DAA03F7EAE242F5F527333E16DD7A3939094B803C33819A84C74F87E8F459`
+- `outputs\xauusd_micro_validation_package.zip`: `EAD68A0F7D0B24BF7DB4E84AB3BA1CD93414E6237B05EA8CB085DA57CDBD608F`
+- `work\test_price_action_strategy_modules.ps1`: `23020FD85348EBE9F71492CBF0584A16025EE38B58ECB96714E08826C586B118`
 - `work\test_price_action_strategy_batch.ps1`: `4B9B4747F2872AA3617E1804D5610FDB5709664D06F52635B5DF7F393697B0DC`
-- `work\build_price_action_strategy_batch.ps1`: `F84E468E27327E1F161858041D7226C368BCAF47A5DF657D80324012DAFDD2D2`
+- `work\build_price_action_strategy_batch.ps1`: `E3A8DE66E9A0F9117F96A65C61F5493D6EA0D2474493B99B353E501FD119D5FC`
 
 ## Background-Safety Note
 
