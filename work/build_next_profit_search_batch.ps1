@@ -29,6 +29,18 @@ function Get-ReportName {
    return "profit_search_${phaseShort}_$($Row.Profile)_$($Row.Set)_$($Row.Window)"
 }
 
+function Get-RecentWindowBoost {
+   param([object]$Row)
+
+   $window = [string]$Row.Window
+   $set = [string]$Row.Set
+   if($window -eq "2026_Q2") { return 2200 }
+   if($window -eq "2026_ytd") { return 1800 }
+   if($window -like "2026*") { return 1400 }
+   if($set -eq "full" -or $window -eq "full") { return 700 }
+   return 0
+}
+
 if(!(Test-Path -LiteralPath $ManifestPath)) { throw "Manifest not found: $ManifestPath" }
 if(!(Test-Path -LiteralPath $MetricsPath)) { throw "Metrics file not found: $MetricsPath" }
 if(!(Test-Path -LiteralPath $ProfilesPath)) { throw "Profiles file not found: $ProfilesPath" }
@@ -90,6 +102,7 @@ foreach($row in $manifest) {
    $score = 0
    $reason = ""
    $role = ""
+   $recentBoost = Get-RecentWindowBoost $row
 
    if($status -eq "UNPARSED") {
       $score += 50000
@@ -97,6 +110,7 @@ foreach($row in $manifest) {
       $role = "Repair existing evidence"
    } elseif($row.Phase -eq "phase1_fast_triage") {
       $score += 20000
+      $score += $recentBoost
       $score += (($guardrailScore - 75) * 120)
       if($phase2Seed) { $score += 600 }
       if($row.Profile -eq "baseline_promoted") { $score += 1200 }
@@ -105,6 +119,7 @@ foreach($row in $manifest) {
       if($row.Set -eq "stress") { $score += 1200; $reason = "Stress-window fast prune." }
       elseif($row.Set -eq "full") { $score += 950; $reason = "Fast full-period sanity check." }
       elseif($row.Set -eq "opportunity") { $score += 650; $reason = "Opportunity-window upside check." }
+      if($recentBoost -gt 0) { $reason = "$reason Recent-data priority through 2026." }
       if($guardrailStatus -eq "REJECT_PROMOTION") {
          $score -= 4000
          $reason = "$reason Guardrail rejects promotion; keep as low-priority research."
@@ -115,6 +130,7 @@ foreach($row in $manifest) {
       $score -= ($priority * 60)
    } elseif($row.Phase -eq "phase2_real_tick_validation") {
       $score += 12000
+      $score += $recentBoost
       $score += (($guardrailScore - 75) * 80)
       $role = "Real-tick validation"
       $reason = "Required real-tick evidence for promotion."
@@ -125,6 +141,7 @@ foreach($row in $manifest) {
       if($row.Set -eq "split") { $score += 900 }
       elseif($row.Set -eq "quarter") { $score += 500 }
       if($row.Window -eq "full") { $score += 1000 }
+      if($recentBoost -gt 0) { $reason = "$reason Recent-data priority through 2026." }
       if($guardrailStatus -eq "REJECT_PROMOTION") {
          $score -= 6000
          $reason = "$reason Guardrail rejects promotion; phase-2 should wait."
@@ -158,6 +175,7 @@ foreach($row in $manifest) {
       Phase1TotalForProfile = [Math]::Round($stats.Phase1Total, 2)
       GuardrailStatus = $guardrailStatus
       GuardrailScore = $guardrailScore
+      RecentDataBoost = $recentBoost
       RiskFlags = $riskFlags
       OverfitFlags = $overfitFlags
    }) | Out-Null
@@ -200,6 +218,7 @@ $report.Add("- Missing/unparsed configs: $allMissing") | Out-Null
 $report.Add("- Phase-1 remaining: $phase1Missing") | Out-Null
 $report.Add("- Phase-2 remaining: $phase2Missing") | Out-Null
 $report.Add("- Unparsed reports needing repair: $unparsed") | Out-Null
+$report.Add("- Recent-data boost: 2026_Q2 and 2026_ytd are pulled earlier without increasing batch size.") | Out-Null
 $report.Add("") | Out-Null
 $report.Add("## Recommended Next Runs") | Out-Null
 $report.Add("") | Out-Null
