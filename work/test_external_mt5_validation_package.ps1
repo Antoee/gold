@@ -50,8 +50,8 @@ $expected = @(Read-CsvSafe $expectedPath)
 $contents = @(Read-CsvSafe $contentsPath)
 $packageStatus = @(Read-CsvSafe $statusPath)
 $compileChecklist = @(Read-CsvSafe $compileChecklistPath)
-$configs = if(Test-Path -LiteralPath $configsDir) { @(Get-ChildItem -LiteralPath $configsDir -Filter "*.ini" -File) } else { @() }
-$profiles = if(Test-Path -LiteralPath $profilesDir) { @(Get-ChildItem -LiteralPath $profilesDir -Filter "*.set" -File) } else { @() }
+$configs = @(if(Test-Path -LiteralPath $configsDir) { Get-ChildItem -LiteralPath $configsDir -Filter "*.ini" -File } else { @() })
+$profiles = @(if(Test-Path -LiteralPath $profilesDir) { Get-ChildItem -LiteralPath $profilesDir -Filter "*.set" -File } else { @() })
 
 Add-Check $rows "Package directory exists" (Test-Path -LiteralPath $PackageDir) $PackageDir "Rebuild with work\build_external_mt5_validation_package.ps1."
 Add-Check $rows "EA source included" (Test-Path -LiteralPath $sourcePath) $sourcePath "Include outputs\Professional_XAUUSD_EA.mq5."
@@ -82,6 +82,9 @@ $importCommand = $compileChecklist | Where-Object { $_.Item -eq "Import command"
 Add-Check $rows "Compile checklist includes import command" ($null -ne $importCommand -and [string]$importCommand.ExpectedValue -like "*import_mt5_compile_log.ps1*") `
    $(if($importCommand) { $importCommand.ExpectedValue } else { "Import command row missing." }) `
    "Add the compile-log importer command to COMPILE_RETURN_CHECKLIST.csv."
+Add-Check $rows "Compile checklist requires compiled source path" ($null -ne $importCommand -and [string]$importCommand.ExpectedValue -like "*-CompiledSourcePath*") `
+   $(if($importCommand) { $importCommand.ExpectedValue } else { "Import command row missing." }) `
+   "Require -CompiledSourcePath so SourceHashStatus can become MATCH instead of EXPECTED_ONLY."
 
 $manifestProfiles = @($manifest | Select-Object -ExpandProperty Profile -Unique | Sort-Object)
 $manifestWindows = @($manifest | Select-Object -ExpandProperty Window -Unique | Sort-Object)
