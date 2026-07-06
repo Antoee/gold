@@ -11,28 +11,29 @@ Updated: 2026-07-06
 
 ## Latest Risk-Code Change
 
-Added optional Margin Pressure Risk Scaling for generated research profiles:
+Added optional Trade Free-Margin Pressure Risk Scaling for generated research profiles:
 
-- `InpUseMarginPressureRiskScaling`
-- `InpMarginPressureStartLevelPercent`
-- `InpMinMarginPressureRiskMultiplier`
-- `MarginPressureRiskMultiplier()` reads account margin level and tapers new-trade risk as margin level approaches `InpMinMarginLevelPercent`.
-- `OpenSignal()` now multiplies margin-pressure risk into final lot sizing and logs `Margin risk x...` when enabled.
+- `InpUseTradeMarginRiskScaling`
+- `InpTradeMarginRiskStartFraction`
+- `InpMinTradeMarginRiskMultiplier`
+- `TradeMarginRiskMultiplier()` estimates required margin for the candidate trade using `OrderCalcMargin()`.
+- `OpenSignal()` now sizes once, estimates required margin as a percent of free margin, tapers risk if the trade is approaching the configured hard trade-margin cap, then recalculates lots before exposure/cost/margin guards.
+- Entry logging records `Trade margin risk x...` when enabled.
 
-This is proactive margin-risk code, not only parameter tweaking. It reduces new-trade exposure before the hard margin guard blocks trades, helping prevent good-looking signals from consuming too much free margin under pressure. The baseline anchor remains disabled for clean comparison, while generated research profiles enable it. It adds no martingale, grid, averaging down, or recovery behavior.
+This is strategy/risk code, not only settings. It reduces new-trade risk before the hard `InpMaxTradeMarginFreePercent` margin guard blocks the order. The baseline anchor remains disabled for clean comparison, while generated research profiles enable it. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor remains `InpUseMarginPressureRiskScaling=false`.
-- Generated research profiles use `InpUseMarginPressureRiskScaling=true`.
-- Research profiles start tapering below margin level `600.0` and taper toward minimum multiplier `0.50` as margin approaches the configured hard floor.
+- Baseline anchor remains `InpUseTradeMarginRiskScaling=false`.
+- Generated research profiles use `InpUseTradeMarginRiskScaling=true`.
+- Research profiles begin tapering at `InpTradeMarginRiskStartFraction=0.50` of `InpMaxTradeMarginFreePercent` and taper toward minimum multiplier `0.50` as required margin approaches the hard cap.
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `808D1A7042F40753C1EBA513F8CDE582005E8E00E47DEF8AAF2F2B10CDDF595A`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `1F3F7E943A16EB9D73C4D69F86E7D21F832B4A1184EE909FE752A573D5DED988`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_ea_source_artifact_sync.ps1`: PASS
 - `work\test_price_action_strategy_batch.ps1`: PASS
@@ -42,15 +43,15 @@ This is proactive margin-risk code, not only parameter tweaking. It reduces new-
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `808D1A7042F40753C1EBA513F8CDE582005E8E00E47DEF8AAF2F2B10CDDF595A`
-- `Professional_XAUUSD_EA.mq5`: `808D1A7042F40753C1EBA513F8CDE582005E8E00E47DEF8AAF2F2B10CDDF595A`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `808D1A7042F40753C1EBA513F8CDE582005E8E00E47DEF8AAF2F2B10CDDF595A`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `CB615629AD4E04A106A4E749DA8486955579B50FB6820A59C6910570A7311785`
+- `outputs\Professional_XAUUSD_EA.mq5`: `1F3F7E943A16EB9D73C4D69F86E7D21F832B4A1184EE909FE752A573D5DED988`
+- `Professional_XAUUSD_EA.mq5`: `1F3F7E943A16EB9D73C4D69F86E7D21F832B4A1184EE909FE752A573D5DED988`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `1F3F7E943A16EB9D73C4D69F86E7D21F832B4A1184EE909FE752A573D5DED988`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `4A9AFD3481C5F6E0FBD164B4278ECA90ECD73FA3906647944B83DC7265436ADC`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `6B25C436EF7755D926EE63BD626BCA4167CF65A41D71A71C7CBC719D88D08DDD`
-- `work\test_price_action_strategy_modules.ps1`: `D38B9637C8843E6A1AE3A8E18457C55AEB08E9DD2386F78E655C78695D2E738B`
-- `work\test_price_action_strategy_batch.ps1`: `EEB76A9E03B67916D2DC918E8B2E35E4B939409742A8DCA9E21E26ED9271D567`
-- `work\build_price_action_strategy_batch.ps1`: `6BAE3186E80F2725D6D8EBED3FDD2CE61F005627D9356C3E5D8AEFE68DB5A510`
+- `outputs\xauusd_micro_validation_package.zip`: `7699E6336722F51A826B561105EED242D57D694B88AF504F93B6EC3E2CF720C9`
+- `work\test_price_action_strategy_modules.ps1`: `E031AF0C6C3A5D394A5C5D3C9C4F00C053BDF05A188A8705ECCACE4CBE002263`
+- `work\test_price_action_strategy_batch.ps1`: `87DC90313F61D4B62F972783D6F06E3757ECF99CFB187D2AE6BF40C39CE2514A`
+- `work\build_price_action_strategy_batch.ps1`: `B627C8E570E73FA235964770CE33FBA93DF87D09609A31C832EA21FE73DC7F5A`
 
 ## Background-Safety Note
 
