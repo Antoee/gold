@@ -11,18 +11,28 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added tester-fitness robustness controls so optimizer results are penalized when profitable settings have weak recovery factor or weak/negative Sharpe:
+Added an optional tick-volume regime guard so entries can be rejected when tick activity is abnormally low or explosively high versus recent average:
 
-- `InpTesterMinRecoveryFactor`
-- `InpTesterMinSharpeRatio`
-- `InpTesterRecoveryPenalty`
-- `InpTesterSharpePenalty`
-- `OnTester()` now applies recovery and Sharpe penalties in both robust-profit and recovery/Sharpe fitness modes.
+- `InpUseTickVolumeRegimeGuard`
+- `InpTickVolumeRegimeLookbackBars`
+- `InpMinTickVolumeRatio`
+- `InpMaxTickVolumeRatio`
+- `CEntryEngine::TickVolumeRegimeAllows()` compares the latest closed candle's tick volume against recent average tick volume.
+- When enabled, rejected setups record `Tick volume regime reject;`.
 
-This does not force a trade signal by itself. It changes how MT5 optimization ranks candidates so fragile high-profit curves are less attractive.
+This is a strategy/risk-control module using tick-volume/order-flow proxy data. It is separate from `InpUseVolumeConfirmation`, so optimization can test volume as either a positive confirmation or as a hard regime filter.
+
+## Fast Batch Impact
+
+- Batch size stayed at 10 profiles and 30 runs.
+- Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
+- `weighted_quality_confluence` enables the guard with ratio band `0.60` to `2.80`.
+- `pa_full_confluence` enables the guard with stricter ratio band `0.65` to `2.50`.
+- Generated configs confirmed the guard is enabled in those profiles and pinned disabled in other profiles.
 
 ## Quiet Validation Results
 
+- `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\sync_ea_source_artifacts.ps1`: PASS
 - `work\test_price_action_strategy_modules.ps1`: PASS
 - `work\test_price_action_strategy_batch.ps1`: PASS
@@ -33,16 +43,16 @@ This does not force a trade signal by itself. It changes how MT5 optimization ra
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `CBAA53D30CFC87E15E90429EA8A5C87EC3B41E9D8CF53BF92C65C96FCF7ED8C9`
-- `Professional_XAUUSD_EA.mq5`: `CBAA53D30CFC87E15E90429EA8A5C87EC3B41E9D8CF53BF92C65C96FCF7ED8C9`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `33FF3153AE24B74EB4FDF2C6F8E948E879C64236FD5F2475D115FBB2313DCD3E`
+- `outputs\Professional_XAUUSD_EA.mq5`: `D2E140708B640EAC33904D9B64C1270C226F45A254AF282A5FC798F7E0CB55DA`
+- `Professional_XAUUSD_EA.mq5`: `D2E140708B640EAC33904D9B64C1270C226F45A254AF282A5FC798F7E0CB55DA`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `7880E29912AC0C76B8C9879E2C708B2700AA2E77DA28D0BA90D9C9648F2FCC75`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\price_action_strategy_handoff.zip`: `ECAD80422A0A1A6B480C50A24DFD28BBC16E093C6667611B226681A7A6EFAC8E`
-- `outputs\price_action_parallel_lanes.zip`: `745F7C9955ABB9200F9780CA35A7930A8DCC91F6C96034A5BCBC957CF970093B`
-- `outputs\xauusd_micro_validation_package.zip`: `02D7D110C7762E5F233B38AF30050C79E39541123C4A253192B4E5FF56185554`
-- `work\test_price_action_strategy_modules.ps1`: `F0E6E4702658688A9C3D551EDD67A1922C54DBB3A3757087A1912586DF45C133`
+- `outputs\price_action_strategy_handoff.zip`: `5AB77E6A4C7B0FC32E0C9A700715E97598CEE911C01A58AE7648737B651E3C42`
+- `outputs\price_action_parallel_lanes.zip`: `E43ABDEF25715CCB1B77ED23B15585F41568A19294470A07F1C1663C9F618BA6`
+- `outputs\xauusd_micro_validation_package.zip`: `1DE470AB54F5DECBB9944A93455598E0FD723B37A56077244DFF21096755A19E`
+- `work\test_price_action_strategy_modules.ps1`: `EF4B5CC5EC7CED713D417AFE99C2C31E834E86282FA47D656F144113BEFED8AD`
 - `work\test_price_action_strategy_batch.ps1`: `4B9B4747F2872AA3617E1804D5610FDB5709664D06F52635B5DF7F393697B0DC`
-- `work\build_price_action_strategy_batch.ps1`: `E98B28443233128CB6C585BD102F3EDCAE4AEE4DA5811D586F28F7F940FB5D97`
+- `work\build_price_action_strategy_batch.ps1`: `E0EB92EA1A79420945CF9372380755A3C395B3261A19BD23D74D5FD162773EE7`
 
 ## Background-Safety Note
 
