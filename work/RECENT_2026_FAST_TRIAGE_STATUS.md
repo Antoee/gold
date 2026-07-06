@@ -11,26 +11,30 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added a final effective risk cap for stacked growth multipliers. This prevents the accumulated profit-only, hot-streak, protected-cushion, trend-regime, daily-opportunity, quality, price-action, session, and other multipliers from silently producing an oversized per-trade risk percent.
+Added a closed-profit requirement switch for growth boost layers. This prevents aggressive compounding from being triggered by temporary floating equity gains when the profile requires realized profit first.
 
 New input and logic:
 
-- `InpMaxEffectiveRiskPercent`
-- `LotsForRisk()` now caps `EffectiveRiskPercent() * riskMultiplier` before converting risk percent into money.
+- `InpGrowthBoostRequiresClosedProfit`
+- `m_initialBalance`
+- `GrowthBoostAllowed()`
+- `ClosedProfitAboveStarting()`
 
-Baseline keeps the cap disabled with `InpMaxEffectiveRiskPercent=0.00`. Generated aggressive research profiles use `InpMaxEffectiveRiskPercent=6.00`, so they can still press with protected-growth logic but cannot exceed a 6.00% final effective risk target before protected-floor and protected-cushion caps are applied. This adds no martingale, grid, averaging down, or recovery behavior.
+When enabled, the profit-only risk boost, hot-streak risk boost, and protected-cushion risk boost require current account balance to be above the starting balance. The profit-only boost also calculates its growth percentage from balance instead of floating equity in that mode.
+
+Baseline keeps this disabled for comparison. Generated aggressive research profiles use `InpGrowthBoostRequiresClosedProfit=true`, so the growth stack can still press, but only after profit has actually been closed. This adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor keeps `InpMaxEffectiveRiskPercent=0.00`.
-- Generated research profiles use `InpMaxEffectiveRiskPercent=6.00`.
+- Baseline anchor keeps `InpGrowthBoostRequiresClosedProfit=false`.
+- Generated research profiles use `InpGrowthBoostRequiresClosedProfit=true`.
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `4E05199AE6894DD6ED49FFEEF5BC82AF34ABA85BBFE7F1E8A5F436819310C337`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `B8631A53DE03001D432A02FF71C80D86578356A9C6F49D7AE2E881B64FBACBB6`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_ea_source_artifact_sync.ps1`: PASS
 - `work\test_price_action_strategy_batch.ps1`: PASS
@@ -42,15 +46,15 @@ Baseline keeps the cap disabled with `InpMaxEffectiveRiskPercent=0.00`. Generate
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `4E05199AE6894DD6ED49FFEEF5BC82AF34ABA85BBFE7F1E8A5F436819310C337`
-- `Professional_XAUUSD_EA.mq5`: `4E05199AE6894DD6ED49FFEEF5BC82AF34ABA85BBFE7F1E8A5F436819310C337`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `4E05199AE6894DD6ED49FFEEF5BC82AF34ABA85BBFE7F1E8A5F436819310C337`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `7D141D64A40084D49CCED7D998AED5F7D2194F9C428C72F7259BA6E0F405DF45`
+- `outputs\Professional_XAUUSD_EA.mq5`: `B8631A53DE03001D432A02FF71C80D86578356A9C6F49D7AE2E881B64FBACBB6`
+- `Professional_XAUUSD_EA.mq5`: `B8631A53DE03001D432A02FF71C80D86578356A9C6F49D7AE2E881B64FBACBB6`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `B8631A53DE03001D432A02FF71C80D86578356A9C6F49D7AE2E881B64FBACBB6`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `E18DCFB2FD7F0447D9EC05FC156EE064640BE3F2D646DA43E5F0B9D0B556D150`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `6887C7B2EE4D4D91A5BB05D817F303AA608F807C276142686247ED0AB5998D99`
-- `outputs\xauusd_micro_validation_package.zip`: `ED0F66360224956CF86D9A79866B8D18BCDF0F1BC88E03B9AED84435EF4C2FF7`
-- `work\test_price_action_strategy_modules.ps1`: `CF6A1DACBFD56EE203589C3C3BCF4939969639253E40B26DFAABB593BB5EA818`
-- `work\test_price_action_strategy_batch.ps1`: `0C6A937A5BEAEA5EA85FE6CBFF980836108B663A73E209C7DF733D6A0C26ED10`
-- `work\build_price_action_strategy_batch.ps1`: `7C7F80BC1AFEF3B564D4A81DBD00F36A2409439E1078AC443FAD66B20E6F1046`
+- `outputs\xauusd_micro_validation_package.zip`: `CC83893E4F49211BABB5A4B9E13E0E3CAC303D45B6597DB734F51C5825EA4C47`
+- `work\test_price_action_strategy_modules.ps1`: `194F3A4E0965D2214278BEC18B4E687BEC339C967306BB589226B1C86BE7BF5D`
+- `work\test_price_action_strategy_batch.ps1`: `B2F5AA0EA801E3C5B5417B5EBFAB4BA725EA81759985874DB7EB89FD6222F49B`
+- `work\build_price_action_strategy_batch.ps1`: `269DF913CCCFDB294742D0C8AB43DD9F659CB8086CBEF25381C0B6417CA30276`
 
 ## Background-Safety Note
 
