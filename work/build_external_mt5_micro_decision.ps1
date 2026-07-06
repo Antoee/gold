@@ -3,7 +3,8 @@ param(
    [string]$OutCsv = "outputs\EXTERNAL_MT5_MICRO_DECISION.csv",
    [string]$OutMarkdown = "outputs\EXTERNAL_MT5_MICRO_DECISION.md",
    [string]$CandidateProfile = "",
-   [string]$BaselineProfile = "baseline_promoted"
+   [string]$BaselineProfile = "baseline_promoted",
+   [string]$GuardrailPath = "outputs\OPTIMIZATION_GUARDRAIL_AUDIT.csv"
 )
 
 Set-StrictMode -Version Latest
@@ -29,12 +30,33 @@ function Format-Num {
    return [Math]::Round([double]$Value, 2)
 }
 
+function Get-RiskPercent {
+   param(
+      [hashtable]$RiskByProfile,
+      [string]$Profile,
+      [double]$Default
+   )
+   if($RiskByProfile.ContainsKey($Profile)) { return [double]$RiskByProfile[$Profile] }
+   return $Default
+}
+
 if(!(Test-Path -LiteralPath $MetricsPath)) {
    throw "Metrics CSV missing: $MetricsPath. Run work\import_external_mt5_validation_package_reports.ps1 first."
 }
 
 $metrics = @(Import-Csv -LiteralPath $MetricsPath)
 if($metrics.Count -eq 0) { throw "Metrics CSV has no rows: $MetricsPath" }
+
+$riskByProfile = @{}
+if(Test-Path -LiteralPath $GuardrailPath) {
+   foreach($row in @(Import-Csv -LiteralPath $GuardrailPath)) {
+      $profile = [string](Get-Value $row "Profile")
+      $risk = To-DoubleOrNull (Get-Value $row "RiskPercent")
+      if(-not [string]::IsNullOrWhiteSpace($profile) -and $null -ne $risk -and $risk -gt 0) {
+         $riskByProfile[$profile] = [double]$risk
+      }
+   }
+}
 
 $candidateProfiles = @()
 if([string]::IsNullOrWhiteSpace($CandidateProfile)) {
@@ -64,8 +86,13 @@ foreach($candidateProfileName in $candidateProfiles) {
       $baselineProfit = To-DoubleOrNull (Get-Value $baseline "NetProfit")
       $candidateDrawdown = To-DoubleOrNull (Get-Value $candidate "MaxDrawdownMoney")
       $baselineDrawdown = To-DoubleOrNull (Get-Value $baseline "MaxDrawdownMoney")
+      $candidateRisk = Get-RiskPercent $riskByProfile $candidateProfileName 1.60
+      $baselineRisk = Get-RiskPercent $riskByProfile $BaselineProfile 1.60
       $delta = if($null -ne $candidateProfit -and $null -ne $baselineProfit) { $candidateProfit - $baselineProfit } else { $null }
       $drawdownDelta = if($null -ne $candidateDrawdown -and $null -ne $baselineDrawdown) { $candidateDrawdown - $baselineDrawdown } else { $null }
+      $candidateRiskAdjustedProfit = if($null -ne $candidateProfit -and $candidateRisk -gt 0) { $candidateProfit / $candidateRisk } else { $null }
+      $baselineRiskAdjustedProfit = if($null -ne $baselineProfit -and $baselineRisk -gt 0) { $baselineProfit / $baselineRisk } else { $null }
+      $riskAdjustedDelta = if($null -ne $candidateRiskAdjustedProfit -and $null -ne $baselineRiskAdjustedProfit) { $candidateRiskAdjustedProfit - $baselineRiskAdjustedProfit } else { $null }
 
       $decision = "WAITING_FOR_REPORTS"
       $reason = "Candidate or baseline report is missing/unparsed."
@@ -74,8 +101,15 @@ foreach($candidateProfileName in $candidateProfiles) {
             $decision = "FAIL_CANDIDATE_LOSS"
             $reason = "Candidate lost money in this stress window."
          } elseif($candidateProfit -lt $baselineProfit) {
-            $decision = "FAIL_UNDERPERFORM_BASELINE"
-            $reason = "Candidate net profit is below the promoted baseline on the same window."
+            $drawdownOk = ($null -eq $drawdownDelta -or $drawdownDelta -le 0)
+            $riskAdjustedOk = ($candidateRisk -lt $baselineRisk -and $null -ne $riskAdjustedDelta -and $riskAdjustedDelta -ge 0)
+            if($riskAdjustedOk -and $drawdownOk) {
+               $decision = "PASS_RISK_ADJUSTED"
+               $reason = "Lower-risk candidate trails raw profit but matches or improves profit per risk percent without worse drawdown."
+            } else {
+               $decision = "FAIL_UNDERPERFORM_BASELINE"
+               $reason = "Candidate net profit is below the promoted baseline without enough risk-adjusted compensation."
+            }
          } elseif($null -ne $drawdownDelta -and $drawdownDelta -gt 0 -and $candidateProfit -le $baselineProfit) {
             $decision = "REVIEW_DRAWDOWN"
             $reason = "Candidate did not improve profit and has higher drawdown."
@@ -100,6 +134,11 @@ foreach($candidateProfileName in $candidateProfiles) {
          CandidateDrawdown = Format-Num $candidateDrawdown
          BaselineDrawdown = Format-Num $baselineDrawdown
          DrawdownDelta = Format-Num $drawdownDelta
+         CandidateRiskPercent = Format-Num $candidateRisk
+         BaselineRiskPercent = Format-Num $baselineRisk
+         CandidateRiskAdjustedProfit = Format-Num $candidateRiskAdjustedProfit
+         BaselineRiskAdjustedProfit = Format-Num $baselineRiskAdjustedProfit
+         RiskAdjustedDelta = Format-Num $riskAdjustedDelta
          Decision = $decision
          Reason = $reason
       }) | Out-Null
@@ -112,7 +151,7 @@ $hasFail = @($rows | Where-Object { $_.Decision -like "FAIL_*" }).Count -gt 0
 $hasRepair = @($rows | Where-Object { $_.Decision -eq "REPAIR_REPORT" }).Count -gt 0
 $hasWaiting = @($rows | Where-Object { $_.Decision -eq "WAITING_FOR_REPORTS" }).Count -gt 0
 $hasReview = @($rows | Where-Object { $_.Decision -eq "REVIEW_DRAWDOWN" }).Count -gt 0
-$allPass = $rows.Count -gt 0 -and @($rows | Where-Object { $_.Decision -eq "PASS_WINDOW" }).Count -eq $rows.Count
+$allPass = $rows.Count -gt 0 -and @($rows | Where-Object { $_.Decision -in @("PASS_WINDOW", "PASS_RISK_ADJUSTED") }).Count -eq $rows.Count
 $overall = if($hasFail) { "REJECT_CANDIDATE" } elseif($hasRepair) { "REPAIR_REPORTS" } elseif($hasWaiting) { "WAITING_FOR_REPORTS" } elseif($hasReview) { "REVIEW_DRAWDOWN" } elseif($allPass) { "PASS_MICRO" } else { "REVIEW_REQUIRED" }
 
 $md = New-Object System.Collections.Generic.List[string]
@@ -125,17 +164,17 @@ $md.Add("- Candidates: ``$($candidateProfiles -join '`, `')``") | Out-Null
 $md.Add("- Baseline: ``$BaselineProfile``") | Out-Null
 $md.Add("- Windows checked: $($rows.Count)") | Out-Null
 $md.Add("") | Out-Null
-$md.Add("| Candidate | Window | Decision | Candidate Net | Baseline Net | Delta | Candidate DD | Baseline DD | Reason |") | Out-Null
-$md.Add("|---|---|---|---:|---:|---:|---:|---:|---|") | Out-Null
+$md.Add("| Candidate | Window | Decision | Candidate Net | Baseline Net | Delta | Candidate Risk | Baseline Risk | Risk-Adj Delta | Candidate DD | Baseline DD | Reason |") | Out-Null
+$md.Add("|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---|") | Out-Null
 foreach($row in $rows) {
    $reason = ([string]$row.Reason) -replace '\|', '/'
-   $md.Add("| ``$($row.CandidateProfile)`` | $($row.Window) | $($row.Decision) | $($row.CandidateNetProfit) | $($row.BaselineNetProfit) | $($row.NetProfitDelta) | $($row.CandidateDrawdown) | $($row.BaselineDrawdown) | $reason |") | Out-Null
+   $md.Add("| ``$($row.CandidateProfile)`` | $($row.Window) | $($row.Decision) | $($row.CandidateNetProfit) | $($row.BaselineNetProfit) | $($row.NetProfitDelta) | $($row.CandidateRiskPercent) | $($row.BaselineRiskPercent) | $($row.RiskAdjustedDelta) | $($row.CandidateDrawdown) | $($row.BaselineDrawdown) | $reason |") | Out-Null
 }
 $md.Add("") | Out-Null
 $md.Add("## Next Action") | Out-Null
 $md.Add("") | Out-Null
 if($overall -eq "PASS_MICRO") {
-   $md.Add("Candidate passed the paired micro stress check. Advance to the full handoff and phase-2 real-tick validation; do not promote from micro evidence alone.") | Out-Null
+   $md.Add("Candidate passed the paired micro stress check, including any lower-risk risk-adjusted comparisons. Advance to the full handoff and phase-2 real-tick validation; do not promote from micro evidence alone.") | Out-Null
 } elseif($overall -eq "REJECT_CANDIDATE") {
    $md.Add("Candidate failed a protected stress window. Keep the promoted baseline and deprioritize this candidate.") | Out-Null
 } elseif($overall -eq "REPAIR_REPORTS") {
