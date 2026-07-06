@@ -11,29 +11,30 @@ Updated: 2026-07-06
 
 ## Latest Risk-Code Change
 
-Activated and validated Open Exposure Risk Control for generated research profiles:
+Added optional Recent Performance Quality Gate for generated research profiles:
 
-- `InpMaxOpenRiskPercent`
-- `InpBlockUnprotectedExposure`
-- `OpenRiskPercent()` calculates total stop-loss risk across current EA positions.
-- `ExposureAllows()` blocks new entries when existing open risk plus the candidate trade exceeds the configured cap.
-- Unprotected positions with no valid stop loss are blocked when `InpBlockUnprotectedExposure=true`.
-- Dashboard now displays `Open Risk` and whether an unprotected position exists.
+- `InpUseRecentPerformanceQualityGate`
+- `InpRecentPerformanceQualityLookbackTrades`
+- `InpRecentPerformanceQualityMaxNetPercent`
+- `InpRecentPerformanceMinQualityScore`
+- `RecentPerformanceQualityAllows()` reviews the last closed trades using the existing recent-performance sample.
+- If recent net performance is weak, new entries must meet the configured minimum signal quality score.
+- `OpenSignal()` now blocks weak-quality entries with `recent performance quality` before risk sizing.
 
-This is risk-management strategy wiring, not only parameter tweaking. The baseline anchor remains `InpMaxOpenRiskPercent=0.00` for clean comparison, while generated research profiles use `InpMaxOpenRiskPercent=2.00` with unprotected exposure blocking enabled. It adds no martingale, grid, averaging down, or recovery behavior.
+This is risk/profit selectivity code, not only parameter tweaking. It complements the existing recent-performance throttle and pause by raising the entry-quality bar instead of only reducing risk or pausing. The baseline anchor remains disabled for clean comparison, while generated research profiles enable it. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor remains `InpMaxOpenRiskPercent=0.00` for clean comparison.
-- Generated research profiles use `InpMaxOpenRiskPercent=2.00`.
-- Generated research profiles keep `InpBlockUnprotectedExposure=true`.
+- Baseline anchor remains `InpUseRecentPerformanceQualityGate=false`.
+- Generated research profiles use `InpUseRecentPerformanceQualityGate=true`.
+- Research profiles use lookback `5`, weak-performance threshold `-0.20`, and minimum quality score `10`.
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `99B2F2725E76D633F2E86C0A232B19AA0F9FE1CD2C5A329CE6C15DF1557985FC`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `7D439B1A03E35BA57BE8440BF2B9963D17846D274C7D6952A942B4A4A8E97367`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_ea_source_artifact_sync.ps1`: PASS
 - `work\test_price_action_strategy_batch.ps1`: PASS
@@ -43,15 +44,15 @@ This is risk-management strategy wiring, not only parameter tweaking. The baseli
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `99B2F2725E76D633F2E86C0A232B19AA0F9FE1CD2C5A329CE6C15DF1557985FC`
-- `Professional_XAUUSD_EA.mq5`: `99B2F2725E76D633F2E86C0A232B19AA0F9FE1CD2C5A329CE6C15DF1557985FC`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `99B2F2725E76D633F2E86C0A232B19AA0F9FE1CD2C5A329CE6C15DF1557985FC`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `D54334BE90867F16519480DAEA027B73F3E026B9405CC20F7FD2E8E04FB685BB`
+- `outputs\Professional_XAUUSD_EA.mq5`: `7D439B1A03E35BA57BE8440BF2B9963D17846D274C7D6952A942B4A4A8E97367`
+- `Professional_XAUUSD_EA.mq5`: `7D439B1A03E35BA57BE8440BF2B9963D17846D274C7D6952A942B4A4A8E97367`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `7D439B1A03E35BA57BE8440BF2B9963D17846D274C7D6952A942B4A4A8E97367`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `AAB2E887480D7D57F3584DA41D2D71C9860F039A10FF93B37EA4C5333E6C5AC4`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `453695DB221BF59FA11C49A1CA215D6B87333264FC16E7A2B5C1D94343AD09AD`
-- `work\test_price_action_strategy_modules.ps1`: `5A374534C737C654A45CDA59546B12CB509600C56A1BB27D4FDF3F21887CB5B7`
-- `work\test_price_action_strategy_batch.ps1`: `18D063B508907974A67DD788F180EE02FE7CCA23980F981F6B50720B59D90C7C`
-- `work\build_price_action_strategy_batch.ps1`: `E9C1F5F536302D4BD94D351EB29F63EA7C9AA4846ACB324EFE3DCBB0B587F396`
+- `outputs\xauusd_micro_validation_package.zip`: `3F405B8CC16EE7CAB480C3327C9ECFD096A622AE22E6867C236E2E81E4A9F0C9`
+- `work\test_price_action_strategy_modules.ps1`: `9D9E4307E71431A7A7B01E52DE2717FC844A9E3D1708A13B72C05332F8276B6F`
+- `work\test_price_action_strategy_batch.ps1`: `44989DD9AD1A7B9F99E413C21B0BF32B8EAD7B44F235E79528A9A3028D655A19`
+- `work\build_price_action_strategy_batch.ps1`: `8800ECD2EBE58B7730F0DC8B96586995893ACF47AFADB2DB30E05DCD035AD8A1`
 
 ## Background-Safety Note
 
