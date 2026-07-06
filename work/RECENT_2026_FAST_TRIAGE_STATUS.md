@@ -11,26 +11,26 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional Asian session range liquidity-sweep confirmation:
+Added optional opposing major-level proximity guard:
 
-- `InpUseAsianRangeSweep`
-- `InpAsianRangeStartHour` / `InpAsianRangeStartMinute`
-- `InpAsianRangeEndHour` / `InpAsianRangeEndMinute`
-- `InpAsianRangeMaxBarsAfter`
-- `InpAsianSweepBufferPoints`
-- `InpWeightAsianRangeSweep`
-- `CMarketStructure::AsianRangeSweep()` builds the configured Asian range from historical OHLC bars, then confirms a buy only after a sweep below the Asian low and reclaim, or a sell only after a sweep above the Asian high and rejection.
-- `CEntryEngine::Build()` now scores this module as `Asian range sweep;` when enabled.
+- `InpUseLevelProximityGuard`
+- `InpLevelGuardUsePreviousDay`
+- `InpLevelGuardUsePreviousWeek`
+- `InpLevelGuardUsePreviousMonth`
+- `InpMinDistanceFromLevelATR`
+- `InpMinDistanceFromLevelPoints`
+- `CEntryEngine::OpposingLevelDistanceAllows()` blocks buy entries when price is still below a nearby previous high, and blocks sell entries when price is still above a nearby previous low.
+- `CEntryEngine::Build()` now rejects those bad-location setups with `Level proximity reject;` before confirmation scoring.
 
-This is a real strategy-code addition from the requested price-action/market-structure list. It adds session liquidity logic without martingale, grid, averaging down, or recovery behavior.
+This is a real strategy-code addition from the requested price-action/market-structure/risk-feature list. It is designed to avoid entries with poor space to the next major support/resistance level, without martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `liquidity_level_reversal` now enables Asian range sweep alongside equal highs/lows, previous levels, session sweeps, and round-number rejection.
-- `pa_full_confluence` now enables Asian range sweep alongside BOS/CHoCH/FVG/order block/VWAP/candle/risk-state filters.
-- Generated configs confirmed the module is enabled only in those research profiles and pinned disabled in the robust base profile.
+- `weighted_quality_confluence` enables the level proximity guard with `0.30 ATR` / `70 points` minimum distance.
+- `pa_full_confluence` enables the level proximity guard with `0.35 ATR` / `80 points` minimum distance.
+- Generated configs confirmed the module is enabled only in strict research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
 
@@ -45,14 +45,14 @@ This is a real strategy-code addition from the requested price-action/market-str
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `B670C1412A08F56985C3927F6CB41CECA9424B7CD86B34BFFB2A67F03C8F9288`
-- `Professional_XAUUSD_EA.mq5`: `B670C1412A08F56985C3927F6CB41CECA9424B7CD86B34BFFB2A67F03C8F9288`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `620025CBEBBE8C796EE26788ACFE120618A8D57CDAFF26B17C55FE43DF5862F5`
+- `outputs\Professional_XAUUSD_EA.mq5`: `E5DE90692124B685B88EC280F064B4984CD7D6703E148E0F62D6AC8943597A76`
+- `Professional_XAUUSD_EA.mq5`: `E5DE90692124B685B88EC280F064B4984CD7D6703E148E0F62D6AC8943597A76`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `2C2F60DA9E964B149BFFC23E989C1CFD168FAF26AA6DD120EC5C9EE4C95D4232`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `3809DB422858B089C1B86593296DBAD3A52FB824891EDDF760837320D32BCE31`
-- `work\test_price_action_strategy_modules.ps1`: `62A3C479267890F3B8F6E98629FC8AD8294F971F7926F1FF386226F0C41B2AD7`
-- `work\test_price_action_strategy_batch.ps1`: `66E6A5E650D4A9DB4C221FE3B7CD78ADE87EF3E9D275B3F425FBE75A73EAADAE`
-- `work\build_price_action_strategy_batch.ps1`: `54B1531509F8954A4B8BA652F5D4F6674D2A8196A4158017680AB05A4C332DA5`
+- `outputs\xauusd_micro_validation_package.zip`: `03D6C17F1CE8111E6C368E261AECBE2978E2A0EABC474A5ECF287D47D2AC84EC`
+- `work\test_price_action_strategy_modules.ps1`: `22A9AEEA54C0B5470565ED9ED7064D42F4771F9E0C5AAECA62B9C592CE8D4E39`
+- `work\test_price_action_strategy_batch.ps1`: `80852C1F3CE7BD27E4D98F5010661FE294753B4FDB0CFAF5C5E5B31EFA82C557`
+- `work\build_price_action_strategy_batch.ps1`: `2A3167836EC7C304E20595C6DDA4F9E0F8C7C0F350B4F5BF29DA9051C3A254BF`
 
 ## Background-Safety Note
 
