@@ -191,6 +191,23 @@ try {
 Add-Row $rows "Open risk exposure guard smoke" $openRiskSmokeStatus $openRiskSmokeEvidence `
    $(if($openRiskSmokeStatus -eq "PASS") { "EA can cap combined open risk before order placement." } else { "Fix open-risk exposure guard before allowing multi-position optimization." })
 
+$riskFlattenSmokeStatus = "FAIL"
+$riskFlattenSmokeEvidence = ""
+try {
+   $riskFlattenSmokeOutput = Invoke-NoWindowPowerShell @("-File", "work\test_risk_limit_flatten_guard.ps1")
+   if($riskFlattenSmokeOutput.ExitCode -eq 0 -and $riskFlattenSmokeOutput.Output -match "RISK_LIMIT_FLATTEN_GUARD_SMOKE_PASS") {
+      $riskFlattenSmokeStatus = "PASS"
+      $riskFlattenSmokeEvidence = "RISK_LIMIT_FLATTEN_GUARD_SMOKE_PASS"
+   } else {
+      $riskFlattenSmokeEvidence = $riskFlattenSmokeOutput.Output
+   }
+} catch {
+   $riskFlattenSmokeEvidence = $_.Exception.Message
+}
+
+Add-Row $rows "Risk limit flatten guard smoke" $riskFlattenSmokeStatus $riskFlattenSmokeEvidence `
+   $(if($riskFlattenSmokeStatus -eq "PASS") { "EA can optionally flatten positions when account-level risk limits trip." } else { "Fix risk-limit flatten guard before testing emergency protection profiles." })
+
 $sourceSyncSmokeStatus = "FAIL"
 $sourceSyncSmokeEvidence = ""
 try {
