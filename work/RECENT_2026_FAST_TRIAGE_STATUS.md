@@ -11,23 +11,24 @@ Updated: 2026-07-06
 
 ## Latest Entry-Code Change
 
-Added optional no-follow-through exit:
+Added optional directional loss cooldown gate:
 
-- `InpUseNoFollowThroughExit`
-- `InpNoFollowThroughBars`
-- `InpNoFollowThroughMinMFER`
-- `InpNoFollowThroughMaxCurrentR`
-- `CPositionManager::Manage()` now checks whether a position has failed to produce enough maximum favorable excursion after a configurable number of bars and is still below a configurable current-R threshold.
-- Matching exits are logged as `no_follow_through` with reason `no follow-through exit`.
+- `InpUseDirectionalLossCooldown`
+- `InpDirectionalLossLookbackTrades`
+- `InpDirectionalLossThreshold`
+- `InpDirectionalLossCooldownMinutes`
+- `CRiskManager::DirectionalLossCooldownActive()` scans recent closed deals and counts losing closes by inferred original trade direction.
+- `OpenSignal()` now blocks only the attempted direction when recent losses in that same direction exceed the configured threshold and the cooldown window is still active.
+- Block reasons are `buy directional loss cooldown` or `sell directional loss cooldown`.
 
-This is a risk-control module for cutting weak trades earlier when they do not launch after entry. It is separate from the broader MFE failure exit, so optimization can independently test faster failure recognition. It is disabled in the robust base profile and enabled only in strict risk-management research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
+This is a risk-control module for avoiding repeated same-side entries after the market has recently punished that direction. It is separate from global recent-performance pauses, so optimization can test whether pausing only buys or only sells preserves good opposite-direction opportunities. It is disabled in the robust base profile and enabled only in strict risk-management research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables no-follow-through exit with `5` bars, minimum MFE `0.20R`, and max current R `-0.10`.
-- `pa_full_confluence` enables a slightly stricter version with `6` bars, minimum MFE `0.25R`, and max current R `-0.08`.
+- `weighted_quality_confluence` enables directional loss cooldown with lookback `4`, loss threshold `2`, and cooldown `240` minutes.
+- `pa_full_confluence` enables a slightly stricter version with lookback `5`, loss threshold `2`, and cooldown `360` minutes.
 - Generated configs confirmed the module is enabled in strict risk-management research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -43,14 +44,14 @@ This is a risk-control module for cutting weak trades earlier when they do not l
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `BD06BBF6FDCB6EBF6C72A075B174C35E89407E2E1EE19F7DCDFE743AB311F9C8`
-- `Professional_XAUUSD_EA.mq5`: `BD06BBF6FDCB6EBF6C72A075B174C35E89407E2E1EE19F7DCDFE743AB311F9C8`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `AF1287E415498DF192763AF19ED0031078326DF101D28F492243265977E38E0C`
+- `outputs\Professional_XAUUSD_EA.mq5`: `D49A8E5E42CFB34BC23A6DF35C82B387F0282BC20F24C364D1A4FF4DD099C194`
+- `Professional_XAUUSD_EA.mq5`: `D49A8E5E42CFB34BC23A6DF35C82B387F0282BC20F24C364D1A4FF4DD099C194`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `58ED0A902555CB570CEB223450F6E90B0E9A72DA5F9A22B1D8A7094A91A865F4`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `61B796316D86326425B1488C10A6C591D20A52A8335210FB8415E6BA52ED4C62`
-- `work\test_price_action_strategy_modules.ps1`: `8465E6FE7835D74FD83EF6BA9019E0DA3D9E92125F2590513975156A79B59742`
-- `work\test_price_action_strategy_batch.ps1`: `B3A9E289161A7FBB9F95855A3141C046B2BF9FF0B4F69DBECEC3D01C24E3DA73`
-- `work\build_price_action_strategy_batch.ps1`: `FCC9FB502957E5F1164828B5DB3D0D7B04343A4A15415037A32D5DD6D74430C4`
+- `outputs\xauusd_micro_validation_package.zip`: `2522247E3221FDD3DF79734628595BCFE5776E8700E2E933C15BFC1BD923FA88`
+- `work\test_price_action_strategy_modules.ps1`: `C77A91DCFB8FC1AABC68C68E3AD1D0BC94E04FD3EFE461DAB8A1D9B2E7CEF049`
+- `work\test_price_action_strategy_batch.ps1`: `B0B8D1E94C708C889ACAB46688DEF30C12419F5DCA324A1BE210DC7613EF6589`
+- `work\build_price_action_strategy_batch.ps1`: `3B974A975603BF35CB514EF2B696766EB4D0BF0E81FD9C4ECC3F73D6F7077F0B`
 
 ## Background-Safety Note
 
