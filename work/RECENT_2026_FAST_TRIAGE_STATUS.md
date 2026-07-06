@@ -11,24 +11,21 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional session-open shock guard:
+Added optional manual-news position protection:
 
-- `InpUseSessionOpenGuard`
-- `InpSessionOpenGuardMinutes`
-- `InpGuardLondonOpen`
-- `InpGuardNewYorkOpen`
-- `InpGuardCustomOpen`
-- `CSessionFilter::InOpenShockWindow()` detects the configured minutes after a session start.
-- `CSessionFilter::IsAllowed()` now blocks entries during guarded London, New York, or custom-session open windows when enabled.
+- `InpClosePositionsOnManualNews`
+- Manual news inputs are now pinned in the robust base profile:
+  `InpUseManualNewsFilter`, `InpNewsTimesCsv`, `InpNewsMinutesBefore`, `InpNewsMinutesAfter`, and `InpClosePositionsOnManualNews`.
+- `OnTick()` now closes all EA-managed open positions with reason `manual news filter` when the manual news filter is active and `InpClosePositionsOnManualNews=true`.
 
-This is a real risk/session feature from the requested time-feature, session overlap, spread/slippage, and risk-feature list. It is designed to reduce entries during the most unstable first minutes of major sessions, without martingale, grid, averaging down, or recovery behavior.
+This is a real risk/news feature from the requested economic-calendar, FOMC/NFP/CPI, spread/slippage, and risk-management list. It keeps the EA from merely blocking new entries while leaving existing exposure open through manually configured high-impact news windows. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables the guard for the first `15` minutes after London and New York opens.
-- `pa_full_confluence` enables the guard for the first `20` minutes after London and New York opens.
+- `weighted_quality_confluence` and `pa_full_confluence` enable `InpClosePositionsOnManualNews=true`.
+- This only affects tests where `InpUseManualNewsFilter=true` and `InpNewsTimesCsv` is populated with manual event timestamps.
 - Generated configs confirmed the module is enabled only in strict research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -44,14 +41,14 @@ This is a real risk/session feature from the requested time-feature, session ove
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `BE4CEFEBC290AE8E5780D083F17F9372F2E09846FC34D0A2887D7789CBFF3EB7`
-- `Professional_XAUUSD_EA.mq5`: `BE4CEFEBC290AE8E5780D083F17F9372F2E09846FC34D0A2887D7789CBFF3EB7`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `879E992DAB3BD8BFAF9ECCCFF889D1A3D09BF33F48AFE48283AB3CD4E8EF9164`
+- `outputs\Professional_XAUUSD_EA.mq5`: `1805EF8FD14F750FC39830EB98E14CBE1A72F9131D8ADE7A32C897822E88510D`
+- `Professional_XAUUSD_EA.mq5`: `1805EF8FD14F750FC39830EB98E14CBE1A72F9131D8ADE7A32C897822E88510D`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `E686E795C109F8631CC7642DFF2ED7A6813E1C9AC55380AAC62553BC1F0EC538`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `69B476968E70EE43DD0E73E386093165853CFA5E1799CC7B58BE451E0B3A26FB`
-- `work\test_price_action_strategy_modules.ps1`: `21FCEE7D528F437158999279A8FF241E7DCF8FB210C9E50306657C8B788B5DC3`
-- `work\test_price_action_strategy_batch.ps1`: `A9DACC74C794CF15B3AC837D4CD152B6C62B3C44D0200B0ADFB637AA9BBD6DB0`
-- `work\build_price_action_strategy_batch.ps1`: `A5C33AE000AC668D1A93E5F62551BF74C97138AD82FF53CB4D2141D7DBC9841D`
+- `outputs\xauusd_micro_validation_package.zip`: `0F59BBBD59BE03BE96043BA81BDB5D7C49758FAEA1B6A188F96B8156F276F443`
+- `work\test_price_action_strategy_modules.ps1`: `BEA937BC55E3A09FD4FE3126DF1D37DFA400FC32CA12F792C27A808C076B5A21`
+- `work\test_price_action_strategy_batch.ps1`: `5207D36A2C830AAC0CE31A31AADE0EFB9A96771726A5BC12161502AB4C7EF409`
+- `work\build_price_action_strategy_batch.ps1`: `7771EE1665A9E3325A811894ADDB7B2F633D78E0BF0FE694130E85DC793C5011`
 
 ## Background-Safety Note
 
