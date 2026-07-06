@@ -11,24 +11,27 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional VWAP pullback-continuation entry confirmation:
+Added optional cumulative-delta proxy entry confirmation:
 
-- `InpUseVWAPPullbackContinuation`
-- `InpVWAPPullbackMaxDistanceATR`
-- `InpVWAPPullbackMinBodyPercent`
-- `InpWeightVWAPPullback`
-- `CEntryEngine::VWAPPullbackContinuation()` detects a pullback into the session VWAP area followed by a directional continuation candle.
-- `CEntryEngine::Build()` now records `VWAP pullback;` as an independent weighted entry reason when the feature is enabled.
+- `InpUseCumulativeDeltaProxy`
+- `InpCumulativeDeltaLookbackBars`
+- `InpCumulativeDeltaMinRatio`
+- `InpCumulativeDeltaMinBarsAligned`
+- `InpWeightCumulativeDelta`
+- `CEntryEngine::CumulativeDeltaProxy()` sums signed tick volume over recent candles and requires directional volume imbalance plus a minimum number of aligned candles.
+- `CEntryEngine::Build()` now records `Cumulative delta proxy;` as an independent weighted entry reason when the feature is enabled.
 
-This is a value-style trend-continuation entry module for XAUUSD. It uses the EA's tick-volume weighted VWAP proxy to look for continuation after price revisits a fair intraday reference level instead of chasing extended candles. It stays optional, configurable, and disabled in the robust base profile. It adds no martingale, grid, averaging down, or recovery behavior.
+This is an order-flow style proxy for XAUUSD tester data. MT5 brokers often do not expose true bid/ask delta or centralized futures volume inside spot-gold Strategy Tester data, so this module uses candle direction multiplied by tick volume as a conservative, configurable approximation. It stays optional, configurable, and disabled in the robust base profile. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables VWAP pullback continuation with max VWAP distance `0.35 ATR`, minimum body `35.0%`, and weight `2`.
-- `pa_full_confluence` enables a stricter VWAP pullback continuation with max VWAP distance `0.30 ATR` and minimum body `40.0%`.
-- Generated configs confirmed the module is enabled in the strict research profiles and pinned disabled in the robust base profile.
+- `tick_vwap_momentum` enables cumulative-delta proxy with lookback `12`, minimum signed-volume ratio `0.18`, and minimum aligned bars `7`.
+- `indicator_phase_filter` enables cumulative-delta proxy with lookback `12`, minimum signed-volume ratio `0.16`, and minimum aligned bars `7`.
+- `weighted_quality_confluence` enables cumulative-delta proxy with lookback `12`, minimum signed-volume ratio `0.18`, minimum aligned bars `7`, and weight `2`.
+- `pa_full_confluence` enables a stricter cumulative-delta proxy with lookback `14`, minimum signed-volume ratio `0.20`, and minimum aligned bars `8`.
+- Generated configs confirmed the module is enabled in order-flow/strict research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
 
@@ -43,14 +46,14 @@ This is a value-style trend-continuation entry module for XAUUSD. It uses the EA
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `C661FEB8DE49556E8D2284469A938CDBBCE31A72B68C5DFF46D84106A1C86111`
-- `Professional_XAUUSD_EA.mq5`: `C661FEB8DE49556E8D2284469A938CDBBCE31A72B68C5DFF46D84106A1C86111`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `B9CCFFC88163FA889AF8B7A3A3FA74A0EA848678F21C4E3722B9C32EBCAD90E2`
+- `outputs\Professional_XAUUSD_EA.mq5`: `BD7F859C57136DB501179784562960AE2CB9E04922599A0954BCB5518A806B6D`
+- `Professional_XAUUSD_EA.mq5`: `BD7F859C57136DB501179784562960AE2CB9E04922599A0954BCB5518A806B6D`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `E462CB763364CB5FE3251DA90FA8BED2A692CB0AFCE078DB0097F0CC22BCD2FF`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `E071DB6AE9FB36DE01DF1C7AEF483E07E66CA0B2E678D1480FE948D6EA371519`
-- `work\test_price_action_strategy_modules.ps1`: `BA946EF8B4F21CB77838430DE94A13D891A989AAC9B1071A006D2BC8A93D2C1B`
-- `work\test_price_action_strategy_batch.ps1`: `4B7A3FD4E59546E16049437D571E09367D86B0EEE83E99E687763151F736D6B0`
-- `work\build_price_action_strategy_batch.ps1`: `677AE1018FDDC746C3A7E7275D87AD935ECA1349CD2CCC15A55392464C623B45`
+- `outputs\xauusd_micro_validation_package.zip`: `82D10BD7D6B5FBBE5A54E1D018659484C19208C66607858DE3D4EE92C6BB6542`
+- `work\test_price_action_strategy_modules.ps1`: `9E6934E0CFA35432A72A18822527DF6A4BADD2BC725F21E72C74E64F64DBE1DA`
+- `work\test_price_action_strategy_batch.ps1`: `B4687F30023CAF48E6F476B478A34C35240EA74C53779497EC53A115036606EB`
+- `work\build_price_action_strategy_batch.ps1`: `1EF14853A4D4B06A1BF537DF169FFFC278A918C0DFB5A964029068407FF1F248`
 
 ## Background-Safety Note
 
