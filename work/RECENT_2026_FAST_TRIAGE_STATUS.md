@@ -11,23 +11,23 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional impulse-exhaustion entry guard:
+Added optional daily-range exhaustion entry guard:
 
-- `InpUseImpulseExhaustionGuard`
-- `InpImpulseExhaustionLookbackBars`
-- `InpImpulseExhaustionMaxMoveATR`
-- `InpImpulseExhaustionClosePercent`
-- `CEntryEngine::ImpulseExhaustionAllows()` detects when recent price has already moved too far in the intended direction and closed near the range extreme.
-- `CEntryEngine::Build()` now rejects late chase entries with `Impulse exhaustion reject;` when the feature is enabled.
+- `InpUseDailyRangeExhaustionGuard`
+- `InpDailyRangeExhaustionLookbackDays`
+- `InpDailyRangeExhaustionMinRatio`
+- `InpDailyRangeExhaustionExtremePercent`
+- `CEntryEngine::DailyRangeExhaustionAllows()` detects when the current day range is already large versus recent daily ranges and price is closing near the daily extreme.
+- `CEntryEngine::Build()` now rejects late daily-high/low chase entries with `Daily range exhaustion reject;` when the feature is enabled.
 
-This is a price-action quality filter for XAUUSD. It is intended to avoid buying after an already-stretched bullish impulse or selling after an already-stretched bearish impulse. It stays optional, configurable, and disabled in the robust base profile. It adds no martingale, grid, averaging down, or recovery behavior.
+This is a price-action quality filter for XAUUSD. It is intended to avoid buying near the high of an already-expanded day or selling near the low of an already-expanded day. It stays optional, configurable, and disabled in the robust base profile. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables impulse exhaustion guard with lookback `6`, max move `1.80 ATR`, and close extreme `80.0%`.
-- `pa_full_confluence` enables stricter impulse exhaustion guard with lookback `8`, max move `1.60 ATR`, and close extreme `82.0%`.
+- `weighted_quality_confluence` enables daily range exhaustion guard with lookback `10`, minimum daily range ratio `1.20`, and close extreme `85.0%`.
+- `pa_full_confluence` enables stricter daily range exhaustion guard with lookback `12`, minimum daily range ratio `1.15`, and close extreme `84.0%`.
 - Generated configs confirmed the module is enabled in the strict research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -43,14 +43,14 @@ This is a price-action quality filter for XAUUSD. It is intended to avoid buying
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `073C353E7D77ECDCCA45E1E65AFE3834BD3255DBB013046FFCBB0DD4AA82C823`
-- `Professional_XAUUSD_EA.mq5`: `073C353E7D77ECDCCA45E1E65AFE3834BD3255DBB013046FFCBB0DD4AA82C823`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `BDC512950CE5772F60F4972DB9797546C476392FC6BDC257BE689B994B8D9F73`
+- `outputs\Professional_XAUUSD_EA.mq5`: `9E8AF754312F70B0B3E4B163A896B1CAFC4EF8D79A32E82752A71DE132C8503A`
+- `Professional_XAUUSD_EA.mq5`: `9E8AF754312F70B0B3E4B163A896B1CAFC4EF8D79A32E82752A71DE132C8503A`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `DCEE73307CE889297D55ABDBE042B4EB505140CAA3798F6DF6D4808164B9E630`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `6F305C3D1128E0E71CD3D73B91F9B57DAA377CAE220852F7A0E799001D9608B1`
-- `work\test_price_action_strategy_modules.ps1`: `3D2AE0B2124B708F3227D328CFCC949AAD769F47C302AE6C939DE3103D88FE5A`
-- `work\test_price_action_strategy_batch.ps1`: `3D57242DBBF443C77FE1FEF6E0C03204DE8D96C25917AFA6EABCA524D11B8E76`
-- `work\build_price_action_strategy_batch.ps1`: `01C33DB9DACA5F91EC3C9DE46523E9314EC8F44E68C9B98821B0D53CB9954BB6`
+- `outputs\xauusd_micro_validation_package.zip`: `21FCC7CCE38D2BEEF7767F317DA3CE20D7AD96FBC79427B6854495F50D146586`
+- `work\test_price_action_strategy_modules.ps1`: `4375185B12160A24573FF26651A4E85ACED88EC6B542CB5F2D1A1AFA38464E28`
+- `work\test_price_action_strategy_batch.ps1`: `F96A8AB4D084493263AA7029BA72F0EE157F8CC93CA68ADD331696DCB341C8B1`
+- `work\build_price_action_strategy_batch.ps1`: `51E16C7C4EB55AB7A96A890768276BE69E3CDE6FFEC6A8769FDCD9E7610792A1`
 
 ## Background-Safety Note
 
