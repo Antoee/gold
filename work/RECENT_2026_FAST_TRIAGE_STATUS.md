@@ -11,21 +11,15 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional MFI volume-pressure confirmation and MFI exhaustion protection:
+Added optional OBV volume-flow confirmation:
 
-- `InpUseMFIConfirmation`
-- `InpMFIPeriod`
-- `InpMFIBuyMin`
-- `InpMFISellMax`
-- `InpUseMFIExhaustionGuard`
-- `InpMFIBuyMax`
-- `InpMFISellMin`
-- `InpWeightMFI`
-- Native MT5 MFI indicator handle in `CIndicators`
-- `MFIConfirmation(...)`
-- `MFIExhaustionAllows(...)`
-- Entry scoring reason `MFI;`
-- Reject reason `MFI exhaustion reject;`
+- `InpUseOBVConfirmation`
+- `InpOBVLookbackBars`
+- `InpOBVMinChange`
+- `InpWeightOBV`
+- Native MT5 OBV indicator handle in `CIndicators`
+- `OBVConfirmation(...)`
+- Entry scoring reason `OBV;`
 
 This is a real strategy-code addition from the requested volume/order-flow and indicator feature list. It is optional, configurable, weighted, and pinned disabled in the robust base profile. It is enabled only in indicator/regime and full-confluence research profiles for fast triage. It adds no martingale, grid, averaging down, or recovery behavior.
 
@@ -33,8 +27,8 @@ This is a real strategy-code addition from the requested volume/order-flow and i
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `indicator_phase_filter` enables MFI confirmation plus MFI exhaustion guard.
-- `pa_full_confluence` enables a stricter MFI confirmation plus MFI exhaustion guard.
+- `indicator_phase_filter` enables OBV confirmation with 8-bar lookback.
+- `pa_full_confluence` enables OBV confirmation with 10-bar lookback.
 - Generated configs confirmed the module is enabled only in the intended research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -50,14 +44,14 @@ This is a real strategy-code addition from the requested volume/order-flow and i
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `843CAC590C468965C7084CB93F37D152E6943DCC67A0F71C60095AB546BA66AF`
-- `Professional_XAUUSD_EA.mq5`: `843CAC590C468965C7084CB93F37D152E6943DCC67A0F71C60095AB546BA66AF`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `AA03E31871D8B990FB498C14DCE88A69AEE594D4CAE7992D5DAE43F6F524923C`
+- `outputs\Professional_XAUUSD_EA.mq5`: `A143325398C29CEE5CA7DA7C9BAEBD62EEFA7B7DFF0CBF6CC2A2A8F287728140`
+- `Professional_XAUUSD_EA.mq5`: `A143325398C29CEE5CA7DA7C9BAEBD62EEFA7B7DFF0CBF6CC2A2A8F287728140`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `DA7B3933C6FF1D241E6721B201D3AB017E22D59627185CD8207BC39F3F20CF76`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `97E413121E48BE43A505225EB05B76E348F0D8CEB34E1E097888B73ED960743C`
-- `work\test_price_action_strategy_modules.ps1`: `C06013CA651F3022AAEC35818A1BE2443BC7546BB466D1449408DCF8B2D5EA00`
-- `work\test_price_action_strategy_batch.ps1`: `19BA4096CB3D14C15BCB1F0905DD4B1EFB2E2E2BA93A66F879D47B7251474F6D`
-- `work\build_price_action_strategy_batch.ps1`: `AED5A9AF44D41130BA1EEF504F4E379C8B5F7C66D1CEB18BD0AD03570CD1C48C`
+- `outputs\xauusd_micro_validation_package.zip`: `8DAAD7590A1312B53EE0F0FEFAC54C21649C8D44224C3F594DD613A99B5C3572`
+- `work\test_price_action_strategy_modules.ps1`: `3CAEC7B71EADEFC053BFF32FADC468AD0BF70BC687C85EB3B12401FA82D2A823`
+- `work\test_price_action_strategy_batch.ps1`: `7501128159FB9D28E363F9A9B5006518D9508F78B756CFA7868F5049CB73F28A`
+- `work\build_price_action_strategy_batch.ps1`: `905802C70175B2981380CEE614AEACAABE6897EA4D5A00BBE4E8F8D2179CA64A`
 
 ## Background-Safety Note
 
