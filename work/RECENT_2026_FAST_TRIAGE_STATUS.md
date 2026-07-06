@@ -11,24 +11,24 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added an optional Adaptive Regime Confidence Gate:
+Added an optional Consecutive Candle Exhaustion Guard:
 
-- `InpUseAdaptiveRegimeConfidenceGate`
-- `InpAdaptiveRegimeMinScore`
-- `InpAdaptiveRegimeLookbackBars`
-- `InpAdaptiveRegimeMinEfficiency`
-- `InpAdaptiveRegimeMinAlignedBars`
-- `CEntryEngine::AdaptiveRegimeConfidenceAllows()` scores ADX strength, ADX strengthening, EMA slope, ATR regime fit, directional efficiency, and candle alignment.
-- Entry rejection logs `Adaptive regime reject score ...` with the contributing regime reasons.
+- `InpUseConsecutiveCandleExhaustionGuard`
+- `InpConsecutiveCandleLookbackBars`
+- `InpMaxConsecutiveDirectionalBars`
+- `InpConsecutiveMoveMaxATR`
+- `InpConsecutiveMinBodyPercent`
+- `CEntryEngine::ConsecutiveCandleExhaustionAllows()` detects same-direction candle runs with meaningful bodies and rejects late entries when the run has already moved too far in ATR terms.
+- Entry rejection logs `Consecutive candle exhaustion reject`.
 
-This changes strategy logic instead of only changing settings. The goal is to avoid trading XAUUSD when the broader condition is too mixed: not cleanly trending, not directionally efficient, not aligned by candles, or sitting outside the acceptable ATR regime. It is disabled in the robust base profile and enabled only in strict research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
+This changes strategy logic instead of only changing settings. The goal is to avoid chasing XAUUSD after a stretched one-way candle sequence, where continuation entries often have poor reward-to-risk and snapback risk. It is disabled in the robust base profile and enabled only in strict research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables Adaptive Regime Confidence Gate with minimum score `5`, lookback `12`, minimum efficiency `0.35`, and minimum aligned bars `6`.
-- `pa_full_confluence` enables a stricter version with minimum score `6`, lookback `14`, minimum efficiency `0.40`, and minimum aligned bars `7`.
+- `weighted_quality_confluence` enables Consecutive Candle Exhaustion Guard with lookback `5`, max directional bars `4`, max move `1.60 ATR`, and minimum body `35%`.
+- `pa_full_confluence` enables a stricter version with lookback `6`, max directional bars `4`, max move `1.45 ATR`, and minimum body `38%`.
 - Generated configs confirmed the module is enabled in strict price-action research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -44,15 +44,15 @@ This changes strategy logic instead of only changing settings. The goal is to av
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `80C25EFDA70A93EE6D7C82308A9A6FE0FE64135B4AC8233BE8E1EB5FB187D3F3`
-- `Professional_XAUUSD_EA.mq5`: `80C25EFDA70A93EE6D7C82308A9A6FE0FE64135B4AC8233BE8E1EB5FB187D3F3`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `80C25EFDA70A93EE6D7C82308A9A6FE0FE64135B4AC8233BE8E1EB5FB187D3F3`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `7BEB3BF7BFE5A560E6B34BD1D74D0D47B12B4396B2A8E0BCD4756869A321842B`
+- `outputs\Professional_XAUUSD_EA.mq5`: `37A67C35D053BBCD691127A81F01555E3EA03931A1849C68ACDEB7ED5F411C0A`
+- `Professional_XAUUSD_EA.mq5`: `37A67C35D053BBCD691127A81F01555E3EA03931A1849C68ACDEB7ED5F411C0A`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `37A67C35D053BBCD691127A81F01555E3EA03931A1849C68ACDEB7ED5F411C0A`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `7279BF16E11BCA5DAF429053CEAD50FAEF2FEB6731FF678A6CA2A3CA93390241`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `773757A20ABE58DA8A5956397BCBACF58C2B8A1E12241DE794E9D760976D80D0`
-- `work\test_price_action_strategy_modules.ps1`: `C588FDC062A56903B387BE9F157EFE0385A019BDC7D4AB8C1DB625E9EA6E9E1D`
-- `work\test_price_action_strategy_batch.ps1`: `E0D8771155BA5157F63D6C64115B08CB7F1A9D9007CFE174B1ADE726739845BB`
-- `work\build_price_action_strategy_batch.ps1`: `CD40A15D39C0EF79A6CC03CE9385738A932314F36FCCAEE7236178079B31C38E`
+- `outputs\xauusd_micro_validation_package.zip`: `650C484F507B4A945212D8B7CF89415E008231BF3DD500A0C6B641F0DAE03E27`
+- `work\test_price_action_strategy_modules.ps1`: `EE20A1E5DF6D49890ADAF4E5AE4D866FFEE41308E64111E116F64425C5FD3688`
+- `work\test_price_action_strategy_batch.ps1`: `6FCC6B714CA6CF17E415BF04A7A85DF05DED8B1DCCFFF26616586441D2134C82`
+- `work\build_price_action_strategy_batch.ps1`: `B31DEF2338E2CCA7B42816A6610E089C29F0094162E667670562A3497CD15A64`
 
 ## Background-Safety Note
 
