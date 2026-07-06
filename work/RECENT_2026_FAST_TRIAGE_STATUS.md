@@ -11,26 +11,25 @@ Updated: 2026-07-06
 
 ## Latest Entry-Code Change
 
-Added optional displacement Break of Structure confirmation:
+Added optional sweep rejection confirmation:
 
-- `InpUseDisplacementBOS`
-- `InpDisplacementBOSLookbackBars`
-- `InpDisplacementBOSBufferPoints`
-- `InpDisplacementBOSMinRangeATR`
-- `InpDisplacementBOSMinBodyPercent`
-- `InpWeightDisplacementBOS`
-- `CMarketStructure::DisplacementBOS()` requires the latest closed candle to break prior structure by a configurable buffer, close in the trade direction, have a minimum ATR-normalized range, and have a minimum body percentage.
-- `CEntryEngine::Build()` now records `Displacement BOS;` as an independent weighted entry reason when the feature is enabled.
+- `InpUseSweepRejection`
+- `InpSweepRejectionMinWickPercent`
+- `InpSweepRejectionMinCloseLocation`
+- `InpWeightSweepRejection`
+- `CMarketStructure::SweepRejection()` requires the latest closed candle to take liquidity beyond the prior swing level, close back through that level, close in the trade direction, and show a configurable rejection wick plus close-location quality.
+- `CEntryEngine::Build()` now records `Sweep rejection;` as an independent weighted entry reason when the feature is enabled.
 
-This is a selectivity module for stronger price-action entries. The existing BOS confirmation can count any close beyond the prior high/low; displacement BOS requires the break to have meaningful force. It is disabled in the robust base profile and enabled only in strict confluence research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
+This is a price-action selectivity module for liquidity-sweep setups. The existing liquidity sweep confirmation can detect a stop-run through prior structure; sweep rejection requires evidence that price rejected the run instead of simply continuing through it. It is disabled in the robust base profile and enabled only in liquidity/confluence research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables displacement BOS with lookback `20`, buffer `10.0` points, minimum range `0.70 ATR`, body `50%`, and weight `2`.
-- `pa_full_confluence` enables a stricter version with lookback `24`, buffer `15.0` points, minimum range `0.80 ATR`, and body `55%`.
-- Generated configs confirmed the module is enabled in strict research profiles and pinned disabled in the robust base profile.
+- `liquidity_level_reversal` enables sweep rejection with minimum wick `35%` and close-location threshold `0.60`.
+- `weighted_quality_confluence` enables sweep rejection with minimum wick `35%`, close-location threshold `0.60`, and weight `2`.
+- `pa_full_confluence` enables a stricter version with minimum wick `40%` and close-location threshold `0.62`.
+- Generated configs confirmed the module is enabled in liquidity/confluence research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
 
@@ -45,14 +44,14 @@ This is a selectivity module for stronger price-action entries. The existing BOS
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `29CF3CC96A07FEBA2310C26D8993D2DE2929AE6B64BFFEB23FD1F174E8AF5154`
-- `Professional_XAUUSD_EA.mq5`: `29CF3CC96A07FEBA2310C26D8993D2DE2929AE6B64BFFEB23FD1F174E8AF5154`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `EFAAFB693E7264F34BD32A662EA173DB4D9A79DBB257F7C0C0F58F6A0A50877B`
+- `outputs\Professional_XAUUSD_EA.mq5`: `294168E5339771C23566F98712CBFF507F309BAA9CDEBC51545167D1607CC6DC`
+- `Professional_XAUUSD_EA.mq5`: `294168E5339771C23566F98712CBFF507F309BAA9CDEBC51545167D1607CC6DC`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `2022665AB38DC64F0F214FDCA058CED168F9AF465D12710D4104BFDF68163CD5`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `B79EC793426D7F9EF22887F140EB1873CBA5C3D5781E09333094C60A8C624CC8`
-- `work\test_price_action_strategy_modules.ps1`: `57FAA6C8AA819B2A9E9AF9E83E2851C9AD8F98BFA7184AE951C75369AE9092E6`
-- `work\test_price_action_strategy_batch.ps1`: `E41EF450912483EF362A01C2B9584ED4540BB647D35F9A6AA71DC9C4EB7E715D`
-- `work\build_price_action_strategy_batch.ps1`: `11F7A40A1862041775672FEF16B97A22F3E15D9278C38EDDF67A97709B81F9EA`
+- `outputs\xauusd_micro_validation_package.zip`: `F940CB87E31C1288DFC5AF6669D25F31BD74C1042AD4C3318D7DB11B08D5CFEC`
+- `work\test_price_action_strategy_modules.ps1`: `E572BFBDA84E08F914361AE9CAB4658955BD0D6E97BF7F02F0CB6E73404C3ECD`
+- `work\test_price_action_strategy_batch.ps1`: `0AF4C0E8DDBABAFDE1895CCC52443834D9FF4AEB5486ABFB0676B6027AAE2D61`
+- `work\build_price_action_strategy_batch.ps1`: `32107935D8C9EEF6089684445FDED363EB19CB4816C577722293E54AF220F248`
 
 ## Background-Safety Note
 
