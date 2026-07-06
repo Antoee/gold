@@ -13,37 +13,29 @@ Updated locally on 2026-07-06.
 ## Current EA Source
 
 - Canonical source: `outputs/Professional_XAUUSD_EA.mq5`.
-- Current synced source SHA256: `4EE1484812ED6148B154D0B0CB2807A110F1A1846C47673083CF7AA8F12E1E34`.
-- EA source did not change in this pass.
+- Current synced source SHA256: `745C07041CAD41F0F2481E3C2A16C571F6346EA7F906CCDDD973C8D6708E2470`.
 
-## Multi-Window Decision Gate Addition
+## Opening-Range Breakout Addition
 
-The price-action fast-triage summary now requires explicit recent/stress coverage before a profile can receive `PASS_FAST_TRIAGE`:
+Added optional opening-range breakout confirmation so the EA can test London/New York-style momentum entries:
 
-- Summary rows now track `RecentParsedWindows`, `StressParsedWindows`, `RecentPassWindows`, `StressPassWindows`, and `CompleteWindowCoverage`.
-- `PASS_FAST_TRIAGE` now requires complete parsed coverage across all expected windows.
-- `PASS_FAST_TRIAGE` also requires at least one passing recent window and one passing stress window.
-- Added `REVIEW_INCOMPLETE_WINDOW_COVERAGE` for candidates that otherwise look acceptable but lack complete parsed recent/stress coverage.
-- The markdown summary now displays recent/stress parsed and pass counts.
-- The decision smoke now checks that a passing synthetic profile shows both recent and stress pass coverage.
+- `InpUseOpeningRangeBreakout=false` by default.
+- `InpOpeningRangeStartHour=7`.
+- `InpOpeningRangeStartMinute=0`.
+- `InpOpeningRangeMinutes=60`.
+- `InpOpeningRangeMaxBarsAfter=16`.
+- `InpOpeningRangeBufferPoints=20.0`.
+- `InpWeightOpeningRangeBreakout=2`.
+- `CMarketStructure::OpeningRangeBreakout()` builds the configured daily opening range and confirms a buffered breakout after the range closes.
+- The entry engine adds `Opening range;` as a normal confirmation and quality-score contributor when enabled.
 
-This makes the gate harder to fool with one good recent run. A candidate must survive both recent data and the stress window before it can even pass fast triage, and promotion still requires broader validation.
-
-## Existing Decision Gate Discipline
-
-The offline price-action decision gate also rejects or reviews aggressively on quality metrics:
-
-- `MinTradesPerWindow=5`.
-- `MinProfitFactor=1.10`.
-- `MinRecoveryFactor=1.00`.
-- `MaxProfitFactorDegradation=0.05`.
-- Higher net profit alone is not enough when PF, recovery, drawdown, compile proof, report coverage, or recent/stress consistency is weak.
+The `vwap_momentum_phase` and `pa_full_confluence` research profiles now enable opening-range breakout confirmation for testing without increasing the 30-run batch size.
 
 ## Current EA Strategy Features
 
 The EA includes optional, independently configurable strategy modules for actual price-action, market-state, tick-tape, intermarket confirmation, weighted setup-quality logic, profit targeting, profit protection, and early loss control:
 
-- CHoCH, FVG, order-block retest, liquidity sweep, previous/session levels, VWAP, candle anatomy, market phase, RSI, MACD, Bollinger, and tick microstructure confirmations.
+- CHoCH, FVG, order-block retest, liquidity sweep, previous/session levels, session sweeps, opening-range breakouts, VWAP, candle anatomy, market phase, RSI, MACD, Bollinger, and tick microstructure confirmations.
 - Correlated-market confirmation.
 - Weighted entry-quality score.
 - Quality-based risk scaling.
@@ -51,6 +43,35 @@ The EA includes optional, independently configurable strategy modules for actual
 - Regime-quality confirmation using ADX, EMA slope, and ATR regime.
 - ATR-based profit-lock stop.
 - Adverse-R early exit.
+
+## Decision Gate Discipline
+
+The offline price-action decision gate rejects or reviews aggressively before any candidate can pass fast triage:
+
+- Complete parsed coverage across recent and stress windows is required for `PASS_FAST_TRIAGE`.
+- At least one passing recent window and one passing stress window are required.
+- `MinTradesPerWindow=5`.
+- `MinProfitFactor=1.10`.
+- `MinRecoveryFactor=1.00`.
+- `MaxProfitFactorDegradation=0.05`.
+- Higher net profit alone is not enough when PF, recovery, drawdown, compile proof, report coverage, or recent/stress consistency is weak.
+
+## Price-Action Research Batch
+
+Fast research batch for actual strategy-code variants:
+
+- Batch: `outputs/PRICE_ACTION_STRATEGY_BATCH.csv`.
+- Profiles: 10.
+- Runs: 30.
+- Windows: `2026_Q2`, `2026_ytd`, `2025_Q2`.
+- Estimated tester runtime: about 10.5 minutes before platform overhead.
+- Handoff zip: `outputs/price_action_strategy_handoff.zip`.
+- Parallel lanes zip: `outputs/price_action_parallel_lanes.zip`.
+
+Research profiles with opening-range enabled:
+
+- `vwap_momentum_phase`.
+- `pa_full_confluence`.
 
 ## Current Decision State
 
@@ -64,10 +85,14 @@ The EA includes optional, independently configurable strategy modules for actual
 
 ## Offline Evidence
 
-- `PRICE_ACTION_STRATEGY_DECISION_SMOKE_PASS`.
-- `REPORT_IMPORT_PREFLIGHT_SMOKE_PASS`.
+- `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`.
+- `PRICE_ACTION_STRATEGY_BATCH_SMOKE_PASS`.
+- `EA_SOURCE_ARTIFACT_SYNC_SMOKE_PASS`.
 - Full offline refresh: PASS, 39 steps, 0 failed.
 - Report import preflight rows:
+  - Price-action strategy modules smoke: PASS.
+  - Price-action strategy batch smoke: PASS.
+  - Price-action strategy handoff smoke: PASS.
   - Price-action strategy decision: `COMPILE_REQUIRED`, with 27 waiting report decisions and stale compile trust.
   - Source hash status smoke: PASS.
   - Local safety: PASS, 39 safety checks pass.
@@ -77,15 +102,16 @@ The EA includes optional, independently configurable strategy modules for actual
 
 ## Hashes
 
-- EA source: `4EE1484812ED6148B154D0B0CB2807A110F1A1846C47673083CF7AA8F12E1E34`.
-- Price-action decision CSV: `7646F4CD657C3A15DD1ED1E1A8393F6F1F462826FB38793FF6F5D4C88277C00F`.
-- Price-action decision report: `ABA5EBBCABF558C3357F1F4E23158972B7A2F21316BAF8936D26B29AE61BFC60`.
-- Report import preflight CSV: `FAC97A86AB47EC8429C22E135D7E012173FEEBA4D7CDC1894A8525E7321E29E1`.
-- External validation package zip: `EDA3FA7A367BA00B04DCA09AAA4F3148E25E1D63670F9199774916C275C676F6`.
-- Decision builder: `E1A3A8D50F74BA748A55A74CB6FF94A5FD7F725FF1C3540FAA6E0FC1849E3AA9`.
-- Decision smoke: `B40CB73E4D6E0D80E18E157A13B747AF903807DA7E1DE4979244FD275FED31A8`.
-- Report preflight smoke: `F05D46D11B3FBE71FAEDBA475EDAF3BAE7133008FDC0677BA95230DCC6541BB8`.
+- EA source: `745C07041CAD41F0F2481E3C2A16C571F6346EA7F906CCDDD973C8D6708E2470`.
+- Base profile: `17A53C2663D6C8C2369183FD01EF94FB59CDD447F27E710360AF22ED5F85BB69`.
+- Price-action batch CSV: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`.
+- Price-action handoff zip: `FE405594EE58960B0079F045CB8E5F5BD5CF74A538B26BCC38F2AB730FF1A318`.
+- Price-action parallel lanes zip: `39507CB37A76903C1325389EA183E5258ACB43E31A73B6DD3780726C81DDB837`.
+- External validation package zip: `0EACA7FEF04C28F2606A43149031E482279B6F59B96DD038CEEF489140965BB4`.
+- Price-action modules smoke: `1BA2698E2AD252FE0ECD53FEB5E943D939BF9E969E9F5AA83E8B2F0326822F69`.
+- Price-action batch smoke: `CDC5524A2C198643B739A9DE9D4D51F836E1B688FA48D3FB1D5CB7FEAE378E15`.
+- Price-action batch builder: `46B24F2D461EA7C3F7A994AC080C7CDCA84088BE35A982A28D06692F247A9489`.
 
 ## Caveat
 
-No profit claim is made from this update. Compile/test evidence is intentionally stale because MT5 and MetaEditor were not launched to avoid interrupting normal PC usage. Next performance step is a controlled external or truly non-interactive MT5 compile and backtest run, then importing reports through this stricter multi-window decision gate.
+No profit claim is made from this update. Compile/test evidence is intentionally stale because MT5 and MetaEditor were not launched to avoid interrupting normal PC usage. Next performance step is a controlled external or truly non-interactive MT5 compile and backtest run, then importing reports through the stricter multi-window decision gate.
