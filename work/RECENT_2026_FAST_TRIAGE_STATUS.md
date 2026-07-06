@@ -11,27 +11,25 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional tick-speed impulse entry confirmation:
+Added optional Fair Value Gap retest entry confirmation:
 
-- `InpUseTickSpeedImpulse`
-- `InpTickSpeedLookbackBars`
-- `InpTickSpeedMinRatio`
-- `InpTickSpeedMinBodyPercent`
-- `InpTickSpeedMinRangeATR`
-- `InpWeightTickSpeedImpulse`
-- `CEntryEngine::TickSpeedImpulse()` compares closed-candle tick volume per second against a configurable recent average, then requires directional candle agreement, minimum body percentage, and minimum ATR-normalized range.
-- `CEntryEngine::Build()` now records `Tick speed impulse;` as an independent weighted entry reason when the feature is enabled.
+- `InpUseFVGRetest`
+- `InpFVGRetestBufferATR`
+- `InpWeightFVGRetest`
+- `CMarketStructure::FairValueGapRetest()` finds a recent bullish or bearish FVG, requires the current closed candle to overlap the gap zone within an ATR buffer, then requires the candle to close back in the trade direction.
+- `CEntryEngine::Build()` now records `FVG retest;` as an independent weighted entry reason when the feature is enabled.
 
-This is a strategy-code module from the requested price-action / tick-data feature set, not a simple settings tweak. It is disabled in the robust base profile and enabled only in research profiles that already test tick/VWAP/full-confluence behavior. It adds no martingale, grid, averaging down, or recovery behavior.
+This is a price-action strategy module, not a simple parameter tweak. The existing FVG confirmation only proves an imbalance exists; the new retest confirmation requires price to actually react from the imbalance. It is disabled in the robust base profile and enabled only in FVG/retest/full-confluence research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `tick_vwap_momentum` enables tick-speed impulse with lookback `12`, ratio `1.30`, body `40.0`, and range `0.40 ATR`.
-- `weighted_quality_confluence` enables tick-speed impulse with lookback `12`, ratio `1.35`, body `45.0`, range `0.45 ATR`, and weight `2`.
-- `pa_full_confluence` enables a stricter version with lookback `14`, ratio `1.40`, body `48.0`, and range `0.50 ATR`.
-- Generated configs confirmed the module is enabled in tick/strict research profiles and pinned disabled in the robust base profile.
+- `fvg_sweep_confluence` enables FVG retest with buffer `0.20 ATR`.
+- `orderblock_fvg_retest` enables FVG retest with buffer `0.20 ATR`.
+- `weighted_quality_confluence` enables FVG retest with buffer `0.20 ATR` and weight `2`.
+- `pa_full_confluence` enables a stricter FVG retest buffer of `0.18 ATR`.
+- Generated configs confirmed the module is enabled in imbalance/retest research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
 
@@ -40,20 +38,20 @@ This is a strategy-code module from the requested price-action / tick-data featu
 - `work\sync_ea_source_artifacts.ps1`: PASS
 - `work\test_price_action_strategy_batch.ps1`: PASS
 - `work\test_ea_source_artifact_sync.ps1`: PASS
-- `work\refresh_offline_validation_state.ps1`: PASS, 39 steps, 0 failed
 - `work\build_external_mt5_validation_package.ps1`: PASS, package configs 20, profiles 9
 - `work\test_external_mt5_validation_package.ps1`: PASS, 26 checks, 0 failed
+- `work\refresh_offline_validation_state.ps1`: PASS, 39 steps, 0 failed
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `27E8BBB040EEDD22E08F2F157BFEA5C18B1C5938225F4C11871EEBD1ACFCBB29`
-- `Professional_XAUUSD_EA.mq5`: `27E8BBB040EEDD22E08F2F157BFEA5C18B1C5938225F4C11871EEBD1ACFCBB29`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `3267D34EB34F80E71D3B250CA2F30BEE1F89630FDB55BC81CE95F50629A165EC`
+- `outputs\Professional_XAUUSD_EA.mq5`: `02EA40E14FB5309C2EE0A5D1787AD445C05B9B78B0CEDDEAFE049CF95C073506`
+- `Professional_XAUUSD_EA.mq5`: `02EA40E14FB5309C2EE0A5D1787AD445C05B9B78B0CEDDEAFE049CF95C073506`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `38BD08C08B212B91CB22A4969E6263253C39BF9F4A559E0B66417BF2F193399D`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `CE4597CEAB25368FE97CD334D849442561B6C810CF875D483AAD116858082DFB`
-- `work\test_price_action_strategy_modules.ps1`: `BC4DB886C6038CE2677D61F450A32E047E769B889DC69D620B70FA8427DFF283`
-- `work\test_price_action_strategy_batch.ps1`: `66C222DF80F9C846C28969E97A5F3FEC620E767E0542F82C943F8E4558B31557`
-- `work\build_price_action_strategy_batch.ps1`: `126370B5D5B173DCDBF3D1185309C3DD6FDD1C77CD423C33D8F65723C088EEF1`
+- `outputs\xauusd_micro_validation_package.zip`: `0C805D026327ED2DEE49116E5F888CA59E816BEFE4B1B9CC71EB0C7CE1D87330`
+- `work\test_price_action_strategy_modules.ps1`: `DA105F64F172B84B3613C00BB69785318381AF836BB2D991EBAC9E700D094E99`
+- `work\test_price_action_strategy_batch.ps1`: `799F42950C9E21041E28155804DB0A4BBEF22C41203D4973B22F75CE882ED3D2`
+- `work\build_price_action_strategy_batch.ps1`: `BB0F99978D09FBE225E002F3875DBE117C5851E7053FB804FCBB77D65B71F2D7`
 
 ## Background-Safety Note
 
