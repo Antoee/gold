@@ -11,24 +11,23 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional psychological round-number rejection:
+Added optional gap risk guard:
 
-- `InpUseRoundNumberRejection`
-- `InpRoundNumberStepPoints`
-- `InpRoundNumberBufferPoints`
-- `InpWeightRoundNumberRejection`
-- `CMarketStructure::RoundNumberRejection()` checks whether the latest closed candle swept/rejected the nearest configured round-number level.
-- Entry reasons add `Round number;` when the confirmation is active and passes.
+- `InpUseGapRiskGuard`
+- `InpMaxGapATR`
+- `InpMaxGapPoints`
+- `CEntryEngine::GapRiskAllows()` compares the latest closed candle open against the previous close.
+- New entries are blocked with `Gap risk reject;` when the detected gap exceeds the configured ATR or point limit.
 
-This is a price-action/market-structure feature aimed at XAUUSD behavior around large figure levels. It is independently configurable and can be optimized without increasing risk.
+This is an entry-safety module intended to avoid chasing discontinuous XAUUSD candles, weekend/session gaps, and backtest-friendly but execution-hostile gap behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `liquidity_level_reversal` enables round-number rejection with 1000-point step and 80-point buffer.
-- `pa_full_confluence` enables round-number rejection with 1000-point step and 70-point buffer.
-- Generated configs confirmed the feature is enabled in those profiles and pinned disabled in other profiles.
+- `weighted_quality_confluence` enables gap guard with max `0.60 ATR` or `250` points.
+- `pa_full_confluence` enables gap guard with max `0.50 ATR` or `220` points.
+- Generated configs confirmed the guard is enabled in those profiles and pinned disabled in other profiles.
 
 ## Quiet Validation Results
 
@@ -43,16 +42,16 @@ This is a price-action/market-structure feature aimed at XAUUSD behavior around 
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `3EAFD26773E21F021B4EF1722FAFA5FD59723800691B2CEAE0333CB4D7641FDB`
-- `Professional_XAUUSD_EA.mq5`: `3EAFD26773E21F021B4EF1722FAFA5FD59723800691B2CEAE0333CB4D7641FDB`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `C1467D1BADF479D271C9A9BA202A2D695ECC479166ADC67E878E0BE0581C7207`
+- `outputs\Professional_XAUUSD_EA.mq5`: `A3C48F7AC089978648C4D76AF039DB69C482C2AC6336CDCC1F436AA008E2415A`
+- `Professional_XAUUSD_EA.mq5`: `A3C48F7AC089978648C4D76AF039DB69C482C2AC6336CDCC1F436AA008E2415A`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `64C6432577FE8BB949F670ED8EF726B848240A39CF34C4D08D00AC956487E2EA`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\price_action_strategy_handoff.zip`: `899B32FF134B4A65BF0088A258C46BB7E8E9C7FDD216803E5D06C8BF8484BE39`
-- `outputs\price_action_parallel_lanes.zip`: `00DA622B91BA093899693A1AF3C312F0466A77339DEA963A3000F671BCA39281`
-- `outputs\xauusd_micro_validation_package.zip`: `6CE985E6A2CF6AC7CDD2D2BF65D75B9D2727F7731AA146D8ACD1682187D5EB80`
-- `work\test_price_action_strategy_modules.ps1`: `A7BD91519627BB7EC31DB71AEBA00445BD9BACD7A7A4845BC24DD60435BC7E1D`
+- `outputs\price_action_strategy_handoff.zip`: `28E7808A943D737E1B631D621825607B9370606F52D05A8CDC581F7F0AA9CD8B`
+- `outputs\price_action_parallel_lanes.zip`: `83A8D65B4391508D917DDBDFAFCFCA8B965A1F00F59F531FB28560AA1F44A51C`
+- `outputs\xauusd_micro_validation_package.zip`: `ACFF9913A8A6A383AC968F6C420AAE26FF47D89E8E63C98E4FD2CAD0231C15A4`
+- `work\test_price_action_strategy_modules.ps1`: `BF96F38FEBEDB05EA3A0EC951D4C16B4A2F7FA05748651B2C8C08B79D38B094E`
 - `work\test_price_action_strategy_batch.ps1`: `4B9B4747F2872AA3617E1804D5610FDB5709664D06F52635B5DF7F393697B0DC`
-- `work\build_price_action_strategy_batch.ps1`: `545929D2D8FDBAD70CE117EA20006F806F04BC35B6D7AAC845DF94D74E2D46C4`
+- `work\build_price_action_strategy_batch.ps1`: `A0C93A0FB0B6D572752111D264456E0D234CA8D02175329ED9FC636362E8B0B8`
 
 ## Background-Safety Note
 
