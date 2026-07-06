@@ -5,8 +5,8 @@ param(
    [string]$GuardrailPath = "outputs\OPTIMIZATION_GUARDRAIL_AUDIT.csv",
    [string]$OutCsv = "outputs\RISK_ADJUSTED_MICRO_BATCH.csv",
    [string]$OutReport = "outputs\RISK_ADJUSTED_MICRO_BATCH.md",
-   [int]$BatchSize = 12,
-   [int]$MaxPerProfile = 4
+   [int]$BatchSize = 15,
+   [int]$MaxPerProfile = 5
 )
 
 Set-StrictMode -Version Latest
@@ -40,6 +40,32 @@ function Get-ExpectedReportName {
    return "profit_search_${phaseShort}_$($Row.Profile)_$($Row.Set)_$($Row.Window)"
 }
 
+function Get-EstimatedSeconds {
+   param([object]$Row)
+
+   $phase = [string]$Row.Phase
+   $window = [string]$Row.Window
+   $set = [string]$Row.Set
+
+   if($phase -eq "phase1_fast_triage") {
+      if($window -eq "2026_Q2") { return 12 }
+      if($window -like "*_Q*") { return 16 }
+      if($window -eq "2026_ytd") { return 35 }
+      if($set -eq "full" -or $window -eq "full") { return 70 }
+      return 25
+   }
+
+   if($phase -eq "phase2_real_tick_validation") {
+      if($window -eq "2026_Q2") { return 14 }
+      if($window -like "*_Q*") { return 18 }
+      if($window -eq "2026_ytd") { return 38 }
+      if($set -eq "split" -and $window -eq "full") { return 80 }
+      return 35
+   }
+
+   return 30
+}
+
 if(!(Test-Path -LiteralPath $ManifestPath)) { throw "Manifest not found: $ManifestPath" }
 if(!(Test-Path -LiteralPath $MetricsPath)) { throw "Metrics not found: $MetricsPath" }
 if(!(Test-Path -LiteralPath $ProfilesPath)) { throw "Profiles not found: $ProfilesPath" }
@@ -60,6 +86,7 @@ $guardrailMap = @{}
 foreach($guardrail in $guardrails) { $guardrailMap[[string]$guardrail.Profile] = $guardrail }
 
 $phase1StressWindows = @("2024_Q1", "2024_Q3", "2025_Q2", "2025_Q3")
+$recentWindows = @("2026_Q2", "2026_ytd")
 $queue = New-Object System.Collections.Generic.List[object]
 
 foreach($row in $manifest) {
@@ -91,6 +118,7 @@ foreach($row in $manifest) {
       if($row.Set -eq "stress") { $score += 2500; $reason = "Fast stress-window prune." }
       if($row.Set -eq "full") { $score += 1200; $reason = "Fast full-period sanity check." }
       if($row.Set -eq "opportunity") { $score += 500; $reason = "Opportunity-window upside check." }
+      if($recentWindows -contains [string]$row.Window) { $score += 2200; $reason = "Recent-2026 fast evidence check." }
       if($phase2Seed) { $score += 1500 }
       if($usesGiveback) { $score += 800 }
       if($row.Profile -eq "baseline_promoted") {
@@ -109,6 +137,7 @@ foreach($row in $manifest) {
       $role = "Real-tick anchor"
       $reason = "Higher-cost validation; run after micro phase-1 evidence unless it is the baseline."
       if($row.Profile -eq "baseline_promoted") { $score += 6000; $reason = "Baseline real-tick anchor." }
+      if($recentWindows -contains [string]$row.Window) { $score += 1800; $reason = "Recent-2026 real-tick anchor." }
       if($phase2Seed) { $score += 1000 }
       if($riskPercent -gt 1.6) { $score -= 3500 }
       if($guardrailStatus -eq "REJECT_PROMOTION") { $score -= 12000 }
@@ -140,18 +169,54 @@ foreach($row in $manifest) {
       UsesGivebackGuard = $usesGiveback
       RiskFlags = $riskFlags
       OverfitFlags = $overfitFlags
+      EstimatedSeconds = Get-EstimatedSeconds $row
+      EstimatedMinutes = [Math]::Round((Get-EstimatedSeconds $row) / 60.0, 2)
    }) | Out-Null
 }
 
+$requiredProfiles = @("baseline_promoted", "baseline_dd4", "risk12_tp38_sl18")
+$requiredWindows = @("2026_Q2", "2024_Q1", "2024_Q3", "2025_Q2", "2025_Q3")
 $selected = New-Object System.Collections.Generic.List[object]
+$selectedKeys = @{}
 $perProfile = @{}
+
+function Add-SelectedItem {
+   param(
+      [object]$Item,
+      [bool]$IgnoreProfileLimit = $false
+   )
+
+   if($script:selected.Count -ge $script:BatchSize) { return $false }
+   $key = Get-Key $Item
+   if($script:selectedKeys.ContainsKey($key)) { return $false }
+   if(!$script:perProfile.ContainsKey($Item.Profile)) { $script:perProfile[$Item.Profile] = 0 }
+   $limit = if($Item.Profile -eq "baseline_promoted") { [Math]::Max($script:MaxPerProfile, 5) } else { $script:MaxPerProfile }
+   if(!$IgnoreProfileLimit -and $script:perProfile[$Item.Profile] -ge $limit) { return $false }
+
+   $script:selected.Add($Item) | Out-Null
+   $script:selectedKeys[$key] = $true
+   $script:perProfile[$Item.Profile]++
+   return $true
+}
+
+foreach($item in ($queue | Where-Object { $_.Status -eq "UNPARSED" } | Sort-Object @{ Expression = "Score"; Descending = $true }, Priority, Profile, Set, Window)) {
+   if(!(Add-SelectedItem $item $true)) { continue }
+}
+
+foreach($window in $requiredWindows) {
+   foreach($profile in $requiredProfiles) {
+      $item = $queue | Where-Object {
+         $_.Phase -eq "phase1_fast_triage" -and
+         [string]$_.Profile -eq $profile -and
+         [string]$_.Window -eq $window
+      } | Sort-Object @{ Expression = "Score"; Descending = $true }, Priority, Set | Select-Object -First 1
+      if($item) { [void](Add-SelectedItem $item $false) }
+   }
+}
+
 foreach($item in ($queue | Sort-Object @{ Expression = "Score"; Descending = $true }, Priority, Profile, Set, Window)) {
    if($selected.Count -ge $BatchSize) { break }
-   if(!$perProfile.ContainsKey($item.Profile)) { $perProfile[$item.Profile] = 0 }
-   $limit = if($item.Profile -eq "baseline_promoted") { [Math]::Max($MaxPerProfile, 5) } else { $MaxPerProfile }
-   if($perProfile[$item.Profile] -ge $limit) { continue }
-   $selected.Add($item) | Out-Null
-   $perProfile[$item.Profile]++
+   [void](Add-SelectedItem $item $false)
 }
 
 $rank = 1
@@ -164,6 +229,7 @@ $ranked = foreach($item in $selected) {
 $ranked | Export-Csv -LiteralPath $OutCsv -NoTypeInformation
 
 $byRole = $ranked | Group-Object Role | Sort-Object Name
+$estimatedSeconds = if($ranked.Count -gt 0) { ($ranked | Measure-Object EstimatedSeconds -Sum).Sum } else { 0 }
 $report = New-Object System.Collections.Generic.List[string]
 $report.Add("# Risk-Adjusted Micro Batch") | Out-Null
 $report.Add("") | Out-Null
@@ -173,7 +239,8 @@ $report.Add("- Batch size: $BatchSize") | Out-Null
 $report.Add("- Max per profile: $MaxPerProfile") | Out-Null
 $report.Add("- Candidate rows considered: $($queue.Count)") | Out-Null
 $report.Add("- Selected rows: $($ranked.Count)") | Out-Null
-$report.Add("- Rule: repair bad reports first, include baseline anchors, prefer stress windows, then diversify high guardrail-score candidates.") | Out-Null
+$report.Add("- Estimated tester runtime: $([Math]::Round($estimatedSeconds / 60.0, 2)) minutes, before platform overhead.") | Out-Null
+$report.Add("- Rule: repair bad reports first, run newest 2026 evidence early, interleave baseline/candidate rows by window, then fill with high guardrail-score candidates.") | Out-Null
 $report.Add("") | Out-Null
 $report.Add("## Role Mix") | Out-Null
 $report.Add("") | Out-Null
@@ -185,10 +252,10 @@ foreach($role in $byRole) {
 $report.Add("") | Out-Null
 $report.Add("## Runs") | Out-Null
 $report.Add("") | Out-Null
-$report.Add("| Rank | Profile | Phase | Set | Window | Model | Score | Guardrail | Role | Reason | Config |") | Out-Null
-$report.Add("|---:|---|---|---|---|---:|---:|---:|---|---|---|") | Out-Null
+$report.Add("| Rank | Profile | Phase | Set | Window | Model | Est Sec | Score | Guardrail | Role | Reason | Config |") | Out-Null
+$report.Add("|---:|---|---|---|---|---:|---:|---:|---:|---|---|---|") | Out-Null
 foreach($item in $ranked) {
-   $report.Add("| $($item.Rank) | ``$($item.Profile)`` | $($item.Phase) | $($item.Set) | $($item.Window) | $($item.Model) | $($item.Score) | $($item.GuardrailScore) | $($item.Role) | $($item.Reason) | ``$($item.Config)`` |") | Out-Null
+   $report.Add("| $($item.Rank) | ``$($item.Profile)`` | $($item.Phase) | $($item.Set) | $($item.Window) | $($item.Model) | $($item.EstimatedSeconds) | $($item.Score) | $($item.GuardrailScore) | $($item.Role) | $($item.Reason) | ``$($item.Config)`` |") | Out-Null
 }
 $report.Add("") | Out-Null
 $report.Add("## Promotion Discipline") | Out-Null
