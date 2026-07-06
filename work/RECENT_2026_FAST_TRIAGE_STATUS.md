@@ -14,36 +14,44 @@ Updated locally on 2026-07-06.
 
 - Canonical source: `outputs/Professional_XAUUSD_EA.mq5`.
 - Root/package source sync: PASS.
-- Current synced source SHA256: `DBE2C19B8AA8B750D2D7D5907F497B76CC05AB1051AABFB260F0F7169C10A9D5`.
+- Current synced source SHA256: `4EE1484812ED6148B154D0B0CB2807A110F1A1846C47673083CF7AA8F12E1E34`.
 
 ## Strategy-Code Work
 
-The EA includes optional, independently configurable strategy modules for actual price-action, market-state, tick-tape, intermarket confirmation, weighted setup-quality logic, profit protection, and early loss control:
+The EA includes optional, independently configurable strategy modules for actual price-action, market-state, tick-tape, intermarket confirmation, weighted setup-quality logic, profit targeting, profit protection, and early loss control:
 
 - CHoCH, FVG, order-block retest, liquidity sweep, previous/session levels, VWAP, candle anatomy, market phase, RSI, MACD, Bollinger, and tick microstructure confirmations.
 - Correlated-market confirmation using configurable same-direction or inverse-direction symbol momentum.
 - Weighted entry-quality score.
 - Quality-based risk scaling.
+- Quality-based take-profit scaling.
 - Regime-quality confirmation using ADX, EMA slope, and ATR regime.
 - ATR-based profit-lock stop.
 - Adverse-R early exit.
 
-## Correlated-Market Confirmation Addition
+## Quality Take-Profit Scaling Addition
 
-Added optional intermarket confirmation so XAUUSD entries can require agreement from a correlated or inverse symbol:
+Added optional quality-based TP scaling so stronger setups can target more while weaker qualifying setups can stay more conservative:
+
+- `InpUseQualityTakeProfitScaling=false` by default.
+- `InpQualityTPMinScore=7`.
+- `InpQualityTPFullScore=12`.
+- `InpMinQualityTPMultiplier=0.85`.
+- `InpMaxQualityTPMultiplier=1.35`.
+- `QualityTakeProfitMultiplier()` maps setup quality to a bounded TP multiplier.
+- `OpenSignal()` applies the multiplier after final stop-distance calculation, so the minimum-RR check uses the actual structure-adjusted stop.
+- Trade logs append `Quality TP x...` when enabled.
+
+The `weighted_quality_confluence` research profile now enables quality TP scaling with a `0.90x` to `1.35x` TP range.
+
+## Correlated-Market Confirmation
+
+Intermarket confirmation remains available for testing:
 
 - `InpUseCorrelationConfirmation=false` by default.
 - `InpCorrelationSymbol=XAGUSD` by default.
-- `InpCorrelationTimeframe=PERIOD_M15`.
-- `InpCorrelationLookbackBars=8`.
-- `InpCorrelationMinMovePoints=20.0`.
-- `InpCorrelationMode=CORRELATION_SAME_DIRECTION` by default.
-- `InpWeightCorrelation=1`.
-- Same-direction mode can test gold/silver confirmation, such as XAUUSD buy only when XAGUSD has positive momentum.
-- Inverse-direction mode can be used for symbols such as DXY if the broker provides the symbol and tester data.
-- If the symbol data is unavailable, the confirmation fails instead of forcing a trade.
-
-The `vwap_momentum_phase` and `weighted_quality_confluence` research profiles now enable XAGUSD same-direction confirmation for testing.
+- Same-direction and inverse-direction modes are supported.
+- `vwap_momentum_phase` and `weighted_quality_confluence` enable XAGUSD same-direction confirmation.
 
 ## Decision Gate Discipline
 
@@ -94,10 +102,10 @@ Research profiles:
 - `choch_bos_shift`
 - `orderblock_fvg_retest`
 - `liquidity_level_reversal`
-- `vwap_momentum_phase` includes XAGUSD correlation confirmation.
+- `vwap_momentum_phase`
 - `tick_vwap_momentum`
 - `indicator_phase_filter`
-- `weighted_quality_confluence` includes XAGUSD correlation confirmation.
+- `weighted_quality_confluence` includes quality TP scaling.
 - `pa_full_confluence`
 
 ## Current Decision State
@@ -129,15 +137,15 @@ Research profiles:
 
 ## Hashes
 
-- EA source: `DBE2C19B8AA8B750D2D7D5907F497B76CC05AB1051AABFB260F0F7169C10A9D5`.
-- Base profile: `AF8DD59ECBC5A5810BF61A1115CE44C6FBC1B52670496B3715142A491A62606C`.
+- EA source: `4EE1484812ED6148B154D0B0CB2807A110F1A1846C47673083CF7AA8F12E1E34`.
+- Base profile: `B4CA8C7BCF63CFD2979D4A7569405CE3D4783EB310402E596FD5AFA8F7B50783`.
 - Price-action batch CSV: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`.
-- Price-action handoff zip: `A9F6F269CDC87812418A961163EF29C492842712A4A216F7CE9A4EFB3CC2E4E9`.
-- Price-action parallel lanes zip: `BCC020770B44DC096D667380FC23DC3DE6A48FA87E68F7650B6C0216E7E47718`.
-- External validation package zip: `A1C296B6CCB4A4EDA2B70F262D9CE3F50DBAED5BD3FDBCA7F1568C4D6F0E5487`.
-- Price-action modules smoke: `EDF72274614CEDB70C3F0E5B9604028AF684E53456E1B8C7FACA2CCA365B9116`.
-- Price-action batch smoke: `93D33A064BEB87FC28B329414E1FD884426FFC691A30279316FFB55866CAED30`.
-- Price-action batch builder: `92FF3F30C176FB43A56FCBDC75211CFF236E08DCABBDE784348C30DE84387FFB`.
+- Price-action handoff zip: `082D661BA27ABC46004C2D62E0316CD701A3CDCA0028FF435CEF61655A0F598F`.
+- Price-action parallel lanes zip: `8E75CE333DF6A674A23742451EBD7FDDC492AD8C55B215CB4D13FC9F0397F266`.
+- External validation package zip: `DB922F94C68665613AEE028F0CCEDD60449CB57B6D6071CFB250964F2CC59634`.
+- Price-action modules smoke: `A654B7670F6264E3CE1E51F8356636CCB8415005DAC8EA3ACBE07BBA05C06135`.
+- Price-action batch smoke: `DA333983D5E86547EB7A77BDFD4EBD94574FD232304208A30F8BE883722D2E72`.
+- Price-action batch builder: `D598CF75807789375F69CAA2C984C2956AF8E98DB3A281C730DE44214E276672`.
 
 ## Caveat
 
