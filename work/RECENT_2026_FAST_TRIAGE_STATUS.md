@@ -11,21 +11,24 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional Bollinger extension guard:
+Added optional volume dry-up guard:
 
-- `InpUseBollingerExtensionGuard`
-- `InpBollingerExtensionBuffer`
-- `CEntryEngine::BollingerExtensionAllows()` blocks buy entries stretched above the upper band and sell entries stretched below the lower band.
-- `CEntryEngine::Build()` now rejects band-extension chase entries with `Bollinger extension reject;` before counting confirmations.
+- `InpUseVolumeDryUpGuard`
+- `InpVolumeDryUpLookbackBars`
+- `InpVolumeDryUpConsecutiveBars`
+- `InpVolumeDryUpMaxRatio`
+- `CEntryEngine::VolumeDryUpAllows()` compares recent consecutive tick volume against a prior average.
+- `CEntryEngine::Build()` now rejects dead-liquidity entries with `Volume dry-up reject;`.
 
-This is an indicator/risk module from the requested strategy-code expansion. It is intended to reduce late chase entries into overextended Bollinger conditions without increasing risk or adding any recovery logic.
+This is a volume/risk module from the requested strategy-code expansion. It is intended to avoid entries when recent tick volume dries up and liquidity is weak, without increasing risk or adding any recovery logic.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `indicator_phase_filter` enables Bollinger extension protection with buffer `0.10`.
-- `pa_full_confluence` enables Bollinger extension protection with tighter buffer `0.05`.
+- `vwap_momentum_phase` enables volume dry-up protection with lookback `24`, consecutive bars `3`, max ratio `0.55`.
+- `weighted_quality_confluence` enables the same dry-up protection.
+- `pa_full_confluence` enables dry-up protection with lookback `30`, consecutive bars `3`, max ratio `0.60`.
 - Generated configs confirmed the module is enabled in those profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -41,16 +44,16 @@ This is an indicator/risk module from the requested strategy-code expansion. It 
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `2D30D99A409D9745A6D72AEC706C1C567359DC90873DCA29AC3A24A7F63755DE`
-- `Professional_XAUUSD_EA.mq5`: `2D30D99A409D9745A6D72AEC706C1C567359DC90873DCA29AC3A24A7F63755DE`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `CBF350D05BA999E509468DE037DB48131F4F9DE38146E86BEB330F5F0CA0DF39`
+- `outputs\Professional_XAUUSD_EA.mq5`: `46FC6F93E062C8EE24FC62C32B92AB247E1956BCC131E13A43CD055A54DC7D84`
+- `Professional_XAUUSD_EA.mq5`: `46FC6F93E062C8EE24FC62C32B92AB247E1956BCC131E13A43CD055A54DC7D84`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `62810ACE47D613791066321E029DEEBD732568F14737753A84761E97B3F3682C`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\price_action_strategy_handoff.zip`: `236A480B01E134FEA2863C2E4988E336E3F4709714FCED2D8D097A021033659A`
-- `outputs\price_action_parallel_lanes.zip`: `892ADCEC4A6C9ECFC640A2C647106DECCD7AE123A8D91F0137F2F0824FE62F92`
-- `outputs\xauusd_micro_validation_package.zip`: `AD0EEB9FB3AE7EA8FC8E70E179D67E7716E9264621BCA11FF90506FD9737DA34`
-- `work\test_price_action_strategy_modules.ps1`: `A4ECC98F6EBAFF467B78F4DFE3A3DED6A440E0F1A4AB1898843361CAA66353BA`
+- `outputs\price_action_strategy_handoff.zip`: `F51229FFB7239609D1A96DF58AEDBE661B9137353DA46B6C42D13C33FFACE98D`
+- `outputs\price_action_parallel_lanes.zip`: `2B928814062E46CA22DB764AF6507CCFF9E31C99DE09EC7229D7F8811080F0CD`
+- `outputs\xauusd_micro_validation_package.zip`: `270E94FCE2166763CB58DB084BC389639655A756470ACC4EE56CD6F8C00A3CE9`
+- `work\test_price_action_strategy_modules.ps1`: `50D246D85AA0EB90B547B5836EEE80ABB649E3DBF5AF81E6C11D4E99D2E06F09`
 - `work\test_price_action_strategy_batch.ps1`: `4B9B4747F2872AA3617E1804D5610FDB5709664D06F52635B5DF7F393697B0DC`
-- `work\build_price_action_strategy_batch.ps1`: `F351A35E0B2C1C8D61EC0BBF9AE072CE01A4C1668A4E5D20C5EA875A050D122F`
+- `work\build_price_action_strategy_batch.ps1`: `29E5FE3524E7416E03A1E7658436DA98FB68AD37BC57A445992CF14752D2C8D6`
 
 ## Background-Safety Note
 
