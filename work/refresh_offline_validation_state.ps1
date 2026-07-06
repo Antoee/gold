@@ -63,13 +63,26 @@ function Invoke-QuietPowerShell {
    $stderrPath = Join-Path $logRoot "$stamp`_$safeName.err.log"
 
    $allArguments = @("-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass") + $Arguments
-   $process = Start-Process -FilePath "powershell.exe" `
-      -ArgumentList $allArguments `
-      -WindowStyle Hidden `
-      -RedirectStandardOutput $stdoutPath `
-      -RedirectStandardError $stderrPath `
-      -Wait `
-      -PassThru
+   $quotedArguments = @($allArguments | ForEach-Object {
+      '"' + (([string]$_) -replace '"', '\"') + '"'
+   })
+   $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
+   $startInfo.FileName = "powershell.exe"
+   $startInfo.Arguments = ($quotedArguments -join " ")
+   $startInfo.UseShellExecute = $false
+   $startInfo.CreateNoWindow = $true
+   $startInfo.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
+   $startInfo.RedirectStandardOutput = $true
+   $startInfo.RedirectStandardError = $true
+
+   $process = [System.Diagnostics.Process]::new()
+   $process.StartInfo = $startInfo
+   [void]$process.Start()
+   $stdoutText = $process.StandardOutput.ReadToEnd()
+   $stderrText = $process.StandardError.ReadToEnd()
+   $process.WaitForExit()
+   $stdoutText | Set-Content -LiteralPath $stdoutPath -Encoding ASCII
+   $stderrText | Set-Content -LiteralPath $stderrPath -Encoding ASCII
 
    if($process.ExitCode -ne 0) {
       $errorText = ""
@@ -140,6 +153,13 @@ try {
       )
       Require-File "outputs\risk_adjusted_micro_handoff\HANDOFF_MANIFEST.csv"
       Require-File "outputs\risk_adjusted_micro_handoff.zip"
+   }
+
+   Invoke-Step $rows "Sync EA source artifacts" {
+      Invoke-QuietPowerShell @("-File", ".\work\sync_ea_source_artifacts.ps1")
+      Require-File "outputs\EA_SOURCE_ARTIFACT_SYNC.csv"
+      Require-File "Professional_XAUUSD_EA.mq5"
+      Require-File "outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5"
    }
 
    Invoke-Step $rows "Audit risk-adjusted micro handoff" {
