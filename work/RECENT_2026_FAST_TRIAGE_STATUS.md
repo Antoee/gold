@@ -14,35 +14,46 @@ Updated locally on 2026-07-06.
 
 - Canonical source: `outputs/Professional_XAUUSD_EA.mq5`.
 - Root/package source sync: PASS.
-- Current synced source SHA256: `F8538DE547B8C14D60CA15766574E9378ECD3881D60FD6144F0EB44C2B55DA26`.
+- Current synced source SHA256: `DBE2C19B8AA8B750D2D7D5907F497B76CC05AB1051AABFB260F0F7169C10A9D5`.
 
 ## Strategy-Code Work
 
-The EA includes optional, independently configurable strategy modules for actual price-action, market-state, tick-tape, weighted setup-quality logic, profit protection, and early loss control:
+The EA includes optional, independently configurable strategy modules for actual price-action, market-state, tick-tape, intermarket confirmation, weighted setup-quality logic, profit protection, and early loss control:
 
 - CHoCH, FVG, order-block retest, liquidity sweep, previous/session levels, VWAP, candle anatomy, market phase, RSI, MACD, Bollinger, and tick microstructure confirmations.
+- Correlated-market confirmation using configurable same-direction or inverse-direction symbol momentum.
 - Weighted entry-quality score.
 - Quality-based risk scaling.
 - Regime-quality confirmation using ADX, EMA slope, and ATR regime.
 - ATR-based profit-lock stop.
 - Adverse-R early exit.
 
-## Decision Gate Tightening
+## Correlated-Market Confirmation Addition
 
-The offline price-action decision gate now rejects or reviews more aggressively before any candidate can pass fast triage:
+Added optional intermarket confirmation so XAUUSD entries can require agreement from a correlated or inverse symbol:
 
-- New parameter: `MinTradesPerWindow=5`.
-- New parameter: `MinProfitFactor=1.10`.
-- New parameter: `MinRecoveryFactor=1.00`.
-- New parameter: `MaxProfitFactorDegradation=0.05`.
-- Added `Resolve-RecoveryFactor()` so missing recovery factor can be estimated from net profit / max drawdown when possible.
-- Added output columns for candidate/baseline recovery factor and recovery delta.
-- A candidate now gets `REJECT_WEAK_PROFIT_FACTOR` when PF is below the minimum threshold.
-- A candidate now gets `REJECT_WEAK_RECOVERY` when recovery factor is below the minimum threshold.
-- A candidate now gets `REVIEW_LOWER_RECOVERY` when it beats net profit but has weaker recovery than baseline.
-- The decision report now prints the active minimum trade, PF, recovery, and PF-degradation thresholds.
+- `InpUseCorrelationConfirmation=false` by default.
+- `InpCorrelationSymbol=XAGUSD` by default.
+- `InpCorrelationTimeframe=PERIOD_M15`.
+- `InpCorrelationLookbackBars=8`.
+- `InpCorrelationMinMovePoints=20.0`.
+- `InpCorrelationMode=CORRELATION_SAME_DIRECTION` by default.
+- `InpWeightCorrelation=1`.
+- Same-direction mode can test gold/silver confirmation, such as XAUUSD buy only when XAGUSD has positive momentum.
+- Inverse-direction mode can be used for symbols such as DXY if the broker provides the symbol and tester data.
+- If the symbol data is unavailable, the confirmation fails instead of forcing a trade.
 
-This makes the pipeline harder to fool: higher net profit alone is no longer enough if the run has weak PF, weak recovery, too few trades, higher drawdown, stale compile proof, or missing reports.
+The `vwap_momentum_phase` and `weighted_quality_confluence` research profiles now enable XAGUSD same-direction confirmation for testing.
+
+## Decision Gate Discipline
+
+The offline price-action decision gate rejects or reviews aggressively before any candidate can pass fast triage:
+
+- `MinTradesPerWindow=5`.
+- `MinProfitFactor=1.10`.
+- `MinRecoveryFactor=1.00`.
+- `MaxProfitFactorDegradation=0.05`.
+- Higher net profit alone is not enough when PF, recovery, drawdown, compile proof, or report coverage is weak.
 
 ## Recent EA Risk Features
 
@@ -83,10 +94,10 @@ Research profiles:
 - `choch_bos_shift`
 - `orderblock_fvg_retest`
 - `liquidity_level_reversal`
-- `vwap_momentum_phase`
+- `vwap_momentum_phase` includes XAGUSD correlation confirmation.
 - `tick_vwap_momentum`
 - `indicator_phase_filter`
-- `weighted_quality_confluence`
+- `weighted_quality_confluence` includes XAGUSD correlation confirmation.
 - `pa_full_confluence`
 
 ## Current Decision State
@@ -101,10 +112,14 @@ Research profiles:
 
 ## Offline Evidence
 
-- `PRICE_ACTION_STRATEGY_DECISION_SMOKE_PASS`.
-- `REPORT_IMPORT_PREFLIGHT_SMOKE_PASS`.
+- `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`.
+- `PRICE_ACTION_STRATEGY_BATCH_SMOKE_PASS`.
+- `EA_SOURCE_ARTIFACT_SYNC_SMOKE_PASS`.
 - Full offline refresh: PASS, 39 steps, 0 failed.
 - Report import preflight rows:
+  - Price-action strategy modules smoke: PASS.
+  - Price-action strategy batch smoke: PASS.
+  - Price-action strategy handoff smoke: PASS.
   - Price-action strategy decision: `COMPILE_REQUIRED`, with 27 waiting report decisions and stale compile trust.
   - Source hash status smoke: PASS.
   - Local safety: PASS, 39 safety checks pass.
@@ -114,14 +129,15 @@ Research profiles:
 
 ## Hashes
 
-- EA source: `F8538DE547B8C14D60CA15766574E9378ECD3881D60FD6144F0EB44C2B55DA26`.
-- Price-action decision CSV: `7646F4CD657C3A15DD1ED1E1A8393F6F1F462826FB38793FF6F5D4C88277C00F`.
-- Price-action decision report: `F1C94A7765B95D5646E780FC7EED42635AAC2022A73F8603F7E72955060F949A`.
-- Report import preflight CSV: `FAC97A86AB47EC8429C22E135D7E012173FEEBA4D7CDC1894A8525E7321E29E1`.
-- External validation package zip: `F456B10260656A27AE35391FCDF28EAA2C2C979551C762155CE8C6BE70760678`.
-- Decision builder: `53A9B3F7E8DBD42DC993B0BEA17AEBF613E58E3AF0B5C7F65746093B164B4140`.
-- Decision smoke: `64B3BEBB3E30714A64B32085697F30BC19E03D898D078372C5235EF0D4D1B2FC`.
-- Report preflight smoke: `F05D46D11B3FBE71FAEDBA475EDAF3BAE7133008FDC0677BA95230DCC6541BB8`.
+- EA source: `DBE2C19B8AA8B750D2D7D5907F497B76CC05AB1051AABFB260F0F7169C10A9D5`.
+- Base profile: `AF8DD59ECBC5A5810BF61A1115CE44C6FBC1B52670496B3715142A491A62606C`.
+- Price-action batch CSV: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`.
+- Price-action handoff zip: `A9F6F269CDC87812418A961163EF29C492842712A4A216F7CE9A4EFB3CC2E4E9`.
+- Price-action parallel lanes zip: `BCC020770B44DC096D667380FC23DC3DE6A48FA87E68F7650B6C0216E7E47718`.
+- External validation package zip: `A1C296B6CCB4A4EDA2B70F262D9CE3F50DBAED5BD3FDBCA7F1568C4D6F0E5487`.
+- Price-action modules smoke: `EDF72274614CEDB70C3F0E5B9604028AF684E53456E1B8C7FACA2CCA365B9116`.
+- Price-action batch smoke: `93D33A064BEB87FC28B329414E1FD884426FFC691A30279316FFB55866CAED30`.
+- Price-action batch builder: `92FF3F30C176FB43A56FCBDC75211CFF236E08DCABBDE784348C30DE84387FFB`.
 
 ## Caveat
 
