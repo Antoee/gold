@@ -11,22 +11,24 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional failed-breakout trap guard:
+Added optional session-open shock guard:
 
-- `InpUseFailedBreakoutGuard`
-- `InpFailedBreakoutLookbackBars`
-- `InpFailedBreakoutBufferPoints`
-- `CEntryEngine::FailedBreakoutAllows()` rejects buy entries when the signal candle sweeps above a recent high but closes back under it, and rejects sell entries when it sweeps below a recent low but closes back above it.
-- `CEntryEngine::Build()` now rejects those fakeout setups with `Failed breakout reject;` before confirmation scoring.
+- `InpUseSessionOpenGuard`
+- `InpSessionOpenGuardMinutes`
+- `InpGuardLondonOpen`
+- `InpGuardNewYorkOpen`
+- `InpGuardCustomOpen`
+- `CSessionFilter::InOpenShockWindow()` detects the configured minutes after a session start.
+- `CSessionFilter::IsAllowed()` now blocks entries during guarded London, New York, or custom-session open windows when enabled.
 
-This is a real strategy-code addition from the requested price-action, wick behavior, liquidity sweep, and market-structure list. It is designed to reduce entries into failed breakout traps on XAUUSD, without martingale, grid, averaging down, or recovery behavior.
+This is a real risk/session feature from the requested time-feature, session overlap, spread/slippage, and risk-feature list. It is designed to reduce entries during the most unstable first minutes of major sessions, without martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables the guard with a 12-bar lookback and 10-point sweep buffer.
-- `pa_full_confluence` enables the guard with a 14-bar lookback and 12-point sweep buffer.
+- `weighted_quality_confluence` enables the guard for the first `15` minutes after London and New York opens.
+- `pa_full_confluence` enables the guard for the first `20` minutes after London and New York opens.
 - Generated configs confirmed the module is enabled only in strict research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -42,14 +44,14 @@ This is a real strategy-code addition from the requested price-action, wick beha
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `C3EF5EBB1279A77D3E2F13B1CF9E347D0145B4E9FBFBC716C45207611B82C4DF`
-- `Professional_XAUUSD_EA.mq5`: `C3EF5EBB1279A77D3E2F13B1CF9E347D0145B4E9FBFBC716C45207611B82C4DF`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `FB14332900448137FD91B783A239BAA421486F5B9276125E2B58E07CF0892985`
+- `outputs\Professional_XAUUSD_EA.mq5`: `BE4CEFEBC290AE8E5780D083F17F9372F2E09846FC34D0A2887D7789CBFF3EB7`
+- `Professional_XAUUSD_EA.mq5`: `BE4CEFEBC290AE8E5780D083F17F9372F2E09846FC34D0A2887D7789CBFF3EB7`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `879E992DAB3BD8BFAF9ECCCFF889D1A3D09BF33F48AFE48283AB3CD4E8EF9164`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `59A2B5A1EA6DC1CA0578E3459D911AC000E5776FE2E4141173308BE9CE62570D`
-- `work\test_price_action_strategy_modules.ps1`: `E4C1794FD49DB13424EB72E6090BAA15D0ECE61CC4281D43292CCD5909F27786`
-- `work\test_price_action_strategy_batch.ps1`: `31A97DA0952024DB425BA7B93807E35000C5DBC7E7990BA1AA6ECD934947AF08`
-- `work\build_price_action_strategy_batch.ps1`: `9D698CEB1D2338C2212822274CD78D28ABAB8A67BC0C0A264350F0776CDFA45F`
+- `outputs\xauusd_micro_validation_package.zip`: `69B476968E70EE43DD0E73E386093165853CFA5E1799CC7B58BE451E0B3A26FB`
+- `work\test_price_action_strategy_modules.ps1`: `21FCEE7D528F437158999279A8FF241E7DCF8FB210C9E50306657C8B788B5DC3`
+- `work\test_price_action_strategy_batch.ps1`: `A9DACC74C794CF15B3AC837D4CD152B6C62B3C44D0200B0ADFB637AA9BBD6DB0`
+- `work\build_price_action_strategy_batch.ps1`: `A5C33AE000AC668D1A93E5F62551BF74C97138AD82FF53CB4D2141D7DBC9841D`
 
 ## Background-Safety Note
 
