@@ -11,23 +11,24 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional open-position spread-shock exit protection:
+Added optional session-end exposure close protection:
 
-- `InpUseSpreadShockExit`
-- `InpSpreadShockExitPoints`
-- `InpSpreadShockExitATRPercent`
-- `InpSpreadShockExitMaxR`
-- `CPositionManager::SpreadShockExitHit()` detects a current spread shock using absolute spread points or spread as a percent of ATR.
-- `CPositionManager::Manage()` can now close managed positions with exit type `spread_shock` when the spread shock is active and the trade is below the configured R threshold.
+- `InpCloseBeforeSessionEnd`
+- `InpSessionEndCloseMinutes`
+- `InpCloseAtLondonEnd`
+- `InpCloseAtNewYorkEnd`
+- `InpCloseAtCustomEnd`
+- `CSessionFilter::CloseWindowActive()` detects the configured flatten window before London, New York, or custom session close.
+- `OnTick()` now calls `positionManager.CloseAll("session end close")` during the configured close window when the feature is enabled.
 
-This is a risk-first XAUUSD protection module. It is intended to avoid holding vulnerable trades during sudden spread blowouts, while staying optional, configurable, and disabled in the robust base profile. It adds no martingale, grid, averaging down, or recovery behavior.
+This is a risk-first XAUUSD session-control module. It is intended to compare holding trades across session transitions versus flattening before lower-quality periods. It stays optional, configurable, and disabled in the robust base profile. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables spread-shock exit with `450.0` points, `25.0%` ATR spread, and max exit threshold `0.10R`.
-- `pa_full_confluence` enables stricter spread-shock exit with `400.0` points, `22.0%` ATR spread, and max exit threshold `0.05R`.
+- `weighted_quality_confluence` enables session-end close for London and New York with a `15` minute flatten window.
+- `pa_full_confluence` enables session-end close for London and New York with a stricter `20` minute flatten window.
 - Generated configs confirmed the module is enabled in the strict research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -43,14 +44,14 @@ This is a risk-first XAUUSD protection module. It is intended to avoid holding v
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `1359D271DF1822A4E10F4E522AA106CFADC8EB71D791E4E4B24C81F5B454AEA7`
-- `Professional_XAUUSD_EA.mq5`: `1359D271DF1822A4E10F4E522AA106CFADC8EB71D791E4E4B24C81F5B454AEA7`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `88EF7C813000DE46DE4B3D5B5CE920945B6893E1D13AEB28F8FAABEEFC2C276D`
+- `outputs\Professional_XAUUSD_EA.mq5`: `F3A523DD484A2E5DA1CD34E2D4958E662F5673204F77D3DC0D4E3AB5CF479CF6`
+- `Professional_XAUUSD_EA.mq5`: `F3A523DD484A2E5DA1CD34E2D4958E662F5673204F77D3DC0D4E3AB5CF479CF6`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `A403734A0AAEEF050620322CBD4B3AEC91886AC6CE4649DE327B14659242EFB4`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `584F01136C665AE5097E16767CC380A70B63964F22A56824717D446E60BEFD5E`
-- `work\test_price_action_strategy_modules.ps1`: `E55CD960FA07AD40FFB48DFCCC8C4B210FF00077266DC8C80C51D54B7A4AA0E3`
-- `work\test_price_action_strategy_batch.ps1`: `E285E44AEE86332380864595EFBAC3DCBD79846DF438598FE989AF846900A528`
-- `work\build_price_action_strategy_batch.ps1`: `854839C8538237F73430130DDDE45202034FF5762CF335CDB63B912B081BE429`
+- `outputs\xauusd_micro_validation_package.zip`: `6374A968A4EEB851287EE937DF3DAF05FFB02F07B7EEF4D82164E841F167F995`
+- `work\test_price_action_strategy_modules.ps1`: `479F6BA239E52784F6D849256AFF0A2BBBC5AD0B9635C8AC2E5F66F73919DA73`
+- `work\test_price_action_strategy_batch.ps1`: `7D59903548F367DA18865FB471D72811F0C0ACA9C46E13AB1916E0B1E7EC5C34`
+- `work\build_price_action_strategy_batch.ps1`: `59DEB9A4800E3F98EA4550B69E9450F982681635F12367659A941558C89A6C7F`
 
 ## Background-Safety Note
 
