@@ -11,46 +11,42 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional trend-regime requirement for winner scale-ins. This tightens the aggressive add-on logic so extra positions require the existing same-direction winner to be protected and the market regime to be strong enough to justify pressing:
+Added optional Protected-Cushion Take-Profit Expansion. This tries to make more from strong winners without increasing initial stop risk:
 
-- `InpWinnerScaleInRequireTrendRegime`
-- `OpenSignal()` now blocks scale-ins with `winner scale-in trend regime` when the add-on would occur but `TrendRegimeBoostProgress(...)` is not positive.
-- Aggressive research profiles enable this requirement; the baseline keeps it disabled.
+- `InpUseProtectedCushionTakeProfitExpansion`
+- `InpProtectedCushionTPMinQualityScore`
+- `InpProtectedCushionTPMinPriceActionScore`
+- `InpProtectedCushionTPStartPercent`
+- `InpProtectedCushionTPFullPercent`
+- `InpProtectedCushionTPMultiplier`
+- `InpProtectedCushionTPRequireTrailing`
+- `ProtectedCushionTakeProfitMultiplier(const SSignal &signal)`
 
-This means winner scale-ins now require same-direction exposure, floating profit, protected stop, locked/protected profit, quality score, spacing, and ADX/ATR trend-regime confirmation before extra risk is added.
+When enabled, the EA can expand take-profit distance only when:
 
-The existing winner-management and protected-floor framework remains in place:
+- The setup quality score is high enough.
+- The price-action score is high enough.
+- Trailing/profit-management protection is available when required.
+- Account equity has cushion above the active protected floor.
 
-- `InpWinnerScaleInMinLockedR` requires protected profit before scale-ins.
-- `InpUseMFEProfitLockStop` can ratchet stops on strong open winners.
-- `InpUseProtectedCushionRiskBoost` can boost risk only when equity has cushion above the protected floor.
-- `LotsForRisk()` caps theoretical stop risk so it should not exceed the active starting-equity/profit-lock floor.
-- `InpUseProtectedFloorCushionRiskCap` limits each trade to a fraction of the cushion above the protected floor.
-- `ProtectedFloorRiskMultiplier()` scales risk down as equity approaches the protected floor.
-- `ProtectedFloorQualityAllows()` blocks lower-quality trades near the floor.
-
-The generated aggressive research profiles now use 2.50% base risk, elite setup quality risk scaling enabled from quality score 10 to 14 with 1.00x to 1.25x multiplier, elite price-action risk scaling enabled from PA score 12 to 18 with 1.00x to 1.35x multiplier, protected-cushion risk boost enabled from 6.0% to 18.0% cushion with max 1.50x multiplier, winner scale-in enabled only when same-direction exposure is already profitable, protected by stop, quality score >= 10, current open profit >= 0.80R, locked/protected profit >= 0.25R, trend-regime confirmation is positive, 0.50 scale-in risk multiplier, and 30-minute minimum since newest same-direction position, MFE profit-lock stop enabled at 1.50R MFE, 0.75R giveback, 0.35R minimum lock, trend-regime risk boost enabled at ADX 28.0 and ATR ratio 1.05 to 1.50 with max 1.50x multiplier, trend-regime TP expansion enabled at quality score >= 12 and price-action score >= 14 with max 1.50x multiplier, protected-floor risk scaling enabled from a 4.0% cushion above the protected floor down to a 0.25x minimum multiplier, protected-floor cushion cap enabled at 35.0% max cushion risk per trade, protected-floor quality gate enabled inside a 2.0% floor cushion with quality score >= 12 required, all boost/TP expansion layers requiring equity above starting equity, hot-streak risk boost enabled over 4 recent trades, boost starts at +0.35 average R, full boost at +1.00 average R, max hot-streak multiplier 1.75, max 2 simultaneous positions, 6 max trades per day, 15-minute minimum trade spacing, runner TP expansion enabled at quality score >= 12 and price-action score >= 14, 1.75 runner TP multiplier, trailing required for runner mode, starting-equity protection enabled at a 0.00% buffer, profit-only risk boost after +1.00% equity growth, full boost at +12.00%, max boost multiplier 3.00, equity profit lock after +2.00% peak equity growth, 50.0% peak-profit lock, 6.00% max equity drawdown, and 8.00% max open-risk cap. The baseline profile remains anchored at 1.60% risk with these aggressive boost features disabled.
-
-This is intentionally more aggressive than the earlier conservative settings, but it still avoids martingale, grid, averaging down, and recovery mechanics. It is not proven profitable until a real MT5 backtest/forward-test report exists.
+Generated aggressive research profiles enable this new TP expansion. The baseline keeps it disabled for clean comparison. This adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor keeps `InpUseWinnerScaleIn=false`, `InpWinnerScaleInRequireTrendRegime=false`, `InpWinnerScaleInMinLockedR=0.00`, `InpUseMFEProfitLockStop=false`, `InpUseProtectedCushionRiskBoost=false`, `InpUseProtectedFloorRiskScaling=false`, `InpUseProtectedFloorCushionRiskCap=false`, `InpUseProtectedFloorQualityGate=false`, `InpUseTrendRegimeRiskBoost=false`, and `InpUseTrendRegimeTakeProfitExpansion=false` plus the existing aggressive boost systems disabled.
-- Generated research profiles use `InpUseWinnerScaleIn=true`, `InpWinnerScaleInMinProfitR=0.80`, `InpWinnerScaleInRequireProtectedStop=true`, `InpWinnerScaleInMinLockedR=0.25`, `InpWinnerScaleInRequireTrendRegime=true`, `InpWinnerScaleInMinQualityScore=10`, `InpWinnerScaleInRiskMultiplier=0.50`, and `InpWinnerScaleInMinMinutesSincePosition=30`.
-- Generated research profiles use `InpUseProtectedCushionRiskBoost=true`, `InpProtectedCushionBoostStartPercent=6.0`, `InpProtectedCushionBoostFullPercent=18.0`, and `InpMaxProtectedCushionBoostMultiplier=1.50`.
-- Generated research profiles use `InpUseMFEProfitLockStop=true`, `InpMFEProfitLockStartR=1.50`, `InpMFEProfitLockGivebackR=0.75`, and `InpMFEProfitLockMinR=0.35`.
-- Generated research profiles are designed to push upside harder only after signal quality, market regime, realized/open trade strength, protected-floor cushion, and account equity state all justify it, while reducing exposure near the protected floor.
+- Baseline anchor keeps `InpUseProtectedCushionTakeProfitExpansion=false`.
+- Generated research profiles use `InpUseProtectedCushionTakeProfitExpansion=true`.
+- Generated research profiles expand protected-cushion TP from a 6.0% protected-floor cushion to full effect at 18.0%, with max multiplier `1.50`, quality score >= 12, price-action score >= 14, and trailing required.
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `5A705BAE5E44A72E4D9F0BF4FB6FFDBBC6CAB9D0CB5CCA30E1FADE1F16147E4D`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `5BA5A2A528BAA26B2112F8F3F10EE0561B0EBCC4CFCFB25EF8BCECF098DDE396`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_ea_source_artifact_sync.ps1`: PASS
 - `work\test_price_action_strategy_batch.ps1`: PASS
-- `work\build_external_mt5_validation_package.ps1`: PASS
+- `work\build_external_mt5_validation_package.ps1`: PASS, package configs 20, profiles 9
 - `work\test_external_mt5_validation_package.ps1`: PASS, 26 checks, 0 failed
 - `work\test_price_action_strategy_decision.ps1`: PASS
 - `work\test_loss_streak_risk_reduction.ps1`: PASS
@@ -58,15 +54,15 @@ This is intentionally more aggressive than the earlier conservative settings, bu
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `5A705BAE5E44A72E4D9F0BF4FB6FFDBBC6CAB9D0CB5CCA30E1FADE1F16147E4D`
-- `Professional_XAUUSD_EA.mq5`: `5A705BAE5E44A72E4D9F0BF4FB6FFDBBC6CAB9D0CB5CCA30E1FADE1F16147E4D`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `5A705BAE5E44A72E4D9F0BF4FB6FFDBBC6CAB9D0CB5CCA30E1FADE1F16147E4D`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `F692A2BD25FE7EC7BD3B7B36FA18CB3DFC29DF3BA17076058CBE7A129B363EEC`
+- `outputs\Professional_XAUUSD_EA.mq5`: `5BA5A2A528BAA26B2112F8F3F10EE0561B0EBCC4CFCFB25EF8BCECF098DDE396`
+- `Professional_XAUUSD_EA.mq5`: `5BA5A2A528BAA26B2112F8F3F10EE0561B0EBCC4CFCFB25EF8BCECF098DDE396`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `5BA5A2A528BAA26B2112F8F3F10EE0561B0EBCC4CFCFB25EF8BCECF098DDE396`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `1DC75A51EC5AD4679F00FABB3CE4C66320C69389AFCD5755350CB8BE95018F4B`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `6887C7B2EE4D4D91A5BB05D817F303AA608F807C276142686247ED0AB5998D99`
-- `outputs\xauusd_micro_validation_package.zip`: `59F2AC8E285B6057EFA0F77EBF9C31D537824681468E39526186B0DF08207460`
-- `work\test_price_action_strategy_modules.ps1`: `59459351A5421706EA4A71C022135A2E518A28E3791DC4262623EE3866AA2FBE`
-- `work\test_price_action_strategy_batch.ps1`: `BF0111A6D9201730AB1E375ED75B13EDAED70914C7DD11C7ADD22D83FEDB4EEF`
-- `work\build_price_action_strategy_batch.ps1`: `E3BBA663CA0252B6D0A59CE82EC4B83DA45092001F51F8254419B91EB74C2FFC`
+- `outputs\xauusd_micro_validation_package.zip`: `1B475D7455E8B9A7EA439CC4758FE143A04F191A07D59A200CE9A07C1E935C90`
+- `work\test_price_action_strategy_modules.ps1`: `1BABB56002A0C9EF81268216F8E1580F966542E5FBA42CC419B64EDBBF455762`
+- `work\test_price_action_strategy_batch.ps1`: `92895D1F0D983857583A33A2879D52ED43C47D6496B9B44F816A1E4366419180`
+- `work\build_price_action_strategy_batch.ps1`: `535598599A97A02D6727443F923DBB3CAC06610A0AE31A471056845FEF1C21A0`
 
 ## Background-Safety Note
 
