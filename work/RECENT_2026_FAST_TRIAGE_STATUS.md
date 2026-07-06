@@ -11,30 +11,24 @@ Updated: 2026-07-06
 
 ## Latest Entry-Code Change
 
-Added optional narrow-range breakout confirmation:
+Added optional no-follow-through exit:
 
-- `InpUseNarrowRangeBreakout`
-- `InpNarrowRangeLookbackBars`
-- `InpNarrowRangeMaxAverageRatio`
-- `InpNarrowRangeMaxATR`
-- `InpNarrowBreakMinRangeATR`
-- `InpNarrowBreakMinBodyPercent`
-- `InpNarrowBreakCloseLocation`
-- `InpNarrowBreakBufferPoints`
-- `InpWeightNarrowRangeBreakout`
-- `CMarketStructure::NarrowRangeBreakout()` requires the prior closed candle to be narrow versus recent average range and ATR, then requires the latest closed candle to break that narrow candle in the trade direction with minimum ATR range, body percentage, and close-location quality.
-- `CEntryEngine::Build()` now records `Narrow range breakout;` as an independent weighted entry reason when the feature is enabled.
+- `InpUseNoFollowThroughExit`
+- `InpNoFollowThroughBars`
+- `InpNoFollowThroughMinMFER`
+- `InpNoFollowThroughMaxCurrentR`
+- `CPositionManager::Manage()` now checks whether a position has failed to produce enough maximum favorable excursion after a configurable number of bars and is still below a configurable current-R threshold.
+- Matching exits are logged as `no_follow_through` with reason `no follow-through exit`.
 
-This is a price-action/OHLC selectivity module for volatility-contraction-to-expansion setups. It gives the optimizer a separate way to test tight pre-breakout compression instead of treating every breakout candle the same. It is disabled in the robust base profile and enabled only in momentum/confluence research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
+This is a risk-control module for cutting weak trades earlier when they do not launch after entry. It is separate from the broader MFE failure exit, so optimization can independently test faster failure recognition. It is disabled in the robust base profile and enabled only in strict risk-management research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `vwap_momentum_phase` enables narrow-range breakout with lookback `12`, max average-range ratio `0.70`, max setup range `0.45 ATR`, breakout minimum `0.50 ATR`, body `45%`, and close-location threshold `0.65`.
-- `weighted_quality_confluence` enables narrow-range breakout with lookback `12`, max average-range ratio `0.68`, max setup range `0.42 ATR`, breakout minimum `0.55 ATR`, body `45%`, close-location threshold `0.66`, and weight `2`.
-- `pa_full_confluence` enables a stricter version with lookback `14`, max average-range ratio `0.65`, max setup range `0.40 ATR`, breakout minimum `0.60 ATR`, body `50%`, and close-location threshold `0.68`.
-- Generated configs confirmed the module is enabled in momentum/confluence research profiles and pinned disabled in the robust base profile.
+- `weighted_quality_confluence` enables no-follow-through exit with `5` bars, minimum MFE `0.20R`, and max current R `-0.10`.
+- `pa_full_confluence` enables a slightly stricter version with `6` bars, minimum MFE `0.25R`, and max current R `-0.08`.
+- Generated configs confirmed the module is enabled in strict risk-management research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
 
@@ -49,14 +43,14 @@ This is a price-action/OHLC selectivity module for volatility-contraction-to-exp
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `7E09734181E06B4A97185B2EBF4906EC791F0CF74222BBFC8353705489F75A96`
-- `Professional_XAUUSD_EA.mq5`: `7E09734181E06B4A97185B2EBF4906EC791F0CF74222BBFC8353705489F75A96`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `F6D9AD2D27AB5EE779D72694F0ECFA71D8E11D30EB7C37A35DEF28ED97653F80`
+- `outputs\Professional_XAUUSD_EA.mq5`: `BD06BBF6FDCB6EBF6C72A075B174C35E89407E2E1EE19F7DCDFE743AB311F9C8`
+- `Professional_XAUUSD_EA.mq5`: `BD06BBF6FDCB6EBF6C72A075B174C35E89407E2E1EE19F7DCDFE743AB311F9C8`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `AF1287E415498DF192763AF19ED0031078326DF101D28F492243265977E38E0C`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `DD3CC469725EA295522152AB30C5923C1BA0D27AF5D2F414CECC13A0E746D7DB`
-- `work\test_price_action_strategy_modules.ps1`: `C6FFFD2341B242D99718698108E6F21ED3FC7313C19E62295ABF27B3248684B6`
-- `work\test_price_action_strategy_batch.ps1`: `17BD630B13856069519117AB486208B63A42F37396FAA442B220A1C605D6BF19`
-- `work\build_price_action_strategy_batch.ps1`: `D7BF8FC9611399EFADD38684B25402DCCD152B80292A740D21384DD11F45AEEE`
+- `outputs\xauusd_micro_validation_package.zip`: `61B796316D86326425B1488C10A6C591D20A52A8335210FB8415E6BA52ED4C62`
+- `work\test_price_action_strategy_modules.ps1`: `8465E6FE7835D74FD83EF6BA9019E0DA3D9E92125F2590513975156A79B59742`
+- `work\test_price_action_strategy_batch.ps1`: `B3A9E289161A7FBB9F95855A3141C046B2BF9FF0B4F69DBECEC3D01C24E3DA73`
+- `work\build_price_action_strategy_batch.ps1`: `FCC9FB502957E5F1164828B5DB3D0D7B04343A4A15415037A32D5DD6D74430C4`
 
 ## Background-Safety Note
 
