@@ -19,8 +19,10 @@ Added optional Price Action Composite Gate:
 - `InpPriceActionRequireLiquidity`
 - `InpPriceActionRequireExecution`
 - `InpPriceActionRequireOrderFlow`
+- `InpWeightPriceActionComposite`
 - `PriceActionCompositeQuality()` scores BOS, displacement BOS, CHoCH, breakout retest, liquidity sweeps, wick rejection, equal/session/Asian sweeps, FVG, FVG retest, order block, OHLC wick/body rejection, displacement candle, tick pressure, tick speed, momentum, candle anatomy, volume, cumulative delta proxy, tick tape, VWAP, daily open, previous-day range, and regime quality.
 - `Build()` now rejects enabled low-quality entries with `PA composite reject score ...` before normal confirmations.
+- Passing composite setups now add `PA composite score ...` as a weighted confirmation so quality risk scaling and quality TP scaling can react to stronger price-action evidence.
 
 This changes entry strategy code, not only settings. The goal is to require actual market-structure, liquidity, execution-candle, and optional order-flow evidence before allowing strict research profiles to trade. It is disabled in the robust base profile and enabled only in strict research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
 
@@ -28,8 +30,8 @@ This changes entry strategy code, not only settings. The goal is to require actu
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables Price Action Composite Gate with minimum score `9` and order-flow requirement disabled.
-- `pa_full_confluence` enables a stricter version with minimum score `12` and order-flow requirement enabled.
+- `weighted_quality_confluence` enables Price Action Composite Gate with minimum score `9`, order-flow requirement disabled, and PA composite weight `3`.
+- `pa_full_confluence` enables a stricter version with minimum score `12`, order-flow requirement enabled, and PA composite weight `4`.
 - Generated configs confirmed the module is enabled in strict price-action research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -45,15 +47,15 @@ This changes entry strategy code, not only settings. The goal is to require actu
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `437C02B05AA872BD2D73557560772555144A9BF56C76D1F8A18C00A4B67591EB`
-- `Professional_XAUUSD_EA.mq5`: `437C02B05AA872BD2D73557560772555144A9BF56C76D1F8A18C00A4B67591EB`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `437C02B05AA872BD2D73557560772555144A9BF56C76D1F8A18C00A4B67591EB`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `0F2C7E502682C4F2C6E24DE6A52A15D0218BE815B0798B42A5860D1F0A823C40`
+- `outputs\Professional_XAUUSD_EA.mq5`: `527ECE0B448A3AB24C395E3D9AF21E986C00A7CAB53315BE11B45A26C8ED88C2`
+- `Professional_XAUUSD_EA.mq5`: `527ECE0B448A3AB24C395E3D9AF21E986C00A7CAB53315BE11B45A26C8ED88C2`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `527ECE0B448A3AB24C395E3D9AF21E986C00A7CAB53315BE11B45A26C8ED88C2`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `5D6CFB101D36267B7BCD0E5BB7D20931E705B38CF8585FA773AF4E9F6402721A`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `8D9DED9DCCF64FC00536532FC329B37325A2A887DF47701FA8AAB79C75818578`
-- `work\test_price_action_strategy_modules.ps1`: `CC365CDB17B5FF0FAD5E9F5BB998B39EFE24064EA2026AD80A1BBC86B0335787`
-- `work\test_price_action_strategy_batch.ps1`: `A808CEF1F314EB09FD0565FF4918002E3CA8361E372D5D40A4B5FCED7C7225A2`
-- `work\build_price_action_strategy_batch.ps1`: `42780A46CBDD4E92054B80799E389E50D0C0BFCC350B82E1AF62DD808F2FA480`
+- `outputs\xauusd_micro_validation_package.zip`: `6D9516BC62FBF39673FB157D2FBD3521210D2E0FD195A8846E20A4B60FBE6375`
+- `work\test_price_action_strategy_modules.ps1`: `00A778A5DF4A6230028B6C46222E2CC0A09C924ED5FF37A2A20990CBF6F19E0F`
+- `work\test_price_action_strategy_batch.ps1`: `EE6A0D1BC225291C15F566D6CCD6C9697F267589F547991D4DEE39E56F6903F7`
+- `work\build_price_action_strategy_batch.ps1`: `FC96E10565DDDD1B74DE1F2AF16923864F2C4325B3DAD5A1046748D51A615C13`
 
 ## Background-Safety Note
 
