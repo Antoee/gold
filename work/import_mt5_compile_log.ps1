@@ -1,5 +1,8 @@
 param(
    [string]$LogPath = "work\compile.log",
+   [string]$ExpectedSourcePath = "outputs\Professional_XAUUSD_EA.mq5",
+   [string]$CompiledSourcePath = "",
+   [bool]$RequireSourceHashMatch = $true,
    [string]$OutCsv = "outputs\MT5_COMPILE_STATUS.csv",
    [string]$OutMarkdown = "outputs\MT5_COMPILE_STATUS.md"
 )
@@ -32,6 +35,9 @@ $warnings = $null
 $elapsed = ""
 $resultLine = ""
 $sourceFile = ""
+$sourceHash = ""
+$expectedSourceHash = ""
+$sourceHashStatus = "NOT_CHECKED"
 $evidence = "Compile log was not found at $LogPath."
 $nextAction = "Export a MetaEditor compile log, then rerun this importer before accepting new backtest reports."
 
@@ -42,6 +48,22 @@ if(Test-Path -LiteralPath $LogPath) {
    $sourceLine = [string]($lines | Where-Object { $_ -match '(?i):\s+information:\s+compiling\s+' } | Select-Object -Last 1)
 
    if($sourceLine -match '(?i)compiling\s+(.+)$') { $sourceFile = $Matches[1].Trim() }
+   if(![string]::IsNullOrWhiteSpace($CompiledSourcePath)) {
+      $sourceFile = $CompiledSourcePath
+   }
+   if(![string]::IsNullOrWhiteSpace($sourceFile) -and (Test-Path -LiteralPath $sourceFile -ErrorAction SilentlyContinue)) {
+      $sourceHash = (Get-FileHash -LiteralPath $sourceFile -Algorithm SHA256).Hash
+   }
+   if(Test-Path -LiteralPath $ExpectedSourcePath -ErrorAction SilentlyContinue) {
+      $expectedSourceHash = (Get-FileHash -LiteralPath $ExpectedSourcePath -Algorithm SHA256).Hash
+   }
+   if(![string]::IsNullOrWhiteSpace($sourceHash) -and ![string]::IsNullOrWhiteSpace($expectedSourceHash)) {
+      $sourceHashStatus = if($sourceHash -eq $expectedSourceHash) { "MATCH" } else { "MISMATCH" }
+   } elseif(![string]::IsNullOrWhiteSpace($expectedSourceHash)) {
+      $sourceHashStatus = "EXPECTED_ONLY"
+   } elseif(![string]::IsNullOrWhiteSpace($sourceHash)) {
+      $sourceHashStatus = "COMPILED_ONLY"
+   }
    if($resultLine -match '(?i)Result:\s+(\d+)\s+errors?,\s+(\d+)\s+warnings?,\s+(.+)$') {
       $errors = [int]$Matches[1]
       $warnings = [int]$Matches[2]
@@ -68,6 +90,12 @@ if(Test-Path -LiteralPath $LogPath) {
       $evidence = "0 compile errors, 0 warnings. $resultLine"
       $nextAction = "Compile gate is satisfied for this log; backtest evidence is still required separately."
    }
+
+   if($RequireSourceHashMatch -and $status -in @("PASS", "WARN") -and $sourceHashStatus -ne "MATCH") {
+      $status = "STALE"
+      $evidence = "Compile log is clean, but compiled source hash did not match expected source. HashStatus=$sourceHashStatus; Source=$sourceFile; Expected=$ExpectedSourcePath"
+      $nextAction = "Import the compile log with -CompiledSourcePath pointing to the exact compiled EA source copy, and require SourceHashStatus=MATCH before trusting reports."
+   }
 }
 
 $rows.Add([pscustomobject]@{
@@ -75,6 +103,10 @@ $rows.Add([pscustomobject]@{
    Status = $status
    LogPath = $LogPath
    SourceFile = $sourceFile
+   SourceHash = $sourceHash
+   ExpectedSourcePath = $ExpectedSourcePath
+   ExpectedSourceHash = $expectedSourceHash
+   SourceHashStatus = $sourceHashStatus
    Errors = if($null -eq $errors) { "" } else { $errors }
    Warnings = if($null -eq $warnings) { "" } else { $warnings }
    Elapsed = $elapsed
@@ -89,10 +121,10 @@ $report.Add("# MT5 Compile Status") | Out-Null
 $report.Add("") | Out-Null
 $report.Add("Offline import only. This script does not launch MetaEditor or MT5.") | Out-Null
 $report.Add("") | Out-Null
-$report.Add("| Area | Status | Log | Source | Errors | Warnings | Evidence | Next Action |") | Out-Null
-$report.Add("|---|---|---|---|---:|---:|---|---|") | Out-Null
+$report.Add("| Area | Status | Log | Source | Hash Status | Errors | Warnings | Evidence | Next Action |") | Out-Null
+$report.Add("|---|---|---|---|---|---:|---:|---|---|") | Out-Null
 foreach($row in $rows) {
-   $report.Add("| $($row.Area) | $($row.Status) | $(Escape-MarkdownCell $row.LogPath) | $(Escape-MarkdownCell $row.SourceFile) | $($row.Errors) | $($row.Warnings) | $(Escape-MarkdownCell $row.Evidence) | $(Escape-MarkdownCell $row.NextAction) |") | Out-Null
+   $report.Add("| $($row.Area) | $($row.Status) | $(Escape-MarkdownCell $row.LogPath) | $(Escape-MarkdownCell $row.SourceFile) | $($row.SourceHashStatus) | $($row.Errors) | $($row.Warnings) | $(Escape-MarkdownCell $row.Evidence) | $(Escape-MarkdownCell $row.NextAction) |") | Out-Null
 }
 
 $report.Add("") | Out-Null
@@ -102,6 +134,8 @@ if($status -eq "PASS") {
    $report.Add("The imported compile log is clean. This is a compile gate only; it does not prove profitability.") | Out-Null
 } elseif($status -eq "WARN") {
    $report.Add("The imported compile log has warnings. Review them before spending tester time.") | Out-Null
+} elseif($status -eq "STALE") {
+   $report.Add("The compile log is not trusted for this EA source because source hash verification did not match.") | Out-Null
 } elseif($status -eq "FAIL") {
    $report.Add("The imported compile log has errors. Do not run backtests until they are fixed.") | Out-Null
 } else {
@@ -111,4 +145,4 @@ Set-Content -LiteralPath $OutMarkdown -Value $report -Encoding UTF8
 
 $rows
 
-if($status -eq "FAIL" -or $status -eq "UNPARSED") { exit 1 }
+if($status -eq "FAIL" -or $status -eq "UNPARSED" -or $status -eq "STALE") { exit 1 }
