@@ -11,22 +11,22 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional margin guard:
+Added optional trading-cost guard:
 
-- `InpUseMarginGuard`
-- `InpMinMarginLevelPercent`
-- `InpMaxTradeMarginFreePercent`
-- `MarginGuardAllows()` checks account margin level, free margin, and estimated required margin before sending an order.
-- New entries can be blocked with `margin level`, `free margin`, `insufficient margin`, `margin calculation`, or `trade margin cap`.
+- `InpUseTradingCostGuard`
+- `InpEstimatedRoundTurnCommissionPerLot`
+- `InpMaxTradingCostRiskPercent`
+- `TradingCostGuardAllows()` estimates spread cost plus optional round-turn commission cost versus the money at risk.
+- New entries can be blocked with `trading cost risk` when estimated costs consume too much of the trade's risk budget.
 
-This is an execution-risk module intended to prevent overcommitting margin during XAUUSD volatility and to keep risk controls aligned with actual account capacity.
+This is an execution-cost module intended to avoid marginal XAUUSD setups where spread/commission drag is too large relative to stop-risk.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables margin guard with min margin level `300%` and max trade margin `20%` of free margin.
-- `pa_full_confluence` enables margin guard with min margin level `350%` and max trade margin `15%` of free margin.
+- `weighted_quality_confluence` enables cost guard with max cost `12%` of risk.
+- `pa_full_confluence` enables cost guard with max cost `10%` of risk.
 - Generated configs confirmed the guard is enabled in those profiles and pinned disabled in other profiles.
 
 ## Quiet Validation Results
@@ -42,16 +42,16 @@ This is an execution-risk module intended to prevent overcommitting margin durin
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `B6A98CBC372738C16FAF28F935C016F1FDFD622CCC480B83E5CA9BB1973416C3`
-- `Professional_XAUUSD_EA.mq5`: `B6A98CBC372738C16FAF28F935C016F1FDFD622CCC480B83E5CA9BB1973416C3`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `F8AFB957A1CABCEB3560D3B04095C6003401CE6B32A1455BF943C33D5E2D9D54`
+- `outputs\Professional_XAUUSD_EA.mq5`: `288BFF54DFCC258E926022117BE7649CF8C3FF01C53C1BBDE97893978BDE2617`
+- `Professional_XAUUSD_EA.mq5`: `288BFF54DFCC258E926022117BE7649CF8C3FF01C53C1BBDE97893978BDE2617`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `CB3141827A5DA8DA35938688396EBAA8B93B344BDFFA47256DFAA05770C38571`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\price_action_strategy_handoff.zip`: `D57BD21C2F769C57FF1338A7774B7DDA0B5E179BDB457C8E2822804ED1302C73`
-- `outputs\price_action_parallel_lanes.zip`: `90F202662130BBA9DD402676ACC12B90E3F60C16E568A8B6E5722A0B29E38614`
-- `outputs\xauusd_micro_validation_package.zip`: `A156723E42068D82092CAA013B6221BF69390B6C5D390C68FCDE1B8EBDC8D66B`
-- `work\test_price_action_strategy_modules.ps1`: `6BA18893D4B79C1ED06309EE82422799B47371459BFD3382A2882F4C7CF4BE4E`
+- `outputs\price_action_strategy_handoff.zip`: `8F70DA8157A1910E7CC066ECA57E580CEF9534A4BE4A392542B6716DE55AC437`
+- `outputs\price_action_parallel_lanes.zip`: `7D6ABFCB114342CFF5344FA543426FCD5E036BA1206ED67D07383CCE60758275`
+- `outputs\xauusd_micro_validation_package.zip`: `3BD54A84F9B4E3B49CE18C5AD81A01D859676CF1F87126A95150BC5928AA0869`
+- `work\test_price_action_strategy_modules.ps1`: `DA870031974188437CFA863EB86E6E1420243B4E783C57C60D8B6EE4824B13B6`
 - `work\test_price_action_strategy_batch.ps1`: `4B9B4747F2872AA3617E1804D5610FDB5709664D06F52635B5DF7F393697B0DC`
-- `work\build_price_action_strategy_batch.ps1`: `2456D8CC3B45BA9E735B5A2BB1E72E330CA93C19D9294C74F2C0A5104FEB6717`
+- `work\build_price_action_strategy_batch.ps1`: `6EAFC618E54B2356DFDD9B6482510AF7EB86C69446A8B60AD50997637622EC00`
 
 ## Background-Safety Note
 
