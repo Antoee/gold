@@ -9,28 +9,28 @@ Updated: 2026-07-06
 - No profit claim is made from this offline-only validation.
 - Full EA source exists locally, but this note is the GitHub-safe status/evidence artifact.
 
-## Latest Entry-Code Change
+## Latest Strategy-Code Change
 
-Added an optional Smart Money Quality Gate:
+Added an optional Smart Money Thesis Break Exit:
 
-- `InpUseSmartMoneyQualityGate`
-- `InpSmartMoneyMinScore`
-- `InpSmartMoneyRequireStructure`
-- `InpSmartMoneyRequireLiquidityOrImbalance`
-- `InpSmartMoneyRequireExecution`
-- `InpSmartMoneyRequireOrderFlow`
-- `InpWeightSmartMoneyQuality`
-- `CEntryEngine::SmartMoneyQuality()` scores structure, liquidity sweeps, FVG/order-block imbalance, displacement candles, VWAP pullbacks, tick-pressure/tick-speed, cumulative-delta proxy, tick microstructure, daily-open bias, previous-day range bias, and regime quality.
-- `CEntryEngine::Build()` can reject weak entries with `SMQ reject score ...` or add one weighted confirmation with `SMQ score ...`.
+- `InpUseSmartMoneyThesisBreakExit`
+- `InpSmartMoneyExitMinScore`
+- `InpSmartMoneyExitMaxR`
+- `InpSmartMoneyExitMinHoldBars`
+- `InpSmartMoneyExitRequireStructure`
+- `InpSmartMoneyExitRequireLiquidityOrImbalance`
+- `InpSmartMoneyExitRequireExecution`
+- `CPositionManager::SmartMoneyThesisBreakExitHit()` scores opposite BOS, displacement BOS, CHoCH, breakout retest, liquidity sweep, sweep rejection, equal-level sweep, FVG, FVG retest, order block, opposite displacement candle, and VWAP confluence.
+- Managed exits log `smart_money_thesis_break` with `SM thesis break score ...`.
 
-This changes strategy logic instead of only changing settings. The goal is to require a coherent price-action story before strict profiles trade: structure plus liquidity or imbalance plus execution quality, with optional order-flow proxy evidence. It is disabled in the robust base profile and enabled only in strict research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
+This changes exit strategy logic instead of only changing settings. The goal is to cut trades when the original price-action thesis breaks, while avoiding panic exits on healthy winners through `InpSmartMoneyExitMaxR` and `InpSmartMoneyExitMinHoldBars`. It is disabled in the robust base profile and enabled only in strict research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables Smart Money Quality Gate with minimum score `6`, structure required, liquidity/imbalance required, execution required, and order-flow optional.
-- `pa_full_confluence` enables a stricter version with minimum score `8` and order-flow proxy evidence required.
+- `weighted_quality_confluence` enables Smart Money Thesis Break Exit with minimum score `5`, max close R `0.35`, minimum hold `2` bars, structure required, execution required, and liquidity/imbalance optional.
+- `pa_full_confluence` enables a stricter version with minimum score `6`, max close R `0.25`, minimum hold `3` bars, and liquidity/imbalance required.
 - Generated configs confirmed the module is enabled in strict price-action research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -46,15 +46,15 @@ This changes strategy logic instead of only changing settings. The goal is to re
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `BFBD1B36A14F2CEF8A4A6926EE5EC610E0D904F3ACD51489B5908AEF16C0E8CE`
-- `Professional_XAUUSD_EA.mq5`: `BFBD1B36A14F2CEF8A4A6926EE5EC610E0D904F3ACD51489B5908AEF16C0E8CE`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `BFBD1B36A14F2CEF8A4A6926EE5EC610E0D904F3ACD51489B5908AEF16C0E8CE`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `0C0CB900F0DFAF1BA0B7FBBD4D7EBA76B855C7BD605FF756CF338D62282466FF`
+- `outputs\Professional_XAUUSD_EA.mq5`: `DCE03F01D8DB861F1BD926203D96265571BFA0E760C47731F9F9C3CEE7721CCA`
+- `Professional_XAUUSD_EA.mq5`: `DCE03F01D8DB861F1BD926203D96265571BFA0E760C47731F9F9C3CEE7721CCA`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `DCE03F01D8DB861F1BD926203D96265571BFA0E760C47731F9F9C3CEE7721CCA`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `6E83B87FFE4D2DCC0620D473E3215202F24C1D88B710092884DF59B50529140E`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `AAC9B05A90D7A10C49013F1C38E6C765AE02BB44FAB7CA9DD06774ACCA4346BF`
-- `work\test_price_action_strategy_modules.ps1`: `682696A4ECCE3E309AC7B37F3AAA6BCCC931E192FC28199D734B84C644183700`
-- `work\test_price_action_strategy_batch.ps1`: `48F4A4B16F52891BB2EEDAB95B3C047E5002679EA6259C384C393664D4574A7B`
-- `work\build_price_action_strategy_batch.ps1`: `BDC2335701787AA1C1DE7CF93247B7CF0DB1DC91BFA498597A130572381B75DD`
+- `outputs\xauusd_micro_validation_package.zip`: `411339268B012530936391854DB71D8BDD04D6B989EBB62527D7DA5245D78066`
+- `work\test_price_action_strategy_modules.ps1`: `1F5D8208A81B19957671090F998BDF514AE04FD3D1076017CE1D0DF67D9E84C9`
+- `work\test_price_action_strategy_batch.ps1`: `EC07798F4D0DA04BACB74892B8B1FD97DBDB2269505FB34D80BBF7F33580821A`
+- `work\build_price_action_strategy_batch.ps1`: `F7EF4DECCCEF2DFEE492087A82572EA1EC4F282770DC10B3B2AB297FB38D0E9A`
 
 ## Background-Safety Note
 
