@@ -14,7 +14,7 @@ Updated locally on 2026-07-06.
 
 - Canonical source: `outputs/Professional_XAUUSD_EA.mq5`.
 - Root/package source sync: PASS.
-- Current synced source SHA256: `1CF2FC9D0B93B4B3511F06729089A92780F87C7C71D13B0F8A4626E67D023113`.
+- Current synced source SHA256: `ECD6FB47D76CCA4CE87C233E10B8B62D500B0D188939F1D2707E5469E386AB1D`.
 
 ## Strategy-Code Work
 
@@ -35,41 +35,37 @@ The EA now includes optional, independently configurable strategy modules for ac
 - Tick microstructure confirmation.
 - Weighted entry-quality score.
 - Quality-based risk scaling.
+- Regime-quality confirmation using ADX, EMA slope, and ATR regime.
 
-## Weighted Entry-Quality Addition
+## Regime-Quality Addition
 
-Added optional weighted setup scoring beside the existing confirmation count:
+Added optional regime scoring so the EA can reward setups only when trend strength, directional slope, and volatility regime agree:
 
-- `SSignal` now tracks `qualityScore`.
+- `InpUseRegimeQualityScore=false` by default.
+- `InpRegimeSlopeLookbackBars=8`.
+- `InpRegimeMinSlopePoints=35.0`.
+- `InpRegimeMinATRPercentile=0.85`.
+- `InpRegimeMaxATRPercentile=1.75`.
+- `InpWeightRegimeQuality=2`.
+- `RegimeQuality()` checks ADX, EMA slope direction, and current ATR versus the recent ATR average.
+- The entry engine adds `Regime quality;` as a normal confirmation and quality-score contributor when enabled.
+
+The feature is default-off so the promoted baseline remains reproducible, but optimization profiles can now test whether trend/volatility context filters out low-quality XAUUSD entries.
+
+## Weighted Entry-Quality And Risk Scaling
+
+The EA also includes optional weighted setup scoring and risk scaling:
+
+- `SSignal` tracks `qualityScore`.
 - Every enabled confirmation can add a configurable weight.
-- `InpUseWeightedEntryScore=false` by default, so promoted baseline behavior stays unchanged.
-- When enabled, `InpMinimumEntryScore` can reject setups that have enough raw confirmations but not enough high-quality evidence.
-- New weight inputs cover BOS, liquidity sweep, CHoCH, FVG, order block, equal levels, previous/session levels, VWAP, momentum, volume, indicators, candles, ATR expansion, and tick microstructure.
-
-This lets research profiles prefer strong structure/tick/imbalance evidence over many weak indicator-only confirmations.
-
-## Quality Risk Scaling Addition
-
-Added optional quality-based risk sizing so the EA can risk less on marginal setups and only use full allowed risk on high-quality setups:
-
+- `InpUseWeightedEntryScore=false` by default.
+- `InpMinimumEntryScore` can reject setups that have enough raw confirmations but not enough high-quality evidence.
 - `InpUseQualityRiskScaling=false` by default.
-- `InpQualityRiskMinScore=5`.
-- `InpQualityRiskFullScore=10`.
-- `InpMinQualityRiskMultiplier=0.50`.
-- `InpMaxQualityRiskMultiplier=1.00`.
 - `QualityRiskMultiplier()` maps setup quality to a bounded risk multiplier.
-- `CRiskManager::LotsForRisk()` now accepts the multiplier and applies it to `EffectiveRiskPercent()`.
+- `CRiskManager::LotsForRisk()` accepts the multiplier and applies it to `EffectiveRiskPercent()`.
 - Trade logs include the quality risk multiplier when enabled.
 
-The `weighted_quality_confluence` research profile now enables both weighted scoring and quality risk scaling:
-
-- `InpUseWeightedEntryScore=true`.
-- `InpMinimumEntryScore=7`.
-- `InpUseQualityRiskScaling=true`.
-- `InpQualityRiskMinScore=7`.
-- `InpQualityRiskFullScore=11`.
-- `InpMinQualityRiskMultiplier=0.50`.
-- `InpMaxQualityRiskMultiplier=1.00`.
+The `weighted_quality_confluence` research profile now enables weighted scoring, quality risk scaling, tick microstructure, and regime-quality scoring.
 
 ## Price-Action Research Batch
 
@@ -96,8 +92,8 @@ Research profiles:
 - `liquidity_level_reversal`
 - `vwap_momentum_phase`
 - `tick_vwap_momentum`
-- `indicator_phase_filter`
-- `weighted_quality_confluence`
+- `indicator_phase_filter` now includes regime-quality scoring.
+- `weighted_quality_confluence` now includes regime-quality scoring and quality risk scaling.
 - `pa_full_confluence`
 
 ## Price-Action Decision Gate
@@ -121,6 +117,10 @@ Current decision state:
 
 ## Offline Evidence
 
+- Focused smokes passed:
+  - `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`.
+  - `PRICE_ACTION_STRATEGY_BATCH_SMOKE_PASS`.
+  - `EA_SOURCE_ARTIFACT_SYNC_SMOKE_PASS`.
 - Full offline refresh: PASS, 39 steps, 0 failed.
 - Report import preflight rows:
   - Open risk exposure guard smoke: PASS.
@@ -137,15 +137,15 @@ Current decision state:
 
 ## Hashes
 
-- EA source: `1CF2FC9D0B93B4B3511F06729089A92780F87C7C71D13B0F8A4626E67D023113`.
-- Price-action batch CSV: `AB602CA98DDC931A4C890A834EF8596AA00DC0B34ECFE133A2916FE0C06373F4`.
-- Price-action handoff zip: `C9A59E96CFD8720A9E5E5C63FFBAB5DEDF0D0747B05EB42F7BE7A5683622FBD1`.
-- Price-action parallel lanes zip: `BF51ACAA9A47205F05C025693B6DA3383DE4740BAEBF1D7B67EB050E433317CB`.
-- External validation package zip: `64716D17BBC5342E861D352A0E2B2CBBBFF6FA6FC21C4080667F726C5C0DE3ED`.
-- Open risk exposure guard smoke: `305BF7920A750147F218F9A1ADB16BDF7B2858B8EEAE3CEF1462C6EFD9913DDE`.
-- Max stop ATR guard smoke: `145DFCBCB3D977F33D2B88D1518E0D76D96715FCFA171E66588E2D2866528C04`.
-- Price-action modules smoke: `FA4A47F3D2D4B733628449E6BDF7F3794CBC6DFB8C1D459D023FBBEF772A3289`.
-- Price-action batch builder: `0E4D601E150523232A0D9407231A054372100F79ED08F1DC5188E6DDAA96666D`.
+- EA source: `ECD6FB47D76CCA4CE87C233E10B8B62D500B0D188939F1D2707E5469E386AB1D`.
+- Base profile: `795950EE752557D37DCA3F4035150F006C94A9E9149D92E1E25DC3710744E97C`.
+- Price-action batch CSV: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`.
+- Price-action handoff zip: `CBDDDF96C5110D59CA24C849AD1D8F6F6CF4E08BB475AC03CBFCE85A88754E4C`.
+- Price-action parallel lanes zip: `A642CE2B3FAB6B46AAE6B38E7AA8938FA74B6A66F65B674E531532BE249FD767`.
+- External validation package zip: `CAE642E51D2928549849A1A831EC881467359A5DEE39820F93000963DCB803AF`.
+- Price-action modules smoke: `7EB980A9117509C541A0F49DDDE31AF7D42A115F06249465825FD20B15938534`.
+- Price-action batch smoke: `7EDC664E694DD1F50F7662284D7C3948B9104DD215C3F0BCF8D19076FAA4A8F8`.
+- Price-action batch builder: `1A3C6DD6FC79AFCB0A711BDB041E1D80B72E82F5F6C094308C952F9C827AEE9D`.
 
 ## Caveat
 
