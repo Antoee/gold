@@ -14,11 +14,11 @@ Updated locally on 2026-07-06.
 
 - Canonical source: `outputs/Professional_XAUUSD_EA.mq5`.
 - Root/package source sync: PASS.
-- Current synced source SHA256: `6CA7AD334AC5466CD7D20B823EBFFA3EA5E522204157386654317E435BF4A037`.
+- Current synced source SHA256: `F8538DE547B8C14D60CA15766574E9378ECD3881D60FD6144F0EB44C2B55DA26`.
 
 ## Strategy-Code Work
 
-The EA now includes optional, independently configurable strategy modules for actual price-action, market-state, tick-tape, weighted setup-quality logic, and profit protection:
+The EA now includes optional, independently configurable strategy modules for actual price-action, market-state, tick-tape, weighted setup-quality logic, profit protection, and early loss control:
 
 - CHoCH confirmation.
 - Fair Value Gap confirmation.
@@ -37,6 +37,19 @@ The EA now includes optional, independently configurable strategy modules for ac
 - Quality-based risk scaling.
 - Regime-quality confirmation using ADX, EMA slope, and ATR regime.
 - ATR-based profit-lock stop.
+- Adverse-R early exit.
+
+## Adverse-R Early Exit Addition
+
+Added an optional early-loss exit so a clearly failing trade can be cut before the full stop loss is reached:
+
+- `InpUseAdverseRExit=false` by default.
+- `InpAdverseExitR=0.75`.
+- The position manager calculates current open profit/loss in R using the entry price and current SL distance.
+- When enabled, if open R drops below `-InpAdverseExitR`, the EA closes the position and logs `adverse R exit`.
+- Selected high-confluence research profiles enable this with `0.75R` to `0.80R` thresholds.
+
+This is risk-first: it can reduce average losing trade size, but it still needs real tester reports because cutting losers too early can also close trades that would have recovered.
 
 ## Profit-Lock Stop Addition
 
@@ -48,8 +61,6 @@ Added an optional profit-protection stop for trades that have already moved in f
 - When enabled, the position manager waits until price has moved at least `InpProfitLockTriggerATR * ATR` from entry.
 - It then moves SL into protected profit by `InpProfitLockATR * ATR` from entry.
 - It works as another stop candidate alongside break-even, ATR trailing, and structure trailing.
-
-This is designed for XAUUSD reversals where a trade reaches open profit but gives it back before the standard trailing stop catches up. The base profile keeps it disabled; selected high-confluence research profiles enable it for testing.
 
 ## Regime-Quality Addition
 
@@ -77,7 +88,7 @@ The EA also includes optional weighted setup scoring and risk scaling:
 - `CRiskManager::LotsForRisk()` accepts the multiplier and applies it to `EffectiveRiskPercent()`.
 - Trade logs include the quality risk multiplier when enabled.
 
-The `weighted_quality_confluence` research profile now enables weighted scoring, quality risk scaling, tick microstructure, regime-quality scoring, and profit-lock stops.
+The `weighted_quality_confluence` research profile now enables weighted scoring, quality risk scaling, tick microstructure, regime-quality scoring, profit-lock stops, and adverse-R early exits.
 
 ## Price-Action Research Batch
 
@@ -105,8 +116,8 @@ Research profiles:
 - `vwap_momentum_phase`
 - `tick_vwap_momentum`
 - `indicator_phase_filter` includes regime-quality scoring.
-- `weighted_quality_confluence` includes regime-quality scoring, quality risk scaling, and profit-lock stops.
-- `pa_full_confluence` includes profit-lock stops.
+- `weighted_quality_confluence` includes regime-quality scoring, quality risk scaling, profit-lock stops, and adverse-R exits.
+- `pa_full_confluence` includes profit-lock stops and adverse-R exits.
 
 ## Price-Action Decision Gate
 
@@ -149,15 +160,15 @@ Current decision state:
 
 ## Hashes
 
-- EA source: `6CA7AD334AC5466CD7D20B823EBFFA3EA5E522204157386654317E435BF4A037`.
-- Base profile: `5F2CDD96A35AB83CB7FB9605CA2D3AEAA07E734D883A112264F7A415885A0DCA`.
+- EA source: `F8538DE547B8C14D60CA15766574E9378ECD3881D60FD6144F0EB44C2B55DA26`.
+- Base profile: `46E889F90E55A3732A5694CE02CFA1C6AE4887BD22792B7B405DB0521896D6E3`.
 - Price-action batch CSV: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`.
-- Price-action handoff zip: `4D3A3CCC2006B984BDB4269B84E5D18DD41E49805903CAB3029698FFCA6D5F38`.
-- Price-action parallel lanes zip: `7CBD72052940E82D65EBD75C26312C21A4F14DBA3EF706C4179C0473453B664F`.
-- External validation package zip: `A8A67AB58D47369AF216029BD0B0261C917BD659A788A778D5D8E6279AA34D42`.
-- Price-action modules smoke: `1FA203F7E4013185CE971071F7BB08C8E13BDBBE21E596B67B62019E56AA173C`.
-- Price-action batch smoke: `07C93FBD1E99A82F3A05FBA5287F4E3CCAE5659078076256605FB60E109FA1AC`.
-- Price-action batch builder: `D057DAA7B6D19977836FE67F7E84E286A623A28D8D6EC1174D7EDC5C2772120B`.
+- Price-action handoff zip: `8AEE623E5064103C5ECD048B5920DB83ABBB2DB5BE83D34F038880D6CC05205D`.
+- Price-action parallel lanes zip: `17FE9B42863F070EF46CBA0C6A30C7A10C5F77C2CF737FBB2CBA23377A78D5A6`.
+- External validation package zip: `2703D121F8FCE538347FFF7E0662A81B208DB43730BC44BAFA13054B2704F230`.
+- Price-action modules smoke: `4B048FFE95120AED3C59A72716F9F042FB9F3578BE393AAF2625B640523D792D`.
+- Price-action batch smoke: `301947BDCCFAC731EA3CF22232210876A37C7EAAE88CDE6409FC04C55A528558`.
+- Price-action batch builder: `DAF8EAB0B63FC19FA6CAB75893D1EC626F5FE7677C18F7BEA01C298BBD96C9DF`.
 
 ## Caveat
 
