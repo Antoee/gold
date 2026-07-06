@@ -11,28 +11,29 @@ Updated: 2026-07-06
 
 ## Latest Risk-Code Change
 
-Added optional Monthly Loss Pressure Risk Scaling:
+Activated and validated Open Exposure Risk Control for generated research profiles:
 
-- `InpUseMonthlyLossRiskScaling`
-- `InpMonthlyLossRiskStartFraction`
-- `InpMinMonthlyLossRiskMultiplier`
-- `MonthlyLossPressureRiskMultiplier()` uses current-month realized P/L and `InpMaxMonthlyLossPercent` to taper risk before the hard monthly loss limit is reached.
-- `OpenSignal()` now multiplies monthly-loss pressure risk into final lot sizing and logs `Monthly loss risk x...` when enabled.
+- `InpMaxOpenRiskPercent`
+- `InpBlockUnprotectedExposure`
+- `OpenRiskPercent()` calculates total stop-loss risk across current EA positions.
+- `ExposureAllows()` blocks new entries when existing open risk plus the candidate trade exceeds the configured cap.
+- Unprotected positions with no valid stop loss are blocked when `InpBlockUnprotectedExposure=true`.
+- Dashboard now displays `Open Risk` and whether an unprotected position exists.
 
-This is strategy/risk code, not only setting changes. It extends the daily and weekly loss-pressure idea to the monthly risk budget, reducing exposure as a bad month develops instead of waiting for the monthly hard stop. The baseline anchor remains pinned disabled for comparison, while generated research profiles enable it. It adds no martingale, grid, averaging down, or recovery behavior.
+This is risk-management strategy wiring, not only parameter tweaking. The baseline anchor remains `InpMaxOpenRiskPercent=0.00` for clean comparison, while generated research profiles use `InpMaxOpenRiskPercent=2.00` with unprotected exposure blocking enabled. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor remains `InpUseMonthlyLossRiskScaling=false` for clean comparison.
-- Generated research profiles enable `InpUseMonthlyLossRiskScaling=true`.
-- Research profiles use start fraction `0.35` and minimum multiplier `0.50`, so risk starts tapering after 35% of the monthly loss budget is used.
+- Baseline anchor remains `InpMaxOpenRiskPercent=0.00` for clean comparison.
+- Generated research profiles use `InpMaxOpenRiskPercent=2.00`.
+- Generated research profiles keep `InpBlockUnprotectedExposure=true`.
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `67FE21DA53BA76BF81CFBBEF08CACCB0BC86F2A29D836B84D5286A309DCF5000`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `99B2F2725E76D633F2E86C0A232B19AA0F9FE1CD2C5A329CE6C15DF1557985FC`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_ea_source_artifact_sync.ps1`: PASS
 - `work\test_price_action_strategy_batch.ps1`: PASS
@@ -42,15 +43,15 @@ This is strategy/risk code, not only setting changes. It extends the daily and w
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `67FE21DA53BA76BF81CFBBEF08CACCB0BC86F2A29D836B84D5286A309DCF5000`
-- `Professional_XAUUSD_EA.mq5`: `67FE21DA53BA76BF81CFBBEF08CACCB0BC86F2A29D836B84D5286A309DCF5000`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `67FE21DA53BA76BF81CFBBEF08CACCB0BC86F2A29D836B84D5286A309DCF5000`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `A706C360A300657213C54EE7C2A1752C308C5D2559854CAB501F0B5D4D6A3881`
+- `outputs\Professional_XAUUSD_EA.mq5`: `99B2F2725E76D633F2E86C0A232B19AA0F9FE1CD2C5A329CE6C15DF1557985FC`
+- `Professional_XAUUSD_EA.mq5`: `99B2F2725E76D633F2E86C0A232B19AA0F9FE1CD2C5A329CE6C15DF1557985FC`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `99B2F2725E76D633F2E86C0A232B19AA0F9FE1CD2C5A329CE6C15DF1557985FC`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `D54334BE90867F16519480DAEA027B73F3E026B9405CC20F7FD2E8E04FB685BB`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `5ABEAD7B64D330AEE77A6BD1E32F9B6249F571824C3F9635B93BBEF69AF9FDB5`
-- `work\test_price_action_strategy_modules.ps1`: `A47FA50955BEA0A9B3522391B337C88F5502863E5D0E5E5F72837B3E742775AE`
-- `work\test_price_action_strategy_batch.ps1`: `DD9829AF058071D814423A40A605C6EFC2AD8149E16BF798DC6556538113037D`
-- `work\build_price_action_strategy_batch.ps1`: `A474EC6CBC2976AE76C09B23C64FF108479948F8E1627E84A51A07CDA6C38894`
+- `outputs\xauusd_micro_validation_package.zip`: `453695DB221BF59FA11C49A1CA215D6B87333264FC16E7A2B5C1D94343AD09AD`
+- `work\test_price_action_strategy_modules.ps1`: `5A374534C737C654A45CDA59546B12CB509600C56A1BB27D4FDF3F21887CB5B7`
+- `work\test_price_action_strategy_batch.ps1`: `18D063B508907974A67DD788F180EE02FE7CCA23980F981F6B50720B59D90C7C`
+- `work\build_price_action_strategy_batch.ps1`: `E9C1F5F536302D4BD94D351EB29F63EA7C9AA4846ACB324EFE3DCBB0B587F396`
 
 ## Background-Safety Note
 
