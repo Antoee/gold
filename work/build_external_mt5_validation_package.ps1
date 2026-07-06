@@ -130,6 +130,7 @@ if(Test-Path -LiteralPath $compileStatusPath) {
 $compileRow = $compileStatusRows | Select-Object -First 1
 $compileStatusItem = if(Test-Path -LiteralPath $compileStatusPath) { Get-Item -LiteralPath $compileStatusPath } else { $null }
 $compileStatus = if($compileRow) { [string]$compileRow.Status } else { "MISSING" }
+$importedSourceHashStatus = Get-RowValue $compileRow "SourceHashStatus"
 $compileTrustStatus = "STALE"
 $compileEvidence = "No fresh compile log has been imported for this package source."
 if($compileStatusItem -and $compileStatus -eq "PASS" -and $sourceItem.LastWriteTimeUtc -le $compileStatusItem.LastWriteTimeUtc) {
@@ -149,6 +150,10 @@ $compileSourceHashStatus = if($compileRow -and ![string]::IsNullOrWhiteSpace($co
 if($compileTrustStatus -eq "FRESH_PASS" -and $compileSourceHashStatus -eq "MISMATCH") {
    $compileTrustStatus = "STALE"
    $compileEvidence = "Compile status source hash does not match package source hash."
+}
+if($compileTrustStatus -eq "FRESH_PASS" -and $importedSourceHashStatus -ne "MATCH") {
+   $compileTrustStatus = "STALE"
+   $compileEvidence = "Imported compile status does not prove SourceHashStatus=MATCH. SourceHashStatus=$importedSourceHashStatus"
 }
 
 $packageStatus = @(
@@ -213,7 +218,7 @@ $compileChecklist = @(
    [pscustomobject]@{
       Item = "Import command"
       Required = "YES"
-      ExpectedValue = "work\import_mt5_compile_log.ps1 -LogPath <returned log> -ExpectedSourcePath outputs\Professional_XAUUSD_EA.mq5"
+      ExpectedValue = "work\import_mt5_compile_log.ps1 -LogPath <returned log> -ExpectedSourcePath outputs\Professional_XAUUSD_EA.mq5 -CompiledSourcePath outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5"
       ReturnAs = "outputs\MT5_COMPILE_STATUS.csv"
       Notes = "Run from the main workspace after the compile log is copied back."
    }
