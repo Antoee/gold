@@ -11,24 +11,25 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added an optional tick-volume regime guard so entries can be rejected when tick activity is abnormally low or explosively high versus recent average:
+Added an optional recent-performance trade pause:
 
-- `InpUseTickVolumeRegimeGuard`
-- `InpTickVolumeRegimeLookbackBars`
-- `InpMinTickVolumeRatio`
-- `InpMaxTickVolumeRatio`
-- `CEntryEngine::TickVolumeRegimeAllows()` compares the latest closed candle's tick volume against recent average tick volume.
-- When enabled, rejected setups record `Tick volume regime reject;`.
+- `InpUseRecentPerformanceTradePause`
+- `InpRecentPerformancePauseLookbackTrades`
+- `InpRecentPerformancePauseMaxNetPercent`
+- `InpRecentPerformancePauseMinutes`
+- `CRiskManager::RecentPerformanceSample()` now provides shared recent closed-trade sampling for both risk throttling and trade pausing.
+- `CRiskManager::RecentPerformancePauseActive()` blocks new entries when the latest sample is weak and the cooldown window is still active.
+- Blocked entries report reason `recent performance pause`.
 
-This is a strategy/risk-control module using tick-volume/order-flow proxy data. It is separate from `InpUseVolumeConfirmation`, so optimization can test volume as either a positive confirmation or as a hard regime filter.
+This is a risk-control module, not martingale, grid, averaging down, or recovery logic. It pauses exposure after recent weakness instead of increasing risk.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables the guard with ratio band `0.60` to `2.80`.
-- `pa_full_confluence` enables the guard with stricter ratio band `0.65` to `2.50`.
-- Generated configs confirmed the guard is enabled in those profiles and pinned disabled in other profiles.
+- `weighted_quality_confluence` enables the pause with 5-trade lookback, max net `-0.25%`, and 180-minute cooldown.
+- `pa_full_confluence` enables the pause with 6-trade lookback, max net `-0.30%`, and 240-minute cooldown.
+- Generated configs confirmed the pause is enabled in those profiles and pinned disabled in other profiles.
 
 ## Quiet Validation Results
 
@@ -43,16 +44,16 @@ This is a strategy/risk-control module using tick-volume/order-flow proxy data. 
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `D2E140708B640EAC33904D9B64C1270C226F45A254AF282A5FC798F7E0CB55DA`
-- `Professional_XAUUSD_EA.mq5`: `D2E140708B640EAC33904D9B64C1270C226F45A254AF282A5FC798F7E0CB55DA`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `7880E29912AC0C76B8C9879E2C708B2700AA2E77DA28D0BA90D9C9648F2FCC75`
+- `outputs\Professional_XAUUSD_EA.mq5`: `FC9B1C6C40ACAE890E83C08A9B1470214794E87F42CA02D99B3D47C9D7C760F8`
+- `Professional_XAUUSD_EA.mq5`: `FC9B1C6C40ACAE890E83C08A9B1470214794E87F42CA02D99B3D47C9D7C760F8`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `4B0F8CA6C04065D9759A62BE5C6D3E04CC86465E62B67F743955C209CEE251AD`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\price_action_strategy_handoff.zip`: `5AB77E6A4C7B0FC32E0C9A700715E97598CEE911C01A58AE7648737B651E3C42`
-- `outputs\price_action_parallel_lanes.zip`: `E43ABDEF25715CCB1B77ED23B15585F41568A19294470A07F1C1663C9F618BA6`
-- `outputs\xauusd_micro_validation_package.zip`: `1DE470AB54F5DECBB9944A93455598E0FD723B37A56077244DFF21096755A19E`
-- `work\test_price_action_strategy_modules.ps1`: `EF4B5CC5EC7CED713D417AFE99C2C31E834E86282FA47D656F144113BEFED8AD`
+- `outputs\price_action_strategy_handoff.zip`: `093BD0FF506CD94CA6AE1BC332E8A36DAD9CD4E6FF5EA7DA7CFADD14AB027513`
+- `outputs\price_action_parallel_lanes.zip`: `1CFEB669EB073E1AD8FA669E1F8DACDFF2ECABA3035865B604AD64046110FE61`
+- `outputs\xauusd_micro_validation_package.zip`: `096EAE7CC9FAA542D8D7A4F88E27980E9CD1B32BA8E49347250C2F316F7C53B6`
+- `work\test_price_action_strategy_modules.ps1`: `7F789EA6CED27CF35CF7FD946B3D2F911410DF2CA6DC072BCD672F750C443E0C`
 - `work\test_price_action_strategy_batch.ps1`: `4B9B4747F2872AA3617E1804D5610FDB5709664D06F52635B5DF7F393697B0DC`
-- `work\build_price_action_strategy_batch.ps1`: `E0EB92EA1A79420945CF9372380755A3C395B3261A19BD23D74D5FD162773EE7`
+- `work\build_price_action_strategy_batch.ps1`: `648D657D1E0C0D93A85C30BB7A9F9CA9C73760ABB39B1A21CA3E64075783318E`
 
 ## Background-Safety Note
 
