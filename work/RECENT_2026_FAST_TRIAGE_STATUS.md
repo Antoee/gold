@@ -11,24 +11,23 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional ADX DI direction confirmation:
+Added optional pre-weekend exposure close protection:
 
-- `InpUseDIDirectionConfirmation`
-- `InpMinDIDifference`
-- `InpWeightDIDirection`
-- `PlusDI(...)` and `MinusDI(...)` accessors from the existing native MT5 ADX handle
-- `DIDirectionConfirmation(...)`
-- Entry scoring reason `DI direction;`
+- `InpCloseBeforeWeekend`
+- `InpWeekendCloseHour`
+- `WeekendCloseWindowActive(...)`
+- `OnTick()` now calls `positionManager.CloseAll("weekend close")` during the configured Friday close window when the feature is enabled.
+- The guard returns before new entry logic, so it can flatten managed exposure rather than merely blocking fresh Friday trades.
 
-This is a real strategy-code addition from the requested trend strength, market phase, and indicator feature list. It is optional, configurable, weighted, and pinned disabled in the robust base profile. It is enabled only in indicator/regime and full-confluence research profiles for fast triage. It adds no martingale, grid, averaging down, or recovery behavior.
+This is a real risk-management addition from the requested time/session and risk feature list. It is optional, configurable, and pinned disabled in the robust base profile. It is enabled only in stricter research profiles for fast triage. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `indicator_phase_filter` enables DI direction confirmation with minimum DI difference 2.0.
-- `pa_full_confluence` enables stricter DI direction confirmation with minimum DI difference 3.0.
-- Generated configs confirmed the module is enabled only in the intended research profiles and pinned disabled in the robust base profile.
+- `weighted_quality_confluence` enables weekend close at Friday hour 17.
+- `pa_full_confluence` enables weekend close at Friday hour 17.
+- Generated configs confirmed the feature is enabled only in the intended research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
 
@@ -43,14 +42,14 @@ This is a real strategy-code addition from the requested trend strength, market 
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `528AD604026C378F068B31DFACD634E79F55A4C68D9A051FA2118A9EF6E3523F`
-- `Professional_XAUUSD_EA.mq5`: `528AD604026C378F068B31DFACD634E79F55A4C68D9A051FA2118A9EF6E3523F`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `ACEE6CD7F96462DC2164EF9737EE066A06E4D5C44E0EBC597491B98241A4C28C`
+- `outputs\Professional_XAUUSD_EA.mq5`: `C6E223FA8163F68DB6ACBB96D08004992E73D0BBB12D4241121C7B0E552241EA`
+- `Professional_XAUUSD_EA.mq5`: `C6E223FA8163F68DB6ACBB96D08004992E73D0BBB12D4241121C7B0E552241EA`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `F37F21BB387103FBFCE1BE8CB22210CA8BD28CF301BFC22058597D8F5E6873B0`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `9DD386393BAEAFE0609CDAB8195F8801685E0FB2AEDF5C817A0E411FD4124362`
-- `work\test_price_action_strategy_modules.ps1`: `AE4659419DCC478C4BC9BDE465520B522253E6206BA64A4915C3A6E535ACF005`
-- `work\test_price_action_strategy_batch.ps1`: `07E83D9CD7691E91DCAC8CF68D35856B05B17339C352801B5C974338280A06E6`
-- `work\build_price_action_strategy_batch.ps1`: `87AAD943C9299EF0A638A5B04A76705DDAC56F66C61D25CAB03300115E2F3E48`
+- `outputs\xauusd_micro_validation_package.zip`: `5BA7439458E31FF636522B3B257E0F78DA7B4A6F8950D0D2A71E4ECE58E3DAD6`
+- `work\test_price_action_strategy_modules.ps1`: `323B76DB904EFB863E7C70DE2C3E5B6D4252B8EA66CC7273261A45749F442199`
+- `work\test_price_action_strategy_batch.ps1`: `8831D69D02A5FE25A3B460863B02AFAD0713BFC1B7C20E494B69CD5F8BEBF1CA`
+- `work\build_price_action_strategy_batch.ps1`: `089F3DA28563F6D7AEBC3B370B0293A2B233568A33D8317D3E8AD83821FACA08`
 
 ## Background-Safety Note
 
