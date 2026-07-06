@@ -11,29 +11,33 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional Donchian/channel breakout strategy logic and completed weekly/monthly profit target locks:
+Added optional stochastic momentum confirmation and exhaustion protection:
 
-- `InpUseDonchianBreakout`
-- `InpDonchianLookbackBars`
-- `InpDonchianBreakBufferPoints`
-- `InpDonchianMinBodyPercent`
-- `InpWeightDonchianBreakout`
-- `CMarketStructure::DonchianBreakout(...)`
-- Entry scoring reason `Donchian breakout;`
-- `InpUseWeeklyProfitLock` / `InpWeeklyProfitLockPercent`
-- `InpUseMonthlyProfitLock` / `InpMonthlyProfitLockPercent`
-- Generalized `ProfitLockHit(...)` now supports daily, weekly, and monthly target locks.
+- `InpUseStochasticConfirmation`
+- `InpStochasticKPeriod`
+- `InpStochasticDPeriod`
+- `InpStochasticSlowing`
+- `InpStochasticBuyMin`
+- `InpStochasticSellMax`
+- `InpUseStochasticExhaustionGuard`
+- `InpStochasticBuyMax`
+- `InpStochasticSellMin`
+- `InpWeightStochastic`
+- Native MT5 stochastic indicator handle in `CIndicators`
+- `StochasticConfirmation(...)`
+- `StochasticExhaustionAllows(...)`
+- Entry scoring reason `Stochastic;`
+- Reject reason `Stochastic exhaustion reject;`
 
-This is a real strategy-code addition from the requested OHLC, price-action, market-structure, and channel/breakout feature list. It is optional, configurable, weighted, and enabled only in stricter research profiles for fast triage. It adds no martingale, grid, averaging down, or recovery behavior.
+This is a real strategy-code addition from the requested indicator and momentum feature list. It is optional, configurable, weighted, and pinned disabled in the robust base profile. It is enabled only in indicator/regime and full-confluence research profiles for fast triage. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables Donchian breakout with 24-bar lookback and weight 2.
-- `pa_full_confluence` enables Donchian breakout with 28-bar lookback and stricter body requirement.
-- Weekly/monthly profit locks are enabled in the stricter profiles and pinned disabled in the robust base profile.
-- Generated configs confirmed the new strategy module and lock settings are present in the intended profiles.
+- `indicator_phase_filter` enables stochastic confirmation plus stochastic exhaustion guard.
+- `pa_full_confluence` enables a stricter stochastic confirmation plus stochastic exhaustion guard.
+- Generated configs confirmed the module is enabled only in the intended research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
 
@@ -42,22 +46,20 @@ This is a real strategy-code addition from the requested OHLC, price-action, mar
 - `work\test_price_action_strategy_modules.ps1`: PASS
 - `work\test_price_action_strategy_batch.ps1`: PASS
 - `work\test_ea_source_artifact_sync.ps1`: PASS
-- `work\test_daily_profit_lock_guard.ps1`: PASS
 - `work\refresh_offline_validation_state.ps1`: PASS, 39 steps, 0 failed
 - `work\build_external_mt5_validation_package.ps1`: PASS, package configs 20, profiles 9
 - `work\test_external_mt5_validation_package.ps1`: PASS, 26 checks, 0 failed
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `D31FE3C1D0431BCCA8380DBFB24D8906360949C1022A79D5169296D03CCCCE81`
-- `Professional_XAUUSD_EA.mq5`: `D31FE3C1D0431BCCA8380DBFB24D8906360949C1022A79D5169296D03CCCCE81`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `EE64564EEBD43C1BF087FCFEA66E85849B24864B335D980A0FA15AC94E04BC51`
+- `outputs\Professional_XAUUSD_EA.mq5`: `9866A50DD4020166B47D51E7419256EF655995334A2A765805B2B32AE334000F`
+- `Professional_XAUUSD_EA.mq5`: `9866A50DD4020166B47D51E7419256EF655995334A2A765805B2B32AE334000F`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `83E1F20C49AE6F8A1543202C32752B3FD41CE31CF09751807417B759360DC05C`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `74464FE75389F579015B3A4238A3AA8A29A420BC6ACD68F60E343A99B6FCFE87`
-- `work\test_price_action_strategy_modules.ps1`: `4CB367958B4B247B337C5310E1F06CBD477BAF20879F7BF206ED49EF562EF302`
-- `work\test_price_action_strategy_batch.ps1`: `2A82D48C68F74D0CC69007DE66284118E0EF36837859E1F8BFC8B7A38AFFA750`
-- `work\build_price_action_strategy_batch.ps1`: `D1BA953209126C0E1D1913029CB11BC967CCEA01218C2A387A13E6572200B38B`
-- `work\test_daily_profit_lock_guard.ps1`: `127B84F20F3F2DD71AA69B0EF6B3F19C22B6F4686B92BE57E982F3F1F488BD58`
+- `outputs\xauusd_micro_validation_package.zip`: `4406D77DBDF6C60EABB66323A84BB6BE8C5F70430F96868AFC4E22D6313EF9C1`
+- `work\test_price_action_strategy_modules.ps1`: `C3EE02748077A8370BF69B59A944187198A2F9AD5EDCC7B42001681FBB4C817B`
+- `work\test_price_action_strategy_batch.ps1`: `6BBFBC7D9E56A914236E43A382DD5162F96D8343ECD3CC2C890D17FFC68737C2`
+- `work\build_price_action_strategy_batch.ps1`: `140918ED17D55EDC5BB2A029C59B95F6DAB4265589983E90B89D4E29DE3634B4`
 
 ## Background-Safety Note
 
