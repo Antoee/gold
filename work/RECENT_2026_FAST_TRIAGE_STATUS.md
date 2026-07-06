@@ -11,22 +11,22 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional gap risk guard:
+Added optional margin guard:
 
-- `InpUseGapRiskGuard`
-- `InpMaxGapATR`
-- `InpMaxGapPoints`
-- `CEntryEngine::GapRiskAllows()` compares the latest closed candle open against the previous close.
-- New entries are blocked with `Gap risk reject;` when the detected gap exceeds the configured ATR or point limit.
+- `InpUseMarginGuard`
+- `InpMinMarginLevelPercent`
+- `InpMaxTradeMarginFreePercent`
+- `MarginGuardAllows()` checks account margin level, free margin, and estimated required margin before sending an order.
+- New entries can be blocked with `margin level`, `free margin`, `insufficient margin`, `margin calculation`, or `trade margin cap`.
 
-This is an entry-safety module intended to avoid chasing discontinuous XAUUSD candles, weekend/session gaps, and backtest-friendly but execution-hostile gap behavior.
+This is an execution-risk module intended to prevent overcommitting margin during XAUUSD volatility and to keep risk controls aligned with actual account capacity.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables gap guard with max `0.60 ATR` or `250` points.
-- `pa_full_confluence` enables gap guard with max `0.50 ATR` or `220` points.
+- `weighted_quality_confluence` enables margin guard with min margin level `300%` and max trade margin `20%` of free margin.
+- `pa_full_confluence` enables margin guard with min margin level `350%` and max trade margin `15%` of free margin.
 - Generated configs confirmed the guard is enabled in those profiles and pinned disabled in other profiles.
 
 ## Quiet Validation Results
@@ -42,16 +42,16 @@ This is an entry-safety module intended to avoid chasing discontinuous XAUUSD ca
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `A3C48F7AC089978648C4D76AF039DB69C482C2AC6336CDCC1F436AA008E2415A`
-- `Professional_XAUUSD_EA.mq5`: `A3C48F7AC089978648C4D76AF039DB69C482C2AC6336CDCC1F436AA008E2415A`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `64C6432577FE8BB949F670ED8EF726B848240A39CF34C4D08D00AC956487E2EA`
+- `outputs\Professional_XAUUSD_EA.mq5`: `B6A98CBC372738C16FAF28F935C016F1FDFD622CCC480B83E5CA9BB1973416C3`
+- `Professional_XAUUSD_EA.mq5`: `B6A98CBC372738C16FAF28F935C016F1FDFD622CCC480B83E5CA9BB1973416C3`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `F8AFB957A1CABCEB3560D3B04095C6003401CE6B32A1455BF943C33D5E2D9D54`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\price_action_strategy_handoff.zip`: `28E7808A943D737E1B631D621825607B9370606F52D05A8CDC581F7F0AA9CD8B`
-- `outputs\price_action_parallel_lanes.zip`: `83A8D65B4391508D917DDBDFAFCFCA8B965A1F00F59F531FB28560AA1F44A51C`
-- `outputs\xauusd_micro_validation_package.zip`: `ACFF9913A8A6A383AC968F6C420AAE26FF47D89E8E63C98E4FD2CAD0231C15A4`
-- `work\test_price_action_strategy_modules.ps1`: `BF96F38FEBEDB05EA3A0EC951D4C16B4A2F7FA05748651B2C8C08B79D38B094E`
+- `outputs\price_action_strategy_handoff.zip`: `D57BD21C2F769C57FF1338A7774B7DDA0B5E179BDB457C8E2822804ED1302C73`
+- `outputs\price_action_parallel_lanes.zip`: `90F202662130BBA9DD402676ACC12B90E3F60C16E568A8B6E5722A0B29E38614`
+- `outputs\xauusd_micro_validation_package.zip`: `A156723E42068D82092CAA013B6221BF69390B6C5D390C68FCDE1B8EBDC8D66B`
+- `work\test_price_action_strategy_modules.ps1`: `6BA18893D4B79C1ED06309EE82422799B47371459BFD3382A2882F4C7CF4BE4E`
 - `work\test_price_action_strategy_batch.ps1`: `4B9B4747F2872AA3617E1804D5610FDB5709664D06F52635B5DF7F393697B0DC`
-- `work\build_price_action_strategy_batch.ps1`: `A0C93A0FB0B6D572752111D264456E0D234CA8D02175329ED9FC636362E8B0B8`
+- `work\build_price_action_strategy_batch.ps1`: `2456D8CC3B45BA9E735B5A2BB1E72E330CA93C19D9294C74F2C0A5104FEB6717`
 
 ## Background-Safety Note
 
