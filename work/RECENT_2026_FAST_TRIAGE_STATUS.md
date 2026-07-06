@@ -11,23 +11,22 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional M1 spread-shock entry guard:
+Added optional early MFE reversal exit:
 
-- `InpUseM1SpreadShockGuard`
-- `InpM1SpreadShockLookbackBars`
-- `InpM1SpreadShockMaxRatio`
-- `InpM1SpreadShockMinPoints`
-- `SpreadShockEntryAllows()` compares current spread against recent M1 spread conditions and blocks entries when the live spread is both meaningfully large and unusually expanded.
-- `OpenSignal()` now records `M1 spread shock` as the block reason when this guard rejects an entry.
+- `InpUseEarlyMFEReversalExit`
+- `InpEarlyMFEReversalStartR`
+- `InpEarlyMFEReversalExitR`
+- `CPositionManager::Manage()` now tracks max favorable R and can close a trade after it has moved favorably, then rolled back below the configured current-R threshold.
+- Exit log reason: `Early MFE reversal exit`
 
-This is a risk-first execution-quality guard for XAUUSD. It is meant to avoid entering during broker spread spikes, thin-liquidity moments, and news-like microstructure shocks that can destroy the real risk/reward of a setup. It stays optional, configurable, and disabled in the robust base profile. It adds no martingale, grid, averaging down, or recovery behavior.
+This is a risk-first trade-management module for XAUUSD. It targets the gap between a trade that never worked and a larger MFE giveback exit: if price first proves the setup had some follow-through, then quickly gives it back, the EA can exit before a small winner or flat trade becomes a full loser. It stays optional, configurable, and disabled in the robust base profile. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables the guard with M1 lookback `30`, max spread ratio `2.50`, and minimum shock spread `60.0` points.
-- `pa_full_confluence` enables a stricter version with M1 lookback `36`, max spread ratio `2.20`, and minimum shock spread `55.0` points.
+- `weighted_quality_confluence` enables the exit with start `0.60 R` and close threshold `-0.05 R`.
+- `pa_full_confluence` enables a stricter version with start `0.70 R` and close threshold `0.00 R`.
 - Generated configs confirmed the module is enabled in the strict research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -43,14 +42,14 @@ This is a risk-first execution-quality guard for XAUUSD. It is meant to avoid en
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `046FADB06320450E55857CB912350D832EC534B65C01FA5CE3C1AA13960DC383`
-- `Professional_XAUUSD_EA.mq5`: `046FADB06320450E55857CB912350D832EC534B65C01FA5CE3C1AA13960DC383`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `F9A23015F0ABAF7A2BE7AEDCB99451A09906E924EC12233678181B7C2D807FF4`
+- `outputs\Professional_XAUUSD_EA.mq5`: `A0A0A0F52A450FAA96F221981873E79BC4C423FE822813E50A68F08DA69CA1E7`
+- `Professional_XAUUSD_EA.mq5`: `A0A0A0F52A450FAA96F221981873E79BC4C423FE822813E50A68F08DA69CA1E7`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `3ED7C8C8D030A9A06C98A57CCDC1CCC2AC68458E849A2E937FC01EBF27B37833`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `1265C600DE4D1A54475A3FA84668D76C8E6DDE1DF4E5E7E131FA9070F13BB639`
-- `work\test_price_action_strategy_modules.ps1`: `14C5D9692CAB399690C78BC5F73269118B48F7AC8E07A71D33088F816B8EFA85`
-- `work\test_price_action_strategy_batch.ps1`: `C7297CB6C6E00E1C2FB8B0B1EA41B5650559DA38DB032C7A5E292760907E231D`
-- `work\build_price_action_strategy_batch.ps1`: `C97C9B3E5368714BE474094EC57BBD6450368D6C34E63ECC480CC976DA5F01FB`
+- `outputs\xauusd_micro_validation_package.zip`: `E70206F9C89B9353F6F48684C44B9C434A2163BA45164147D46FD2263BC16274`
+- `work\test_price_action_strategy_modules.ps1`: `93CBD7C02FFB90C3F7747B7489CBAB04330838895D3DC7CB3AB848EA83ABC277`
+- `work\test_price_action_strategy_batch.ps1`: `8D72AC406EA83846DCF9BC2DA734D79EC306B08347EB0BE582857822D5F3105C`
+- `work\build_price_action_strategy_batch.ps1`: `9AD5A61F15FE0CA97865959B570F2EB4091A8C77EFB933841D37F1711B2AD540`
 
 ## Background-Safety Note
 
