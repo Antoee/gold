@@ -13,11 +13,11 @@ Updated locally on 2026-07-06.
 
 - Canonical source: `outputs/Professional_XAUUSD_EA.mq5`.
 - Root/package source sync: PASS.
-- Current synced source SHA256: `7416A50154D8355F241BC2BA4B512D020459A32E036A115C5D40EC65B2DE30CD`.
+- Current synced source SHA256: `458611765C9AA13BEF42EBAF5B9987CCD5534A5C9E94A2B985895C87FACBC8CD`.
 
 ## Strategy-Code Work
 
-The EA now includes optional, independently configurable strategy modules for actual price-action, market-state, and tick-tape logic:
+The EA now includes optional, independently configurable strategy modules for actual price-action, market-state, tick-tape, and weighted setup-quality logic:
 
 - CHoCH confirmation.
 - Fair Value Gap confirmation.
@@ -32,42 +32,35 @@ The EA now includes optional, independently configurable strategy modules for ac
 - MACD confirmation.
 - Bollinger Band confirmation.
 - Tick microstructure confirmation.
+- Weighted entry-quality score.
 
-## Tick Microstructure Addition
+## Weighted Entry-Quality Addition
 
-Added a rolling tick-tape module inside the EA:
+Added optional weighted setup scoring beside the existing confirmation count:
 
-- Keeps a 256-tick rolling buffer.
-- Updates on every `OnTick()` before new-bar trade gating.
-- Measures recent tick direction ratio.
-- Measures tick speed as ticks per second.
-- Measures recent net movement in points.
-- Can require buy setups to have positive tick pressure and sell setups to have negative tick pressure.
-- Controlled by new inputs:
-  - `InpUseTickMicrostructure`
-  - `InpTickMicroWindowSeconds`
-  - `InpTickMicroMinTicks`
-  - `InpTickMicroMinDirectionRatio`
-  - `InpTickMicroMinTicksPerSecond`
-  - `InpTickMicroMinMovePoints`
+- `SSignal` now tracks `qualityScore`.
+- Every enabled confirmation can add a configurable weight.
+- `InpUseWeightedEntryScore=false` by default, so promoted baseline behavior stays unchanged.
+- When enabled, `InpMinimumEntryScore` can reject setups that have enough raw confirmations but not enough high-quality evidence.
+- New weight inputs cover BOS, liquidity sweep, CHoCH, FVG, order block, equal levels, previous/session levels, VWAP, momentum, volume, indicators, candles, ATR expansion, and tick microstructure.
 
-The base BOS+sweep profile keeps this disabled by default so it can be researched independently.
+This allows research profiles to prefer strong structure/tick/imbalance evidence over many weak indicator-only confirmations.
 
 ## Price-Action Research Batch
 
 Fast research batch for actual strategy-code variants:
 
 - Batch: `outputs/PRICE_ACTION_STRATEGY_BATCH.csv`.
-- Profiles: 9.
-- Runs: 27.
+- Profiles: 10.
+- Runs: 30.
 - Windows: `2026_Q2`, `2026_ytd`, `2025_Q2`.
-- Estimated tester runtime: about 9.45 minutes before platform overhead.
+- Estimated tester runtime: about 10.5 minutes before platform overhead.
 - Handoff zip: `outputs/price_action_strategy_handoff.zip`.
 - Parallel lanes zip: `outputs/price_action_parallel_lanes.zip`.
 - Lanes: 3 independent windows.
-  - `2026_Q2`: 9 configs, about 1.8 minutes.
-  - `2026_ytd`: 9 configs, about 5.25 minutes.
-  - `2025_Q2`: 9 configs, about 2.4 minutes.
+  - `2026_Q2`: 10 configs, about 2 minutes.
+  - `2026_ytd`: 10 configs, about 5.83 minutes.
+  - `2025_Q2`: 10 configs, about 2.67 minutes.
 
 Research profiles:
 
@@ -79,6 +72,7 @@ Research profiles:
 - `vwap_momentum_phase`
 - `tick_vwap_momentum`
 - `indicator_phase_filter`
+- `weighted_quality_confluence`
 - `pa_full_confluence`
 
 ## Price-Action Decision Gate
@@ -94,10 +88,10 @@ The offline decision gate remains active:
 Current decision state:
 
 - Overall: `COMPILE_REQUIRED`.
-- Decisions: 24.
+- Decisions: 27.
 - Pass: 0.
 - Reject: 0.
-- Waiting: 24.
+- Waiting: 27.
 - Compile trust: `STALE`.
 
 ## Offline Evidence
@@ -107,19 +101,19 @@ Current decision state:
 - `PRICE_ACTION_STRATEGY_BATCH_SMOKE_PASS`.
 - `PRICE_ACTION_STRATEGY_HANDOFF_SMOKE_PASS`.
 - `PRICE_ACTION_STRATEGY_DECISION_SMOKE_PASS`.
-- Report import preflight: source hash PASS, price-action decision `COMPILE_REQUIRED` with 24 waiting report decisions.
+- Report import preflight: source hash PASS, price-action decision `COMPILE_REQUIRED` with 27 waiting report decisions.
 - Local pipeline manifest: PASS, 72 artifacts tracked, 0 missing.
 - External MT5 package audit: PASS, 26 checks passed, 0 failed.
 
 ## Hashes
 
-- EA source: `7416A50154D8355F241BC2BA4B512D020459A32E036A115C5D40EC65B2DE30CD`.
-- Price-action batch CSV: `79EC8C83AF399304B4E92EC0C4FB07ECC929B961AE7D31CC8D675404D3C60A68`.
-- Price-action handoff zip: `B1CA2A9C96891FA47A79F3D35827EE8C2DE92DA0E9CF5E127F53ECA9AF5FF078`.
-- Price-action parallel lanes zip: `835ABE34BE502DAAAF21A1100150C4295831CF979FF4279171B21E089D2E4297`.
-- External validation package zip: `22E7FD489F6DF9147502ACB4BE9DF999958A174ACAAE8244D366A8D1F0BA7301`.
-- Price-action modules smoke: `88395E3BABA1D7C0CBAE6543996FBDE0AAB494DEE0931FB6A35430FFE2BED591`.
-- Price-action batch builder: `E6F527B5F7E384A6FD9CF83117F300CDF9E684BBE43D24619B5906378E7BCDBD`.
+- EA source: `458611765C9AA13BEF42EBAF5B9987CCD5534A5C9E94A2B985895C87FACBC8CD`.
+- Price-action batch CSV: `AB602CA98DDC931A4C890A834EF8596AA00DC0B34ECFE133A2916FE0C06373F4`.
+- Price-action handoff zip: `1AA24B7639F8DF0EDB5164EC2BE29B16844A229C8FE5EBE38B5548E67DFC48D8`.
+- Price-action parallel lanes zip: `A14EAE9B9CBB5D0EA9EEC6B82B74EA219A0BD0BC845B8C2BDC6404CDB3A2BF26`.
+- External validation package zip: `2A8CCC0AD569BDCAFDD9CB6FE5D52D72E47DF694E52885AFAC2B12463B3F6AD2`.
+- Price-action modules smoke: `16AFF9CAD888D16E191D74CD66D6DD5A091698FCED1ECBD194CC48D1586F248C`.
+- Price-action batch builder: `E0A41F9A9B3CFE7EBA8E014ABD29420A1A38303CA0B05B35B454BACC68D9FBBA`.
 
 ## Caveat
 
