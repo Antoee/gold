@@ -11,32 +11,26 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added Protected Daily Profit Opportunity Risk Boost. This gives the EA a controlled way to press harder later in a profitable day, but only after the day is already green and daily profit protection is enabled.
+Added a final effective risk cap for stacked growth multipliers. This prevents the accumulated profit-only, hot-streak, protected-cushion, trend-regime, daily-opportunity, quality, price-action, session, and other multipliers from silently producing an oversized per-trade risk percent.
 
-New inputs and logic:
+New input and logic:
 
-- `InpUseDailyProfitOpportunityRiskBoost`
-- `InpDailyProfitOpportunityStartFraction`
-- `InpDailyProfitOpportunityFullFraction`
-- `InpMaxDailyProfitOpportunityRiskMultiplier`
-- `InpDailyProfitOpportunityRequiresProtection`
-- `DailyProfitOpportunityRiskMultiplier()`
-- Entry log marker: `Daily profit opportunity risk x...`
+- `InpMaxEffectiveRiskPercent`
+- `LotsForRisk()` now caps `EffectiveRiskPercent() * riskMultiplier` before converting risk percent into money.
 
-Generated research profiles start the boost once daily profit reaches 25% of the daily profit-lock target, reach full boost at 75% of the target, and cap the boost at `1.35x`. The existing daily profit protection throttle remains separate and can still reduce risk as the EA approaches the configured daily profit lock. This adds no martingale, grid, averaging down, or recovery behavior.
+Baseline keeps the cap disabled with `InpMaxEffectiveRiskPercent=0.00`. Generated aggressive research profiles use `InpMaxEffectiveRiskPercent=6.00`, so they can still press with protected-growth logic but cannot exceed a 6.00% final effective risk target before protected-floor and protected-cushion caps are applied. This adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor keeps `InpUseDailyProfitOpportunityRiskBoost=false`.
-- Generated research profiles use `InpUseDailyProfitOpportunityRiskBoost=true`.
-- Generated research profiles use `InpMaxDailyProfitOpportunityRiskMultiplier=1.35`.
+- Baseline anchor keeps `InpMaxEffectiveRiskPercent=0.00`.
+- Generated research profiles use `InpMaxEffectiveRiskPercent=6.00`.
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `1D5B68E67F30E49BDB916FFAFD15A04622F980CD5960FC75FCECB9F6604EA0F2`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `4E05199AE6894DD6ED49FFEEF5BC82AF34ABA85BBFE7F1E8A5F436819310C337`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_ea_source_artifact_sync.ps1`: PASS
 - `work\test_price_action_strategy_batch.ps1`: PASS
@@ -48,15 +42,15 @@ Generated research profiles start the boost once daily profit reaches 25% of the
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `1D5B68E67F30E49BDB916FFAFD15A04622F980CD5960FC75FCECB9F6604EA0F2`
-- `Professional_XAUUSD_EA.mq5`: `1D5B68E67F30E49BDB916FFAFD15A04622F980CD5960FC75FCECB9F6604EA0F2`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `1D5B68E67F30E49BDB916FFAFD15A04622F980CD5960FC75FCECB9F6604EA0F2`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `4D6A7A1188968AA16F224E41C8AD366CBA67229073D105BCFFE9DC7C972E6579`
+- `outputs\Professional_XAUUSD_EA.mq5`: `4E05199AE6894DD6ED49FFEEF5BC82AF34ABA85BBFE7F1E8A5F436819310C337`
+- `Professional_XAUUSD_EA.mq5`: `4E05199AE6894DD6ED49FFEEF5BC82AF34ABA85BBFE7F1E8A5F436819310C337`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `4E05199AE6894DD6ED49FFEEF5BC82AF34ABA85BBFE7F1E8A5F436819310C337`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `7D141D64A40084D49CCED7D998AED5F7D2194F9C428C72F7259BA6E0F405DF45`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `6887C7B2EE4D4D91A5BB05D817F303AA608F807C276142686247ED0AB5998D99`
-- `outputs\xauusd_micro_validation_package.zip`: `3D8C3F1C6A19D1BA32C05D8F90C5174D633EF64C5A623915AFF3DF36964F37A0`
-- `work\test_price_action_strategy_modules.ps1`: `EFE47850689E66763A7081C82BEA76C291EB414BA5198739F9FE74DBBEB16731`
-- `work\test_price_action_strategy_batch.ps1`: `81435DA3057EFCA22293D165F565FAE7EF77F77467D559BBFF0BBFB2153CFDCB`
-- `work\build_price_action_strategy_batch.ps1`: `0244AB4A496516598C852E04C8F1474E66CC085B4D063770AB2448CDBD25F771`
+- `outputs\xauusd_micro_validation_package.zip`: `ED0F66360224956CF86D9A79866B8D18BCDF0F1BC88E03B9AED84435EF4C2FF7`
+- `work\test_price_action_strategy_modules.ps1`: `CF6A1DACBFD56EE203589C3C3BCF4939969639253E40B26DFAABB593BB5EA818`
+- `work\test_price_action_strategy_batch.ps1`: `0C6A937A5BEAEA5EA85FE6CBFF980836108B663A73E209C7DF733D6A0C26ED10`
+- `work\build_price_action_strategy_batch.ps1`: `7C7F80BC1AFEF3B564D4A81DBD00F36A2409439E1078AC443FAD66B20E6F1046`
 
 ## Background-Safety Note
 
