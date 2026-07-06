@@ -11,23 +11,23 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional spread-regime execution guard:
+Added optional MTF trend-quality guard:
 
-- `InpUseSpreadRegimeGuard`
-- `InpSpreadRegimeLookbackBars`
-- `InpMaxSpreadRegimeRatio`
-- `InpMinSpreadRegimePoints`
-- `SpreadRegimeAllows()` compares current spread against recent bar spread history.
-- `OpenSignal()` now rejects abnormal execution conditions with `spread regime` before sizing/opening a trade.
+- `InpUseMTFTrendQualityGuard`
+- `InpMTFQualitySlopeLookback`
+- `InpMTFQualityMinSlopePoints`
+- `InpMTFQualityMaxDistanceATR`
+- `MTFTrendQualityAllows()` checks higher-timeframe EMA slope and rejects overextended entries too far from the MTF EMA.
+- `OpenSignal()` now rejects weak or overextended higher-timeframe trend setups before sizing/opening a trade.
 
-This is an execution-cost/risk module from the requested strategy-code expansion. It is intended to avoid trades during abnormal broker spread spikes without increasing risk or adding any recovery logic.
+This is a trend-quality/risk module from the requested strategy-code expansion. It is intended to reduce chop trades and late chase entries without increasing risk or adding any recovery logic.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables spread-regime protection with lookback `24`, max ratio `2.00`, min spread `50.0`.
-- `pa_full_confluence` enables spread-regime protection with lookback `30`, max ratio `1.80`, min spread `45.0`.
+- `weighted_quality_confluence` enables MTF trend-quality protection with slope lookback `20`, minimum slope `50.0`, max distance `3.20 ATR`.
+- `pa_full_confluence` enables MTF trend-quality protection with slope lookback `24`, minimum slope `60.0`, max distance `2.80 ATR`.
 - Generated configs confirmed the module is enabled in those strict profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -43,16 +43,16 @@ This is an execution-cost/risk module from the requested strategy-code expansion
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `3A4F3E55DC4965B86E7CAFAFD2A63A6B5001D25860424EA7FF72EFEED134B31C`
-- `Professional_XAUUSD_EA.mq5`: `3A4F3E55DC4965B86E7CAFAFD2A63A6B5001D25860424EA7FF72EFEED134B31C`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `81929889E21D4C1864BF53174D742FF83B0BE0BAE9AF05918F9F7E82032A7CB0`
+- `outputs\Professional_XAUUSD_EA.mq5`: `E171351CB82DDBD3479ECFCE5AA5B89C4CEF30C145FFF0852512C431055C4BEC`
+- `Professional_XAUUSD_EA.mq5`: `E171351CB82DDBD3479ECFCE5AA5B89C4CEF30C145FFF0852512C431055C4BEC`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `07D720E8BF65B54CF032D0581CB7A6A6D34BF883887382608A1CD40173CC2DF3`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\price_action_strategy_handoff.zip`: `2B5CBB5C3EA89054F842116512C2430F0EBEA353791A66B4EAE4C9863F7E5CA4`
-- `outputs\price_action_parallel_lanes.zip`: `9776465D885D0FBE0DE15AAF6005727BB017F86161FFE467302067CA8ADA96E1`
-- `outputs\xauusd_micro_validation_package.zip`: `49D399893E726EA0A3CF671EA09D98AC9AD4146670DAB2503C7351872F91F600`
-- `work\test_price_action_strategy_modules.ps1`: `030A99CD08713272BB0219B2669EDC358AC9B58EC8DE3C4A004A0635EAF3C467`
+- `outputs\price_action_strategy_handoff.zip`: `153C6C375BF038D40766FDB5562C694E46AB81F922EC69B133F8308027F2E716`
+- `outputs\price_action_parallel_lanes.zip`: `840095FB8C99C479EDEBB6047D8CD535DFF60030C399C0DAF9E3F6C263FE7D80`
+- `outputs\xauusd_micro_validation_package.zip`: `347F7D169F17FF6660490A6EA7A7CD7523BCFAC5EBC3E1B6F3B7DCE7E4A140D2`
+- `work\test_price_action_strategy_modules.ps1`: `F69A93E81136032ABF05B031C5EF695D6C06B83A4B08D413212145C46CF5BB85`
 - `work\test_price_action_strategy_batch.ps1`: `4B9B4747F2872AA3617E1804D5610FDB5709664D06F52635B5DF7F393697B0DC`
-- `work\build_price_action_strategy_batch.ps1`: `53F0A2C9B07A38D0DA5B5BAF6298B0DAA545D0A30EA41286E9F4B2C2039065F3`
+- `work\build_price_action_strategy_batch.ps1`: `5363FF26A3F5C83E5E21CBCE53AC3727386D5B6C0377786BCDA90E1F29C462CD`
 
 ## Background-Safety Note
 
