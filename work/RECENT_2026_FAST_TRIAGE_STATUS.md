@@ -11,24 +11,22 @@ Updated: 2026-07-06
 
 ## Latest Risk-Code Change
 
-Added optional Market Phase Risk Scaling on top of the risk stack:
+Enabled optional Flatten On Hard Risk Limits in generated research profiles:
 
-- `InpUseMarketPhaseRiskScaling`
-- `InpTrendPhaseRiskMultiplier`
-- `InpTransitionPhaseRiskMultiplier`
-- `InpRangePhaseRiskMultiplier`
-- `MarketPhaseRiskMultiplier()` reuses the configured ADX trend/range thresholds and scales risk by trend, transition, or range phase.
-- `OpenSignal()` now multiplies market-phase risk into final lot sizing and logs `Phase risk x...` when enabled.
+- `InpClosePositionsOnRiskLimit`
+- Existing `OnTick()` logic checks `riskManager.RiskLimitHit(riskExitReason)` before normal position management.
+- When enabled, the EA calls `positionManager.CloseAll(riskExitReason)` if a hard account guard trips.
+- Covered guard reasons include equity drawdown limit, daily/weekly/monthly loss limits, daily/weekly/monthly profit locks, daily equity trail, and profit giveback guards.
 
-This changes risk strategy code, not only settings. The goal is to keep valid XAUUSD setups eligible while reducing exposure in weaker trend/transition/range conditions instead of treating all market phases equally. It is disabled in the robust base profile and enabled only in strict research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
+This improves risk behavior without adding recovery logic. The baseline anchor remains pinned disabled for comparison, while generated research profiles enable it so hard account guards can flatten exposure instead of only blocking new entries. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables Market Phase Risk Scaling with transition multiplier `0.75` and range multiplier `0.55`.
-- `pa_full_confluence` enables a stricter version with transition multiplier `0.70` and range multiplier `0.45`.
-- Generated configs confirmed the module is enabled in strict price-action research profiles and pinned disabled in the robust base profile.
+- Baseline anchor remains `InpClosePositionsOnRiskLimit=false` for clean comparison.
+- Generated research profiles enable `InpClosePositionsOnRiskLimit=true`.
+- Generated configs confirmed the risk-flatten setting is enabled in research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
 
@@ -46,12 +44,12 @@ This changes risk strategy code, not only settings. The goal is to keep valid XA
 - `outputs\Professional_XAUUSD_EA.mq5`: `8FAD7C06613565E8D6BCF5E0AE4213F949B8837678714184937BD76BF7138834`
 - `Professional_XAUUSD_EA.mq5`: `8FAD7C06613565E8D6BCF5E0AE4213F949B8837678714184937BD76BF7138834`
 - `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `8FAD7C06613565E8D6BCF5E0AE4213F949B8837678714184937BD76BF7138834`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `C31F82F0453B380ECBCD8BBA744AF4E4414FC330804F200E5D14893E803EFBFA`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `42C18B320A2AFB29F6C125EA511D03C233AD4BD5D1E074A35117AE9861A52D80`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `EDEC8000B460BB2FA6FA259F3765DDC57991FE040271A3DD1BC7B20A01597F16`
-- `work\test_price_action_strategy_modules.ps1`: `2009AF0070CB8754C07496BC8F983B3196E8B0F04F3DF1C9E2DBE9396981633C`
-- `work\test_price_action_strategy_batch.ps1`: `6D6B50DF636BA7D65AAE0874A61A6BF4547A897CE5B0028076FCEEC89DA3BD94`
-- `work\build_price_action_strategy_batch.ps1`: `C5DECC20F8AB0CE5ED2E6130E69E99F6695CB2D78AF5EDAD5BF0B9835D5CE4E0`
+- `outputs\xauusd_micro_validation_package.zip`: `920027B3641FB88C5BD7FB62FE459C3C98FE28596DCD9A67B068A147F1501429`
+- `work\test_price_action_strategy_modules.ps1`: `6C4216633FE47DFF0956B2E59743D7B9585725A5034B521467D2BBD3CFA5F08C`
+- `work\test_price_action_strategy_batch.ps1`: `4D3406DCD4DE68A9C2E618E668720418F1D5CABA947FB279BB7D4B9D7F3401FB`
+- `work\build_price_action_strategy_batch.ps1`: `E3E5485D6C430714E1E3A5B2FC0CE97F53A40C6EA5A5EB173C207CE9C37466E9`
 
 ## Background-Safety Note
 
