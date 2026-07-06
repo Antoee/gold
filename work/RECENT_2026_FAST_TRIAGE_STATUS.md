@@ -11,38 +11,42 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional Protected-Cushion Take-Profit Expansion. This tries to make more from strong winners without increasing initial stop risk:
+Added optional Protected-Cushion Unlimited Runner mode. This is a more aggressive upside feature that can remove the fixed take-profit on elite setups so trailing/profit-lock logic can let a strong XAUUSD trend run.
 
-- `InpUseProtectedCushionTakeProfitExpansion`
-- `InpProtectedCushionTPMinQualityScore`
-- `InpProtectedCushionTPMinPriceActionScore`
-- `InpProtectedCushionTPStartPercent`
-- `InpProtectedCushionTPFullPercent`
-- `InpProtectedCushionTPMultiplier`
-- `InpProtectedCushionTPRequireTrailing`
-- `ProtectedCushionTakeProfitMultiplier(const SSignal &signal)`
+New inputs and logic:
 
-When enabled, the EA can expand take-profit distance only when:
+- `InpUseProtectedCushionUnlimitedRunner`
+- `InpProtectedRunnerMinQualityScore`
+- `InpProtectedRunnerMinPriceActionScore`
+- `InpProtectedRunnerMinCushionPercent`
+- `InpProtectedRunnerRequireTrendRegime`
+- `InpProtectedRunnerRequireTrailing`
+- `InpProtectedRunnerRequireProfitLock`
+- `ProtectedCushionUnlimitedRunnerAllows(const SSignal &signal)`
+
+When enabled, the EA only allows this no-fixed-TP runner when:
 
 - The setup quality score is high enough.
 - The price-action score is high enough.
-- Trailing/profit-management protection is available when required.
-- Account equity has cushion above the active protected floor.
+- Account equity has enough cushion above the active protected floor.
+- Trend-regime confirmation is positive when required.
+- Trailing management is available when required.
+- Profit-lock management is available when required.
 
-Generated aggressive research profiles enable this new TP expansion. The baseline keeps it disabled for clean comparison. This adds no martingale, grid, averaging down, or recovery behavior.
+This attempts to increase large-trend capture without increasing initial stop risk. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor keeps `InpUseProtectedCushionTakeProfitExpansion=false`.
-- Generated research profiles use `InpUseProtectedCushionTakeProfitExpansion=true`.
-- Generated research profiles expand protected-cushion TP from a 6.0% protected-floor cushion to full effect at 18.0%, with max multiplier `1.50`, quality score >= 12, price-action score >= 14, and trailing required.
+- Baseline anchor keeps `InpUseProtectedCushionUnlimitedRunner=false`.
+- Generated research profiles use `InpUseProtectedCushionUnlimitedRunner=true`.
+- Generated research profiles require quality score >= 14, price-action score >= 16, protected-floor cushion >= 12.0%, positive trend-regime confirmation, trailing enabled, and profit-lock enabled before no-fixed-TP runner mode can be used.
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `5BA5A2A528BAA26B2112F8F3F10EE0561B0EBCC4CFCFB25EF8BCECF098DDE396`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `2DD4B4E9C12B97B486C29E8062331475E4FB95F70B2AA1166A6314B37D77C17B`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_ea_source_artifact_sync.ps1`: PASS
 - `work\test_price_action_strategy_batch.ps1`: PASS
@@ -54,15 +58,15 @@ Generated aggressive research profiles enable this new TP expansion. The baselin
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `5BA5A2A528BAA26B2112F8F3F10EE0561B0EBCC4CFCFB25EF8BCECF098DDE396`
-- `Professional_XAUUSD_EA.mq5`: `5BA5A2A528BAA26B2112F8F3F10EE0561B0EBCC4CFCFB25EF8BCECF098DDE396`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `5BA5A2A528BAA26B2112F8F3F10EE0561B0EBCC4CFCFB25EF8BCECF098DDE396`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `1DC75A51EC5AD4679F00FABB3CE4C66320C69389AFCD5755350CB8BE95018F4B`
+- `outputs\Professional_XAUUSD_EA.mq5`: `2DD4B4E9C12B97B486C29E8062331475E4FB95F70B2AA1166A6314B37D77C17B`
+- `Professional_XAUUSD_EA.mq5`: `2DD4B4E9C12B97B486C29E8062331475E4FB95F70B2AA1166A6314B37D77C17B`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `2DD4B4E9C12B97B486C29E8062331475E4FB95F70B2AA1166A6314B37D77C17B`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `AF661C1AD5D1A2029384BD30019CBC82A6CB915AFE98372416F82F94DEFD2365`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `6887C7B2EE4D4D91A5BB05D817F303AA608F807C276142686247ED0AB5998D99`
-- `outputs\xauusd_micro_validation_package.zip`: `1B475D7455E8B9A7EA439CC4758FE143A04F191A07D59A200CE9A07C1E935C90`
-- `work\test_price_action_strategy_modules.ps1`: `1BABB56002A0C9EF81268216F8E1580F966542E5FBA42CC419B64EDBBF455762`
-- `work\test_price_action_strategy_batch.ps1`: `92895D1F0D983857583A33A2879D52ED43C47D6496B9B44F816A1E4366419180`
-- `work\build_price_action_strategy_batch.ps1`: `535598599A97A02D6727443F923DBB3CAC06610A0AE31A471056845FEF1C21A0`
+- `outputs\xauusd_micro_validation_package.zip`: `913EF4CDBAF398B45781995AB58C735469310D8790C9317EEDD0A9D1DEDB3B50`
+- `work\test_price_action_strategy_modules.ps1`: `BCD94FE716B832BE2B687153CAA2C9C5A30088DFA81B863FD7E55D22C05E6490`
+- `work\test_price_action_strategy_batch.ps1`: `74C4FBB7C65B16E39C046B67933B44D88F24F38226B5CA2FEC846CB2982E0488`
+- `work\build_price_action_strategy_batch.ps1`: `52B0375F0B7EDB0285075790438606A3504C408EFCA1F59DD6CED2CC6434D178`
 
 ## Background-Safety Note
 
