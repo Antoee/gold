@@ -9,32 +9,30 @@ Updated: 2026-07-06
 - No profit claim is made from this offline-only validation.
 - Full EA source exists locally, but this note is the GitHub-safe status/evidence artifact.
 
-## Latest Risk-Code Change
+## Latest Strategy-Code Change
 
-Added optional Recent Average-R Risk Scaling for generated research profiles:
+Added optional Recent Swing Level Proximity Guard inside the existing level proximity filter:
 
-- `InpUseRecentPerformanceRRiskScaling`
-- `InpRecentPerformanceRRiskLookbackTrades`
-- `InpRecentPerformanceRRiskStartAverageR`
-- `InpRecentPerformanceRRiskFullAverageR`
-- `InpMinRecentPerformanceRRiskMultiplier`
-- `RecentPerformanceRRiskMultiplier()` reuses the existing R-multiple sampler to scale new-trade risk down when recent average R weakens.
-- `OpenSignal()` now multiplies this scaler into final lot sizing and logs `Recent R risk x...` when enabled.
+- `InpLevelGuardUseRecentSwings`
+- `InpLevelGuardSwingLookbackBars`
+- `OpposingLevelDistanceAllows()` now optionally scans confirmed recent swing highs and swing lows.
+- Buy signals can be blocked when the close is too close below a recent swing high resistance.
+- Sell signals can be blocked when the close is too close above a recent swing low support.
 
-This is risk-control logic, not only settings. It complements the recent average-R quality gate and full trade pause by reducing size earlier, before conditions are bad enough to block trading. It adds no martingale, grid, averaging down, or recovery behavior.
+This is strategy/risk logic using existing swing-structure helpers, not only settings. It expands the previous day/week/month opposing-level guard so entries avoid nearby local market-structure levels where XAUUSD often stalls or reverses. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor remains `InpUseRecentPerformanceRRiskScaling=false`.
-- Generated research profiles use `InpUseRecentPerformanceRRiskScaling=true`.
-- Research profiles start tapering below average R `0.00`, fully taper by average R `-0.50`, and use minimum multiplier `0.50`.
+- Baseline anchor remains `InpLevelGuardUseRecentSwings=false`.
+- Generated research profiles use `InpLevelGuardUseRecentSwings=true` with `InpLevelGuardSwingLookbackBars=30`.
+- Research profiles that enable level proximity now test both higher-timeframe opposing levels and recent swing opposing levels.
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `291DB36B432EC610B111F2FA0AD582E6BB3542187FF484501CE7B8614C3791A3`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `74A1D99EEB6A962BCD0124B5B5C6FA6E2E357C79C29C91AA21E55BF551946A47`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_ea_source_artifact_sync.ps1`: PASS
 - `work\test_price_action_strategy_batch.ps1`: PASS
@@ -44,15 +42,15 @@ This is risk-control logic, not only settings. It complements the recent average
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `291DB36B432EC610B111F2FA0AD582E6BB3542187FF484501CE7B8614C3791A3`
-- `Professional_XAUUSD_EA.mq5`: `291DB36B432EC610B111F2FA0AD582E6BB3542187FF484501CE7B8614C3791A3`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `291DB36B432EC610B111F2FA0AD582E6BB3542187FF484501CE7B8614C3791A3`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `9B48DC58BB7A451AB177448284C933B839217FA96C8842F97259C1E87AB52589`
+- `outputs\Professional_XAUUSD_EA.mq5`: `74A1D99EEB6A962BCD0124B5B5C6FA6E2E357C79C29C91AA21E55BF551946A47`
+- `Professional_XAUUSD_EA.mq5`: `74A1D99EEB6A962BCD0124B5B5C6FA6E2E357C79C29C91AA21E55BF551946A47`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `74A1D99EEB6A962BCD0124B5B5C6FA6E2E357C79C29C91AA21E55BF551946A47`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `D70DCE426BCE87A7AAD61245FB2DC5794CD22A246BB4891266EB854AFB50F7A2`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `FA75911511963B05A50B616B288890E8AFFDF9310892D746F913EB06071E001E`
-- `work\test_price_action_strategy_modules.ps1`: `333470ED72F31835299E143F1DBC8076C3A4FAC489FFD230E3432C4BDA3BC40E`
-- `work\test_price_action_strategy_batch.ps1`: `6655ACDB0E699A05C47397CEF2791A48B1EE700B9B736AF5F7F29AA1FBF0DF42`
-- `work\build_price_action_strategy_batch.ps1`: `0E8F6A0D15401654129AF757D6797F889B36FC0525F4694BD2F7C2FF0D0479B8`
+- `outputs\xauusd_micro_validation_package.zip`: `18634557FED0EC48C758590944A831259B36EE67FEE1DAFEBCF273AB4F03E484`
+- `work\test_price_action_strategy_modules.ps1`: `99D1E5E786E45A9DA41CFEF9AE714A6FE3165918EB51CBFFFFBC90AD7BB40D77`
+- `work\test_price_action_strategy_batch.ps1`: `0559D0557F3D0352E5C174AE09C2FBEF284EF10780BC26A423ABC29923C0A146`
+- `work\build_price_action_strategy_batch.ps1`: `2CB9C6B3621693697362CD7BFEDABAC5B14E772603D850C647E2FD738AF94465`
 
 ## Background-Safety Note
 
