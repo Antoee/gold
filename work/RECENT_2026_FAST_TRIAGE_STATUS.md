@@ -9,27 +9,25 @@ Updated: 2026-07-06
 - No profit claim is made from this offline-only validation.
 - Full EA source exists locally, but this note is the GitHub-safe status/evidence artifact.
 
-## Latest Strategy-Code Change
+## Latest Risk-Code Change
 
-Added optional Fair Value Gap retest entry confirmation:
+Added optional daily equity trailing guard:
 
-- `InpUseFVGRetest`
-- `InpFVGRetestBufferATR`
-- `InpWeightFVGRetest`
-- `CMarketStructure::FairValueGapRetest()` finds a recent bullish or bearish FVG, requires the current closed candle to overlap the gap zone within an ATR buffer, then requires the candle to close back in the trade direction.
-- `CEntryEngine::Build()` now records `FVG retest;` as an independent weighted entry reason when the feature is enabled.
+- `InpUseDailyEquityTrailGuard`
+- `InpDailyEquityTrailGivebackPercent`
+- `InpDailyEquityTrailMinProfitPercent`
+- `CRiskManager::DailyEquityTrailHit()` tracks the current trading day's starting equity and peak equity, then blocks new entries after a configurable giveback from the day's equity high once minimum protected daily profit exists.
+- `CRiskManager::RiskLimitHit()` now reports `daily equity trail` when the guard trips. If `InpClosePositionsOnRiskLimit` is enabled, the existing risk-limit close path can close open exposure when this condition appears.
 
-This is a price-action strategy module, not a simple parameter tweak. The existing FVG confirmation only proves an imbalance exists; the new retest confirmation requires price to actually react from the imbalance. It is disabled in the robust base profile and enabled only in FVG/retest/full-confluence research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
+This is a risk-first protection module for the "trying not to lose money" side of the goal. It is disabled in the robust base profile and enabled only in stricter research profiles that already use profit locks, session guards, and reduced-risk behavior. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `fvg_sweep_confluence` enables FVG retest with buffer `0.20 ATR`.
-- `orderblock_fvg_retest` enables FVG retest with buffer `0.20 ATR`.
-- `weighted_quality_confluence` enables FVG retest with buffer `0.20 ATR` and weight `2`.
-- `pa_full_confluence` enables a stricter FVG retest buffer of `0.18 ATR`.
-- Generated configs confirmed the module is enabled in imbalance/retest research profiles and pinned disabled in the robust base profile.
+- `weighted_quality_confluence` enables daily equity trail with `40.0%` giveback after `0.50%` protected daily equity profit.
+- `pa_full_confluence` enables a stricter daily equity trail with `35.0%` giveback after `0.40%` protected daily equity profit.
+- Generated configs confirmed the module is enabled in strict risk-managed research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
 
@@ -44,14 +42,14 @@ This is a price-action strategy module, not a simple parameter tweak. The existi
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `02EA40E14FB5309C2EE0A5D1787AD445C05B9B78B0CEDDEAFE049CF95C073506`
-- `Professional_XAUUSD_EA.mq5`: `02EA40E14FB5309C2EE0A5D1787AD445C05B9B78B0CEDDEAFE049CF95C073506`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `38BD08C08B212B91CB22A4969E6263253C39BF9F4A559E0B66417BF2F193399D`
+- `outputs\Professional_XAUUSD_EA.mq5`: `5A30D120788558CF5B8147C205A0A7C1032B4708C4CD63EA20EB2ADBA8B4D999`
+- `Professional_XAUUSD_EA.mq5`: `5A30D120788558CF5B8147C205A0A7C1032B4708C4CD63EA20EB2ADBA8B4D999`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `99EE633E4F716BA11486F1D81F282A4309AF58917897BC4A55F57FB2824F1635`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `0C805D026327ED2DEE49116E5F888CA59E816BEFE4B1B9CC71EB0C7CE1D87330`
-- `work\test_price_action_strategy_modules.ps1`: `DA105F64F172B84B3613C00BB69785318381AF836BB2D991EBAC9E700D094E99`
-- `work\test_price_action_strategy_batch.ps1`: `799F42950C9E21041E28155804DB0A4BBEF22C41203D4973B22F75CE882ED3D2`
-- `work\build_price_action_strategy_batch.ps1`: `BB0F99978D09FBE225E002F3875DBE117C5851E7053FB804FCBB77D65B71F2D7`
+- `outputs\xauusd_micro_validation_package.zip`: `546D6653CAC43B4C7F11D3B8684B3F80744D91ADC9F210668A4BF5F47444DE6C`
+- `work\test_price_action_strategy_modules.ps1`: `CB866F89B388101A98B4AB103031E8F3EF100CD4777EA9609D592F342C1C8542`
+- `work\test_price_action_strategy_batch.ps1`: `E5F7BB17E64A48AD16460A2BB7BDAFE9C8595E2BBAD45572786CC56D76F444D6`
+- `work\build_price_action_strategy_batch.ps1`: `19F35C7FD20788C46DED3075C7DCC7A370F896256BF877B95384FC9542BDC325`
 
 ## Background-Safety Note
 
