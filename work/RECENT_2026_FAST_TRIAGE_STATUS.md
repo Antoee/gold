@@ -11,25 +11,23 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional previous-day range-location confirmation:
+Added optional VWAP distance guard:
 
-- `ENUM_PREVIOUS_DAY_RANGE_MODE`
-- `InpUsePreviousDayRangeBias`
-- `InpPreviousDayRangeMode`
-- `InpPreviousDayRangeBufferPoints`
-- `InpWeightPreviousDayRangeBias`
-- `CMarketStructure::PreviousDayRangeBias()` supports half-range bias mode and previous-day breakout mode.
-- In half-range mode, buys confirm above yesterday's midpoint plus buffer and sells confirm below yesterday's midpoint minus buffer.
-- In breakout mode, buys confirm above yesterday's high plus buffer and sells confirm below yesterday's low minus buffer.
-- `CEntryEngine::Build()` now scores those setups with `Previous day range bias;` when enabled.
+- `InpUseVWAPDistanceGuard`
+- `InpVWAPGuardMaxDistanceATR`
+- `CMarketStructure::VWAPValue()` centralizes VWAP calculation for confirmation and guard logic.
+- `CEntryEngine::VWAPDistanceAllows()` rejects entries when the signal candle closes too far from VWAP relative to ATR.
+- `CEntryEngine::Build()` now rejects those overextended setups with `VWAP distance reject;` before confirmation scoring.
 
-This is a real strategy-code addition from the requested daily highs/lows, previous-day levels, OHLC, and time-feature list. It tests whether XAUUSD entries improve when aligned with yesterday's range context, without martingale, grid, averaging down, or recovery behavior.
+This is a real strategy-code addition from the requested VWAP/order-flow proxy, volatility, and risk-feature list. It is designed to reduce chasing extended XAUUSD moves far away from fair intraday value, without martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `liquidity_level_reversal`, `vwap_momentum_phase`, `tick_vwap_momentum`, `weighted_quality_confluence`, and `pa_full_confluence` enable previous-day range bias in half-range mode.
+- `vwap_momentum_phase` and `tick_vwap_momentum` enable the guard at `1.80 ATR` max VWAP distance.
+- `weighted_quality_confluence` enables the guard at `1.70 ATR` max VWAP distance.
+- `pa_full_confluence` enables the guard at `1.60 ATR` max VWAP distance.
 - Generated configs confirmed the module is enabled only in research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -45,14 +43,14 @@ This is a real strategy-code addition from the requested daily highs/lows, previ
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `411EBF5433F51ABA7DA3B86C68E32A809B80F48A7E21E1A43353CA5A6FED08DD`
-- `Professional_XAUUSD_EA.mq5`: `411EBF5433F51ABA7DA3B86C68E32A809B80F48A7E21E1A43353CA5A6FED08DD`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `8F12C20BBE422803A2765FD17B5C63FE045FCC8778D8E7C9061415D600F2CFA8`
+- `outputs\Professional_XAUUSD_EA.mq5`: `D83FA98F81D1E9B06D96038BC7D1D4B28085C00BB36B7017EEEE9B0922D29D72`
+- `Professional_XAUUSD_EA.mq5`: `D83FA98F81D1E9B06D96038BC7D1D4B28085C00BB36B7017EEEE9B0922D29D72`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `BD09F225AF4791C3BA1CE8B62BCB32A6881F21D85C03BE94BE4065A03DCEB9EF`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `5306318E049B6CF3D7571FDACEDF81428DDBAFE8F1F3751EF54B8AACE12443C9`
-- `work\test_price_action_strategy_modules.ps1`: `D646C9F2D7B8702039BCB6CFF8F7AC52E2CF9035FD136327D82B2FB0E8966015`
-- `work\test_price_action_strategy_batch.ps1`: `628AE39C492D1B5DF386BE1878064EC0F59443DFDF4AF3DF227CDC799576F6EF`
-- `work\build_price_action_strategy_batch.ps1`: `71CEBC75AD81D7CBE694E658F086EBB2B9F8997E1F31522EF40004CB7D9A4A3E`
+- `outputs\xauusd_micro_validation_package.zip`: `00FD46401DFD45365B473A7F6CE6384E4CCD0B0C51071CDB27F6A036D2598631`
+- `work\test_price_action_strategy_modules.ps1`: `DB577C440F670665607CEA968253C366FE348C014DCB75A912F21001F9221BDE`
+- `work\test_price_action_strategy_batch.ps1`: `FA4227514598E8182CAA0554FD44796152D38722577D6D0DF4FB607A0B1A4EEB`
+- `work\build_price_action_strategy_batch.ps1`: `A364BB08793846DA4EE4D1C3BBA1834920FAB038B867887254DF07E4CBF32FD9`
 
 ## Background-Safety Note
 
