@@ -50,6 +50,8 @@ foreach($row in ($batch | Sort-Object {[int]$_.Rank})) {
       SourceConfig = $source
       HandoffConfig = $target
       ExpectedReportName = $row.ExpectedReportName
+      EstimatedSeconds = if($row.PSObject.Properties["EstimatedSeconds"]) { $row.EstimatedSeconds } else { "" }
+      EstimatedMinutes = if($row.PSObject.Properties["EstimatedMinutes"]) { $row.EstimatedMinutes } else { "" }
    }) | Out-Null
 }
 
@@ -65,6 +67,14 @@ $readme.Add("- Source batch: ``$BatchCsv``") | Out-Null
 $readme.Add("- Config count: $($manifestRows.Count)") | Out-Null
 $readme.Add("- Config folder: ``configs/``") | Out-Null
 $readme.Add("- Manifest: ``HANDOFF_MANIFEST.csv``") | Out-Null
+$estimatedSeconds = @($manifestRows | ForEach-Object {
+   if(![string]::IsNullOrWhiteSpace([string]$_.EstimatedSeconds)) {
+      [double]::Parse([string]$_.EstimatedSeconds, [Globalization.CultureInfo]::InvariantCulture)
+   }
+} | Measure-Object -Sum).Sum
+if($estimatedSeconds -gt 0) {
+   $readme.Add("- Estimated tester runtime: $([Math]::Round($estimatedSeconds / 60.0, 2)) minutes, before platform overhead") | Out-Null
+}
 $readme.Add("") | Out-Null
 $readme.Add("## Safety") | Out-Null
 $readme.Add("") | Out-Null
@@ -72,11 +82,11 @@ $readme.Add("Do not run these locally while MT5 is locked for PC usability. Loca
 $readme.Add("") | Out-Null
 $readme.Add("## Run Order") | Out-Null
 $readme.Add("") | Out-Null
-$readme.Add("| Rank | Profile | Phase | Set | Window | Model | Config | Expected Report |") | Out-Null
-$readme.Add("|---:|---|---|---|---|---:|---|---|") | Out-Null
+$readme.Add("| Rank | Profile | Phase | Set | Window | Model | Est Sec | Config | Expected Report |") | Out-Null
+$readme.Add("|---:|---|---|---|---|---:|---:|---|---|") | Out-Null
 foreach($row in ($manifestRows | Sort-Object Rank)) {
    $configName = Split-Path -Leaf $row.HandoffConfig
-   $readme.Add("| $($row.Rank) | ``$($row.Profile)`` | $($row.Phase) | $($row.Set) | $($row.Window) | $($row.Model) | ``configs/$configName`` | ``$($row.ExpectedReportName)`` |") | Out-Null
+   $readme.Add("| $($row.Rank) | ``$($row.Profile)`` | $($row.Phase) | $($row.Set) | $($row.Window) | $($row.Model) | $($row.EstimatedSeconds) | ``configs/$configName`` | ``$($row.ExpectedReportName)`` |") | Out-Null
 }
 $readme.Add("") | Out-Null
 $readme.Add("## After Reports Exist") | Out-Null
