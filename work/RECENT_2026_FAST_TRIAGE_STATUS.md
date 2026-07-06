@@ -11,31 +11,24 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional raw price-action and tick-pressure entry confirmations:
+Added optional open-position spread-shock exit protection:
 
-- `InpUseDisplacementCandle`
-- `InpDisplacementMinRangeATR`
-- `InpDisplacementMinBodyPercent`
-- `InpDisplacementMaxOppositeWickPercent`
-- `InpUseTickPressureCandle`
-- `InpTickPressureLookbackBars`
-- `InpTickPressureMinVolumeRatio`
-- `InpTickPressureMinCloseLocation`
-- `InpWeightDisplacementCandle`
-- `InpWeightTickPressureCandle`
-- `CEntryEngine::DisplacementCandle()` scores directional OHLC displacement using candle range, body size, ATR expansion, and opposite-wick rejection.
-- `CEntryEngine::TickPressureCandle()` scores tick-volume pressure using volume ratio and close location inside the candle range.
-- `CEntryEngine::Build()` now records `Displacement candle;` and `Tick pressure candle;` as independent entry reasons.
+- `InpUseSpreadShockExit`
+- `InpSpreadShockExitPoints`
+- `InpSpreadShockExitATRPercent`
+- `InpSpreadShockExitMaxR`
+- `CPositionManager::SpreadShockExitHit()` detects a current spread shock using absolute spread points or spread as a percent of ATR.
+- `CPositionManager::Manage()` can now close managed positions with exit type `spread_shock` when the spread shock is active and the trade is below the configured R threshold.
 
-This expands the strategy code beyond settings-only optimization. The new modules use data available inside MT5 Strategy Tester without requiring unsupported feeds such as DOM, DXY, bond yields, or news sentiment.
+This is a risk-first XAUUSD protection module. It is intended to avoid holding vulnerable trades during sudden spread blowouts, while staying optional, configurable, and disabled in the robust base profile. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables displacement candle and tick-pressure candle confirmations with weights of `2` each.
-- `pa_full_confluence` enables stricter displacement and tick-pressure thresholds.
-- Generated configs confirmed both modules are enabled in the strict research profiles and pinned disabled in the robust base profile.
+- `weighted_quality_confluence` enables spread-shock exit with `450.0` points, `25.0%` ATR spread, and max exit threshold `0.10R`.
+- `pa_full_confluence` enables stricter spread-shock exit with `400.0` points, `22.0%` ATR spread, and max exit threshold `0.05R`.
+- Generated configs confirmed the module is enabled in the strict research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
 
@@ -50,14 +43,14 @@ This expands the strategy code beyond settings-only optimization. The new module
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `00F366237AC8D32B6C64BC4783E212279F2EE93F3B12C0A6EE47D824AEED91BC`
-- `Professional_XAUUSD_EA.mq5`: `00F366237AC8D32B6C64BC4783E212279F2EE93F3B12C0A6EE47D824AEED91BC`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `22DA7EA81EB791F2EFD20FF195EBE179363FE3AE8CDAEE3DBD916A71031E9A50`
+- `outputs\Professional_XAUUSD_EA.mq5`: `1359D271DF1822A4E10F4E522AA106CFADC8EB71D791E4E4B24C81F5B454AEA7`
+- `Professional_XAUUSD_EA.mq5`: `1359D271DF1822A4E10F4E522AA106CFADC8EB71D791E4E4B24C81F5B454AEA7`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `88EF7C813000DE46DE4B3D5B5CE920945B6893E1D13AEB28F8FAABEEFC2C276D`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `B6F3985CA6A7B57E8F692E444BF1FCD25A65313E8E82DA8B6190A8775AB33E67`
-- `work\test_price_action_strategy_modules.ps1`: `AD3F031FB145D41D8C8156D4A0B0C3E6C510D327CF53C95F9F3D695551AA22DB`
-- `work\test_price_action_strategy_batch.ps1`: `AF234526E60BC260438AA7457DB6D811D07FE7225EF86EF6863A8443A547D00E`
-- `work\build_price_action_strategy_batch.ps1`: `2E5C7EC875FC1D7EFB9B11D1EA2F35B09F69D2B28FBA6E154C99E2C22CC493F1`
+- `outputs\xauusd_micro_validation_package.zip`: `584F01136C665AE5097E16767CC380A70B63964F22A56824717D446E60BEFD5E`
+- `work\test_price_action_strategy_modules.ps1`: `E55CD960FA07AD40FFB48DFCCC8C4B210FF00077266DC8C80C51D54B7A4AA0E3`
+- `work\test_price_action_strategy_batch.ps1`: `E285E44AEE86332380864595EFBAC3DCBD79846DF438598FE989AF846900A528`
+- `work\build_price_action_strategy_batch.ps1`: `854839C8538237F73430130DDDE45202034FF5762CF335CDB63B912B081BE429`
 
 ## Background-Safety Note
 
