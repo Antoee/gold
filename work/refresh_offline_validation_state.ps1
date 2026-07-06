@@ -162,6 +162,18 @@ try {
       Require-File "outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5"
    }
 
+   Invoke-Step $rows "Build external MT5 validation package" {
+      Invoke-QuietPowerShell @("-File", ".\work\build_external_mt5_validation_package.ps1")
+      Require-File "outputs\external_mt5_validation_package\PACKAGE_STATUS.csv"
+      Require-File "outputs\external_mt5_validation_package\COMPILE_RETURN_CHECKLIST.csv"
+      Require-File "outputs\xauusd_micro_validation_package.zip"
+   }
+
+   Invoke-Step $rows "Audit external MT5 validation package" {
+      Invoke-QuietPowerShell @("-File", ".\work\test_external_mt5_validation_package.ps1")
+      Require-File "outputs\EXTERNAL_MT5_PACKAGE_AUDIT.csv"
+   }
+
    Invoke-Step $rows "Audit risk-adjusted micro handoff" {
       Invoke-QuietPowerShell @(
          "-File", ".\work\audit_handoff_config_integrity.ps1",
