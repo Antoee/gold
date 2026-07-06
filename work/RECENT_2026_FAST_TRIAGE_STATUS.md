@@ -11,27 +11,24 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional cumulative-delta proxy entry confirmation:
+Added optional session-range exhaustion guard:
 
-- `InpUseCumulativeDeltaProxy`
-- `InpCumulativeDeltaLookbackBars`
-- `InpCumulativeDeltaMinRatio`
-- `InpCumulativeDeltaMinBarsAligned`
-- `InpWeightCumulativeDelta`
-- `CEntryEngine::CumulativeDeltaProxy()` sums signed tick volume over recent candles and requires directional volume imbalance plus a minimum number of aligned candles.
-- `CEntryEngine::Build()` now records `Cumulative delta proxy;` as an independent weighted entry reason when the feature is enabled.
+- `InpUseSessionRangeExhaustionGuard`
+- `InpSessionRangeExhaustionLookbackHours`
+- `InpSessionRangeExhaustionMinATR`
+- `InpSessionRangeExhaustionExtremePercent`
+- `CEntryEngine::SessionRangeExhaustionAllows()` scans the recent intraday/session range and blocks buys near the upper extreme or sells near the lower extreme after the range is already stretched by ATR.
+- `CEntryEngine::Build()` now records `Session range exhaustion reject;` when the guard blocks a chase entry.
 
-This is an order-flow style proxy for XAUUSD tester data. MT5 brokers often do not expose true bid/ask delta or centralized futures volume inside spot-gold Strategy Tester data, so this module uses candle direction multiplied by tick volume as a conservative, configurable approximation. It stays optional, configurable, and disabled in the robust base profile. It adds no martingale, grid, averaging down, or recovery behavior.
+This is a risk-first XAUUSD protection module. It is meant to reduce late entries after a large intraday move has already consumed much of the available session range, especially when gold is stretched and vulnerable to snapback. It stays optional, configurable, and disabled in the robust base profile. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `tick_vwap_momentum` enables cumulative-delta proxy with lookback `12`, minimum signed-volume ratio `0.18`, and minimum aligned bars `7`.
-- `indicator_phase_filter` enables cumulative-delta proxy with lookback `12`, minimum signed-volume ratio `0.16`, and minimum aligned bars `7`.
-- `weighted_quality_confluence` enables cumulative-delta proxy with lookback `12`, minimum signed-volume ratio `0.18`, minimum aligned bars `7`, and weight `2`.
-- `pa_full_confluence` enables a stricter cumulative-delta proxy with lookback `14`, minimum signed-volume ratio `0.20`, and minimum aligned bars `8`.
-- Generated configs confirmed the module is enabled in order-flow/strict research profiles and pinned disabled in the robust base profile.
+- `weighted_quality_confluence` enables the guard with lookback `8h`, minimum range `2.20 ATR`, and extreme threshold `82%`.
+- `pa_full_confluence` enables a stricter version with lookback `8h`, minimum range `2.00 ATR`, and extreme threshold `80%`.
+- Generated configs confirmed the module is enabled in the strict research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
 
@@ -46,14 +43,14 @@ This is an order-flow style proxy for XAUUSD tester data. MT5 brokers often do n
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `BD7F859C57136DB501179784562960AE2CB9E04922599A0954BCB5518A806B6D`
-- `Professional_XAUUSD_EA.mq5`: `BD7F859C57136DB501179784562960AE2CB9E04922599A0954BCB5518A806B6D`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `E462CB763364CB5FE3251DA90FA8BED2A692CB0AFCE078DB0097F0CC22BCD2FF`
+- `outputs\Professional_XAUUSD_EA.mq5`: `4B945C4679217175EE494467F465446C4B28337CD7780F3C3CD112CE8CC9D9E7`
+- `Professional_XAUUSD_EA.mq5`: `4B945C4679217175EE494467F465446C4B28337CD7780F3C3CD112CE8CC9D9E7`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `C34C5C1A9DD347D3ED128544B76DD8B73CCD4C26B652FF2C11DBB8EDEBA92FD7`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `82D10BD7D6B5FBBE5A54E1D018659484C19208C66607858DE3D4EE92C6BB6542`
-- `work\test_price_action_strategy_modules.ps1`: `9E6934E0CFA35432A72A18822527DF6A4BADD2BC725F21E72C74E64F64DBE1DA`
-- `work\test_price_action_strategy_batch.ps1`: `B4687F30023CAF48E6F476B478A34C35240EA74C53779497EC53A115036606EB`
-- `work\build_price_action_strategy_batch.ps1`: `1EF14853A4D4B06A1BF537DF169FFFC278A918C0DFB5A964029068407FF1F248`
+- `outputs\xauusd_micro_validation_package.zip`: `D52D2DDB5762FE5817B94C073B503C18607CD3FC8423234D2DA8BD68FB5611DE`
+- `work\test_price_action_strategy_modules.ps1`: `0B67D8405F26D93F22B763D60310E284288F281562B51471DFC767A4833B91EA`
+- `work\test_price_action_strategy_batch.ps1`: `D2B04A8C2ED217ED892E9B331DCA776AD4CE44B63FCED695B8E2A5EDFB39D41E`
+- `work\build_price_action_strategy_batch.ps1`: `EB46F7F63EFC76C3D886FEE067290A55667063D5B789CED33F40B6486DB93670`
 
 ## Background-Safety Note
 
