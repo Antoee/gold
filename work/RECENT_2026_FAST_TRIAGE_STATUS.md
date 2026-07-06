@@ -11,33 +11,22 @@ Updated: 2026-07-06
 
 ## Latest Risk-Code Change
 
-Added optional Price Action Risk Scaling on top of the Price Action Composite Gate:
+Added optional Correlation Risk Scaling on top of the price-action risk stack:
 
-- `InpUsePriceActionCompositeGate`
-- `InpPriceActionCompositeMinScore`
-- `InpPriceActionRequireStructure`
-- `InpPriceActionRequireLiquidity`
-- `InpPriceActionRequireExecution`
-- `InpPriceActionRequireOrderFlow`
-- `InpWeightPriceActionComposite`
-- `InpUsePriceActionRiskScaling`
-- `InpPriceActionRiskMinScore`
-- `InpPriceActionRiskFullScore`
-- `InpMinPriceActionRiskMultiplier`
-- `InpMaxPriceActionRiskMultiplier`
-- `PriceActionCompositeQuality()` scores BOS, displacement BOS, CHoCH, breakout retest, liquidity sweeps, wick rejection, equal/session/Asian sweeps, FVG, FVG retest, order block, OHLC wick/body rejection, displacement candle, tick pressure, tick speed, momentum, candle anatomy, volume, cumulative delta proxy, tick tape, VWAP, daily open, previous-day range, and regime quality.
-- `Build()` now rejects enabled low-quality entries with `PA composite reject score ...` before normal confirmations.
-- Passing composite setups now add `PA composite score ...` as a weighted confirmation so quality risk scaling and quality TP scaling can react to stronger price-action evidence.
-- `OpenSignal()` now applies `PriceActionRiskMultiplier(signal.priceActionScore)` before lot sizing and logs `PA risk x...` when enabled.
+- `InpUseCorrelationRiskScaling`
+- `InpCorrelationWeakRiskMultiplier`
+- `InpCorrelationConflictRiskMultiplier`
+- `CorrelationRiskMultiplier()` reuses the configured correlation symbol/timeframe/lookback/mode and reduces risk when the related market move is weak or conflicts with the XAUUSD setup.
+- `OpenSignal()` now multiplies correlation risk into final lot sizing and logs `Correlation risk x...` when enabled.
 
-This changes entry and risk strategy code, not only settings. The goal is to require actual market-structure, liquidity, execution-candle, and optional order-flow evidence before allowing strict research profiles to trade, then reduce position size on marginal-but-valid price-action scores. It is disabled in the robust base profile and enabled only in strict research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
+This changes risk strategy code, not only settings. The goal is to keep valid XAUUSD setups eligible while reducing exposure when XAGUSD/correlation evidence is weak or contradictory. It is disabled in the robust base profile and enabled only in strict research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables Price Action Risk Scaling from score `9` to `16`, minimum risk multiplier `0.55`, order-flow requirement disabled, and PA composite weight `3`.
-- `pa_full_confluence` enables a stricter version from score `12` to `20`, minimum risk multiplier `0.45`, order-flow requirement enabled, and PA composite weight `4`.
+- `weighted_quality_confluence` enables Correlation Risk Scaling with weak multiplier `0.75` and conflict multiplier `0.50`.
+- `pa_full_confluence` enables a stricter version with weak multiplier `0.70` and conflict multiplier `0.40`.
 - Generated configs confirmed the module is enabled in strict price-action research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -53,15 +42,15 @@ This changes entry and risk strategy code, not only settings. The goal is to req
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `618496E938E7B983F2BB8FF812B14EB93821EBC81B57F158A29E4FE2FD85801D`
-- `Professional_XAUUSD_EA.mq5`: `618496E938E7B983F2BB8FF812B14EB93821EBC81B57F158A29E4FE2FD85801D`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `618496E938E7B983F2BB8FF812B14EB93821EBC81B57F158A29E4FE2FD85801D`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `6B554539682F71ADAC3DAAD13CC8232F5905C89F0BF470382A4E10169DC1873A`
+- `outputs\Professional_XAUUSD_EA.mq5`: `3D5B8FA153F731A44AB4BC080DD43F7047AB7B165DFCB04A9C6126DFFA360AF8`
+- `Professional_XAUUSD_EA.mq5`: `3D5B8FA153F731A44AB4BC080DD43F7047AB7B165DFCB04A9C6126DFFA360AF8`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `3D5B8FA153F731A44AB4BC080DD43F7047AB7B165DFCB04A9C6126DFFA360AF8`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `91961D16EF06BA8A49D0BFD1C2631EBEBA2BB8460D7342099E3FE53416DF4520`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `100228EFE5F62C854B9989A0347D1D65F3A35B395F0E79A61FCA9681647AA6C1`
-- `work\test_price_action_strategy_modules.ps1`: `50C7B8EE392F9D652C2FBB0F954053175609CAA16E4D25C34F34DD865C9FE228`
-- `work\test_price_action_strategy_batch.ps1`: `D172C40AD65DBDC3F12CC04D85483CAC4379CA86E1E774DA28B0110DF2F2C6E7`
-- `work\build_price_action_strategy_batch.ps1`: `86527C3D521F88B2452D83739584DFDCB7BE67CD8414DDF955DC960E9FE5ADC6`
+- `outputs\xauusd_micro_validation_package.zip`: `816D13391A6C766AA592BFFA71033A2FE5F8C07757FE2A21A21462FBC8E19549`
+- `work\test_price_action_strategy_modules.ps1`: `8DB8A576B3483183A175AA03C0C87AC0E8165703D70645C2E0A15012A2E1A52E`
+- `work\test_price_action_strategy_batch.ps1`: `03870E50B424147B7C58711FDCB66C38F09A9F85B29FDB67C947EA08F0FF2900`
+- `work\build_price_action_strategy_batch.ps1`: `525527BFF6193CD07B6CB9CDB871FACFB45DA509CFF5DC93C095E4EB234E64F2`
 
 ## Background-Safety Note
 
