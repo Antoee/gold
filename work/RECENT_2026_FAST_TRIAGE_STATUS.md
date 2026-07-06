@@ -11,30 +11,30 @@ Updated: 2026-07-06
 
 ## Latest Risk-Code Change
 
-Added optional Recent Performance Quality Gate for generated research profiles:
+Added optional Recent Average-R Quality Gate for generated research profiles:
 
-- `InpUseRecentPerformanceQualityGate`
-- `InpRecentPerformanceQualityLookbackTrades`
-- `InpRecentPerformanceQualityMaxNetPercent`
-- `InpRecentPerformanceMinQualityScore`
-- `RecentPerformanceQualityAllows()` reviews the last closed trades using the existing recent-performance sample.
-- If recent net performance is weak, new entries must meet the configured minimum signal quality score.
-- `OpenSignal()` now blocks weak-quality entries with `recent performance quality` before risk sizing.
+- `InpUseRecentPerformanceRQualityGate`
+- `InpRecentPerformanceRLookbackTrades`
+- `InpRecentPerformanceMaxAverageR`
+- `InpRecentPerformanceRMinQualityScore`
+- `RecentPerformanceRMultipleSample()` reconstructs recent R multiples from MT5 deal history using matching position IDs, entry stop loss, close volume, and closed-deal profit.
+- `RecentPerformanceRQualityAllows()` raises the required signal quality score when recent average R is weak.
+- `OpenSignal()` now blocks weak-quality entries with `recent average R quality` before risk sizing.
 
-This is risk/profit selectivity code, not only parameter tweaking. It complements the existing recent-performance throttle and pause by raising the entry-quality bar instead of only reducing risk or pausing. The baseline anchor remains disabled for clean comparison, while generated research profiles enable it. It adds no martingale, grid, averaging down, or recovery behavior.
+This is risk-adjusted selectivity code, not only parameter tweaking. It complements the net-percent recent performance gate with an R-based view that is less distorted by dynamic lot sizing. If a full reconstructable R sample is unavailable from MT5 history, the gate stays inactive and the existing recent-performance controls remain the fallback. The baseline anchor remains disabled for clean comparison, while generated research profiles enable it. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor remains `InpUseRecentPerformanceQualityGate=false`.
-- Generated research profiles use `InpUseRecentPerformanceQualityGate=true`.
-- Research profiles use lookback `5`, weak-performance threshold `-0.20`, and minimum quality score `10`.
+- Baseline anchor remains `InpUseRecentPerformanceRQualityGate=false`.
+- Generated research profiles use `InpUseRecentPerformanceRQualityGate=true`.
+- Research profiles use lookback `5`, average-R threshold `-0.15`, and minimum quality score `11`.
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `7D439B1A03E35BA57BE8440BF2B9963D17846D274C7D6952A942B4A4A8E97367`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `3216889FC4F8742843B6AAD1AB15088A068E980460942C74EA222C195F456620`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_ea_source_artifact_sync.ps1`: PASS
 - `work\test_price_action_strategy_batch.ps1`: PASS
@@ -44,15 +44,15 @@ This is risk/profit selectivity code, not only parameter tweaking. It complement
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `7D439B1A03E35BA57BE8440BF2B9963D17846D274C7D6952A942B4A4A8E97367`
-- `Professional_XAUUSD_EA.mq5`: `7D439B1A03E35BA57BE8440BF2B9963D17846D274C7D6952A942B4A4A8E97367`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `7D439B1A03E35BA57BE8440BF2B9963D17846D274C7D6952A942B4A4A8E97367`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `AAB2E887480D7D57F3584DA41D2D71C9860F039A10FF93B37EA4C5333E6C5AC4`
+- `outputs\Professional_XAUUSD_EA.mq5`: `3216889FC4F8742843B6AAD1AB15088A068E980460942C74EA222C195F456620`
+- `Professional_XAUUSD_EA.mq5`: `3216889FC4F8742843B6AAD1AB15088A068E980460942C74EA222C195F456620`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `3216889FC4F8742843B6AAD1AB15088A068E980460942C74EA222C195F456620`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `3F3BA83908536C902E183DDAF4549392088222AAD6C28072564D1DED24949813`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `3F405B8CC16EE7CAB480C3327C9ECFD096A622AE22E6867C236E2E81E4A9F0C9`
-- `work\test_price_action_strategy_modules.ps1`: `9D9E4307E71431A7A7B01E52DE2717FC844A9E3D1708A13B72C05332F8276B6F`
-- `work\test_price_action_strategy_batch.ps1`: `44989DD9AD1A7B9F99E413C21B0BF32B8EAD7B44F235E79528A9A3028D655A19`
-- `work\build_price_action_strategy_batch.ps1`: `8800ECD2EBE58B7730F0DC8B96586995893ACF47AFADB2DB30E05DCD035AD8A1`
+- `outputs\xauusd_micro_validation_package.zip`: `75B113BBB9227E0C82CC8BBFDE10938BD23EAB92098E9733C4FF86AD1D393F8F`
+- `work\test_price_action_strategy_modules.ps1`: `32AA8E7DE6971C8BE7095EEC360D0EBA50F27EA04BD19D4B86D285F83FCAE17B`
+- `work\test_price_action_strategy_batch.ps1`: `BC3111F1A84F75228DFD536506663B6DF0783F2D120BBC6104BF0BD98C4089F2`
+- `work\build_price_action_strategy_batch.ps1`: `C08A9D21FB8F8FCE834EBC572977186B80D016985EA71E9E19864C6F848B749A`
 
 ## Background-Safety Note
 
