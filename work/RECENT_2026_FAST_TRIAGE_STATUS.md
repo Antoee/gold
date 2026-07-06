@@ -11,23 +11,25 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional trading-cost guard:
+Added optional session-based risk scaling:
 
-- `InpUseTradingCostGuard`
-- `InpEstimatedRoundTurnCommissionPerLot`
-- `InpMaxTradingCostRiskPercent`
-- `TradingCostGuardAllows()` estimates spread cost plus optional round-turn commission cost versus the money at risk.
-- New entries can be blocked with `trading cost risk` when estimated costs consume too much of the trade's risk budget.
+- `InpUseSessionRiskScaling`
+- `InpLondonRiskMultiplier`
+- `InpNewYorkRiskMultiplier`
+- `InpCustomSessionRiskMultiplier`
+- `CSessionFilter::RiskMultiplier()` returns a configurable risk multiplier for the active session.
+- `OpenSignal()` now combines quality-risk scaling with session-risk scaling before lot sizing.
+- Entry logs add `Session risk x...;` when the module is enabled.
 
-This is an execution-cost module intended to avoid marginal XAUUSD setups where spread/commission drag is too large relative to stop-risk.
+This is a risk-control module for letting optimization reduce exposure in weaker XAUUSD sessions without changing the core entry logic or increasing risk after losses.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables cost guard with max cost `12%` of risk.
-- `pa_full_confluence` enables cost guard with max cost `10%` of risk.
-- Generated configs confirmed the guard is enabled in those profiles and pinned disabled in other profiles.
+- `weighted_quality_confluence` enables session risk scaling with London `1.00`, New York `0.85`, Custom `0.60`.
+- `pa_full_confluence` enables session risk scaling with London `1.00`, New York `0.80`, Custom `0.50`.
+- Generated configs confirmed the module is enabled in those profiles and pinned disabled in other profiles.
 
 ## Quiet Validation Results
 
@@ -42,16 +44,16 @@ This is an execution-cost module intended to avoid marginal XAUUSD setups where 
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `288BFF54DFCC258E926022117BE7649CF8C3FF01C53C1BBDE97893978BDE2617`
-- `Professional_XAUUSD_EA.mq5`: `288BFF54DFCC258E926022117BE7649CF8C3FF01C53C1BBDE97893978BDE2617`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `CB3141827A5DA8DA35938688396EBAA8B93B344BDFFA47256DFAA05770C38571`
+- `outputs\Professional_XAUUSD_EA.mq5`: `3F3DC7A1A6113D9222DA85B1B00D3C13B453DF6E4EB41069E10A100AC7D58D43`
+- `Professional_XAUUSD_EA.mq5`: `3F3DC7A1A6113D9222DA85B1B00D3C13B453DF6E4EB41069E10A100AC7D58D43`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `2124A0BD2B72053EC224D59CB6C23EB82C00C4454B1AC41E533ABA42F205420D`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\price_action_strategy_handoff.zip`: `8F70DA8157A1910E7CC066ECA57E580CEF9534A4BE4A392542B6716DE55AC437`
-- `outputs\price_action_parallel_lanes.zip`: `7D6ABFCB114342CFF5344FA543426FCD5E036BA1206ED67D07383CCE60758275`
-- `outputs\xauusd_micro_validation_package.zip`: `3BD54A84F9B4E3B49CE18C5AD81A01D859676CF1F87126A95150BC5928AA0869`
-- `work\test_price_action_strategy_modules.ps1`: `DA870031974188437CFA863EB86E6E1420243B4E783C57C60D8B6EE4824B13B6`
+- `outputs\price_action_strategy_handoff.zip`: `D6AF0CBB68AC4032F230D210584264A5FE1BFFB2F06F90A1484C7347A1E708F8`
+- `outputs\price_action_parallel_lanes.zip`: `902773B761BAB3D0E06D7B5CAAA5DBA0853B96FB4AD1A8EB4F02EAF019119FB3`
+- `outputs\xauusd_micro_validation_package.zip`: `F40D94455A454BB39EF023CD83468E3DE24829BE38FD9B8A7CC3D9A678D9A703`
+- `work\test_price_action_strategy_modules.ps1`: `DAAAAF0108C3792C4FF4EE4C17462527179C5C7D1490F18B30296DCA665446E2`
 - `work\test_price_action_strategy_batch.ps1`: `4B9B4747F2872AA3617E1804D5610FDB5709664D06F52635B5DF7F393697B0DC`
-- `work\build_price_action_strategy_batch.ps1`: `6EAFC618E54B2356DFDD9B6482510AF7EB86C69446A8B60AD50997637622EC00`
+- `work\build_price_action_strategy_batch.ps1`: `59BE3A25580301A31A2D2748A95313D711E4030586171C710430496521CFBF7A`
 
 ## Background-Safety Note
 
