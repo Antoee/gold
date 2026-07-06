@@ -8,24 +8,27 @@ Generated locally without launching MT5.
 - Added a pre-entry max-stop ATR guard locally: after final structure/broker stop sizing, the EA rejects entries where `stopDistance > signal.atr * InpMaxStopATRMultiplier` and records `max stop ATR` as the block reason.
 - Added `InpMaxTradesPerDay` to the canonical EA source locally and set the default/base profile value to `4`.
 - Added a risk-manager daily trade-frequency circuit breaker locally: the EA counts current-day entry deals for the same symbol/magic and rejects new entries with `daily trade limit` after the configured cap.
-- Pinned `InpMaxStopATRMultiplier=3.00` and `InpMaxTradesPerDay=4` in the base profile and regenerated package configs so external tests do not rely on MT5 defaults.
+- Added `InpMaxDailyLossCount` to the canonical EA source locally and set the default/base profile value to `2`.
+- Added a risk-manager daily loss-count circuit breaker locally: the EA counts current-day losing exit deals for the same symbol/magic and rejects new entries with `daily loss count limit` after the configured cap.
+- Pinned `InpMaxStopATRMultiplier=3.00`, `InpMaxTradesPerDay=4`, and `InpMaxDailyLossCount=2` in the base profile and regenerated package configs so external tests do not rely on MT5 defaults.
 - Added two phase-1-only profit-search variants: `maxstop25_dd4` with `InpMaxStopATRMultiplier=2.50`, and `maxstop20_dd4` with `InpMaxStopATRMultiplier=2.00`.
 - Added `work/build_max_stop_probe_batch.ps1` locally to create a short external handoff batch focused on the max-stop variants.
 - Added `work/test_max_stop_probe_batch.ps1` locally to smoke-test the probe rows, phase/model settings, guard values, config paths, and estimated runtime.
 - Added `work/test_daily_trade_limit_guard.ps1` locally to verify the EA and base profile pin the daily trade-frequency circuit breaker.
+- Added `work/test_daily_loss_count_guard.ps1` locally to verify the EA and base profile pin the daily loss-count circuit breaker.
 - Added `work/audit_mt5_autostart_sources.ps1` locally to read-only check Windows Startup folders, Registry Run/RunOnce keys, Scheduled Tasks, and Services for MT5/MetaEditor autostart sources.
 - Added `work/test_mt5_autostart_source_audit.ps1` locally to verify the autostart audit covers all four source areas and does not launch MT5.
 - Updated `work/audit_handoff_config_integrity.ps1` locally so handoff integrity checks require `InpMaxStopATRMultiplier` in packaged configs.
-- Wired the daily trade limit smoke, max-stop probe handoff, autostart audit, integrity audit, report-import preflight, and local pipeline manifest into the offline refresh.
+- Wired the daily trade limit smoke, daily loss-count smoke, max-stop probe handoff, autostart audit, integrity audit, report-import preflight, and local pipeline manifest into the offline refresh.
 - Kept local MT5 launch hard-locked. Quiet no-resident-helper mode is active: the stop marker is present and no watchdog process should be running.
 
 ## Current Local Evidence
 
-- Canonical EA source SHA-256: `E571BA44C08367333F71940E6C99EFEFB34D0DD17B8E5E57418A979B826610B4`.
-- Root EA source SHA-256: `E571BA44C08367333F71940E6C99EFEFB34D0DD17B8E5E57418A979B826610B4`.
-- Packaged EA source SHA-256: `E571BA44C08367333F71940E6C99EFEFB34D0DD17B8E5E57418A979B826610B4`.
+- Canonical EA source SHA-256: `8D46F98E9855727AB8B97FED35D08A5B3C62D62FEFBF30F6E40EB6F9D30469E7`.
+- Root EA source SHA-256: `8D46F98E9855727AB8B97FED35D08A5B3C62D62FEFBF30F6E40EB6F9D30469E7`.
+- Packaged EA source SHA-256: `8D46F98E9855727AB8B97FED35D08A5B3C62D62FEFBF30F6E40EB6F9D30469E7`.
 - Generated handoff `.ini` configs checked for `InpMaxTradesPerDay`: 56 files, 0 missing.
-- External package profile `.set` files with `InpMaxTradesPerDay`: 6 matched profile files.
+- Generated handoff `.ini` configs checked for `InpMaxDailyLossCount`: 56 files, 0 missing.
 - Main profit-search profiles: 22.
 - Main profit-search manifest: 297 configs total.
 - Phase-1 fast-triage configs: 198.
@@ -41,24 +44,26 @@ Generated locally without launching MT5.
 - Parallel micro lanes: 4 lanes, 20 configs total, estimated 6.58 tester minutes before platform overhead.
 - Parallel micro lane decisions: 16 candidate lane decisions, all `WAITING_FOR_REPORTS`.
 - MT5 autostart source audit: PASS, 4 source areas checked, 0 MT5/MetaEditor matches.
-- Local pipeline manifest: 50 tracked artifacts, 0 missing.
+- Local pipeline manifest: 51 tracked artifacts, 0 missing.
 - Quiet stop marker present: `work/STOP_MT5_FOCUS_WATCHDOG`.
 - Resident watchdog state: intentionally stopped; no resident helper should be active.
-- External MT5 validation package zip SHA-256: `8588016BDC25136C2889906AB93E25EB70E55ECFFDEFF640FDE7AB1E2CE4063E`.
-- Risk-adjusted micro handoff zip SHA-256: `E46D6C8ED4223FE3B7DF192A6B31FB0EB1DD209D569F28ADA50B75FACB7DB071`.
-- Max-stop probe handoff zip SHA-256: `918D6AEFFFBF0C38C8870E3B86B11CF5A46EF61DE0D82E34232FF68077DBF20C`.
-- Parallel micro lanes zip SHA-256: `5179E0CAE468AC366A3C8B2CF7FB66680AFB6574BEEAB90D34C097E7705F9C0A`.
-- Research retest zip SHA-256: `A388B62B9E542CF4FFC2AE3D142A54CA9281BA40B2ABC5273E1761AE4B5BE0E8`.
+- External MT5 validation package zip SHA-256: `F267F7309153392A6F324998AB0E71B1F8C468E37A12D2220F89091F1786D9E4`.
+- Risk-adjusted micro handoff zip SHA-256: `FD18B153B22C5833F64E4FE7DE6BD2F4FF345BD5C30D256FEAE194FEB553FA8D`.
+- Max-stop probe handoff zip SHA-256: `5C9AAC254A451B78276424E14607D92612521AB39F136BDF14DAB807D435657F`.
+- Parallel micro lanes zip SHA-256: `5AF9C9C823DA1F6327B8C009E86A97B5BB326911D60EA9AA03B3C44F71C4FF00`.
+- Research retest zip SHA-256: `E5AB410F46D580769CD7D674F6D5C5299BB644AB8A00502117481ACD89A0A826`.
 - Daily trade limit guard smoke SHA-256: `8F163BC67BC44DF8B37CD9537BADE4E10C6CC6CE28D50F333804924F9BEDA3C2`.
+- Daily loss-count guard smoke SHA-256: `E0A0CF29C4D655D88A30499B3E985B9D400B3D5B1714F6BA2CAA44B5FE826D2B`.
 
 ## Verification
 
+- `work/test_daily_loss_count_guard.ps1`: `DAILY_LOSS_COUNT_GUARD_SMOKE_PASS`.
 - `work/test_daily_trade_limit_guard.ps1`: `DAILY_TRADE_LIMIT_GUARD_SMOKE_PASS`.
 - `work/test_max_stop_atr_guard.ps1`: `MAX_STOP_ATR_GUARD_SMOKE_PASS`.
 - `work/test_max_stop_probe_batch.ps1`: `MAX_STOP_PROBE_BATCH_SMOKE_PASS`.
 - `work/test_mt5_autostart_source_audit.ps1`: `MT5_AUTOSTART_SOURCE_AUDIT_SMOKE_PASS`.
 - `work/audit_mt5_autostart_sources.ps1`: PASS, 4 source areas checked, 0 MT5/MetaEditor matches.
-- `work/sync_ea_source_artifacts.ps1`: PASS, 3 artifacts, hash `E571BA44C08367333F71940E6C99EFEFB34D0DD17B8E5E57418A979B826610B4`.
+- `work/sync_ea_source_artifacts.ps1`: PASS, 3 artifacts, hash `8D46F98E9855727AB8B97FED35D08A5B3C62D62FEFBF30F6E40EB6F9D30469E7`.
 - `work/test_ea_source_artifact_sync.ps1`: `EA_SOURCE_ARTIFACT_SYNC_SMOKE_PASS`.
 - `work/test_generate_profit_search_configs.ps1`: `GENERATE_PROFIT_SEARCH_CONFIGS_SMOKE_PASS`.
 - `work/test_risk_adjusted_micro_batch_frontier.ps1`: `RISK_ADJUSTED_MICRO_BATCH_FRONTIER_SMOKE_PASS`.
@@ -66,12 +71,12 @@ Generated locally without launching MT5.
 - `work/test_research_retest_decision.ps1`: `RESEARCH_RETEST_DECISION_SMOKE_PASS`.
 - `work/test_parallel_micro_lanes.ps1`: `PARALLEL_MICRO_LANES_SMOKE_PASS`.
 - `work/test_parallel_micro_lane_decision.ps1`: `PARALLEL_MICRO_LANE_DECISION_SMOKE_PASS`.
-- `work/refresh_offline_validation_state.ps1`: PASS, 29 steps, 0 failed.
-- `outputs/REPORT_IMPORT_PREFLIGHT.csv`: daily trade limit smoke PASS; autostart audit smoke PASS; MT5 autostart sources PASS; max-stop probe smoke PASS; manifest PASS with 297 expected configs; imported metrics `WAITING_FOR_REPORTS`; max-stop probe handoff PASS; optimization guardrails TRACKED; local pipeline manifest PASS; local safety PASS; external micro decision `COMPILE_REQUIRED`.
+- `work/refresh_offline_validation_state.ps1`: PASS, 30 steps, 0 failed.
+- `outputs/REPORT_IMPORT_PREFLIGHT.csv`: daily loss-count smoke PASS; daily trade limit smoke PASS; autostart audit smoke PASS; MT5 autostart sources PASS; max-stop probe smoke PASS; manifest PASS with 297 expected configs; imported metrics `WAITING_FOR_REPORTS`; max-stop probe handoff PASS; optimization guardrails TRACKED; local pipeline manifest PASS; local safety PASS; external micro decision `COMPILE_REQUIRED`.
 - `outputs/MT5_AUTOSTART_SOURCE_AUDIT.csv`: Startup folders false, Registry Run keys false, Scheduled tasks false, Services false.
 - `outputs/MAX_STOP_PROBE_BATCH.csv`: 16 rows.
 - `outputs/MAX_STOP_PROBE_HANDOFF_INTEGRITY.csv`: 16 rows, 0 failures.
-- `outputs/LOCAL_PIPELINE_MANIFEST.csv`: PASS, 50 artifacts, 0 missing.
+- `outputs/LOCAL_PIPELINE_MANIFEST.csv`: PASS, 51 artifacts, 0 missing.
 - `outputs/parallel_micro_lanes/LANE_MANIFEST.csv`: 4 lanes.
 - `outputs/parallel_micro_lanes/LANE_RUN_MANIFEST.csv`: 20 runs.
 - `outputs/PARALLEL_MICRO_LANE_DECISION.csv`: 16 rows, `WAITING_FOR_REPORTS=16`.
@@ -84,7 +89,7 @@ Generated locally without launching MT5.
 
 The local generated scripts and outputs are updated in the workspace. This status note records the change on GitHub; the larger source/script files still need a normal git push or connector full-file update to fully synchronize the repository.
 
-Compile proof is stale because the canonical EA source changed. Before trusting new MT5 reports, compile the exact packaged source with hash `E571BA44C08367333F71940E6C99EFEFB34D0DD17B8E5E57418A979B826610B4` and import the compile log.
+Compile proof is stale because the canonical EA source changed. Before trusting new MT5 reports, compile the exact packaged source with hash `8D46F98E9855727AB8B97FED35D08A5B3C62D62FEFBF30F6E40EB6F9D30469E7` and import the compile log.
 
 No profit is proven by this update. The micro, max-stop probe, max-stop variant, and research retest reports are still missing, so the current promoted profile remains unchanged until fresh external MT5 reports are returned and pass the gates.
 
