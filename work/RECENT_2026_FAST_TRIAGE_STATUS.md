@@ -9,31 +9,34 @@ Updated: 2026-07-06
 - No profit claim is made from this offline-only validation.
 - Full EA source exists locally, but this note is the GitHub-safe status/evidence artifact.
 
-## Latest Risk-Code Change
+## Latest Strategy-Code Change
 
-Added optional Trade Free-Margin Pressure Risk Scaling for generated research profiles:
+Added optional Recent Range Location Bias for generated research profiles:
 
-- `InpUseTradeMarginRiskScaling`
-- `InpTradeMarginRiskStartFraction`
-- `InpMinTradeMarginRiskMultiplier`
-- `TradeMarginRiskMultiplier()` estimates required margin for the candidate trade using `OrderCalcMargin()`.
-- `OpenSignal()` now sizes once, estimates required margin as a percent of free margin, tapers risk if the trade is approaching the configured hard trade-margin cap, then recalculates lots before exposure/cost/margin guards.
-- Entry logging records `Trade margin risk x...` when enabled.
+- `InpUseRangeLocationBias`
+- `InpRangeLocationLookbackBars`
+- `InpRangeLocationBuyMinPercent`
+- `InpRangeLocationSellMaxPercent`
+- `InpWeightRangeLocationBias`
+- `RangeLocationBias()` calculates the last closed candle's close position inside the recent high/low range.
+- Buy signals require the close to be in the stronger upper portion of the recent range; sell signals require the close to be in the weaker lower portion.
+- Smart Money Quality and Price Action Composite scoring now include `SMQ range location;` and `PA range location;` evidence.
+- The weighted entry engine can score the direct confirmation as `Range location bias;`.
 
-This is strategy/risk code, not only settings. It reduces new-trade risk before the hard `InpMaxTradeMarginFreePercent` margin guard blocks the order. The baseline anchor remains disabled for clean comparison, while generated research profiles enable it. It adds no martingale, grid, averaging down, or recovery behavior.
+This is strategy logic using OHLC market-structure context, not only settings. It is designed to reduce mid-range/chop entries while preserving the baseline anchor for comparison. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor remains `InpUseTradeMarginRiskScaling=false`.
-- Generated research profiles use `InpUseTradeMarginRiskScaling=true`.
-- Research profiles begin tapering at `InpTradeMarginRiskStartFraction=0.50` of `InpMaxTradeMarginFreePercent` and taper toward minimum multiplier `0.50` as required margin approaches the hard cap.
+- Baseline anchor remains `InpUseRangeLocationBias=false`.
+- Generated research profiles use `InpUseRangeLocationBias=true`.
+- Research profiles use lookback `24`, buy threshold `55.0`, sell threshold `45.0`, and weight `1`.
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `1F3F7E943A16EB9D73C4D69F86E7D21F832B4A1184EE909FE752A573D5DED988`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `FB2CDBAB58800B51F09E93B4DEAEEF2C21A470CE521DEECA93EA37F004C43781`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_ea_source_artifact_sync.ps1`: PASS
 - `work\test_price_action_strategy_batch.ps1`: PASS
@@ -43,15 +46,15 @@ This is strategy/risk code, not only settings. It reduces new-trade risk before 
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `1F3F7E943A16EB9D73C4D69F86E7D21F832B4A1184EE909FE752A573D5DED988`
-- `Professional_XAUUSD_EA.mq5`: `1F3F7E943A16EB9D73C4D69F86E7D21F832B4A1184EE909FE752A573D5DED988`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `1F3F7E943A16EB9D73C4D69F86E7D21F832B4A1184EE909FE752A573D5DED988`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `4A9AFD3481C5F6E0FBD164B4278ECA90ECD73FA3906647944B83DC7265436ADC`
+- `outputs\Professional_XAUUSD_EA.mq5`: `FB2CDBAB58800B51F09E93B4DEAEEF2C21A470CE521DEECA93EA37F004C43781`
+- `Professional_XAUUSD_EA.mq5`: `FB2CDBAB58800B51F09E93B4DEAEEF2C21A470CE521DEECA93EA37F004C43781`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `FB2CDBAB58800B51F09E93B4DEAEEF2C21A470CE521DEECA93EA37F004C43781`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `DFEEF59E3334EB5D1CEE7E9CFD63E8EB53529569121AF5978724426BBF86154A`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `7699E6336722F51A826B561105EED242D57D694B88AF504F93B6EC3E2CF720C9`
-- `work\test_price_action_strategy_modules.ps1`: `E031AF0C6C3A5D394A5C5D3C9C4F00C053BDF05A188A8705ECCACE4CBE002263`
-- `work\test_price_action_strategy_batch.ps1`: `87DC90313F61D4B62F972783D6F06E3757ECF99CFB187D2AE6BF40C39CE2514A`
-- `work\build_price_action_strategy_batch.ps1`: `B627C8E570E73FA235964770CE33FBA93DF87D09609A31C832EA21FE73DC7F5A`
+- `outputs\xauusd_micro_validation_package.zip`: `47C0E2160C910A0FD47020ABC82B324F0DCEE33F99F7286F6654D7F34FA3A929`
+- `work\test_price_action_strategy_modules.ps1`: `F50ADD61CBFDD63831DC8E2B4C0FAB57492910CE2CA6D99FEA6F137F37B2BA4E`
+- `work\test_price_action_strategy_batch.ps1`: `5E38791B6FFC3D12155ADC4A5BF0EE34B18145F79B41AA543898102573C67646`
+- `work\build_price_action_strategy_batch.ps1`: `F36080CD8B7837E06B02A36E1FE702ECA98348A60C74396043934517FE35F2AD`
 
 ## Background-Safety Note
 
