@@ -13,7 +13,20 @@ Updated locally on 2026-07-06.
 ## Current EA Source
 
 - Canonical source: `outputs/Professional_XAUUSD_EA.mq5`.
-- Current synced source SHA256: `FC500A897E195EF50A2369351D03DC1307C8821AECDD83CBC8B1921CFE6874B4`.
+- Current synced source SHA256: `9572DF05C96A045CB3DD9AEAED99043483DE8C99F900D00272CEE5E71CDB8866`.
+
+## Stagnation Exit Addition
+
+Added an optional stagnation exit so the position manager can close trades that have been open for a configurable number of bars but still have not reached a minimum R threshold:
+
+- `InpUseStagnationExit=false` by default.
+- `InpStagnationExitBars=24`.
+- `InpStagnationExitMaxR=0.10`.
+- When enabled, the position manager closes a trade if `r <= InpStagnationExitMaxR` after at least `InpStagnationExitBars` signal-timeframe bars.
+- Exit logs use event `exit`, bias `stagnation`, and reason `stagnation exit`.
+- This is strategy/risk-control code intended to reduce dead-time exposure and slow loss drift, not a settings-only change.
+
+The `weighted_quality_confluence` and `pa_full_confluence` research profiles now enable stagnation exit for fast-triage testing.
 
 ## Reversal-Pressure Exit Addition
 
@@ -27,7 +40,7 @@ Added an optional reversal-pressure exit so the position manager can protect tra
 - Exit logs use event `exit`, bias `reversal_pressure`, and the detected opposite-pressure reasons.
 - This is strategy/risk-control code, not a settings-only change.
 
-The `weighted_quality_confluence` and `pa_full_confluence` research profiles now enable reversal-pressure exit for fast-triage testing.
+The `weighted_quality_confluence` and `pa_full_confluence` research profiles enable reversal-pressure exit for fast-triage testing.
 
 ## Underwater Time Exit Addition
 
@@ -69,6 +82,7 @@ The EA includes optional, independently configurable strategy modules for actual
 - ATR-based profit-lock stop.
 - Adverse-R early exit.
 - Underwater time exit.
+- Stagnation exit.
 - Reversal-pressure exit.
 
 ## Decision Gate Discipline
@@ -94,6 +108,11 @@ Fast research batch for actual strategy-code variants:
 - Estimated tester runtime: about 10.5 minutes before platform overhead.
 - Handoff zip: `outputs/price_action_strategy_handoff.zip`.
 - Parallel lanes zip: `outputs/price_action_parallel_lanes.zip`.
+
+Research profiles with stagnation exit enabled:
+
+- `weighted_quality_confluence`.
+- `pa_full_confluence`.
 
 Research profiles with reversal-pressure exit enabled:
 
@@ -139,15 +158,19 @@ Research profiles with breakout retest enabled:
 
 ## Hashes
 
-- EA source: `FC500A897E195EF50A2369351D03DC1307C8821AECDD83CBC8B1921CFE6874B4`.
-- Base profile: `D945C4C343031235A6A22905C4725873FD85AD4ECE2124742A87911748639A35`.
+- EA source: `9572DF05C96A045CB3DD9AEAED99043483DE8C99F900D00272CEE5E71CDB8866`.
+- Base profile: `1B447C513BAE318AE6224AA47D2725502E2A1E38AF0E80ADEB719F703D35749F`.
 - Price-action batch CSV: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`.
-- Price-action handoff zip: `924A8320171CA57E7E61E4FA8E2854DC355DD05F49F50B75CA8312BE37CD3DBC`.
-- Price-action parallel lanes zip: `8102F0A8561E9E984BE47D599742131543FBCB4B287CE6BE25C26991A54CADD3`.
-- External validation package zip: `298BFF905755629341D4B1F45813FA3A443A98D4147C40B5935DA375DDEF9839`.
-- Price-action modules smoke: `E7E7ABB011B1C25E166F8AC08CC3EA2C81FCFAFA5E3F5D9DFC9FDB9DE3F80419`.
-- Price-action batch smoke: `6C8F583FFDAE02BF3677B0FE296963BE2D1F4789943EB292E585BB1F270B917B`.
-- Price-action batch builder: `20D978B55D53D9C636721F7BA2CE837E2C45BB710B64C0D6C628C5AB23B1B0E0`.
+- Price-action handoff zip: `D27A463B68A5442DC9C7173F6E66E0B50C513964986F323552545C15DD041613`.
+- Price-action parallel lanes zip: `8100E700E981BEBE3E1835F5519249FA24B16E5D2607D89A280844C4137A2D7A`.
+- External validation package zip: `93F83EAAE116AB28617C5DC76EE77261A6B2B3222438A60CE95419948B5208A2`.
+- Price-action modules smoke: `8402F0E2EAB0006AF5EA31BF9A9F5F55190D0815C848F0C89EB57AE517B5683F`.
+- Price-action batch smoke: `D284BC77964A564D8DA87E87E509C6BF14837333EC5B7DE3CEDE4D773DA71630`.
+- Price-action batch builder: `A536EF7077C3BB0A4B5991E636D8F83C5F225D808B4175CA69B92BCD0F3E6DB5`.
+
+## GitHub Source Caveat
+
+The status note is committed through the GitHub connector. The local shell still has no `git`, no `gh`, and no GitHub token exposed, and the 103 KB EA source is too large to safely pass through connector text parameters without risking truncation. The authoritative local artifacts and hashes above should be used for source integrity until a normal git push or non-truncated upload path is available.
 
 ## Caveat
 
