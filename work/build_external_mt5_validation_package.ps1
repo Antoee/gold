@@ -26,11 +26,24 @@ function Escape-MarkdownCell {
    return (($Value -replace '\|', '/') -replace "`r?`n", " ").Trim()
 }
 
+function Get-RowValue {
+   param(
+      [object]$Row,
+      [string]$Name,
+      [string]$Default = ""
+   )
+   if($null -eq $Row) { return $Default }
+   $property = $Row.PSObject.Properties[$Name]
+   if($null -eq $property) { return $Default }
+   return [string]$property.Value
+}
+
 $manifestPath = Join-Path $HandoffDir "HANDOFF_MANIFEST.csv"
 $configDir = Join-Path $HandoffDir "configs"
 $outCsv = Join-Path $PackageDir "PACKAGE_CONTENTS.csv"
 $outReadme = Join-Path $PackageDir "README_EXTERNAL_MT5.md"
 $expectedReports = Join-Path $PackageDir "EXPECTED_REPORTS.csv"
+$packageStatusPath = Join-Path $PackageDir "PACKAGE_STATUS.csv"
 $packageParent = Split-Path -Parent $PackageDir
 if([string]::IsNullOrWhiteSpace($packageParent)) { $packageParent = "." }
 $zipPath = Join-Path $packageParent ("{0}.zip" -f $PackageName)
@@ -107,6 +120,107 @@ foreach($row in $rows) {
 $expected | Export-Csv -LiteralPath $expectedReports -NoTypeInformation
 $contents.Add([pscustomobject]@{ Type = "expected_reports"; Source = $expectedReports; PackagePath = "EXPECTED_REPORTS.csv" }) | Out-Null
 
+$sourceItem = Get-Item -LiteralPath $EaSourcePath
+$sourceHash = (Get-FileHash -LiteralPath $EaSourcePath -Algorithm SHA256).Hash
+$compileStatusRows = @()
+$compileStatusPath = "outputs\MT5_COMPILE_STATUS.csv"
+if(Test-Path -LiteralPath $compileStatusPath) {
+   $compileStatusRows = @(Import-Csv -LiteralPath $compileStatusPath)
+}
+$compileRow = $compileStatusRows | Select-Object -First 1
+$compileStatusItem = if(Test-Path -LiteralPath $compileStatusPath) { Get-Item -LiteralPath $compileStatusPath } else { $null }
+$compileStatus = if($compileRow) { [string]$compileRow.Status } else { "MISSING" }
+$compileTrustStatus = "STALE"
+$compileEvidence = "No fresh compile log has been imported for this package source."
+if($compileStatusItem -and $compileStatus -eq "PASS" -and $sourceItem.LastWriteTimeUtc -le $compileStatusItem.LastWriteTimeUtc) {
+   $compileTrustStatus = "FRESH_PASS"
+   $compileEvidence = [string]$compileRow.Evidence
+} elseif($compileStatusItem -and $sourceItem.LastWriteTimeUtc -gt $compileStatusItem.LastWriteTimeUtc) {
+   $compileEvidence = "EA source is newer than imported compile status. SourceUtc=$($sourceItem.LastWriteTimeUtc); CompileStatusUtc=$($compileStatusItem.LastWriteTimeUtc)"
+} elseif($compileRow) {
+   $compileEvidence = "Imported compile status is $compileStatus. $([string]$compileRow.Evidence)"
+}
+$compileExpectedSourceHash = Get-RowValue $compileRow "ExpectedSourceHash"
+$compileSourceHashStatus = if($compileRow -and ![string]::IsNullOrWhiteSpace($compileExpectedSourceHash)) {
+   if($compileExpectedSourceHash -eq $sourceHash) { "MATCH" } else { "MISMATCH" }
+} else {
+   "NOT_AVAILABLE"
+}
+if($compileTrustStatus -eq "FRESH_PASS" -and $compileSourceHashStatus -eq "MISMATCH") {
+   $compileTrustStatus = "STALE"
+   $compileEvidence = "Compile status source hash does not match package source hash."
+}
+
+$packageStatus = @(
+   [pscustomobject]@{
+      Area = "Compile trust"
+      Status = $compileTrustStatus
+      Evidence = $compileEvidence
+      RequiredAction = "Compile source\Professional_XAUUSD_EA.mq5 on the external MT5 machine and return the MetaEditor compile log before trusting reports."
+   },
+   [pscustomobject]@{
+      Area = "Source hash"
+      Status = "SHA256"
+      Evidence = $sourceHash
+      RequiredAction = "Returned compile evidence and reports must correspond to this exact source hash."
+   },
+   [pscustomobject]@{
+      Area = "Source risk guard"
+      Status = if((Select-String -LiteralPath $EaSourcePath -Pattern "InpAllowMinLotRiskOverflow", "lots < minLot" -SimpleMatch).Count -ge 2) { "PASS" } else { "FAIL" }
+      Evidence = "EA source includes the min-lot risk overflow guard and override input."
+      RequiredAction = "Keep InpAllowMinLotRiskOverflow=false unless deliberately testing broker-minimum overflow behavior."
+   },
+   [pscustomobject]@{
+      Area = "Package scope"
+      Status = "MICRO_ONLY"
+      Evidence = "$($rows.Count) configs packaged; this is paired micro validation only."
+      RequiredAction = "Do not promote from this package alone; use it only to decide whether full phase-2 validation is worth running."
+   }
+)
+$packageStatus | Export-Csv -LiteralPath $packageStatusPath -NoTypeInformation
+$contents.Add([pscustomobject]@{ Type = "package_status"; Source = $packageStatusPath; PackagePath = "PACKAGE_STATUS.csv" }) | Out-Null
+
+$compileChecklistPath = Join-Path $PackageDir "COMPILE_RETURN_CHECKLIST.csv"
+$compileChecklist = @(
+   [pscustomobject]@{
+      Item = "Compile source"
+      Required = "YES"
+      ExpectedValue = "source\Professional_XAUUSD_EA.mq5"
+      ReturnAs = "MetaEditor compile log"
+      Notes = "Compile this exact packaged source on the external MT5 machine."
+   },
+   [pscustomobject]@{
+      Item = "Source hash"
+      Required = "YES"
+      ExpectedValue = $sourceHash
+      ReturnAs = "MT5_COMPILE_STATUS.csv SourceHashStatus=MATCH"
+      Notes = "Returned compile evidence must correspond to this exact SHA-256 hash."
+   },
+   [pscustomobject]@{
+      Item = "Compile errors"
+      Required = "YES"
+      ExpectedValue = "0"
+      ReturnAs = "MetaEditor result line"
+      Notes = "Any compile error blocks all backtest report trust."
+   },
+   [pscustomobject]@{
+      Item = "Compile warnings"
+      Required = "YES"
+      ExpectedValue = "0"
+      ReturnAs = "MetaEditor result line"
+      Notes = "Warnings must be reviewed before tester time is trusted."
+   },
+   [pscustomobject]@{
+      Item = "Import command"
+      Required = "YES"
+      ExpectedValue = "work\import_mt5_compile_log.ps1 -LogPath <returned log> -ExpectedSourcePath outputs\Professional_XAUUSD_EA.mq5"
+      ReturnAs = "outputs\MT5_COMPILE_STATUS.csv"
+      Notes = "Run from the main workspace after the compile log is copied back."
+   }
+)
+$compileChecklist | Export-Csv -LiteralPath $compileChecklistPath -NoTypeInformation
+$contents.Add([pscustomobject]@{ Type = "compile_checklist"; Source = $compileChecklistPath; PackagePath = "COMPILE_RETURN_CHECKLIST.csv" }) | Out-Null
+
 $readme = New-Object System.Collections.Generic.List[string]
 $readme.Add("# External MT5 Validation Package") | Out-Null
 $readme.Add("") | Out-Null
@@ -119,7 +233,17 @@ $readme.Add("- configs\*.ini: MT5 Strategy Tester config files from the handoff 
 $readme.Add("- profiles\*.set: profile/input snapshots for review.") | Out-Null
 $readme.Add("- HANDOFF_MANIFEST.csv: source of truth for windows, profiles, and expected report names.") | Out-Null
 $readme.Add("- EXPECTED_REPORTS.csv: checklist of report files to return.") | Out-Null
+$readme.Add("- PACKAGE_STATUS.csv: machine-readable compile trust and promotion-scope status.") | Out-Null
+$readme.Add("- COMPILE_RETURN_CHECKLIST.csv: exact compile evidence required before any report is trusted.") | Out-Null
 $readme.Add("- reports_here: put exported .htm/.html reports here before copying results back.") | Out-Null
+$readme.Add("") | Out-Null
+$readme.Add("## Required Status") | Out-Null
+$readme.Add("") | Out-Null
+$readme.Add("| Area | Status | Evidence | Required Action |") | Out-Null
+$readme.Add("|---|---|---|---|") | Out-Null
+foreach($statusRow in $packageStatus) {
+   $readme.Add("| $(Escape-MarkdownCell $statusRow.Area) | $(Escape-MarkdownCell $statusRow.Status) | $(Escape-MarkdownCell $statusRow.Evidence) | $(Escape-MarkdownCell $statusRow.RequiredAction) |") | Out-Null
+}
 $readme.Add("") | Out-Null
 $readme.Add("## Run Order") | Out-Null
 $readme.Add("") | Out-Null
@@ -128,6 +252,16 @@ $readme.Add("2. Save the MetaEditor compile log and require 0 errors, 0 warnings
 $readme.Add("3. Run each config in configs\ with MT5 Strategy Tester.") | Out-Null
 $readme.Add("4. Export each report using the ExpectedReportName from EXPECTED_REPORTS.csv.") | Out-Null
 $readme.Add("5. Copy reports and the compile log back to the main workspace for offline import.") | Out-Null
+$readme.Add("") | Out-Null
+$readme.Add("## Compile Return Checklist") | Out-Null
+$readme.Add("") | Out-Null
+$readme.Add("Return compile evidence before relying on any tester report. The package source hash is ``$sourceHash``.") | Out-Null
+$readme.Add("") | Out-Null
+$readme.Add("| Item | Required | Expected Value | Return As | Notes |") | Out-Null
+$readme.Add("|---|---|---|---|---|") | Out-Null
+foreach($check in $compileChecklist) {
+   $readme.Add("| $(Escape-MarkdownCell $check.Item) | $($check.Required) | $(Escape-MarkdownCell $check.ExpectedValue) | $(Escape-MarkdownCell $check.ReturnAs) | $(Escape-MarkdownCell $check.Notes) |") | Out-Null
+}
 $readme.Add("") | Out-Null
 $readme.Add("## Return Import") | Out-Null
 $readme.Add("") | Out-Null
