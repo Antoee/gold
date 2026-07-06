@@ -11,27 +11,26 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional winner-only scale-in behavior for aggressive growth without martingale, grid, or averaging down:
+Added optional high-quality runner take-profit expansion so the best confluence setups can target larger winners:
 
-- `InpUseWinnerScaleIn`
-- `InpWinnerScaleInMinProfitR`
-- `InpWinnerScaleInRequireProtectedStop`
-- `InpWinnerScaleInMinQualityScore`
-- `InpWinnerScaleInRiskMultiplier`
-- `InpWinnerScaleInMinMinutesSincePosition`
-- `CountPositionsByBias()` counts existing same-direction exposure.
-- `WinnerScaleInAllows()` permits add-on entries only when existing exposure is same-direction, already profitable, meets the minimum R threshold, passes the quality threshold, satisfies spacing, and has a protected stop when required.
-- Add-on entries use a reduced risk multiplier and are logged with `Winner scale-in risk x...`.
+- `InpUseRunnerTakeProfitExpansion`
+- `InpRunnerMinQualityScore`
+- `InpRunnerMinPriceActionScore`
+- `InpRunnerTakeProfitMultiplier`
+- `InpRunnerRequireTrailing`
+- `RunnerTakeProfitMultiplier()` returns a larger TP multiplier only when runner mode is enabled, trailing/profit-management support is active when required, total quality meets the threshold, and price-action score meets the threshold.
+- Entry sizing still uses the same protected risk path. The runner only expands the reward side of qualifying trades.
+- Runner entries are logged with `Runner TP x...`.
 
-The existing aggressive risk framework remains in place:
+The existing aggressive growth framework remains in place:
 
-- `StartingEquityFloor()` can halt/close risk when equity reaches the configured starting-equity floor.
-- `EquityProfitLockFloor()` locks a configurable percentage of peak account profit after the profit threshold is reached.
-- `ProtectedEquityFloor()` combines the starting-equity floor and dynamic profit-lock floor.
-- `LotsForRisk()` caps new trade risk so theoretical stop risk does not exceed the protected equity floor.
-- `EffectiveRiskPercent()` can increase risk only after account equity is already above the configured profit threshold.
+- Winner-only scale-in can add only to same-direction protected winners.
+- Starting-equity protection can halt/close risk at the configured floor.
+- Equity profit lock can protect a configurable percentage of peak account profit.
+- Protected-equity floor caps new trade risk so theoretical stop risk does not exceed the floor.
+- Profit-only risk boost can increase risk only after account equity is already above the configured profit threshold.
 
-The generated aggressive research profiles now use 2.50% base risk, max 2 simultaneous positions, 6 max trades per day, 15-minute minimum trade spacing, winner scale-in enabled at 0.80R minimum open profit, protected stop required, quality score >= 10, 0.50 scale-in risk multiplier, 30-minute minimum since the newest same-direction position, starting-equity protection enabled at a 0.00% buffer, profit-only risk boost after +1.00% equity growth, full boost at +12.00%, max boost multiplier 3.00, equity profit lock after +2.00% peak equity growth, 50.0% peak-profit lock, 6.00% max equity drawdown, and 8.00% max open-risk cap. The baseline profile remains anchored at 1.60% risk, 1 max position, 4 trades/day, 30-minute spacing, and winner scale-in disabled.
+The generated aggressive research profiles now use 2.50% base risk, max 2 simultaneous positions, 6 max trades per day, 15-minute minimum trade spacing, winner scale-in enabled at 0.80R minimum open profit, protected stop required, quality score >= 10, 0.50 scale-in risk multiplier, 30-minute minimum since newest same-direction position, runner TP expansion enabled at quality score >= 12 and price-action score >= 14, 1.75 runner TP multiplier, trailing required for runner mode, starting-equity protection enabled at a 0.00% buffer, profit-only risk boost after +1.00% equity growth, full boost at +12.00%, max boost multiplier 3.00, equity profit lock after +2.00% peak equity growth, 50.0% peak-profit lock, 6.00% max equity drawdown, and 8.00% max open-risk cap. The baseline profile remains anchored at 1.60% risk, 1 max position, 4 trades/day, 30-minute spacing, winner scale-in disabled, and runner TP disabled.
 
 This is intentionally more aggressive than the earlier conservative settings, but it still avoids martingale, grid, averaging down, and recovery mechanics. It is not proven profitable until a real MT5 backtest/forward-test report exists.
 
@@ -39,14 +38,14 @@ This is intentionally more aggressive than the earlier conservative settings, bu
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor remains `InpUseWinnerScaleIn=false`, `InpUseStartingEquityProtection=false`, `InpUseProfitOnlyRiskBoost=false`, and `InpUseEquityProfitLock=false`.
-- Generated research profiles use `InpUseWinnerScaleIn=true`, `InpUseStartingEquityProtection=true`, `InpUseProfitOnlyRiskBoost=true`, and `InpUseEquityProfitLock=true`.
-- Generated research profiles are now designed to push upside harder by pressing only protected winners while keeping account-level risk floors active.
+- Baseline anchor remains `InpUseWinnerScaleIn=false`, `InpUseRunnerTakeProfitExpansion=false`, `InpUseStartingEquityProtection=false`, `InpUseProfitOnlyRiskBoost=false`, and `InpUseEquityProfitLock=false`.
+- Generated research profiles use `InpUseWinnerScaleIn=true`, `InpUseRunnerTakeProfitExpansion=true`, `InpUseStartingEquityProtection=true`, `InpUseProfitOnlyRiskBoost=true`, and `InpUseEquityProfitLock=true`.
+- Generated research profiles are now designed to push upside harder by pressing protected winners and stretching targets only for the strongest confluence signals while keeping account-level risk floors active.
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `CFB1EFE26E616E257B5F45EC7B8554825C5F22FF48730772E41A1EC73C26A135`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `B065E7D6BCFF4F68F6AC40CD0939FD2C476E9B765C5D690A8051A9FB67295AB2`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_ea_source_artifact_sync.ps1`: PASS
 - `work\test_price_action_strategy_batch.ps1`: PASS
@@ -54,19 +53,19 @@ This is intentionally more aggressive than the earlier conservative settings, bu
 - `work\test_external_mt5_validation_package.ps1`: PASS, 26 checks, 0 failed
 - `work\test_price_action_strategy_decision.ps1`: PASS
 - `work\test_loss_streak_risk_reduction.ps1`: PASS
-- `work\refresh_offline_validation_state.ps1`: PASS in output and artifact, 39 steps, 0 failed. The wrapper timed out after result emission, so the CSV artifact was verified directly.
+- `work\refresh_offline_validation_state.ps1`: PASS, 39 steps, 0 failed
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `CFB1EFE26E616E257B5F45EC7B8554825C5F22FF48730772E41A1EC73C26A135`
-- `Professional_XAUUSD_EA.mq5`: `CFB1EFE26E616E257B5F45EC7B8554825C5F22FF48730772E41A1EC73C26A135`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `CFB1EFE26E616E257B5F45EC7B8554825C5F22FF48730772E41A1EC73C26A135`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `EA399ED1CE2184DC4E79D92AFF82A145E1637FAE290765ECCDA49799F6CE3A54`
-- `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `7929ABFB54EB6550CF83CD2234D89177775CD96E86A4AD2CA0224BFA812995E9`
-- `outputs\xauusd_micro_validation_package.zip`: `E306AD4FA5B279D590632678BA832766B9724F43A8E7389C83A6FAF79FD36CBB`
-- `work\test_price_action_strategy_modules.ps1`: `4C33431ED0CDE079930FD927708BC0B5D772A7F13F54957062DED0C07DEBABAB`
-- `work\test_price_action_strategy_batch.ps1`: `F404A038F485C85114361F607CD3534BD56E32BB866DE949B78AC59863129DE1`
-- `work\build_price_action_strategy_batch.ps1`: `772459B87921968AFB5692D6976FB6ABE31E1C099C2EEF4450A7C6AD2D8A0D4E`
+- `outputs\Professional_XAUUSD_EA.mq5`: `B065E7D6BCFF4F68F6AC40CD0939FD2C476E9B765C5D690A8051A9FB67295AB2`
+- `Professional_XAUUSD_EA.mq5`: `B065E7D6BCFF4F68F6AC40CD0939FD2C476E9B765C5D690A8051A9FB67295AB2`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `B065E7D6BCFF4F68F6AC40CD0939FD2C476E9B765C5D690A8051A9FB67295AB2`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `60CBD2869DCA56B86B0B1B7963FF478FEAA21B4E62A87F59BAAB2E095E6E64C4`
+- `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `36CA47EAB0261A26A96CB302CCDEDA91EA3E4F0A4E712735C04E01AA2CB8F652`
+- `outputs\xauusd_micro_validation_package.zip`: `B0EE610E31195145354A79CB08B66F0915C40D7189D32723963514EFE58B88E9`
+- `work\test_price_action_strategy_modules.ps1`: `3245034700A98085A58AA87979397FAEC3CB9A4D29460F3DBB3B7A467820A4BE`
+- `work\test_price_action_strategy_batch.ps1`: `026C3B99CCCBEF1D0D517B1D78EC9FDF3143C76B28B4E3B0B99DC468F3BECCD3`
+- `work\build_price_action_strategy_batch.ps1`: `36A8CC7F5AA9521CDDAB11C6B22760E729800565615909E6DFFFFBC0A4E75A31`
 
 ## Background-Safety Note
 
