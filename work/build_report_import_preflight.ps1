@@ -10,6 +10,7 @@ param(
    [string]$CompileStatusPath = "outputs\MT5_COMPILE_STATUS.csv",
    [string]$ExternalPackageAuditPath = "outputs\EXTERNAL_MT5_PACKAGE_AUDIT.csv",
    [string]$ExternalMicroDecisionPath = "outputs\EXTERNAL_MT5_MICRO_DECISION.csv",
+   [string]$PackageStatusPath = "outputs\external_mt5_validation_package\PACKAGE_STATUS.csv",
    [string]$BatchPath = "outputs\NEXT_PROFIT_SEARCH_BATCH.csv",
    [string]$PromotionPacketDir = "outputs\promotion_packets",
    [string]$OutCsv = "outputs\REPORT_IMPORT_PREFLIGHT.csv",
@@ -57,6 +58,39 @@ function Get-Value {
    return $property.Value
 }
 
+function Invoke-NoWindowPowerShell {
+   param(
+      [Parameter(Mandatory=$true)]
+      [string[]]$Arguments
+   )
+
+   $allArguments = @("-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass") + $Arguments
+   $quotedArguments = @($allArguments | ForEach-Object {
+      '"' + (([string]$_) -replace '"', '\"') + '"'
+   })
+
+   $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
+   $startInfo.FileName = "powershell.exe"
+   $startInfo.Arguments = ($quotedArguments -join " ")
+   $startInfo.UseShellExecute = $false
+   $startInfo.CreateNoWindow = $true
+   $startInfo.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
+   $startInfo.RedirectStandardOutput = $true
+   $startInfo.RedirectStandardError = $true
+
+   $process = [System.Diagnostics.Process]::new()
+   $process.StartInfo = $startInfo
+   [void]$process.Start()
+   $stdoutText = $process.StandardOutput.ReadToEnd()
+   $stderrText = $process.StandardError.ReadToEnd()
+   $process.WaitForExit()
+
+   [pscustomobject]@{
+      ExitCode = $process.ExitCode
+      Output = ($stdoutText + $stderrText).Trim()
+   }
+}
+
 $rows = New-Object System.Collections.Generic.List[object]
 
 $manifest = Read-CsvSafe $ManifestPath
@@ -75,12 +109,12 @@ $batch = Read-CsvSafe $BatchPath
 $parserStatus = "FAIL"
 $parserEvidence = ""
 try {
-   $parserOutput = & powershell -NoProfile -ExecutionPolicy Bypass -File "work\test_report_collector_parser.ps1" 2>&1
-   if(($parserOutput | Out-String) -match "REPORT_COLLECTOR_PARSER_SMOKE_PASS") {
+   $parserOutput = Invoke-NoWindowPowerShell @("-File", "work\test_report_collector_parser.ps1")
+   if($parserOutput.ExitCode -eq 0 -and $parserOutput.Output -match "REPORT_COLLECTOR_PARSER_SMOKE_PASS") {
       $parserStatus = "PASS"
       $parserEvidence = "REPORT_COLLECTOR_PARSER_SMOKE_PASS"
    } else {
-      $parserEvidence = ($parserOutput | Out-String).Trim()
+      $parserEvidence = $parserOutput.Output
    }
 } catch {
    $parserEvidence = $_.Exception.Message
@@ -92,12 +126,12 @@ Add-Row $rows "Parser smoke" $parserStatus $parserEvidence `
 $externalDecisionSmokeStatus = "FAIL"
 $externalDecisionSmokeEvidence = ""
 try {
-   $externalDecisionSmokeOutput = & powershell -NoProfile -ExecutionPolicy Bypass -File "work\test_external_mt5_micro_decision.ps1" 2>&1
-   if(($externalDecisionSmokeOutput | Out-String) -match "EXTERNAL_MT5_MICRO_DECISION_SMOKE_PASS") {
+   $externalDecisionSmokeOutput = Invoke-NoWindowPowerShell @("-File", "work\test_external_mt5_micro_decision.ps1")
+   if($externalDecisionSmokeOutput.ExitCode -eq 0 -and $externalDecisionSmokeOutput.Output -match "EXTERNAL_MT5_MICRO_DECISION_SMOKE_PASS") {
       $externalDecisionSmokeStatus = "PASS"
       $externalDecisionSmokeEvidence = "EXTERNAL_MT5_MICRO_DECISION_SMOKE_PASS"
    } else {
-      $externalDecisionSmokeEvidence = ($externalDecisionSmokeOutput | Out-String).Trim()
+      $externalDecisionSmokeEvidence = $externalDecisionSmokeOutput.Output
    }
 } catch {
    $externalDecisionSmokeEvidence = $_.Exception.Message
@@ -105,6 +139,57 @@ try {
 
 Add-Row $rows "External micro decision smoke" $externalDecisionSmokeStatus $externalDecisionSmokeEvidence `
    $(if($externalDecisionSmokeStatus -eq "PASS") { "External micro decision pass/reject/repair/wait logic is covered." } else { "Fix external micro decision smoke failure before trusting returned package reports." })
+
+$recentBatchSmokeStatus = "FAIL"
+$recentBatchSmokeEvidence = ""
+try {
+   $recentBatchSmokeOutput = Invoke-NoWindowPowerShell @("-File", "work\test_next_profit_search_batch_recent_priority.ps1")
+   if($recentBatchSmokeOutput.ExitCode -eq 0 -and $recentBatchSmokeOutput.Output -match "NEXT_PROFIT_SEARCH_BATCH_RECENT_PRIORITY_SMOKE_PASS") {
+      $recentBatchSmokeStatus = "PASS"
+      $recentBatchSmokeEvidence = "NEXT_PROFIT_SEARCH_BATCH_RECENT_PRIORITY_SMOKE_PASS"
+   } else {
+      $recentBatchSmokeEvidence = $recentBatchSmokeOutput.Output
+   }
+} catch {
+   $recentBatchSmokeEvidence = $_.Exception.Message
+}
+
+Add-Row $rows "Recent batch priority smoke" $recentBatchSmokeStatus $recentBatchSmokeEvidence `
+   $(if($recentBatchSmokeStatus -eq "PASS") { "2026-aware fast-test prioritization is covered." } else { "Fix recent-data batch priority before relying on the next-run queue." })
+
+$riskSizingSmokeStatus = "FAIL"
+$riskSizingSmokeEvidence = ""
+try {
+   $riskSizingSmokeOutput = Invoke-NoWindowPowerShell @("-File", "work\test_risk_lot_sizing_guard.ps1")
+   if($riskSizingSmokeOutput.ExitCode -eq 0 -and $riskSizingSmokeOutput.Output -match "RISK_LOT_SIZING_GUARD_SMOKE_PASS") {
+      $riskSizingSmokeStatus = "PASS"
+      $riskSizingSmokeEvidence = "RISK_LOT_SIZING_GUARD_SMOKE_PASS"
+   } else {
+      $riskSizingSmokeEvidence = $riskSizingSmokeOutput.Output
+   }
+} catch {
+   $riskSizingSmokeEvidence = $_.Exception.Message
+}
+
+Add-Row $rows "Risk lot-sizing guard smoke" $riskSizingSmokeStatus $riskSizingSmokeEvidence `
+   $(if($riskSizingSmokeStatus -eq "PASS") { "EA rejects entries when broker minimum lot would exceed configured risk." } else { "Fix lot-sizing guard before trusting risk-controlled tests." })
+
+$sourceHashSmokeStatus = "FAIL"
+$sourceHashSmokeEvidence = ""
+try {
+   $sourceHashSmokeOutput = Invoke-NoWindowPowerShell @("-File", "work\test_source_hash_status.ps1")
+   if($sourceHashSmokeOutput.ExitCode -eq 0 -and $sourceHashSmokeOutput.Output -match "SOURCE_HASH_STATUS_SMOKE_PASS") {
+      $sourceHashSmokeStatus = "PASS"
+      $sourceHashSmokeEvidence = "SOURCE_HASH_STATUS_SMOKE_PASS"
+   } else {
+      $sourceHashSmokeEvidence = $sourceHashSmokeOutput.Output
+   }
+} catch {
+   $sourceHashSmokeEvidence = $_.Exception.Message
+}
+
+Add-Row $rows "Source hash status smoke" $sourceHashSmokeStatus $sourceHashSmokeEvidence `
+   $(if($sourceHashSmokeStatus -eq "PASS") { "Package source hash matches the current EA source." } else { "Rebuild external package status before trusting returned compile/report evidence." })
 
 if($manifest.Count -gt 0) {
    $phase1 = @($manifest | Where-Object { (Get-Value $_ "Phase") -eq "phase1_fast_triage" }).Count
@@ -215,7 +300,39 @@ if($safety.Count -gt 0 -and $safetyFailures.Count -eq 0) {
 
 $compileStatus = @($compileStatus)
 $compileRow = $compileStatus | Select-Object -First 1
-if($compileStatus.Count -gt 0 -and (Get-Value $compileRow "Status") -eq "PASS") {
+$compileIsStale = $false
+$compileStaleEvidence = ""
+if($compileStatus.Count -gt 0) {
+   $sourceFile = [string](Get-Value $compileRow "SourceFile")
+   if([string]::IsNullOrWhiteSpace($sourceFile)) {
+      $sourceFile = "outputs\Professional_XAUUSD_EA.mq5"
+   }
+   $expectedSourceHash = [string](Get-Value $compileRow "ExpectedSourceHash")
+   $sourceHashStatus = [string](Get-Value $compileRow "SourceHashStatus")
+   if(![string]::IsNullOrWhiteSpace($expectedSourceHash) -and (Test-Path -LiteralPath "outputs\Professional_XAUUSD_EA.mq5")) {
+      $currentSourceHash = (Get-FileHash -LiteralPath "outputs\Professional_XAUUSD_EA.mq5" -Algorithm SHA256).Hash
+      if($expectedSourceHash -ne $currentSourceHash) {
+         $compileIsStale = $true
+         $compileStaleEvidence = "EA source hash changed after compile status. CurrentHash=$currentSourceHash; CompileExpectedHash=$expectedSourceHash"
+      }
+   }
+   if($sourceHashStatus -eq "MISMATCH") {
+      $compileIsStale = $true
+      $compileStaleEvidence = "Compile log source hash does not match expected EA source hash."
+   }
+   if((Test-Path -LiteralPath $sourceFile) -and (Test-Path -LiteralPath $CompileStatusPath)) {
+      $sourceTime = (Get-Item -LiteralPath $sourceFile).LastWriteTimeUtc
+      $compileStatusTime = (Get-Item -LiteralPath $CompileStatusPath).LastWriteTimeUtc
+      if(!$compileIsStale -and $sourceTime -gt $compileStatusTime) {
+         $compileIsStale = $true
+         $compileStaleEvidence = "EA source changed after compile status. SourceUtc=$sourceTime; CompileStatusUtc=$compileStatusTime"
+      }
+   }
+}
+if($compileStatus.Count -gt 0 -and $compileIsStale) {
+   Add-Row $rows "Compile status" "STALE" $compileStaleEvidence `
+      "Import a fresh MetaEditor compile log before trusting this EA build for tester reports."
+} elseif($compileStatus.Count -gt 0 -and (Get-Value $compileRow "Status") -eq "PASS") {
    Add-Row $rows "Compile status" "PASS" "$(Get-Value $compileRow "Evidence")" `
       "Compile proof is clean for this imported log; rerun after every EA source change."
 } elseif($compileStatus.Count -gt 0) {
@@ -240,20 +357,26 @@ if($externalPackageAudit.Count -gt 0 -and $externalPackageFailures.Count -eq 0) 
 
 if($externalMicroDecision.Count -gt 0) {
    $decisionCounts = ($externalMicroDecision | Group-Object Decision | Sort-Object Name | ForEach-Object { "$($_.Name)=$($_.Count)" }) -join "; "
+   $compileTrustStatus = "MISSING"
+   if(Test-Path -LiteralPath $PackageStatusPath) {
+      $packageStatusRows = @(Import-Csv -LiteralPath $PackageStatusPath)
+      $compileTrustRow = $packageStatusRows | Where-Object { (Get-Value $_ "Area") -eq "Compile trust" } | Select-Object -First 1
+      if($compileTrustRow) { $compileTrustStatus = [string](Get-Value $compileTrustRow "Status" "MISSING") }
+   }
    $hasFail = @($externalMicroDecision | Where-Object { (Get-Value $_ "Decision") -like "FAIL_*" }).Count -gt 0
    $hasRepair = @($externalMicroDecision | Where-Object { (Get-Value $_ "Decision") -eq "REPAIR_REPORT" }).Count -gt 0
    $hasWaiting = @($externalMicroDecision | Where-Object { (Get-Value $_ "Decision") -eq "WAITING_FOR_REPORTS" }).Count -gt 0
    $hasReview = @($externalMicroDecision | Where-Object { (Get-Value $_ "Decision") -eq "REVIEW_DRAWDOWN" }).Count -gt 0
-   $allPass = $externalMicroDecision.Count -gt 0 -and @($externalMicroDecision | Where-Object { (Get-Value $_ "Decision") -eq "PASS_WINDOW" }).Count -eq $externalMicroDecision.Count
-   $status = if($hasFail) { "REJECT_CANDIDATE" } elseif($hasRepair) { "REPAIR_REPORTS" } elseif($hasWaiting) { "WAITING_FOR_REPORTS" } elseif($hasReview) { "REVIEW_DRAWDOWN" } elseif($allPass) { "PASS_MICRO" } else { "REVIEW_REQUIRED" }
-   $next = if($status -eq "PASS_MICRO") { "Proceed to full handoff and phase-2 real ticks; do not promote from micro evidence alone." } elseif($status -eq "REJECT_CANDIDATE") { "Keep current promoted profile and deprioritize the candidate." } elseif($status -eq "REPAIR_REPORTS") { "Repair or re-export external package reports." } else { "Complete external package report import before spending full-handoff tester time." }
-   Add-Row $rows "External micro decision" $status $decisionCounts $next
+   $allPass = $externalMicroDecision.Count -gt 0 -and @($externalMicroDecision | Where-Object { (Get-Value $_ "Decision") -in @("PASS_WINDOW", "PASS_RISK_ADJUSTED") }).Count -eq $externalMicroDecision.Count
+   $status = if($hasFail) { "REJECT_CANDIDATE" } elseif($hasRepair) { "REPAIR_REPORTS" } elseif($compileTrustStatus -ne "FRESH_PASS") { "COMPILE_REQUIRED" } elseif($hasWaiting) { "WAITING_FOR_REPORTS" } elseif($hasReview) { "REVIEW_DRAWDOWN" } elseif($allPass) { "PASS_MICRO" } else { "REVIEW_REQUIRED" }
+   $next = if($status -eq "PASS_MICRO") { "Proceed to full handoff and phase-2 real ticks; do not promote from micro evidence alone." } elseif($status -eq "REJECT_CANDIDATE") { "Keep current promoted profile and deprioritize the candidate." } elseif($status -eq "REPAIR_REPORTS") { "Repair or re-export external package reports." } elseif($status -eq "COMPILE_REQUIRED") { "Compile the exact packaged source and import the compile log before trusting micro decisions." } else { "Complete external package report import before spending full-handoff tester time." }
+   Add-Row $rows "External micro decision" $status "$decisionCounts; CompileTrust=$compileTrustStatus" $next
 } else {
    Add-Row $rows "External micro decision" "WAITING_FOR_REPORTS" "No external micro decision rows found at $ExternalMicroDecisionPath" `
       "Run work\import_external_mt5_validation_package_reports.ps1 and work\build_external_mt5_micro_decision.ps1 after reports return."
 }
 
-$blocking = @($rows | Where-Object { $_.Status -in @("FAIL", "HAS_UNPARSED_REPORTS") })
+$blocking = @($rows | Where-Object { $_.Status -in @("FAIL", "STALE", "HAS_UNPARSED_REPORTS", "COMPILE_REQUIRED") })
 $rows | Export-Csv -LiteralPath $OutCsv -NoTypeInformation
 
 $report = New-Object System.Collections.Generic.List[string]
