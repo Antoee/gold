@@ -11,25 +11,21 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional volume dry-up guard:
+Added optional opposite-wick rejection guard:
 
-- `InpUseVolumeDryUpGuard`
-- `InpVolumeDryUpLookbackBars`
-- `InpVolumeDryUpConsecutiveBars`
-- `InpVolumeDryUpMaxRatio`
-- `CEntryEngine::VolumeDryUpAllows()` compares recent consecutive tick volume against a prior average.
-- `CEntryEngine::Build()` now rejects dead-liquidity entries with `Volume dry-up reject;`.
+- `InpUseOppositeWickGuard`
+- `InpMaxOppositeWickPercent`
+- `CEntryEngine::OppositeWickAllows()` blocks buy entries after large upper rejection wicks and sell entries after large lower rejection wicks.
+- `CEntryEngine::Build()` now rejects these price-action failures with `Opposite wick reject;`.
 
-This is a volume/risk module from the requested strategy-code expansion. It is intended to avoid entries when recent tick volume dries up and liquidity is weak, without increasing risk or adding any recovery logic.
+This is a price-action/risk module from the requested strategy-code expansion. It is intended to avoid entries after the candle has already rejected the intended direction, without increasing risk or adding any recovery logic.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `vwap_momentum_phase` enables volume dry-up protection with lookback `24`, consecutive bars `3`, max ratio `0.55`.
-- `weighted_quality_confluence` enables the same dry-up protection.
-- `pa_full_confluence` enables dry-up protection with lookback `30`, consecutive bars `3`, max ratio `0.60`.
-- Generated configs confirmed the module is enabled in those profiles and pinned disabled in the robust base profile.
+- `pa_full_confluence` enables opposite-wick rejection with max opposite wick `45.0%`.
+- Generated configs confirmed the module is enabled in that strict candle-anatomy profile and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
 
@@ -44,16 +40,16 @@ This is a volume/risk module from the requested strategy-code expansion. It is i
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `46FC6F93E062C8EE24FC62C32B92AB247E1956BCC131E13A43CD055A54DC7D84`
-- `Professional_XAUUSD_EA.mq5`: `46FC6F93E062C8EE24FC62C32B92AB247E1956BCC131E13A43CD055A54DC7D84`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `62810ACE47D613791066321E029DEEBD732568F14737753A84761E97B3F3682C`
+- `outputs\Professional_XAUUSD_EA.mq5`: `F6D8450685C9F4ECA558C163754B7FF3AFB695CA46C168CD9DF480FAA38C2E8B`
+- `Professional_XAUUSD_EA.mq5`: `F6D8450685C9F4ECA558C163754B7FF3AFB695CA46C168CD9DF480FAA38C2E8B`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `1A7153D40FBBC0D0F4D921B715C4451B170D2C2C3B82EA0585B2190CE5967222`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\price_action_strategy_handoff.zip`: `F51229FFB7239609D1A96DF58AEDBE661B9137353DA46B6C42D13C33FFACE98D`
-- `outputs\price_action_parallel_lanes.zip`: `2B928814062E46CA22DB764AF6507CCFF9E31C99DE09EC7229D7F8811080F0CD`
-- `outputs\xauusd_micro_validation_package.zip`: `270E94FCE2166763CB58DB084BC389639655A756470ACC4EE56CD6F8C00A3CE9`
-- `work\test_price_action_strategy_modules.ps1`: `50D246D85AA0EB90B547B5836EEE80ABB649E3DBF5AF81E6C11D4E99D2E06F09`
+- `outputs\price_action_strategy_handoff.zip`: `37FE6D24D02B8D081B2BE1B6A82665E345EC715D372A2FAB1C84CD91E04232C2`
+- `outputs\price_action_parallel_lanes.zip`: `F0E3325D95B583D365D2C4AA1D4090354EB2369A15BC65EA3046CB35A0947F57`
+- `outputs\xauusd_micro_validation_package.zip`: `4D615E90E7EC7290E043E3D205328B78548C8B91FF68D242C1EBDFBA7544C4F7`
+- `work\test_price_action_strategy_modules.ps1`: `9AD7377EE70E91768718477DECBE6FE91EC686AE027ED2C316D75F34CA8D682A`
 - `work\test_price_action_strategy_batch.ps1`: `4B9B4747F2872AA3617E1804D5610FDB5709664D06F52635B5DF7F393697B0DC`
-- `work\build_price_action_strategy_batch.ps1`: `29E5FE3524E7416E03A1E7658436DA98FB68AD37BC57A445992CF14752D2C8D6`
+- `work\build_price_action_strategy_batch.ps1`: `7C3B02607780F7634E793D1A714A2B129BECD8BF1C36865BEA77CB66D5008EF0`
 
 ## Background-Safety Note
 
