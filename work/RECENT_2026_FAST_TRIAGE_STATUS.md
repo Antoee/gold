@@ -11,23 +11,25 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional early MFE reversal exit:
+Added optional ADX-strengthening entry confirmation:
 
-- `InpUseEarlyMFEReversalExit`
-- `InpEarlyMFEReversalStartR`
-- `InpEarlyMFEReversalExitR`
-- `CPositionManager::Manage()` now tracks max favorable R and can close a trade after it has moved favorably, then rolled back below the configured current-R threshold.
-- Exit log reason: `Early MFE reversal exit`
+- `InpUseADXStrengtheningConfirmation`
+- `InpADXStrengthLookbackBars`
+- `InpADXMinIncrease`
+- `InpWeightADXStrengthening`
+- `CEntryEngine::ADXStrengtheningConfirmation()` compares current ADX against a configurable prior ADX value and confirms only when trend strength is rising enough.
+- `CEntryEngine::Build()` now records `ADX strengthening;` as an independent weighted entry reason when the feature is enabled.
 
-This is a risk-first trade-management module for XAUUSD. It targets the gap between a trade that never worked and a larger MFE giveback exit: if price first proves the setup had some follow-through, then quickly gives it back, the EA can exit before a small winner or flat trade becomes a full loser. It stays optional, configurable, and disabled in the robust base profile. It adds no martingale, grid, averaging down, or recovery behavior.
+This is a selectivity module for XAUUSD trend entries. The EA already has an ADX floor, but this adds a separate preference for setups where trend strength is expanding instead of merely above threshold. It stays optional, configurable, and disabled in the robust base profile. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables the exit with start `0.60 R` and close threshold `-0.05 R`.
-- `pa_full_confluence` enables a stricter version with start `0.70 R` and close threshold `0.00 R`.
-- Generated configs confirmed the module is enabled in the strict research profiles and pinned disabled in the robust base profile.
+- `indicator_phase_filter` enables ADX strengthening with lookback `5` and minimum ADX increase `1.50`.
+- `weighted_quality_confluence` enables ADX strengthening with lookback `5`, minimum ADX increase `2.00`, and weight `1`.
+- `pa_full_confluence` enables a stricter version with lookback `6` and minimum ADX increase `2.00`.
+- Generated configs confirmed the module is enabled in indicator/strict research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
 
@@ -42,14 +44,14 @@ This is a risk-first trade-management module for XAUUSD. It targets the gap betw
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `A0A0A0F52A450FAA96F221981873E79BC4C423FE822813E50A68F08DA69CA1E7`
-- `Professional_XAUUSD_EA.mq5`: `A0A0A0F52A450FAA96F221981873E79BC4C423FE822813E50A68F08DA69CA1E7`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `3ED7C8C8D030A9A06C98A57CCDC1CCC2AC68458E849A2E937FC01EBF27B37833`
+- `outputs\Professional_XAUUSD_EA.mq5`: `6E47B55353E1E78B3E0AA238BB9F689E32B0B82929435AF3F520C866A38AC38C`
+- `Professional_XAUUSD_EA.mq5`: `6E47B55353E1E78B3E0AA238BB9F689E32B0B82929435AF3F520C866A38AC38C`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `2EF2B6C49798CE62BBC61F1C52785F5A28FF5CC51C55665810014C2CD2BAA5AF`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `E70206F9C89B9353F6F48684C44B9C434A2163BA45164147D46FD2263BC16274`
-- `work\test_price_action_strategy_modules.ps1`: `93CBD7C02FFB90C3F7747B7489CBAB04330838895D3DC7CB3AB848EA83ABC277`
-- `work\test_price_action_strategy_batch.ps1`: `8D72AC406EA83846DCF9BC2DA734D79EC306B08347EB0BE582857822D5F3105C`
-- `work\build_price_action_strategy_batch.ps1`: `9AD5A61F15FE0CA97865959B570F2EB4091A8C77EFB933841D37F1711B2AD540`
+- `outputs\xauusd_micro_validation_package.zip`: `85992C4073B54768E02ADEF7BB80206E04E9378BE19C8920DAF5E6D14D0BBD83`
+- `work\test_price_action_strategy_modules.ps1`: `25D586AF2B24256140D4A749DFACCFEEA1B4996167B77CEEEB83DC27955ADA8E`
+- `work\test_price_action_strategy_batch.ps1`: `C2C35BD0163A24151729DD81486C65F389E7D1AEF3B5CF8CF8BBDE98544720CB`
+- `work\build_price_action_strategy_batch.ps1`: `BD8D450EA8FE6627E6AC4B98B100BF5BF614613C15C0998785222CD38F0F930C`
 
 ## Background-Safety Note
 
