@@ -11,23 +11,23 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional session-range exhaustion guard:
+Added optional M1 spread-shock entry guard:
 
-- `InpUseSessionRangeExhaustionGuard`
-- `InpSessionRangeExhaustionLookbackHours`
-- `InpSessionRangeExhaustionMinATR`
-- `InpSessionRangeExhaustionExtremePercent`
-- `CEntryEngine::SessionRangeExhaustionAllows()` scans the recent intraday/session range and blocks buys near the upper extreme or sells near the lower extreme after the range is already stretched by ATR.
-- `CEntryEngine::Build()` now records `Session range exhaustion reject;` when the guard blocks a chase entry.
+- `InpUseM1SpreadShockGuard`
+- `InpM1SpreadShockLookbackBars`
+- `InpM1SpreadShockMaxRatio`
+- `InpM1SpreadShockMinPoints`
+- `SpreadShockEntryAllows()` compares current spread against recent M1 spread conditions and blocks entries when the live spread is both meaningfully large and unusually expanded.
+- `OpenSignal()` now records `M1 spread shock` as the block reason when this guard rejects an entry.
 
-This is a risk-first XAUUSD protection module. It is meant to reduce late entries after a large intraday move has already consumed much of the available session range, especially when gold is stretched and vulnerable to snapback. It stays optional, configurable, and disabled in the robust base profile. It adds no martingale, grid, averaging down, or recovery behavior.
+This is a risk-first execution-quality guard for XAUUSD. It is meant to avoid entering during broker spread spikes, thin-liquidity moments, and news-like microstructure shocks that can destroy the real risk/reward of a setup. It stays optional, configurable, and disabled in the robust base profile. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables the guard with lookback `8h`, minimum range `2.20 ATR`, and extreme threshold `82%`.
-- `pa_full_confluence` enables a stricter version with lookback `8h`, minimum range `2.00 ATR`, and extreme threshold `80%`.
+- `weighted_quality_confluence` enables the guard with M1 lookback `30`, max spread ratio `2.50`, and minimum shock spread `60.0` points.
+- `pa_full_confluence` enables a stricter version with M1 lookback `36`, max spread ratio `2.20`, and minimum shock spread `55.0` points.
 - Generated configs confirmed the module is enabled in the strict research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -43,14 +43,14 @@ This is a risk-first XAUUSD protection module. It is meant to reduce late entrie
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `4B945C4679217175EE494467F465446C4B28337CD7780F3C3CD112CE8CC9D9E7`
-- `Professional_XAUUSD_EA.mq5`: `4B945C4679217175EE494467F465446C4B28337CD7780F3C3CD112CE8CC9D9E7`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `C34C5C1A9DD347D3ED128544B76DD8B73CCD4C26B652FF2C11DBB8EDEBA92FD7`
+- `outputs\Professional_XAUUSD_EA.mq5`: `046FADB06320450E55857CB912350D832EC534B65C01FA5CE3C1AA13960DC383`
+- `Professional_XAUUSD_EA.mq5`: `046FADB06320450E55857CB912350D832EC534B65C01FA5CE3C1AA13960DC383`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `F9A23015F0ABAF7A2BE7AEDCB99451A09906E924EC12233678181B7C2D807FF4`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `D52D2DDB5762FE5817B94C073B503C18607CD3FC8423234D2DA8BD68FB5611DE`
-- `work\test_price_action_strategy_modules.ps1`: `0B67D8405F26D93F22B763D60310E284288F281562B51471DFC767A4833B91EA`
-- `work\test_price_action_strategy_batch.ps1`: `D2B04A8C2ED217ED892E9B331DCA776AD4CE44B63FCED695B8E2A5EDFB39D41E`
-- `work\build_price_action_strategy_batch.ps1`: `EB46F7F63EFC76C3D886FEE067290A55667063D5B789CED33F40B6486DB93670`
+- `outputs\xauusd_micro_validation_package.zip`: `1265C600DE4D1A54475A3FA84668D76C8E6DDE1DF4E5E7E131FA9070F13BB639`
+- `work\test_price_action_strategy_modules.ps1`: `14C5D9692CAB399690C78BC5F73269118B48F7AC8E07A71D33088F816B8EFA85`
+- `work\test_price_action_strategy_batch.ps1`: `C7297CB6C6E00E1C2FB8B0B1EA41B5650559DA38DB032C7A5E292760907E231D`
+- `work\build_price_action_strategy_batch.ps1`: `C97C9B3E5368714BE474094EC57BBD6450368D6C34E63ECC480CC976DA5F01FB`
 
 ## Background-Safety Note
 
