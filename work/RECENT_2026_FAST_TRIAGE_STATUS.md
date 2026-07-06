@@ -11,49 +11,55 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added a realized-balance profit-lock floor. This lets the protected-floor system lock part of closed profit, not only floating peak-equity gains.
+Added a protected-growth optimization fitness mode. This does not change live trade entries by itself; it changes how MT5 Strategy Tester optimization can rank parameter sets when you run optimization later.
 
-New inputs and logic:
+New enum/input/logic:
 
-- `InpUseBalanceProfitLock`
-- `InpBalanceProfitLockStartPercent`
-- `InpBalanceProfitLockPercent`
-- `BalanceProfitLockFloor()`
-- `ProtectedEquityFloor()` now uses the maximum of starting-equity floor, equity peak-profit lock, and realized-balance profit lock.
+- `FITNESS_PROTECTED_GROWTH = 3`
+- `InpTesterProfitFactorRewardPower`
+- `InpTesterRecoveryRewardPower`
+- `InpTesterDrawdownRewardPower`
+- `OnTester()` now builds one robust base score, then protected-growth mode rewards higher profit factor and recovery while reducing the score as equity drawdown rises.
 
-Generated aggressive research profiles enable this at the same 2.00% start and 50.0% lock settings as the equity profit lock. That means once realized balance profit is large enough, the EA can protect part of it through the same lot-sizing/protected-floor controls already used by the rest of the risk manager. Baseline keeps it disabled for clean comparison. This adds no martingale, grid, averaging down, or recovery behavior.
+The goal is to search for higher-profit settings without letting raw net profit dominate the optimizer when drawdown/recovery quality is weak. Generated aggressive research profiles now set `InpTesterFitnessMode=3` with stronger PF/recovery/drawdown reward powers. The baseline anchor keeps mode `1` for comparison.
+
+This adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor keeps `InpUseBalanceProfitLock=false`.
-- Generated research profiles use `InpUseBalanceProfitLock=true`.
+- Baseline anchor keeps `InpTesterFitnessMode=1`.
+- Generated research profiles use `InpTesterFitnessMode=3`.
+- Generated research profiles use:
+  - `InpTesterProfitFactorRewardPower=0.75`
+  - `InpTesterRecoveryRewardPower=0.75`
+  - `InpTesterDrawdownRewardPower=1.25`
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `9E2787D78F48C736EB292880180B2DE626F674CE23F9E732509B6DF1F8B4BE0D`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `15A6804688128F8BB8D3E423588B9B0689874BAEC341DE8983F46746AF993115`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
+- `work\test_price_action_strategy_decision.ps1`: PASS
+- `work\test_loss_streak_risk_reduction.ps1`: PASS
 - `work\test_ea_source_artifact_sync.ps1`: PASS
 - `work\test_price_action_strategy_batch.ps1`: PASS
 - `work\build_external_mt5_validation_package.ps1`: PASS, package configs 20, profiles 9
 - `work\test_external_mt5_validation_package.ps1`: PASS, 26 checks, 0 failed
-- `work\test_price_action_strategy_decision.ps1`: PASS
-- `work\test_loss_streak_risk_reduction.ps1`: PASS
 - `work\refresh_offline_validation_state.ps1`: PASS, 39 steps, 0 failed
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `9E2787D78F48C736EB292880180B2DE626F674CE23F9E732509B6DF1F8B4BE0D`
-- `Professional_XAUUSD_EA.mq5`: `9E2787D78F48C736EB292880180B2DE626F674CE23F9E732509B6DF1F8B4BE0D`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `9E2787D78F48C736EB292880180B2DE626F674CE23F9E732509B6DF1F8B4BE0D`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `ED3D5DD2A7DFD0C9EF19DACE15A718E6AE3AD029083DDE1FDCA0F32AAD4F9FC3`
+- `outputs\Professional_XAUUSD_EA.mq5`: `15A6804688128F8BB8D3E423588B9B0689874BAEC341DE8983F46746AF993115`
+- `Professional_XAUUSD_EA.mq5`: `15A6804688128F8BB8D3E423588B9B0689874BAEC341DE8983F46746AF993115`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `15A6804688128F8BB8D3E423588B9B0689874BAEC341DE8983F46746AF993115`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `563810FE314F220B9ADCA65EDD55402D357BAE5EEE056C620F96D130C23EB378`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `6887C7B2EE4D4D91A5BB05D817F303AA608F807C276142686247ED0AB5998D99`
-- `outputs\xauusd_micro_validation_package.zip`: `5AD0C2AAE5C275D24208C9C32D47EFCED6A9C91DCD7E2563E177E4DF58235E09`
-- `work\test_price_action_strategy_modules.ps1`: `A2B9CA1D80F75672360151E085690EF63F0604E6819E123DB0F540D7B7D73DC1`
+- `outputs\xauusd_micro_validation_package.zip`: `1EEDCB94D09720AAC560ADCA8D6C5985037B9B370F3E731228CE52581C36F6BF`
+- `work\test_price_action_strategy_modules.ps1`: `DACA96609A9DD0C3ECF9794D44293FC64E330BDC37D779C465B33C8EC445C012`
 - `work\test_price_action_strategy_batch.ps1`: `D546C9556DD34AC509EDC8706D57B7D5CDD7B9B0AECFB6BD1097B28F962C4874`
-- `work\build_price_action_strategy_batch.ps1`: `3914FEAB2C42102D9AD0FED5FA7AC8179ED2B0ED2095E56D0A39D6B61D0D285C`
+- `work\build_price_action_strategy_batch.ps1`: `6D41142D9D74BEC4077168839A31EA209FACF563D17BC6639DB1E2B1C86A11D0`
 
 ## Background-Safety Note
 
@@ -61,4 +67,4 @@ The stop marker remains expected at `work\STOP_MT5_FOCUS_WATCHDOG`. Any future M
 
 ## GitHub Source Caveat
 
-The status note was committed through the GitHub connector. The local shell still has no usable `git` or `gh` path in this workspace, and the full EA source is large enough that the status note plus hashes remains the safer connector artifact until a normal git push or non-truncated upload path is available.
+The status note is committed through the GitHub connector. The local shell still has no usable `git` or `gh` path in this workspace, and the full EA source is large enough that the status note plus hashes remains the safer connector artifact until a normal git push or non-truncated upload path is available.
