@@ -11,26 +11,24 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added an optional Smart Money Thesis Break Exit:
+Added an optional Adaptive Regime Confidence Gate:
 
-- `InpUseSmartMoneyThesisBreakExit`
-- `InpSmartMoneyExitMinScore`
-- `InpSmartMoneyExitMaxR`
-- `InpSmartMoneyExitMinHoldBars`
-- `InpSmartMoneyExitRequireStructure`
-- `InpSmartMoneyExitRequireLiquidityOrImbalance`
-- `InpSmartMoneyExitRequireExecution`
-- `CPositionManager::SmartMoneyThesisBreakExitHit()` scores opposite BOS, displacement BOS, CHoCH, breakout retest, liquidity sweep, sweep rejection, equal-level sweep, FVG, FVG retest, order block, opposite displacement candle, and VWAP confluence.
-- Managed exits log `smart_money_thesis_break` with `SM thesis break score ...`.
+- `InpUseAdaptiveRegimeConfidenceGate`
+- `InpAdaptiveRegimeMinScore`
+- `InpAdaptiveRegimeLookbackBars`
+- `InpAdaptiveRegimeMinEfficiency`
+- `InpAdaptiveRegimeMinAlignedBars`
+- `CEntryEngine::AdaptiveRegimeConfidenceAllows()` scores ADX strength, ADX strengthening, EMA slope, ATR regime fit, directional efficiency, and candle alignment.
+- Entry rejection logs `Adaptive regime reject score ...` with the contributing regime reasons.
 
-This changes exit strategy logic instead of only changing settings. The goal is to cut trades when the original price-action thesis breaks, while avoiding panic exits on healthy winners through `InpSmartMoneyExitMaxR` and `InpSmartMoneyExitMinHoldBars`. It is disabled in the robust base profile and enabled only in strict research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
+This changes strategy logic instead of only changing settings. The goal is to avoid trading XAUUSD when the broader condition is too mixed: not cleanly trending, not directionally efficient, not aligned by candles, or sitting outside the acceptable ATR regime. It is disabled in the robust base profile and enabled only in strict research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables Smart Money Thesis Break Exit with minimum score `5`, max close R `0.35`, minimum hold `2` bars, structure required, execution required, and liquidity/imbalance optional.
-- `pa_full_confluence` enables a stricter version with minimum score `6`, max close R `0.25`, minimum hold `3` bars, and liquidity/imbalance required.
+- `weighted_quality_confluence` enables Adaptive Regime Confidence Gate with minimum score `5`, lookback `12`, minimum efficiency `0.35`, and minimum aligned bars `6`.
+- `pa_full_confluence` enables a stricter version with minimum score `6`, lookback `14`, minimum efficiency `0.40`, and minimum aligned bars `7`.
 - Generated configs confirmed the module is enabled in strict price-action research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -46,15 +44,15 @@ This changes exit strategy logic instead of only changing settings. The goal is 
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `DCE03F01D8DB861F1BD926203D96265571BFA0E760C47731F9F9C3CEE7721CCA`
-- `Professional_XAUUSD_EA.mq5`: `DCE03F01D8DB861F1BD926203D96265571BFA0E760C47731F9F9C3CEE7721CCA`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `DCE03F01D8DB861F1BD926203D96265571BFA0E760C47731F9F9C3CEE7721CCA`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `6E83B87FFE4D2DCC0620D473E3215202F24C1D88B710092884DF59B50529140E`
+- `outputs\Professional_XAUUSD_EA.mq5`: `80C25EFDA70A93EE6D7C82308A9A6FE0FE64135B4AC8233BE8E1EB5FB187D3F3`
+- `Professional_XAUUSD_EA.mq5`: `80C25EFDA70A93EE6D7C82308A9A6FE0FE64135B4AC8233BE8E1EB5FB187D3F3`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `80C25EFDA70A93EE6D7C82308A9A6FE0FE64135B4AC8233BE8E1EB5FB187D3F3`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `7BEB3BF7BFE5A560E6B34BD1D74D0D47B12B4396B2A8E0BCD4756869A321842B`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `411339268B012530936391854DB71D8BDD04D6B989EBB62527D7DA5245D78066`
-- `work\test_price_action_strategy_modules.ps1`: `1F5D8208A81B19957671090F998BDF514AE04FD3D1076017CE1D0DF67D9E84C9`
-- `work\test_price_action_strategy_batch.ps1`: `EC07798F4D0DA04BACB74892B8B1FD97DBDB2269505FB34D80BBF7F33580821A`
-- `work\build_price_action_strategy_batch.ps1`: `F7EF4DECCCEF2DFEE492087A82572EA1EC4F282770DC10B3B2AB297FB38D0E9A`
+- `outputs\xauusd_micro_validation_package.zip`: `773757A20ABE58DA8A5956397BCBACF58C2B8A1E12241DE794E9D760976D80D0`
+- `work\test_price_action_strategy_modules.ps1`: `C588FDC062A56903B387BE9F157EFE0385A019BDC7D4AB8C1DB625E9EA6E9E1D`
+- `work\test_price_action_strategy_batch.ps1`: `E0D8771155BA5157F63D6C64115B08CB7F1A9D9007CFE174B1ADE726739845BB`
+- `work\build_price_action_strategy_batch.ps1`: `CD40A15D39C0EF79A6CC03CE9385738A932314F36FCCAEE7236178079B31C38E`
 
 ## Background-Safety Note
 
