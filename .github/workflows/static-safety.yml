@@ -55,6 +55,14 @@ jobs:
         shell: powershell
         run: powershell -NoProfile -ExecutionPolicy Bypass -File work\test_offline_refresh_quiet_mode.ps1
 
+      - name: Build risk-adjusted external MT5 package
+        shell: powershell
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File work\build_external_mt5_validation_package.ps1
+
+      - name: Run external MT5 package audit
+        shell: powershell
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File work\test_external_mt5_validation_package.ps1
+
       - name: Run MT5 local safety audit
         shell: powershell
         run: powershell -NoProfile -ExecutionPolicy Bypass -File work\audit_mt5_local_safety.ps1
