@@ -34,9 +34,9 @@ The EA now includes optional, independently configurable strategy modules for ac
 
 The base BOS+sweep profile keeps conservative defaults, mostly disabled, so each module can be tested independently.
 
-## New Price-Action Research Batch
+## Price-Action Research Batch
 
-Added a fast research batch that enables the new strategy-code modules in controlled variants instead of only changing risk settings.
+Fast research batch for actual strategy-code variants:
 
 - Batch: `outputs/PRICE_ACTION_STRATEGY_BATCH.csv`.
 - Profiles: 8.
@@ -61,26 +61,58 @@ Research profiles:
 - `indicator_phase_filter`
 - `pa_full_confluence`
 
+## Price-Action Decision Gate
+
+Added offline report import and decision scripts for the price-action batch:
+
+- Importer: `work/import_price_action_strategy_reports.ps1`.
+- Decision builder: `work/build_price_action_strategy_decision.ps1`.
+- Smoke test: `work/test_price_action_strategy_decision.ps1`.
+- Metrics output: `outputs/PRICE_ACTION_STRATEGY_REPORT_METRICS.csv`.
+- Decision output: `outputs/PRICE_ACTION_STRATEGY_DECISION.csv`.
+
+Decision rules now automatically:
+
+- Compare every candidate against the same-window `baseline_promoted` result.
+- Reject candidate windows that lose money.
+- Reject candidate windows that underperform baseline without risk-adjusted compensation.
+- Reject windows with too few trades.
+- Review variants that improve profit but increase drawdown.
+- Keep lower-risk candidates alive only when profit per risk improves and drawdown does not worsen.
+- Refuse trusted performance conclusions while compile proof is stale.
+
+Current decision state:
+
+- Overall: `COMPILE_REQUIRED`.
+- Decisions: 21.
+- Pass: 0.
+- Reject: 0.
+- Waiting: 21.
+- Compile trust: `STALE`.
+
 ## Offline Evidence
 
 - Full offline refresh: PASS, 39 steps, 0 failed.
 - `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`.
 - `PRICE_ACTION_STRATEGY_BATCH_SMOKE_PASS`.
 - `PRICE_ACTION_STRATEGY_HANDOFF_SMOKE_PASS`.
+- `PRICE_ACTION_STRATEGY_DECISION_SMOKE_PASS`.
 - `DAILY_PROFIT_LOCK_GUARD_SMOKE_PASS`.
 - `DRAWDOWN_RISK_REDUCTION_SMOKE_PASS`.
-- Report import preflight: PASS for price-action modules, price-action batch, handoff, source-hash status, package audit, and safety checks.
-- Local pipeline manifest: PASS, 67 artifacts tracked, 0 missing.
+- Report import preflight: price-action decision is present and currently `COMPILE_REQUIRED` with 21 waiting report decisions.
+- Local pipeline manifest: PASS, 72 artifacts tracked, 0 missing.
 - External MT5 package audit: PASS, 26 checks passed, 0 failed.
 
 ## Hashes
 
 - EA source: `A737B4164E14C00D8AC3AC7E1EF3E888FD5AFFCEA82733F5D4E765DAD8332883`.
-- Price-action batch CSV: `746E47F3AF3516F4721B643D0BC3081CFA88DEEFD5AD78AEC3419219AC0A3872`.
-- Price-action handoff zip: `1DC3B9F262BDD0FFD140C168A23ED40210A95AEC65179C6816222ED7B112A79D`.
-- Price-action parallel lanes zip: `9867BFA0B604C1BE343A65F6E051CFEC098C9ECEC7A498415FC997B7BFF96FF8`.
-- External validation package zip: `8F6230C00CF17147690F4C23F11F7D0F2D660A7FB687C48843182D880514173C`.
+- Importer script: `9A40A6EC9EAD1107675805AC1DC28D2C1E3022FFF732703B876721A1FCD40650`.
+- Decision script: `5D96C0D4F676F1799B056E863FB608DC00975AC2BE0168FF738FB878F7CFE415`.
+- Decision smoke: `A8A33C1A356FF2E99CD58D1BCBF6D4A47A7E9306D7C5143E7D5F397EDE384B1D`.
+- Price-action report metrics: `A15F8796DED0B79EA864A521CC44DAF5D5D3FE525D5863CEA13E0F3765AF4555`.
+- Price-action decision CSV: `37E1075E961889626E7196A7C4374B3AF9874B5D22B7075BBD73CC1AF2A0126E`.
+- Local pipeline manifest: `956464ABAD0F159B5DC1471DB08442F28722C9F2ED144629EF540F55148EC8E6`.
 
 ## Caveat
 
-No profit claim is made from this update. Compile/test evidence is intentionally stale because MT5 and MetaEditor were not launched to avoid interrupting normal PC usage. Next performance step is a controlled external or truly non-interactive MT5 compile and backtest run using the rebuilt package or the new price-action lane zips.
+No profit claim is made from this update. Compile/test evidence is intentionally stale because MT5 and MetaEditor were not launched to avoid interrupting normal PC usage. Next performance step is a controlled external or truly non-interactive MT5 compile and backtest run using the rebuilt package or the new price-action lane zips, followed by importing reports through the new decision gate.
