@@ -11,23 +11,31 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional pre-weekend exposure close protection:
+Added optional raw price-action and tick-pressure entry confirmations:
 
-- `InpCloseBeforeWeekend`
-- `InpWeekendCloseHour`
-- `WeekendCloseWindowActive(...)`
-- `OnTick()` now calls `positionManager.CloseAll("weekend close")` during the configured Friday close window when the feature is enabled.
-- The guard returns before new entry logic, so it can flatten managed exposure rather than merely blocking fresh Friday trades.
+- `InpUseDisplacementCandle`
+- `InpDisplacementMinRangeATR`
+- `InpDisplacementMinBodyPercent`
+- `InpDisplacementMaxOppositeWickPercent`
+- `InpUseTickPressureCandle`
+- `InpTickPressureLookbackBars`
+- `InpTickPressureMinVolumeRatio`
+- `InpTickPressureMinCloseLocation`
+- `InpWeightDisplacementCandle`
+- `InpWeightTickPressureCandle`
+- `CEntryEngine::DisplacementCandle()` scores directional OHLC displacement using candle range, body size, ATR expansion, and opposite-wick rejection.
+- `CEntryEngine::TickPressureCandle()` scores tick-volume pressure using volume ratio and close location inside the candle range.
+- `CEntryEngine::Build()` now records `Displacement candle;` and `Tick pressure candle;` as independent entry reasons.
 
-This is a real risk-management addition from the requested time/session and risk feature list. It is optional, configurable, and pinned disabled in the robust base profile. It is enabled only in stricter research profiles for fast triage. It adds no martingale, grid, averaging down, or recovery behavior.
+This expands the strategy code beyond settings-only optimization. The new modules use data available inside MT5 Strategy Tester without requiring unsupported feeds such as DOM, DXY, bond yields, or news sentiment.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables weekend close at Friday hour 17.
-- `pa_full_confluence` enables weekend close at Friday hour 17.
-- Generated configs confirmed the feature is enabled only in the intended research profiles and pinned disabled in the robust base profile.
+- `weighted_quality_confluence` enables displacement candle and tick-pressure candle confirmations with weights of `2` each.
+- `pa_full_confluence` enables stricter displacement and tick-pressure thresholds.
+- Generated configs confirmed both modules are enabled in the strict research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
 
@@ -42,14 +50,14 @@ This is a real risk-management addition from the requested time/session and risk
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `C6E223FA8163F68DB6ACBB96D08004992E73D0BBB12D4241121C7B0E552241EA`
-- `Professional_XAUUSD_EA.mq5`: `C6E223FA8163F68DB6ACBB96D08004992E73D0BBB12D4241121C7B0E552241EA`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `F37F21BB387103FBFCE1BE8CB22210CA8BD28CF301BFC22058597D8F5E6873B0`
+- `outputs\Professional_XAUUSD_EA.mq5`: `00F366237AC8D32B6C64BC4783E212279F2EE93F3B12C0A6EE47D824AEED91BC`
+- `Professional_XAUUSD_EA.mq5`: `00F366237AC8D32B6C64BC4783E212279F2EE93F3B12C0A6EE47D824AEED91BC`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `22DA7EA81EB791F2EFD20FF195EBE179363FE3AE8CDAEE3DBD916A71031E9A50`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `5BA7439458E31FF636522B3B257E0F78DA7B4A6F8950D0D2A71E4ECE58E3DAD6`
-- `work\test_price_action_strategy_modules.ps1`: `323B76DB904EFB863E7C70DE2C3E5B6D4252B8EA66CC7273261A45749F442199`
-- `work\test_price_action_strategy_batch.ps1`: `8831D69D02A5FE25A3B460863B02AFAD0713BFC1B7C20E494B69CD5F8BEBF1CA`
-- `work\build_price_action_strategy_batch.ps1`: `089F3DA28563F6D7AEBC3B370B0293A2B233568A33D8317D3E8AD83821FACA08`
+- `outputs\xauusd_micro_validation_package.zip`: `B6F3985CA6A7B57E8F692E444BF1FCD25A65313E8E82DA8B6190A8775AB33E67`
+- `work\test_price_action_strategy_modules.ps1`: `AD3F031FB145D41D8C8156D4A0B0C3E6C510D327CF53C95F9F3D695551AA22DB`
+- `work\test_price_action_strategy_batch.ps1`: `AF234526E60BC260438AA7457DB6D811D07FE7225EF86EF6863A8443A547D00E`
+- `work\build_price_action_strategy_batch.ps1`: `2E5C7EC875FC1D7EFB9B11D1EA2F35B09F69D2B28FBA6E154C99E2C22CC493F1`
 
 ## Background-Safety Note
 
