@@ -11,42 +11,29 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional Protected-Cushion Unlimited Runner mode. This is a more aggressive upside feature that can remove the fixed take-profit on elite setups so trailing/profit-lock logic can let a strong XAUUSD trend run.
+Added optional Protected Runner Partial Close. This de-risks the no-fixed-TP runner by taking a configurable partial profit when an unlimited-runner trade reaches a configurable R multiple, then leaves the remainder available for trailing/profit-lock management.
 
 New inputs and logic:
 
-- `InpUseProtectedCushionUnlimitedRunner`
-- `InpProtectedRunnerMinQualityScore`
-- `InpProtectedRunnerMinPriceActionScore`
-- `InpProtectedRunnerMinCushionPercent`
-- `InpProtectedRunnerRequireTrendRegime`
-- `InpProtectedRunnerRequireTrailing`
-- `InpProtectedRunnerRequireProfitLock`
-- `ProtectedCushionUnlimitedRunnerAllows(const SSignal &signal)`
+- `InpUseProtectedRunnerPartialClose`
+- `InpProtectedRunnerPartialCloseAtR`
+- `InpProtectedRunnerPartialClosePercent`
+- Position manager detects runner trades with no fixed TP (`tp == 0.0`) and logs `protected runner partial close`.
 
-When enabled, the EA only allows this no-fixed-TP runner when:
-
-- The setup quality score is high enough.
-- The price-action score is high enough.
-- Account equity has enough cushion above the active protected floor.
-- Trend-regime confirmation is positive when required.
-- Trailing management is available when required.
-- Profit-lock management is available when required.
-
-This attempts to increase large-trend capture without increasing initial stop risk. It adds no martingale, grid, averaging down, or recovery behavior.
+This is designed to pair with Protected-Cushion Unlimited Runner mode: let elite XAUUSD trends run, but bank part of the win first. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor keeps `InpUseProtectedCushionUnlimitedRunner=false`.
-- Generated research profiles use `InpUseProtectedCushionUnlimitedRunner=true`.
-- Generated research profiles require quality score >= 14, price-action score >= 16, protected-floor cushion >= 12.0%, positive trend-regime confirmation, trailing enabled, and profit-lock enabled before no-fixed-TP runner mode can be used.
+- Baseline anchor keeps `InpUseProtectedRunnerPartialClose=false`.
+- Generated research profiles use `InpUseProtectedRunnerPartialClose=true`.
+- Generated research profiles take a 35.0% partial close at +1.00R on no-fixed-TP runner trades.
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `2DD4B4E9C12B97B486C29E8062331475E4FB95F70B2AA1166A6314B37D77C17B`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `B9A6AFF83F15B28116939155A78829A23E4928FC310B18F74EFC0C09A0F1E693`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_ea_source_artifact_sync.ps1`: PASS
 - `work\test_price_action_strategy_batch.ps1`: PASS
@@ -58,15 +45,15 @@ This attempts to increase large-trend capture without increasing initial stop ri
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `2DD4B4E9C12B97B486C29E8062331475E4FB95F70B2AA1166A6314B37D77C17B`
-- `Professional_XAUUSD_EA.mq5`: `2DD4B4E9C12B97B486C29E8062331475E4FB95F70B2AA1166A6314B37D77C17B`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `2DD4B4E9C12B97B486C29E8062331475E4FB95F70B2AA1166A6314B37D77C17B`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `AF661C1AD5D1A2029384BD30019CBC82A6CB915AFE98372416F82F94DEFD2365`
+- `outputs\Professional_XAUUSD_EA.mq5`: `B9A6AFF83F15B28116939155A78829A23E4928FC310B18F74EFC0C09A0F1E693`
+- `Professional_XAUUSD_EA.mq5`: `B9A6AFF83F15B28116939155A78829A23E4928FC310B18F74EFC0C09A0F1E693`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `B9A6AFF83F15B28116939155A78829A23E4928FC310B18F74EFC0C09A0F1E693`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `AFE5030354AED994A56C3347E90D5A3F1E279F26A80557B49B7435D7FEACF2C6`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `6887C7B2EE4D4D91A5BB05D817F303AA608F807C276142686247ED0AB5998D99`
-- `outputs\xauusd_micro_validation_package.zip`: `913EF4CDBAF398B45781995AB58C735469310D8790C9317EEDD0A9D1DEDB3B50`
-- `work\test_price_action_strategy_modules.ps1`: `BCD94FE716B832BE2B687153CAA2C9C5A30088DFA81B863FD7E55D22C05E6490`
-- `work\test_price_action_strategy_batch.ps1`: `74C4FBB7C65B16E39C046B67933B44D88F24F38226B5CA2FEC846CB2982E0488`
-- `work\build_price_action_strategy_batch.ps1`: `52B0375F0B7EDB0285075790438606A3504C408EFCA1F59DD6CED2CC6434D178`
+- `outputs\xauusd_micro_validation_package.zip`: `1A0FDEE5D8132BA10B9CDC0CD4CDD5E4FB06BD59C2150EA620F779263185549B`
+- `work\test_price_action_strategy_modules.ps1`: `6F383B1CBDA913E656821A2AE1A410832D4F3C3114D9FC9149E435796CB36387`
+- `work\test_price_action_strategy_batch.ps1`: `90BB7B6787D230A4F7E61D0D7F7996B3218031156D5CE4873AE4727057AFF547`
+- `work\build_price_action_strategy_batch.ps1`: `75E5A4DF5D90562D1644F666F661538CFC33500BB1C3E74D36BF9BCE19DBF7AA`
 
 ## Background-Safety Note
 
