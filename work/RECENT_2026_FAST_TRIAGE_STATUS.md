@@ -11,28 +11,28 @@ Updated: 2026-07-06
 
 ## Latest Risk-Code Change
 
-Added optional Weekly Loss Pressure Risk Scaling:
+Added optional Monthly Loss Pressure Risk Scaling:
 
-- `InpUseWeeklyLossRiskScaling`
-- `InpWeeklyLossRiskStartFraction`
-- `InpMinWeeklyLossRiskMultiplier`
-- `WeeklyLossPressureRiskMultiplier()` uses current-week realized P/L and `InpMaxWeeklyLossPercent` to taper risk before the hard weekly loss limit is reached.
-- `OpenSignal()` now multiplies weekly-loss pressure risk into final lot sizing and logs `Weekly loss risk x...` when enabled.
+- `InpUseMonthlyLossRiskScaling`
+- `InpMonthlyLossRiskStartFraction`
+- `InpMinMonthlyLossRiskMultiplier`
+- `MonthlyLossPressureRiskMultiplier()` uses current-month realized P/L and `InpMaxMonthlyLossPercent` to taper risk before the hard monthly loss limit is reached.
+- `OpenSignal()` now multiplies monthly-loss pressure risk into final lot sizing and logs `Monthly loss risk x...` when enabled.
 
-This is strategy/risk code, not only setting changes. It extends the daily loss-pressure idea to the weekly risk budget, reducing exposure as a bad week develops instead of waiting for the weekly hard stop. The baseline anchor remains pinned disabled for comparison, while generated research profiles enable it. It adds no martingale, grid, averaging down, or recovery behavior.
+This is strategy/risk code, not only setting changes. It extends the daily and weekly loss-pressure idea to the monthly risk budget, reducing exposure as a bad month develops instead of waiting for the monthly hard stop. The baseline anchor remains pinned disabled for comparison, while generated research profiles enable it. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor remains `InpUseWeeklyLossRiskScaling=false` for clean comparison.
-- Generated research profiles enable `InpUseWeeklyLossRiskScaling=true`.
-- Research profiles use start fraction `0.35` and minimum multiplier `0.50`, so risk starts tapering after 35% of the weekly loss budget is used.
+- Baseline anchor remains `InpUseMonthlyLossRiskScaling=false` for clean comparison.
+- Generated research profiles enable `InpUseMonthlyLossRiskScaling=true`.
+- Research profiles use start fraction `0.35` and minimum multiplier `0.50`, so risk starts tapering after 35% of the monthly loss budget is used.
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `86ADC5C6D6EAD590BC360CFA5AFB7A983D9B9597385A17FC69E163FF5F124F00`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `67FE21DA53BA76BF81CFBBEF08CACCB0BC86F2A29D836B84D5286A309DCF5000`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_ea_source_artifact_sync.ps1`: PASS
 - `work\test_price_action_strategy_batch.ps1`: PASS
@@ -42,15 +42,15 @@ This is strategy/risk code, not only setting changes. It extends the daily loss-
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `86ADC5C6D6EAD590BC360CFA5AFB7A983D9B9597385A17FC69E163FF5F124F00`
-- `Professional_XAUUSD_EA.mq5`: `86ADC5C6D6EAD590BC360CFA5AFB7A983D9B9597385A17FC69E163FF5F124F00`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `86ADC5C6D6EAD590BC360CFA5AFB7A983D9B9597385A17FC69E163FF5F124F00`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `E864D142A8AF9BD70D028425E957C261C8668C24311EFCE8A56E3F6938D86177`
+- `outputs\Professional_XAUUSD_EA.mq5`: `67FE21DA53BA76BF81CFBBEF08CACCB0BC86F2A29D836B84D5286A309DCF5000`
+- `Professional_XAUUSD_EA.mq5`: `67FE21DA53BA76BF81CFBBEF08CACCB0BC86F2A29D836B84D5286A309DCF5000`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `67FE21DA53BA76BF81CFBBEF08CACCB0BC86F2A29D836B84D5286A309DCF5000`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `A706C360A300657213C54EE7C2A1752C308C5D2559854CAB501F0B5D4D6A3881`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `9EE6B1F325FB52759CBA162B54760FB66281444B423D57A44CE802BF5B491CDE`
-- `work\test_price_action_strategy_modules.ps1`: `30403A3B72C8A3262C88AE014455BE60C6294ABB663B4A69693B85B98D534298`
-- `work\test_price_action_strategy_batch.ps1`: `DCB84BCF9753F4A5AE7FD7E3178A870D4E7271D4524411F3F8A8963737DC07DB`
-- `work\build_price_action_strategy_batch.ps1`: `55A899F233161A0E48784FA384179A8982FFE341DF890D709B1E3FDC068E7868`
+- `outputs\xauusd_micro_validation_package.zip`: `5ABEAD7B64D330AEE77A6BD1E32F9B6249F571824C3F9635B93BBEF69AF9FDB5`
+- `work\test_price_action_strategy_modules.ps1`: `A47FA50955BEA0A9B3522391B337C88F5502863E5D0E5E5F72837B3E742775AE`
+- `work\test_price_action_strategy_batch.ps1`: `DD9829AF058071D814423A40A605C6EFC2AD8149E16BF798DC6556538113037D`
+- `work\build_price_action_strategy_batch.ps1`: `A474EC6CBC2976AE76C09B23C64FF108479948F8E1627E84A51A07CDA6C38894`
 
 ## Background-Safety Note
 
