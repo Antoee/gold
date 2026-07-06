@@ -13,7 +13,20 @@ Updated locally on 2026-07-06.
 ## Current EA Source
 
 - Canonical source: `outputs/Professional_XAUUSD_EA.mq5`.
-- Current synced source SHA256: `8DBAFD3457D2D12EAFDE71BFB6386AE0B4E2CE2780F3AAF9BDBA48F54566827A`.
+- Current synced source SHA256: `40AED19C3BAE268D94DEFE6EF71A26F278224895A56485EE9A6091D0D4306892`.
+
+## Recent-Performance Risk Throttle Addition
+
+Added an optional recent-performance risk throttle so the risk manager can reduce position risk after a weak recent trade sample:
+
+- `InpUseRecentPerformanceRiskThrottle=false` by default.
+- `InpRecentPerformanceLookbackTrades=5`.
+- `InpRecentPerformanceMinNetPercent=0.00`.
+- `InpRecentPerformanceRiskFactor=0.50`.
+- When enabled, the risk manager sums the last configured number of closed trades for the EA symbol/magic and reduces effective risk if net profit as a percent of balance is at or below the threshold.
+- This is risk throttling, not martingale, grid, averaging down, or recovery logic; it reduces exposure after weak performance instead of increasing it.
+
+The `weighted_quality_confluence` and `pa_full_confluence` research profiles now enable recent-performance risk throttle for fast-triage testing.
 
 ## Dynamic ATR Regime Guard Addition
 
@@ -27,7 +40,7 @@ Added an optional dynamic ATR regime guard so the entry engine can reject setups
 - Rejected setups log the internal reason `ATR regime reject;`.
 - This is strategy/risk-control code intended to avoid dead chop and extreme volatility regimes without relying only on static ATR point limits.
 
-The `weighted_quality_confluence` and `pa_full_confluence` research profiles now enable dynamic ATR regime guard for fast-triage testing.
+The `weighted_quality_confluence` and `pa_full_confluence` research profiles enable dynamic ATR regime guard for fast-triage testing.
 
 ## Entry Shock Guard Addition
 
@@ -106,6 +119,7 @@ The EA includes optional, independently configurable strategy modules for actual
 - Correlated-market confirmation.
 - Weighted entry-quality score.
 - Quality-based risk scaling.
+- Recent-performance risk throttle.
 - Quality-based take-profit scaling.
 - Regime-quality confirmation using ADX, EMA slope, and ATR regime.
 - ATR-based profit-lock stop.
@@ -137,6 +151,11 @@ Fast research batch for actual strategy-code variants:
 - Estimated tester runtime: about 10.5 minutes before platform overhead.
 - Handoff zip: `outputs/price_action_strategy_handoff.zip`.
 - Parallel lanes zip: `outputs/price_action_parallel_lanes.zip`.
+
+Research profiles with recent-performance risk throttle enabled:
+
+- `weighted_quality_confluence`.
+- `pa_full_confluence`.
 
 Research profiles with dynamic ATR regime guard enabled:
 
@@ -197,15 +216,15 @@ Research profiles with breakout retest enabled:
 
 ## Hashes
 
-- EA source: `8DBAFD3457D2D12EAFDE71BFB6386AE0B4E2CE2780F3AAF9BDBA48F54566827A`.
-- Base profile: `FF3866562D1BA3FD3B1A4F487085BEAA914AFDD26295B780F952B8AC21341626`.
+- EA source: `40AED19C3BAE268D94DEFE6EF71A26F278224895A56485EE9A6091D0D4306892`.
+- Base profile: `4BDAE4FA98637426CF85A834F8242A102713DAE9D228D1898D37D6087199166F`.
 - Price-action batch CSV: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`.
-- Price-action handoff zip: `69EFB71BA55C219D139BF004EF73252C7496BE9B286BA5BF07BCB4E50CADFBCD`.
-- Price-action parallel lanes zip: `26E16A664ABA056B9638F2CAB3537ED0BA5E4E16F27DDC328B66F55E26CBF4D8`.
-- External validation package zip: `27CD32588BDC9CBC9665D53C147303993E26211D078DE7B5B1CBE765526E2644`.
-- Price-action modules smoke: `F1FC6E7377C5E3C57BD4A624DFC89CBE3C6EC59B808C2F94182C5D746031C354`.
-- Price-action batch smoke: `A668887FAA30BC58ADF8E17841510A301234E88E40E0B241C634EEEF1C19F994`.
-- Price-action batch builder: `A433B246A1EDFB46B653E6A2226A9D1DACA3F5B59ACAD98A9AB96786B9560924`.
+- Price-action handoff zip: `81E2AE53C9D16D8064E56D74F477200D9068B68E08AC0548897C523D4031EA33`.
+- Price-action parallel lanes zip: `B7D3BCEE3C6814497E5DC0962AC9A929E1C818F6620BBE132F052BFECDDC246D`.
+- External validation package zip: `FD4D0F3590D4FF9DB0C3CE8D20AB0506832DEDC2ABDDC42B761DA7B8FA09A445`.
+- Price-action modules smoke: `8AED1DEF8E9EAA7679061C285004BD2A2BFF5FC8A33C97A6C46BBC4BA2892EB7`.
+- Price-action batch smoke: `4B42D2E634F58DD974FAD0AB321125E45F2753E7F4D52676912F1B8DE62159BB`.
+- Price-action batch builder: `74EED380A7A7F13D94014C6F31C00AE5F1B429EA455ED521E0B5EBB4E54CDB29`.
 
 ## GitHub Source Caveat
 
