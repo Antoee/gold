@@ -11,30 +11,29 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added a closed-profit requirement switch for growth boost layers. This prevents aggressive compounding from being triggered by temporary floating equity gains when the profile requires realized profit first.
+Added a realized-balance profit-lock floor. This lets the protected-floor system lock part of closed profit, not only floating peak-equity gains.
 
-New input and logic:
+New inputs and logic:
 
-- `InpGrowthBoostRequiresClosedProfit`
-- `m_initialBalance`
-- `GrowthBoostAllowed()`
-- `ClosedProfitAboveStarting()`
+- `InpUseBalanceProfitLock`
+- `InpBalanceProfitLockStartPercent`
+- `InpBalanceProfitLockPercent`
+- `BalanceProfitLockFloor()`
+- `ProtectedEquityFloor()` now uses the maximum of starting-equity floor, equity peak-profit lock, and realized-balance profit lock.
 
-When enabled, the profit-only risk boost, hot-streak risk boost, and protected-cushion risk boost require current account balance to be above the starting balance. The profit-only boost also calculates its growth percentage from balance instead of floating equity in that mode.
-
-Baseline keeps this disabled for comparison. Generated aggressive research profiles use `InpGrowthBoostRequiresClosedProfit=true`, so the growth stack can still press, but only after profit has actually been closed. This adds no martingale, grid, averaging down, or recovery behavior.
+Generated aggressive research profiles enable this at the same 2.00% start and 50.0% lock settings as the equity profit lock. That means once realized balance profit is large enough, the EA can protect part of it through the same lot-sizing/protected-floor controls already used by the rest of the risk manager. Baseline keeps it disabled for clean comparison. This adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor keeps `InpGrowthBoostRequiresClosedProfit=false`.
-- Generated research profiles use `InpGrowthBoostRequiresClosedProfit=true`.
+- Baseline anchor keeps `InpUseBalanceProfitLock=false`.
+- Generated research profiles use `InpUseBalanceProfitLock=true`.
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `B8631A53DE03001D432A02FF71C80D86578356A9C6F49D7AE2E881B64FBACBB6`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `9E2787D78F48C736EB292880180B2DE626F674CE23F9E732509B6DF1F8B4BE0D`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_ea_source_artifact_sync.ps1`: PASS
 - `work\test_price_action_strategy_batch.ps1`: PASS
@@ -46,15 +45,15 @@ Baseline keeps this disabled for comparison. Generated aggressive research profi
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `B8631A53DE03001D432A02FF71C80D86578356A9C6F49D7AE2E881B64FBACBB6`
-- `Professional_XAUUSD_EA.mq5`: `B8631A53DE03001D432A02FF71C80D86578356A9C6F49D7AE2E881B64FBACBB6`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `B8631A53DE03001D432A02FF71C80D86578356A9C6F49D7AE2E881B64FBACBB6`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `E18DCFB2FD7F0447D9EC05FC156EE064640BE3F2D646DA43E5F0B9D0B556D150`
+- `outputs\Professional_XAUUSD_EA.mq5`: `9E2787D78F48C736EB292880180B2DE626F674CE23F9E732509B6DF1F8B4BE0D`
+- `Professional_XAUUSD_EA.mq5`: `9E2787D78F48C736EB292880180B2DE626F674CE23F9E732509B6DF1F8B4BE0D`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `9E2787D78F48C736EB292880180B2DE626F674CE23F9E732509B6DF1F8B4BE0D`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `ED3D5DD2A7DFD0C9EF19DACE15A718E6AE3AD029083DDE1FDCA0F32AAD4F9FC3`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `6887C7B2EE4D4D91A5BB05D817F303AA608F807C276142686247ED0AB5998D99`
-- `outputs\xauusd_micro_validation_package.zip`: `CC83893E4F49211BABB5A4B9E13E0E3CAC303D45B6597DB734F51C5825EA4C47`
-- `work\test_price_action_strategy_modules.ps1`: `194F3A4E0965D2214278BEC18B4E687BEC339C967306BB589226B1C86BE7BF5D`
-- `work\test_price_action_strategy_batch.ps1`: `B2F5AA0EA801E3C5B5417B5EBFAB4BA725EA81759985874DB7EB89FD6222F49B`
-- `work\build_price_action_strategy_batch.ps1`: `269DF913CCCFDB294742D0C8AB43DD9F659CB8086CBEF25381C0B6417CA30276`
+- `outputs\xauusd_micro_validation_package.zip`: `5AD0C2AAE5C275D24208C9C32D47EFCED6A9C91DCD7E2563E177E4DF58235E09`
+- `work\test_price_action_strategy_modules.ps1`: `A2B9CA1D80F75672360151E085690EF63F0604E6819E123DB0F540D7B7D73DC1`
+- `work\test_price_action_strategy_batch.ps1`: `D546C9556DD34AC509EDC8706D57B7D5CDD7B9B0AECFB6BD1097B28F962C4874`
+- `work\build_price_action_strategy_batch.ps1`: `3914FEAB2C42102D9AD0FED5FA7AC8179ED2B0ED2095E56D0A39D6B61D0D285C`
 
 ## Background-Safety Note
 
