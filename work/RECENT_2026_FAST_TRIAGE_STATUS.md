@@ -11,23 +11,23 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional daily-range exhaustion entry guard:
+Added optional EMA pullback-continuation entry confirmation:
 
-- `InpUseDailyRangeExhaustionGuard`
-- `InpDailyRangeExhaustionLookbackDays`
-- `InpDailyRangeExhaustionMinRatio`
-- `InpDailyRangeExhaustionExtremePercent`
-- `CEntryEngine::DailyRangeExhaustionAllows()` detects when the current day range is already large versus recent daily ranges and price is closing near the daily extreme.
-- `CEntryEngine::Build()` now rejects late daily-high/low chase entries with `Daily range exhaustion reject;` when the feature is enabled.
+- `InpUseEMAPullbackContinuation`
+- `InpEMAPullbackMaxDistanceATR`
+- `InpEMAPullbackMinBodyPercent`
+- `InpWeightEMAPullback`
+- `CEntryEngine::EMAPullbackContinuation()` detects a pullback to the fast entry EMA followed by a directional continuation candle.
+- `CEntryEngine::Build()` now records `EMA pullback;` as an independent weighted entry reason when the feature is enabled.
 
-This is a price-action quality filter for XAUUSD. It is intended to avoid buying near the high of an already-expanded day or selling near the low of an already-expanded day. It stays optional, configurable, and disabled in the robust base profile. It adds no martingale, grid, averaging down, or recovery behavior.
+This is a trend-continuation entry module for XAUUSD. It is intended to add a cleaner pullback-style entry path so the EA is not relying only on breakouts or late momentum candles. It stays optional, configurable, and disabled in the robust base profile. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables daily range exhaustion guard with lookback `10`, minimum daily range ratio `1.20`, and close extreme `85.0%`.
-- `pa_full_confluence` enables stricter daily range exhaustion guard with lookback `12`, minimum daily range ratio `1.15`, and close extreme `84.0%`.
+- `weighted_quality_confluence` enables EMA pullback continuation with max EMA distance `0.35 ATR`, minimum body `35.0%`, and weight `2`.
+- `pa_full_confluence` enables a stricter EMA pullback continuation with max EMA distance `0.30 ATR` and minimum body `40.0%`.
 - Generated configs confirmed the module is enabled in the strict research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -43,14 +43,14 @@ This is a price-action quality filter for XAUUSD. It is intended to avoid buying
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `9E8AF754312F70B0B3E4B163A896B1CAFC4EF8D79A32E82752A71DE132C8503A`
-- `Professional_XAUUSD_EA.mq5`: `9E8AF754312F70B0B3E4B163A896B1CAFC4EF8D79A32E82752A71DE132C8503A`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `DCEE73307CE889297D55ABDBE042B4EB505140CAA3798F6DF6D4808164B9E630`
+- `outputs\Professional_XAUUSD_EA.mq5`: `74B786AD429BECCE0113688A5E418B2EA5CD1630422F20C739F17F91FA7BA287`
+- `Professional_XAUUSD_EA.mq5`: `74B786AD429BECCE0113688A5E418B2EA5CD1630422F20C739F17F91FA7BA287`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `CA159892D0BE120BB4A8AE16569897F9AC6677E54F6884FEF3203F37FF0B8BA3`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `21FCC7CCE38D2BEEF7767F317DA3CE20D7AD96FBC79427B6854495F50D146586`
-- `work\test_price_action_strategy_modules.ps1`: `4375185B12160A24573FF26651A4E85ACED88EC6B542CB5F2D1A1AFA38464E28`
-- `work\test_price_action_strategy_batch.ps1`: `F96A8AB4D084493263AA7029BA72F0EE157F8CC93CA68ADD331696DCB341C8B1`
-- `work\build_price_action_strategy_batch.ps1`: `51E16C7C4EB55AB7A96A890768276BE69E3CDE6FFEC6A8769FDCD9E7610792A1`
+- `outputs\xauusd_micro_validation_package.zip`: `46ADFB9B330A0562BA0AFB5D434D724C6C3DA8CAD14C65A5A3C2C9D711D3F3D5`
+- `work\test_price_action_strategy_modules.ps1`: `DBE28773D78DDAEF9B65FA518001C4D74BDD52099B98FDAFCDC5ECA2DE8F0117`
+- `work\test_price_action_strategy_batch.ps1`: `D7A0A1AFD472F13FD635DBBD8E7B68160E3C34A25A28078ECAD31E3F6710700E`
+- `work\build_price_action_strategy_batch.ps1`: `09754E61B25C5118915B19D716B63D712F9B7AEF831A059BE1F76087950524E1`
 
 ## Background-Safety Note
 
