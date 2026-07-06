@@ -11,23 +11,25 @@ Updated: 2026-07-06
 
 ## Latest Risk-Code Change
 
-Added optional Spread Risk Scaling:
+Added optional Price Action Composite Gate:
 
-- `InpUseSpreadRiskScaling`
-- `InpSpreadRiskStartPoints`
-- `InpMinSpreadRiskMultiplier`
-- `SpreadRiskMultiplier()` compares current spread to the configured start point and the hard maximum spread guard, then scales position risk down as spread gets worse.
-- `OpenSignal()` now combines quality, session, day-of-week, directional-loss, volatility, and spread risk multipliers before lot sizing.
-- Entry logging adds `Spread risk x...` when enabled.
+- `InpUsePriceActionCompositeGate`
+- `InpPriceActionCompositeMinScore`
+- `InpPriceActionRequireStructure`
+- `InpPriceActionRequireLiquidity`
+- `InpPriceActionRequireExecution`
+- `InpPriceActionRequireOrderFlow`
+- `PriceActionCompositeQuality()` scores BOS, displacement BOS, CHoCH, breakout retest, liquidity sweeps, wick rejection, equal/session/Asian sweeps, FVG, FVG retest, order block, OHLC wick/body rejection, displacement candle, tick pressure, tick speed, momentum, candle anatomy, volume, cumulative delta proxy, tick tape, VWAP, daily open, previous-day range, and regime quality.
+- `Build()` now rejects enabled low-quality entries with `PA composite reject score ...` before normal confirmations.
 
-This changes risk logic instead of only changing settings. The goal is to keep otherwise valid setups eligible while cutting exposure when XAUUSD spread conditions are deteriorating but have not yet reached the hard no-trade spread limit. It is disabled in the robust base profile and enabled only in strict research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
+This changes entry strategy code, not only settings. The goal is to require actual market-structure, liquidity, execution-candle, and optional order-flow evidence before allowing strict research profiles to trade. It is disabled in the robust base profile and enabled only in strict research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables Spread Risk Scaling from `120.0` points with minimum risk multiplier `0.60`.
-- `pa_full_confluence` enables a stricter version from `100.0` points with minimum risk multiplier `0.50`.
+- `weighted_quality_confluence` enables Price Action Composite Gate with minimum score `9` and order-flow requirement disabled.
+- `pa_full_confluence` enables a stricter version with minimum score `12` and order-flow requirement enabled.
 - Generated configs confirmed the module is enabled in strict price-action research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -43,15 +45,15 @@ This changes risk logic instead of only changing settings. The goal is to keep o
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `FCB0B3A905A76654595E5C48B107FDE8A10BE084F22AC0A6E4749553F636D2C5`
-- `Professional_XAUUSD_EA.mq5`: `FCB0B3A905A76654595E5C48B107FDE8A10BE084F22AC0A6E4749553F636D2C5`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `FCB0B3A905A76654595E5C48B107FDE8A10BE084F22AC0A6E4749553F636D2C5`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `16947CECD73E8E1647B26AD686ADFB1806D9177105ECB8F858FAA070C7F4FDC3`
+- `outputs\Professional_XAUUSD_EA.mq5`: `437C02B05AA872BD2D73557560772555144A9BF56C76D1F8A18C00A4B67591EB`
+- `Professional_XAUUSD_EA.mq5`: `437C02B05AA872BD2D73557560772555144A9BF56C76D1F8A18C00A4B67591EB`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `437C02B05AA872BD2D73557560772555144A9BF56C76D1F8A18C00A4B67591EB`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `0F2C7E502682C4F2C6E24DE6A52A15D0218BE815B0798B42A5860D1F0A823C40`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `0107FBF517B10F8E737C09B63D883A87EF1984BF1937E3605D8C18A3D2B1CCC0`
-- `work\test_price_action_strategy_modules.ps1`: `A67F704AB8910E35A0B30CE096591CB3E8E65B1BA28FFD463972E0F671B2BD98`
-- `work\test_price_action_strategy_batch.ps1`: `08B75CEB0833AFF8504A0E7F6C68F0C373A81278C70FEC5BECB572430670FCBA`
-- `work\build_price_action_strategy_batch.ps1`: `57B8BE2A550F9FAD42B0FCF97A1AFC58855617BEAE7D216672C5A99DDC66D3FC`
+- `outputs\xauusd_micro_validation_package.zip`: `8D9DED9DCCF64FC00536532FC329B37325A2A887DF47701FA8AAB79C75818578`
+- `work\test_price_action_strategy_modules.ps1`: `CC365CDB17B5FF0FAD5E9F5BB998B39EFE24064EA2026AD80A1BBC86B0335787`
+- `work\test_price_action_strategy_batch.ps1`: `A808CEF1F314EB09FD0565FF4918002E3CA8361E372D5D40A4B5FCED7C7225A2`
+- `work\build_price_action_strategy_batch.ps1`: `42780A46CBDD4E92054B80799E389E50D0C0BFCC350B82E1AF62DD808F2FA480`
 
 ## Background-Safety Note
 
