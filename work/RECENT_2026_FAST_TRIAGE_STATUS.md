@@ -11,26 +11,27 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional opposing major-level proximity guard:
+Added optional compression-breakout confirmation:
 
-- `InpUseLevelProximityGuard`
-- `InpLevelGuardUsePreviousDay`
-- `InpLevelGuardUsePreviousWeek`
-- `InpLevelGuardUsePreviousMonth`
-- `InpMinDistanceFromLevelATR`
-- `InpMinDistanceFromLevelPoints`
-- `CEntryEngine::OpposingLevelDistanceAllows()` blocks buy entries when price is still below a nearby previous high, and blocks sell entries when price is still above a nearby previous low.
-- `CEntryEngine::Build()` now rejects those bad-location setups with `Level proximity reject;` before confirmation scoring.
+- `InpUseCompressionBreakout`
+- `InpCompressionLookbackBars`
+- `InpCompressionMaxRangeATR`
+- `InpCompressionBreakBufferPoints`
+- `InpCompressionMinBodyPercent`
+- `InpWeightCompressionBreakout`
+- `CMarketStructure::CompressionBreakout()` requires the prior range to be narrow relative to ATR, then requires the latest closed candle to break out with configurable buffer and body strength.
+- `CEntryEngine::Build()` now scores those setups with `Compression breakout;` when enabled.
 
-This is a real strategy-code addition from the requested price-action/market-structure/risk-feature list. It is designed to avoid entries with poor space to the next major support/resistance level, without martingale, grid, averaging down, or recovery behavior.
+This is a real strategy-code addition from the requested OHLC/candle-size/ATR/volatility-regime list. It is designed to test expansion-after-compression behavior without martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables the level proximity guard with `0.30 ATR` / `70 points` minimum distance.
-- `pa_full_confluence` enables the level proximity guard with `0.35 ATR` / `80 points` minimum distance.
-- Generated configs confirmed the module is enabled only in strict research profiles and pinned disabled in the robust base profile.
+- `vwap_momentum_phase` enables compression breakout with 12-bar compression, max range `1.10 ATR`, and `45%` minimum body.
+- `weighted_quality_confluence` enables compression breakout with 12-bar compression and max range `1.15 ATR`.
+- `pa_full_confluence` enables compression breakout with 14-bar compression, max range `1.05 ATR`, and a `20 point` breakout buffer.
+- Generated configs confirmed the module is enabled only in research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
 
@@ -45,14 +46,14 @@ This is a real strategy-code addition from the requested price-action/market-str
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `E5DE90692124B685B88EC280F064B4984CD7D6703E148E0F62D6AC8943597A76`
-- `Professional_XAUUSD_EA.mq5`: `E5DE90692124B685B88EC280F064B4984CD7D6703E148E0F62D6AC8943597A76`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `2C2F60DA9E964B149BFFC23E989C1CFD168FAF26AA6DD120EC5C9EE4C95D4232`
+- `outputs\Professional_XAUUSD_EA.mq5`: `A289854C89C59680840B66F6CB1441D12C150864F4CAD4B20B53F4CFE183DE1A`
+- `Professional_XAUUSD_EA.mq5`: `A289854C89C59680840B66F6CB1441D12C150864F4CAD4B20B53F4CFE183DE1A`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `BE3720793E5850ADC5922EDAA955CF4DF36DC479EFCC4036E8B28F143899CEB5`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `03D6C17F1CE8111E6C368E261AECBE2978E2A0EABC474A5ECF287D47D2AC84EC`
-- `work\test_price_action_strategy_modules.ps1`: `22A9AEEA54C0B5470565ED9ED7064D42F4771F9E0C5AAECA62B9C592CE8D4E39`
-- `work\test_price_action_strategy_batch.ps1`: `80852C1F3CE7BD27E4D98F5010661FE294753B4FDB0CFAF5C5E5B31EFA82C557`
-- `work\build_price_action_strategy_batch.ps1`: `2A3167836EC7C304E20595C6DDA4F9E0F8C7C0F350B4F5BF29DA9051C3A254BF`
+- `outputs\xauusd_micro_validation_package.zip`: `024B65BE965560AA0CFD48340A1E3526533C6E17FFB329DDD70FBF36B409B715`
+- `work\test_price_action_strategy_modules.ps1`: `FFCAB174B4C598045E7A9AC6E6EBDDD441BD079794E22F6EEA86021D5E3D07AB`
+- `work\test_price_action_strategy_batch.ps1`: `13F59EBEB64F1AE80AD4D7BA000822DC19ACA051D12BBEFFB8A20BF7BE1C6F6A`
+- `work\build_price_action_strategy_batch.ps1`: `1734E7B1CC7F0F5F72F606578D6243B0BBD8C207242D2234A0A6C62A4C9847AD`
 
 ## Background-Safety Note
 
