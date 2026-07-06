@@ -13,29 +13,27 @@ Updated locally on 2026-07-06.
 ## Current EA Source
 
 - Canonical source: `outputs/Professional_XAUUSD_EA.mq5`.
-- Current synced source SHA256: `745C07041CAD41F0F2481E3C2A16C571F6346EA7F906CCDDD973C8D6708E2470`.
+- Current synced source SHA256: `A2F7101E8378C67AC258420C9F886E5ACB38554F4CB22D958AA20099074CC487`.
 
-## Opening-Range Breakout Addition
+## Breakout-Retest Confirmation Addition
 
-Added optional opening-range breakout confirmation so the EA can test London/New York-style momentum entries:
+Added optional breakout-retest confirmation so the EA can test structure breaks that pull back to the broken level before continuation:
 
-- `InpUseOpeningRangeBreakout=false` by default.
-- `InpOpeningRangeStartHour=7`.
-- `InpOpeningRangeStartMinute=0`.
-- `InpOpeningRangeMinutes=60`.
-- `InpOpeningRangeMaxBarsAfter=16`.
-- `InpOpeningRangeBufferPoints=20.0`.
-- `InpWeightOpeningRangeBreakout=2`.
-- `CMarketStructure::OpeningRangeBreakout()` builds the configured daily opening range and confirms a buffered breakout after the range closes.
-- The entry engine adds `Opening range;` as a normal confirmation and quality-score contributor when enabled.
+- `InpUseBreakoutRetest=false` by default.
+- `InpBreakoutRetestLookbackBars=20`.
+- `InpBreakoutRetestATR=0.25`.
+- `InpBreakoutRetestCloseBufferPoints=10.0`.
+- `InpWeightBreakoutRetest=2`.
+- `CMarketStructure::BreakoutRetest()` checks that the prior bar broke the structure level, the current bar retested near that level, and the current close continued back through the level with a buffer.
+- The entry engine adds `Breakout retest;` as a normal confirmation and quality-score contributor when enabled.
 
-The `vwap_momentum_phase` and `pa_full_confluence` research profiles now enable opening-range breakout confirmation for testing without increasing the 30-run batch size.
+The `orderblock_fvg_retest` and `weighted_quality_confluence` research profiles now enable breakout-retest confirmation without increasing the 30-run batch size.
 
 ## Current EA Strategy Features
 
 The EA includes optional, independently configurable strategy modules for actual price-action, market-state, tick-tape, intermarket confirmation, weighted setup-quality logic, profit targeting, profit protection, and early loss control:
 
-- CHoCH, FVG, order-block retest, liquidity sweep, previous/session levels, session sweeps, opening-range breakouts, VWAP, candle anatomy, market phase, RSI, MACD, Bollinger, and tick microstructure confirmations.
+- CHoCH, BOS, breakout retests, FVG, order-block retest, liquidity sweep, previous/session levels, session sweeps, opening-range breakouts, VWAP, candle anatomy, market phase, RSI, MACD, Bollinger, and tick microstructure confirmations.
 - Correlated-market confirmation.
 - Weighted entry-quality score.
 - Quality-based risk scaling.
@@ -68,10 +66,10 @@ Fast research batch for actual strategy-code variants:
 - Handoff zip: `outputs/price_action_strategy_handoff.zip`.
 - Parallel lanes zip: `outputs/price_action_parallel_lanes.zip`.
 
-Research profiles with opening-range enabled:
+Research profiles with breakout retest enabled:
 
-- `vwap_momentum_phase`.
-- `pa_full_confluence`.
+- `orderblock_fvg_retest`.
+- `weighted_quality_confluence`.
 
 ## Current Decision State
 
@@ -102,15 +100,15 @@ Research profiles with opening-range enabled:
 
 ## Hashes
 
-- EA source: `745C07041CAD41F0F2481E3C2A16C571F6346EA7F906CCDDD973C8D6708E2470`.
-- Base profile: `17A53C2663D6C8C2369183FD01EF94FB59CDD447F27E710360AF22ED5F85BB69`.
+- EA source: `A2F7101E8378C67AC258420C9F886E5ACB38554F4CB22D958AA20099074CC487`.
+- Base profile: `E4DADF47CB9096B3345D56A72C97EED4B1CFAAC0AFD99F4FBC5C0C7F140D83D4`.
 - Price-action batch CSV: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`.
-- Price-action handoff zip: `FE405594EE58960B0079F045CB8E5F5BD5CF74A538B26BCC38F2AB730FF1A318`.
-- Price-action parallel lanes zip: `39507CB37A76903C1325389EA183E5258ACB43E31A73B6DD3780726C81DDB837`.
-- External validation package zip: `0EACA7FEF04C28F2606A43149031E482279B6F59B96DD038CEEF489140965BB4`.
-- Price-action modules smoke: `1BA2698E2AD252FE0ECD53FEB5E943D939BF9E969E9F5AA83E8B2F0326822F69`.
-- Price-action batch smoke: `CDC5524A2C198643B739A9DE9D4D51F836E1B688FA48D3FB1D5CB7FEAE378E15`.
-- Price-action batch builder: `46B24F2D461EA7C3F7A994AC080C7CDCA84088BE35A982A28D06692F247A9489`.
+- Price-action handoff zip: `C871097671A34BB23A6A2EB82E5E2E3FC7A21BB6BEDA7C010FE974C55EEDEC58`.
+- Price-action parallel lanes zip: `FB10BAA9CFDAF8E9567987152230ABC7C4A8C9E7CA30E5B3F54A7B69745857A2`.
+- External validation package zip: `92320EBE0246B06D637E6EB7420708451A24068B38F5F73815BE7D58865C1145`.
+- Price-action modules smoke: `2A1A1438B93FBFAA52822FA786023F51058251B2B5EB718ACD6F6CE868FB24C0`.
+- Price-action batch smoke: `A3BB7DC0CFB2B243ED884F1C9BE5220D6334860BAC16B6302A8316659C4466D9`.
+- Price-action batch builder: `0B591D508451712F505D07C4413999009AC17A04659BB5DAF30FC6B55CE7C4B7`.
 
 ## Caveat
 
