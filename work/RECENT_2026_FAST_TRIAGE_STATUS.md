@@ -11,28 +11,28 @@ Updated: 2026-07-06
 
 ## Latest Risk-Code Change
 
-Added optional Daily Profit Protection Risk Scaling for generated research profiles:
+Added optional Weekly Profit Protection Risk Scaling for generated research profiles:
 
-- `InpUseDailyProfitRiskScaling`
-- `InpDailyProfitRiskStartFraction`
-- `InpMinDailyProfitRiskMultiplier`
-- `DailyProfitProtectionRiskMultiplier()` uses current-day realized profit and `InpDailyProfitLockPercent` to taper risk as the EA approaches the daily profit lock.
-- `OpenSignal()` now multiplies daily-profit protection risk into final lot sizing and logs `Daily profit risk x...` when enabled.
+- `InpUseWeeklyProfitRiskScaling`
+- `InpWeeklyProfitRiskStartFraction`
+- `InpMinWeeklyProfitRiskMultiplier`
+- `WeeklyProfitProtectionRiskMultiplier()` uses current-week realized profit and `InpWeeklyProfitLockPercent` to taper risk as the EA approaches the weekly profit lock.
+- `OpenSignal()` now multiplies weekly-profit protection risk into final lot sizing and logs `Weekly profit risk x...` when enabled.
 
-This is profit-preservation risk code, not only parameter tweaking. It reduces new-trade exposure after the EA has built daily profit, helping protect green days before a hard profit lock or giveback guard is reached. The baseline anchor remains disabled for clean comparison, while generated research profiles enable it. It adds no martingale, grid, averaging down, or recovery behavior.
+This is profit-preservation risk code, not only parameter tweaking. It reduces new-trade exposure after the EA has built weekly profit, helping protect good weeks before a hard profit lock or giveback guard is reached. The baseline anchor remains disabled for clean comparison, while generated research profiles enable it. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor remains `InpUseDailyProfitRiskScaling=false`.
-- Generated research profiles use `InpUseDailyProfitRiskScaling=true`.
-- Research profiles start tapering at `0.50` of the daily profit-lock target and taper toward minimum multiplier `0.50`.
+- Baseline anchor remains `InpUseWeeklyProfitRiskScaling=false`.
+- Generated research profiles use `InpUseWeeklyProfitRiskScaling=true`.
+- Research profiles start tapering at `0.50` of the weekly profit-lock target and taper toward minimum multiplier `0.50`.
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `7D04FDC8491CFD4B715B545D804744AD5F2D39C69D3B73FC903BC9FEDCEE6B9A`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `81F8C22FD3509A688FA96DBA0B714EB2D28D9574FCF0052EF6EE3EA36A099B63`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_ea_source_artifact_sync.ps1`: PASS
 - `work\test_price_action_strategy_batch.ps1`: PASS
@@ -42,15 +42,15 @@ This is profit-preservation risk code, not only parameter tweaking. It reduces n
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `7D04FDC8491CFD4B715B545D804744AD5F2D39C69D3B73FC903BC9FEDCEE6B9A`
-- `Professional_XAUUSD_EA.mq5`: `7D04FDC8491CFD4B715B545D804744AD5F2D39C69D3B73FC903BC9FEDCEE6B9A`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `7D04FDC8491CFD4B715B545D804744AD5F2D39C69D3B73FC903BC9FEDCEE6B9A`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `A711CA31CB2E01164C685EC855EE9E781265524FE1ACA78DC1BEE397AC6D8BEA`
+- `outputs\Professional_XAUUSD_EA.mq5`: `81F8C22FD3509A688FA96DBA0B714EB2D28D9574FCF0052EF6EE3EA36A099B63`
+- `Professional_XAUUSD_EA.mq5`: `81F8C22FD3509A688FA96DBA0B714EB2D28D9574FCF0052EF6EE3EA36A099B63`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `81F8C22FD3509A688FA96DBA0B714EB2D28D9574FCF0052EF6EE3EA36A099B63`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `9DB371988D9E0D774EF9EDA1FFF0D9CFCCF832272597DF1A7F0613F2DA5AD70B`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `2503F0AA315C59CCC8939B11D25D7150F4D7526C9F82D3A7AA346E7C7752DD4D`
-- `work\test_price_action_strategy_modules.ps1`: `6E90664CB6D1825E573BA9E288758C363A809938A0BF52D7F1AC7E77A0230586`
-- `work\test_price_action_strategy_batch.ps1`: `9B1616A5C2D0C5C6BAE72122FF31D7BBB6A670976C500E017DEBBCFA9B44172C`
-- `work\build_price_action_strategy_batch.ps1`: `B2DD77D0F71F4AF4975AB9AE43E09A7424C628EB89E3A38DB467627A7C391977`
+- `outputs\xauusd_micro_validation_package.zip`: `52F1C2EF161502CB0780D1E48194BA54A507FC69D7410645A37DC4951A673C74`
+- `work\test_price_action_strategy_modules.ps1`: `842DDBDD5C81364250CD60CC004198D30751F466498F35DEB62EC88BD6AD4C90`
+- `work\test_price_action_strategy_batch.ps1`: `CC6C0D604CBBA84A1E4D576A7EB29A444BF3964F1E5AF7DA13E272E0A6BF3E16`
+- `work\build_price_action_strategy_batch.ps1`: `3B09A473440B58A3AE5FA970F7FDE76A3FC887CFA27BBCE193691F4259D2B6B2`
 
 ## Background-Safety Note
 
