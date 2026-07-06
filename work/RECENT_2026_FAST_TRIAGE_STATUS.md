@@ -11,30 +11,30 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional CCI momentum confirmation and CCI exhaustion protection:
+Added optional MFI volume-pressure confirmation and MFI exhaustion protection:
 
-- `InpUseCCIConfirmation`
-- `InpCCIPeriod`
-- `InpCCIBuyMin`
-- `InpCCISellMax`
-- `InpUseCCIExhaustionGuard`
-- `InpCCIBuyMax`
-- `InpCCISellMin`
-- `InpWeightCCI`
-- Native MT5 CCI indicator handle in `CIndicators`
-- `CCIConfirmation(...)`
-- `CCIExhaustionAllows(...)`
-- Entry scoring reason `CCI;`
-- Reject reason `CCI exhaustion reject;`
+- `InpUseMFIConfirmation`
+- `InpMFIPeriod`
+- `InpMFIBuyMin`
+- `InpMFISellMax`
+- `InpUseMFIExhaustionGuard`
+- `InpMFIBuyMax`
+- `InpMFISellMin`
+- `InpWeightMFI`
+- Native MT5 MFI indicator handle in `CIndicators`
+- `MFIConfirmation(...)`
+- `MFIExhaustionAllows(...)`
+- Entry scoring reason `MFI;`
+- Reject reason `MFI exhaustion reject;`
 
-This is a real strategy-code addition from the requested indicator and momentum feature list. It is optional, configurable, weighted, and pinned disabled in the robust base profile. It is enabled only in indicator/regime and full-confluence research profiles for fast triage. It adds no martingale, grid, averaging down, or recovery behavior.
+This is a real strategy-code addition from the requested volume/order-flow and indicator feature list. It is optional, configurable, weighted, and pinned disabled in the robust base profile. It is enabled only in indicator/regime and full-confluence research profiles for fast triage. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `indicator_phase_filter` enables CCI confirmation plus CCI exhaustion guard.
-- `pa_full_confluence` enables a stricter CCI confirmation plus CCI exhaustion guard.
+- `indicator_phase_filter` enables MFI confirmation plus MFI exhaustion guard.
+- `pa_full_confluence` enables a stricter MFI confirmation plus MFI exhaustion guard.
 - Generated configs confirmed the module is enabled only in the intended research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -50,14 +50,14 @@ This is a real strategy-code addition from the requested indicator and momentum 
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `3C687B84AFB5411EF28CBF0C733E31CC0EB814E15335709B1A90B3F9C1561DB4`
-- `Professional_XAUUSD_EA.mq5`: `3C687B84AFB5411EF28CBF0C733E31CC0EB814E15335709B1A90B3F9C1561DB4`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `E2F689AB153F7F38D45BE1325FA93B3B5EF9E458E8A8F1C018CF5591A536E24F`
+- `outputs\Professional_XAUUSD_EA.mq5`: `843CAC590C468965C7084CB93F37D152E6943DCC67A0F71C60095AB546BA66AF`
+- `Professional_XAUUSD_EA.mq5`: `843CAC590C468965C7084CB93F37D152E6943DCC67A0F71C60095AB546BA66AF`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `AA03E31871D8B990FB498C14DCE88A69AEE594D4CAE7992D5DAE43F6F524923C`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `8C4E404D86F74A67C19428C75B64428D69A782DAB227C7C85503D7298E894856`
-- `work\test_price_action_strategy_modules.ps1`: `3FDC7E9128B9C310916305B3D3BBDA8A11CDE347184FA4AD477D52866D780CCF`
-- `work\test_price_action_strategy_batch.ps1`: `7E7D36CF47B2634D526584DC7E8A91436C05E5464560B2B39BEF433E6D95D2F4`
-- `work\build_price_action_strategy_batch.ps1`: `C64073DAC573447064667BCFA97C0A277689DB198C4A85FB0BA6D8FA12BC12B1`
+- `outputs\xauusd_micro_validation_package.zip`: `97E413121E48BE43A505225EB05B76E348F0D8CEB34E1E097888B73ED960743C`
+- `work\test_price_action_strategy_modules.ps1`: `C06013CA651F3022AAEC35818A1BE2443BC7546BB466D1449408DCF8B2D5EA00`
+- `work\test_price_action_strategy_batch.ps1`: `19BA4096CB3D14C15BCB1F0905DD4B1EFB2E2E2BA93A66F879D47B7251474F6D`
+- `work\build_price_action_strategy_batch.ps1`: `AED5A9AF44D41130BA1EEF504F4E379C8B5F7C66D1CEB18BD0AD03570CD1C48C`
 
 ## Background-Safety Note
 
