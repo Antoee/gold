@@ -8,12 +8,13 @@ Updated locally on 2026-07-06.
 - Current work was done with hidden/no-window PowerShell only.
 - Final local scan before this status update: no `terminal`, `terminal64`, `metatester`, `metatester64`, `MetaEditor`, or `metaeditor64` processes found.
 - Quiet stop marker remains present: `work/STOP_MT5_FOCUS_WATCHDOG`.
+- No watchdog process is intentionally running right now; the repo is in quiet no-resident-helper mode.
 
 ## Current EA Source
 
 - Canonical source: `outputs/Professional_XAUUSD_EA.mq5`.
 - Root/package source sync: PASS.
-- Current synced source SHA256: `458611765C9AA13BEF42EBAF5B9987CCD5534A5C9E94A2B985895C87FACBC8CD`.
+- Current synced source SHA256: `1CF2FC9D0B93B4B3511F06729089A92780F87C7C71D13B0F8A4626E67D023113`.
 
 ## Strategy-Code Work
 
@@ -33,6 +34,7 @@ The EA now includes optional, independently configurable strategy modules for ac
 - Bollinger Band confirmation.
 - Tick microstructure confirmation.
 - Weighted entry-quality score.
+- Quality-based risk scaling.
 
 ## Weighted Entry-Quality Addition
 
@@ -44,7 +46,30 @@ Added optional weighted setup scoring beside the existing confirmation count:
 - When enabled, `InpMinimumEntryScore` can reject setups that have enough raw confirmations but not enough high-quality evidence.
 - New weight inputs cover BOS, liquidity sweep, CHoCH, FVG, order block, equal levels, previous/session levels, VWAP, momentum, volume, indicators, candles, ATR expansion, and tick microstructure.
 
-This allows research profiles to prefer strong structure/tick/imbalance evidence over many weak indicator-only confirmations.
+This lets research profiles prefer strong structure/tick/imbalance evidence over many weak indicator-only confirmations.
+
+## Quality Risk Scaling Addition
+
+Added optional quality-based risk sizing so the EA can risk less on marginal setups and only use full allowed risk on high-quality setups:
+
+- `InpUseQualityRiskScaling=false` by default.
+- `InpQualityRiskMinScore=5`.
+- `InpQualityRiskFullScore=10`.
+- `InpMinQualityRiskMultiplier=0.50`.
+- `InpMaxQualityRiskMultiplier=1.00`.
+- `QualityRiskMultiplier()` maps setup quality to a bounded risk multiplier.
+- `CRiskManager::LotsForRisk()` now accepts the multiplier and applies it to `EffectiveRiskPercent()`.
+- Trade logs include the quality risk multiplier when enabled.
+
+The `weighted_quality_confluence` research profile now enables both weighted scoring and quality risk scaling:
+
+- `InpUseWeightedEntryScore=true`.
+- `InpMinimumEntryScore=7`.
+- `InpUseQualityRiskScaling=true`.
+- `InpQualityRiskMinScore=7`.
+- `InpQualityRiskFullScore=11`.
+- `InpMinQualityRiskMultiplier=0.50`.
+- `InpMaxQualityRiskMultiplier=1.00`.
 
 ## Price-Action Research Batch
 
@@ -97,23 +122,30 @@ Current decision state:
 ## Offline Evidence
 
 - Full offline refresh: PASS, 39 steps, 0 failed.
-- `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`.
-- `PRICE_ACTION_STRATEGY_BATCH_SMOKE_PASS`.
-- `PRICE_ACTION_STRATEGY_HANDOFF_SMOKE_PASS`.
-- `PRICE_ACTION_STRATEGY_DECISION_SMOKE_PASS`.
-- Report import preflight: source hash PASS, price-action decision `COMPILE_REQUIRED` with 27 waiting report decisions.
+- Report import preflight rows:
+  - Open risk exposure guard smoke: PASS.
+  - Max stop ATR guard smoke: PASS.
+  - Price-action strategy modules smoke: PASS.
+  - Price-action strategy batch smoke: PASS.
+  - Price-action strategy handoff smoke: PASS.
+  - Source hash status smoke: PASS.
+  - Local safety: PASS, 39 safety checks pass.
+  - Price-action strategy decision: `COMPILE_REQUIRED`, with 27 waiting report decisions and stale compile trust.
+  - Compile status: `STALE`.
 - Local pipeline manifest: PASS, 72 artifacts tracked, 0 missing.
 - External MT5 package audit: PASS, 26 checks passed, 0 failed.
 
 ## Hashes
 
-- EA source: `458611765C9AA13BEF42EBAF5B9987CCD5534A5C9E94A2B985895C87FACBC8CD`.
+- EA source: `1CF2FC9D0B93B4B3511F06729089A92780F87C7C71D13B0F8A4626E67D023113`.
 - Price-action batch CSV: `AB602CA98DDC931A4C890A834EF8596AA00DC0B34ECFE133A2916FE0C06373F4`.
-- Price-action handoff zip: `1AA24B7639F8DF0EDB5164EC2BE29B16844A229C8FE5EBE38B5548E67DFC48D8`.
-- Price-action parallel lanes zip: `A14EAE9B9CBB5D0EA9EEC6B82B74EA219A0BD0BC845B8C2BDC6404CDB3A2BF26`.
-- External validation package zip: `2A8CCC0AD569BDCAFDD9CB6FE5D52D72E47DF694E52885AFAC2B12463B3F6AD2`.
-- Price-action modules smoke: `16AFF9CAD888D16E191D74CD66D6DD5A091698FCED1ECBD194CC48D1586F248C`.
-- Price-action batch builder: `E0A41F9A9B3CFE7EBA8E014ABD29420A1A38303CA0B05B35B454BACC68D9FBBA`.
+- Price-action handoff zip: `C9A59E96CFD8720A9E5E5C63FFBAB5DEDF0D0747B05EB42F7BE7A5683622FBD1`.
+- Price-action parallel lanes zip: `BF51ACAA9A47205F05C025693B6DA3383DE4740BAEBF1D7B67EB050E433317CB`.
+- External validation package zip: `64716D17BBC5342E861D352A0E2B2CBBBFF6FA6FC21C4080667F726C5C0DE3ED`.
+- Open risk exposure guard smoke: `305BF7920A750147F218F9A1ADB16BDF7B2858B8EEAE3CEF1462C6EFD9913DDE`.
+- Max stop ATR guard smoke: `145DFCBCB3D977F33D2B88D1518E0D76D96715FCFA171E66588E2D2866528C04`.
+- Price-action modules smoke: `FA4A47F3D2D4B733628449E6BDF7F3794CBC6DFB8C1D459D023FBBEF772A3289`.
+- Price-action batch builder: `0E4D601E150523232A0D9407231A054372100F79ED08F1DC5188E6DDAA96666D`.
 
 ## Caveat
 
