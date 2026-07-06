@@ -7,6 +7,8 @@ Generated locally without launching MT5.
 - Added a phase-1 fast-triage `2026_ytd` window to the profit-search config generator.
 - Added `risk14_tp38_sl18`, a middle-ground candidate with `InpRiskPercent=1.40` and `InpTakeProfitATRMultiplier=3.80`.
 - Updated the risk-adjusted micro batch to compare four profiles across four compact windows: `baseline_promoted`, `baseline_dd4`, `risk12_tp38_sl18`, and `risk14_tp38_sl18` on `2026_Q2`, `2026_ytd`, `2024_Q1`, and `2025_Q2`.
+- Added `work/test_risk_adjusted_micro_batch_frontier.ps1` locally to protect the 16-run frontier shape, require `2026_ytd`, block aggressive-risk profiles, keep model 2 only, and cap estimated runtime at 6 minutes.
+- Wired the frontier smoke into report-import preflight as `Risk-adjusted micro frontier smoke`.
 - Updated the external MT5 package audit to require the new 16-row micro-batch shape.
 
 ## Regenerated Local Evidence
@@ -22,9 +24,10 @@ Generated locally without launching MT5.
 
 ## Verification
 
+- `work/test_risk_adjusted_micro_batch_frontier.ps1`: `RISK_ADJUSTED_MICRO_BATCH_FRONTIER_SMOKE_PASS`.
 - `work/refresh_offline_validation_state.ps1`: PASS, 16 steps, 0 failed.
 - `outputs/EXTERNAL_MT5_PACKAGE_AUDIT.md`: PASS, 22/22 checks, 16 configs packaged.
-- `outputs/REPORT_IMPORT_PREFLIGHT.md`: PASS for parser, risk guards, MT5 hidden launcher lock, source sync, handoff integrity, micro handoff, local safety, and external package.
+- `outputs/REPORT_IMPORT_PREFLIGHT.md`: `Risk-adjusted micro frontier smoke` PASS plus parser, risk guards, MT5 hidden launcher lock, source sync, handoff integrity, micro handoff, local safety, and external package PASS.
 - Final local process scan: `NO_MT5_OR_METAEDITOR_PROCESSES_FOUND`.
 
 ## Important Caveat
