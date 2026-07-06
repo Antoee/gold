@@ -13,7 +13,20 @@ Updated locally on 2026-07-06.
 ## Current EA Source
 
 - Canonical source: `outputs/Professional_XAUUSD_EA.mq5`.
-- Current synced source SHA256: `A2F7101E8378C67AC258420C9F886E5ACB38554F4CB22D958AA20099074CC487`.
+- Current synced source SHA256: `D3B7E5B38F0483E32283A1F88A2FF4DC03D2E3D6E79AB180356E8BA71760A99D`.
+
+## Underwater Time Exit Addition
+
+Added an optional underwater time exit so the EA can cut trades that stay negative for too long instead of only waiting for full stop loss or the adverse-R exit:
+
+- `InpUseUnderwaterTimeExit=false` by default.
+- `InpUnderwaterExitBars=12`.
+- `InpUnderwaterExitMaxR=-0.25`.
+- When enabled, the position manager closes a trade if its current R is at or below `InpUnderwaterExitMaxR` after at least `InpUnderwaterExitBars` signal-timeframe bars.
+- Exit logs use event `exit`, bias `underwater_time`, and reason `underwater time exit`.
+- This is risk-control strategy code, not a settings-only change.
+
+The `weighted_quality_confluence` and `pa_full_confluence` research profiles now enable underwater time exit for fast-triage testing.
 
 ## Breakout-Retest Confirmation Addition
 
@@ -27,7 +40,7 @@ Added optional breakout-retest confirmation so the EA can test structure breaks 
 - `CMarketStructure::BreakoutRetest()` checks that the prior bar broke the structure level, the current bar retested near that level, and the current close continued back through the level with a buffer.
 - The entry engine adds `Breakout retest;` as a normal confirmation and quality-score contributor when enabled.
 
-The `orderblock_fvg_retest` and `weighted_quality_confluence` research profiles now enable breakout-retest confirmation without increasing the 30-run batch size.
+The `orderblock_fvg_retest` and `weighted_quality_confluence` research profiles enable breakout-retest confirmation without increasing the 30-run batch size.
 
 ## Current EA Strategy Features
 
@@ -41,6 +54,7 @@ The EA includes optional, independently configurable strategy modules for actual
 - Regime-quality confirmation using ADX, EMA slope, and ATR regime.
 - ATR-based profit-lock stop.
 - Adverse-R early exit.
+- Underwater time exit.
 
 ## Decision Gate Discipline
 
@@ -65,6 +79,11 @@ Fast research batch for actual strategy-code variants:
 - Estimated tester runtime: about 10.5 minutes before platform overhead.
 - Handoff zip: `outputs/price_action_strategy_handoff.zip`.
 - Parallel lanes zip: `outputs/price_action_parallel_lanes.zip`.
+
+Research profiles with underwater time exit enabled:
+
+- `weighted_quality_confluence`.
+- `pa_full_confluence`.
 
 Research profiles with breakout retest enabled:
 
@@ -100,15 +119,15 @@ Research profiles with breakout retest enabled:
 
 ## Hashes
 
-- EA source: `A2F7101E8378C67AC258420C9F886E5ACB38554F4CB22D958AA20099074CC487`.
-- Base profile: `E4DADF47CB9096B3345D56A72C97EED4B1CFAAC0AFD99F4FBC5C0C7F140D83D4`.
+- EA source: `D3B7E5B38F0483E32283A1F88A2FF4DC03D2E3D6E79AB180356E8BA71760A99D`.
+- Base profile: `0BE9399A315EE2D091F67521FB975D1A7508CCD1174CFDCF9D8B95823B62397E`.
 - Price-action batch CSV: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`.
-- Price-action handoff zip: `C871097671A34BB23A6A2EB82E5E2E3FC7A21BB6BEDA7C010FE974C55EEDEC58`.
-- Price-action parallel lanes zip: `FB10BAA9CFDAF8E9567987152230ABC7C4A8C9E7CA30E5B3F54A7B69745857A2`.
-- External validation package zip: `92320EBE0246B06D637E6EB7420708451A24068B38F5F73815BE7D58865C1145`.
-- Price-action modules smoke: `2A1A1438B93FBFAA52822FA786023F51058251B2B5EB718ACD6F6CE868FB24C0`.
-- Price-action batch smoke: `A3BB7DC0CFB2B243ED884F1C9BE5220D6334860BAC16B6302A8316659C4466D9`.
-- Price-action batch builder: `0B591D508451712F505D07C4413999009AC17A04659BB5DAF30FC6B55CE7C4B7`.
+- Price-action handoff zip: `2C073050E54FDEAB2E08A3F92DE33677DB31F9AD07DB9DE1CB2B4ED4C9491A93`.
+- Price-action parallel lanes zip: `BA33F1ED2535E03C84AAC67EF804A5122C642F537D2C0E92F956FDE8C3491363`.
+- External validation package zip: `A284B08C01042D8B5129A8B9CF3078F134488429FAF75D0FBD5E538965B4083A`.
+- Price-action modules smoke: `8BAFC01CC47F1C7BDAC9641C4448F4FACA7C74C5AE5A233EA6BF9C75E6C67681`.
+- Price-action batch smoke: `D537AB82D89B3C8F388BB80D1010EA69B3640B9698D45CADAE1BA87A1205E53B`.
+- Price-action batch builder: `502F350D8755EC1C35CE5752A7FECAB497314393EE8D5074219060FF3A01356F`.
 
 ## Caveat
 
