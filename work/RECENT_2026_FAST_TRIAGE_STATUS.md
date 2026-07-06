@@ -11,28 +11,29 @@ Updated: 2026-07-06
 
 ## Latest Entry-Code Change
 
-Added optional range expansion breakout confirmation:
+Added optional narrow-range breakout confirmation:
 
-- `InpUseRangeExpansionBreakout`
-- `InpRangeExpansionLookbackBars`
-- `InpRangeExpansionMinRangeRatio`
-- `InpRangeExpansionMinATR`
-- `InpRangeExpansionMinBodyPercent`
-- `InpRangeExpansionCloseLocation`
-- `InpRangeExpansionBufferPoints`
-- `InpWeightRangeExpansionBreakout`
-- `CMarketStructure::RangeExpansionBreakout()` requires the latest closed candle to break beyond the prior range, expand versus recent average candle range, meet a minimum ATR-normalized range, show a minimum body percentage, and close near the directional extreme.
-- `CEntryEngine::Build()` now records `Range expansion breakout;` as an independent weighted entry reason when the feature is enabled.
+- `InpUseNarrowRangeBreakout`
+- `InpNarrowRangeLookbackBars`
+- `InpNarrowRangeMaxAverageRatio`
+- `InpNarrowRangeMaxATR`
+- `InpNarrowBreakMinRangeATR`
+- `InpNarrowBreakMinBodyPercent`
+- `InpNarrowBreakCloseLocation`
+- `InpNarrowBreakBufferPoints`
+- `InpWeightNarrowRangeBreakout`
+- `CMarketStructure::NarrowRangeBreakout()` requires the prior closed candle to be narrow versus recent average range and ATR, then requires the latest closed candle to break that narrow candle in the trade direction with minimum ATR range, body percentage, and close-location quality.
+- `CEntryEngine::Build()` now records `Narrow range breakout;` as an independent weighted entry reason when the feature is enabled.
 
-This is a price-action/OHLC selectivity module for continuation setups. It tries to separate real impulsive range expansion from ordinary channel breaks by requiring both historical expansion and strong candle anatomy. It is disabled in the robust base profile and enabled only in momentum/confluence research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
+This is a price-action/OHLC selectivity module for volatility-contraction-to-expansion setups. It gives the optimizer a separate way to test tight pre-breakout compression instead of treating every breakout candle the same. It is disabled in the robust base profile and enabled only in momentum/confluence research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `vwap_momentum_phase` enables range expansion breakout with lookback `12`, range ratio `1.35`, minimum `0.55 ATR`, body `45%`, and close-location threshold `0.65`.
-- `weighted_quality_confluence` enables range expansion breakout with lookback `12`, range ratio `1.40`, minimum `0.60 ATR`, body `45%`, close-location threshold `0.66`, and weight `2`.
-- `pa_full_confluence` enables a stricter version with lookback `14`, range ratio `1.45`, minimum `0.65 ATR`, body `50%`, and close-location threshold `0.68`.
+- `vwap_momentum_phase` enables narrow-range breakout with lookback `12`, max average-range ratio `0.70`, max setup range `0.45 ATR`, breakout minimum `0.50 ATR`, body `45%`, and close-location threshold `0.65`.
+- `weighted_quality_confluence` enables narrow-range breakout with lookback `12`, max average-range ratio `0.68`, max setup range `0.42 ATR`, breakout minimum `0.55 ATR`, body `45%`, close-location threshold `0.66`, and weight `2`.
+- `pa_full_confluence` enables a stricter version with lookback `14`, max average-range ratio `0.65`, max setup range `0.40 ATR`, breakout minimum `0.60 ATR`, body `50%`, and close-location threshold `0.68`.
 - Generated configs confirmed the module is enabled in momentum/confluence research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -48,14 +49,14 @@ This is a price-action/OHLC selectivity module for continuation setups. It tries
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `0E00B7BBB9B700824F76EB56B6F11E7F43951264EF7A3804878658C5791D038A`
-- `Professional_XAUUSD_EA.mq5`: `0E00B7BBB9B700824F76EB56B6F11E7F43951264EF7A3804878658C5791D038A`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `A2FF2F19CFA437B1AD507243F582FA2CF1DECC2351E53219B2AA21522160DC1A`
+- `outputs\Professional_XAUUSD_EA.mq5`: `7E09734181E06B4A97185B2EBF4906EC791F0CF74222BBFC8353705489F75A96`
+- `Professional_XAUUSD_EA.mq5`: `7E09734181E06B4A97185B2EBF4906EC791F0CF74222BBFC8353705489F75A96`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `F6D9AD2D27AB5EE779D72694F0ECFA71D8E11D30EB7C37A35DEF28ED97653F80`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `3FC9FD8AEB298717728A325BF5CE33B7D66936C1AA0D43DFFF69E6BAC55D9FA5`
-- `work\test_price_action_strategy_modules.ps1`: `2ACAD4E13B8A0FE2E72686D2E56734DB8C571791BBABE081B56FC3EFF19294C9`
-- `work\test_price_action_strategy_batch.ps1`: `CF1CCA3C5AB9757425B34C1FBD0D9B632B0493DDF2B797E5E3A453BF8362DF4E`
-- `work\build_price_action_strategy_batch.ps1`: `808506C9AD6B7EE191FF21D6F00744B41A5E3D833989D7BC3D0EB4E626D51560`
+- `outputs\xauusd_micro_validation_package.zip`: `DD3CC469725EA295522152AB30C5923C1BA0D27AF5D2F414CECC13A0E746D7DB`
+- `work\test_price_action_strategy_modules.ps1`: `C6FFFD2341B242D99718698108E6F21ED3FC7313C19E62295ABF27B3248684B6`
+- `work\test_price_action_strategy_batch.ps1`: `17BD630B13856069519117AB486208B63A42F37396FAA442B220A1C605D6BF19`
+- `work\build_price_action_strategy_batch.ps1`: `D7BF8FC9611399EFADD38684B25402DCCD152B80292A740D21384DD11F45AEEE`
 
 ## Background-Safety Note
 
