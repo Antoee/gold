@@ -48,6 +48,7 @@ try {
    $compilePath = Join-Path $tempRoot "compile.csv"
    $externalPackagePath = Join-Path $tempRoot "external_package.csv"
    $externalMicroPath = Join-Path $tempRoot "external_micro.csv"
+   $packageStatusPath = Join-Path $tempRoot "package_status.csv"
    $batchPath = Join-Path $tempRoot "batch.csv"
    $packetDir = Join-Path $tempRoot "promotion_packets"
    $outCsv = Join-Path $tempRoot "preflight.csv"
@@ -87,6 +88,9 @@ try {
    Write-CsvRows $externalMicroPath @(
       [pscustomobject]@{ Decision = "WAITING_FOR_REPORTS"; Window = "2024_Q1" }
    )
+   Write-CsvRows $packageStatusPath @(
+      [pscustomobject]@{ Area = "Compile trust"; Status = "FRESH_PASS"; Evidence = "synthetic fresh compile"; RequiredAction = "none" }
+   )
    Write-CsvRows $batchPath @(
       [pscustomobject]@{ Rank = "1"; Profile = "baseline_dd4" }
    )
@@ -95,7 +99,7 @@ try {
       [pscustomobject]@{ Gate = "Equity drawdown guard active or baseline anchor"; Status = "PASS"; Evidence = "fixture"; Required = "fixture" }
    )
 
-   & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $resolvedRepo "work\build_report_import_preflight.ps1") `
+   & (Join-Path $resolvedRepo "work\build_report_import_preflight.ps1") `
       -ManifestPath $manifestPath `
       -MetricsPath $metricsPath `
       -DecisionMatrixPath $decisionPath `
@@ -107,6 +111,7 @@ try {
       -CompileStatusPath $compilePath `
       -ExternalPackageAuditPath $externalPackagePath `
       -ExternalMicroDecisionPath $externalMicroPath `
+      -PackageStatusPath $packageStatusPath `
       -BatchPath $batchPath `
       -PromotionPacketDir $packetDir `
       -OutCsv $outCsv `
