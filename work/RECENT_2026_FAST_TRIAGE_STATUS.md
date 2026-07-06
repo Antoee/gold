@@ -9,33 +9,31 @@ Updated: 2026-07-06
 - No profit claim is made from this offline-only validation.
 - Full EA source exists locally, but this note is the GitHub-safe status/evidence artifact.
 
-## Latest Strategy-Code Change
+## Latest Risk-Code Change
 
-Added optional Failed Breakout Reversal confirmation for generated research profiles:
+Added optional Recent Average-R Trade Pause for generated research profiles:
 
-- `InpUseFailedBreakoutReversal`
-- `InpFailedBreakoutReversalLookbackBars`
-- `InpFailedBreakoutReversalBufferPoints`
-- `InpFailedBreakoutReversalMinCloseLocation`
-- `InpWeightFailedBreakoutReversal`
-- `FailedBreakoutReversal()` detects a sweep beyond the recent range followed by a strong close back through that range level in the trade direction.
-- Smart Money Quality and Price Action Composite scoring now include `SMQ failed breakout reversal;` and `PA failed breakout reversal;` evidence.
-- The weighted entry engine can score the direct confirmation as `Failed breakout reversal;`.
+- `InpUseRecentPerformanceRTradePause`
+- `InpRecentPerformanceRPauseLookbackTrades`
+- `InpRecentPerformancePauseMaxAverageR`
+- `InpRecentPerformanceRPauseMinutes`
+- `RecentPerformanceRPauseActive()` reuses the existing R-multiple sampler to evaluate recent completed trades.
+- `CanOpen()` now blocks new entries with reason `recent average R pause` when recent average R is below the configured threshold and the cooldown window is still active.
 
-This is strategy logic for trap/reversal entries using OHLC market-structure context, not only settings. It complements the existing failed-breakout guard by allowing failed breaks to become positive evidence when the reversal is in the trade direction. It adds no martingale, grid, averaging down, or recovery behavior.
+This is risk-control logic, not only settings. It complements the existing recent net-P/L pause and recent average-R quality gate by allowing the EA to stand down completely after poor recent trade quality. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor remains `InpUseFailedBreakoutReversal=false`.
-- Generated research profiles use `InpUseFailedBreakoutReversal=true`.
-- Research profiles use lookback `12`, buffer `10.0`, minimum close location `0.60`, and weight `2`.
+- Baseline anchor remains `InpUseRecentPerformanceRTradePause=false`.
+- Generated research profiles use `InpUseRecentPerformanceRTradePause=true`.
+- Research profiles use lookback `5`, max average R `-0.25`, and pause `240` minutes.
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `BD0D4CC0746136A48089B6AA174A4835FC440187A2033D80B0AC3EE719138743`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `4EC4388A24C1F9C8894C3B8B8EAF344BCBF4629871FF6D9FB1FFFF1F8C85B446`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_ea_source_artifact_sync.ps1`: PASS
 - `work\test_price_action_strategy_batch.ps1`: PASS
@@ -45,15 +43,15 @@ This is strategy logic for trap/reversal entries using OHLC market-structure con
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `BD0D4CC0746136A48089B6AA174A4835FC440187A2033D80B0AC3EE719138743`
-- `Professional_XAUUSD_EA.mq5`: `BD0D4CC0746136A48089B6AA174A4835FC440187A2033D80B0AC3EE719138743`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `BD0D4CC0746136A48089B6AA174A4835FC440187A2033D80B0AC3EE719138743`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `FD5951566BD9E6425485E9175F140ADE0B604F992DFAF578B29E995B27393883`
+- `outputs\Professional_XAUUSD_EA.mq5`: `4EC4388A24C1F9C8894C3B8B8EAF344BCBF4629871FF6D9FB1FFFF1F8C85B446`
+- `Professional_XAUUSD_EA.mq5`: `4EC4388A24C1F9C8894C3B8B8EAF344BCBF4629871FF6D9FB1FFFF1F8C85B446`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `4EC4388A24C1F9C8894C3B8B8EAF344BCBF4629871FF6D9FB1FFFF1F8C85B446`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `EB394B4E2877461FD920C47894633E1D8B4BF2C3985DB4E10860990EE1356488`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `2420855C2C3B201C6AC6DEE487D8692B388FEDC2660C57374650FC81F81100DB`
-- `work\test_price_action_strategy_modules.ps1`: `E62C38CE3ADC8F926751B1FF20F795C9FC589A275D707A69D5A09017E72E9FAA`
-- `work\test_price_action_strategy_batch.ps1`: `797675F98FF01A402F9A3A4EDB082C69799FD122274B89AECBAFDE11C6E87807`
-- `work\build_price_action_strategy_batch.ps1`: `3749704F7DFDD59B448B95B43A016723B9B4A44E1B3814E5F34C82288DB8E3A9`
+- `outputs\xauusd_micro_validation_package.zip`: `C72F117C8081050882E2B8B379ABE80A71FC6DAFA200F587374C691B22281198`
+- `work\test_price_action_strategy_modules.ps1`: `EAE012BAC396765D857143AA959BD8499C58467AD0B57C3346C32F67803F67A8`
+- `work\test_price_action_strategy_batch.ps1`: `51D512C7157788FBAE56E3564635BA5CDFAD4D6125B01940B2FABCDAE023CDA1`
+- `work\build_price_action_strategy_batch.ps1`: `9E2A6BBC9F875EEB672FB3314C88407ECAA1EF803A6819628FB5AE42913CCC42`
 
 ## Background-Safety Note
 
