@@ -11,21 +11,26 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional opposite-wick rejection guard:
+Added optional Asian session range liquidity-sweep confirmation:
 
-- `InpUseOppositeWickGuard`
-- `InpMaxOppositeWickPercent`
-- `CEntryEngine::OppositeWickAllows()` blocks buy entries after large upper rejection wicks and sell entries after large lower rejection wicks.
-- `CEntryEngine::Build()` now rejects these price-action failures with `Opposite wick reject;`.
+- `InpUseAsianRangeSweep`
+- `InpAsianRangeStartHour` / `InpAsianRangeStartMinute`
+- `InpAsianRangeEndHour` / `InpAsianRangeEndMinute`
+- `InpAsianRangeMaxBarsAfter`
+- `InpAsianSweepBufferPoints`
+- `InpWeightAsianRangeSweep`
+- `CMarketStructure::AsianRangeSweep()` builds the configured Asian range from historical OHLC bars, then confirms a buy only after a sweep below the Asian low and reclaim, or a sell only after a sweep above the Asian high and rejection.
+- `CEntryEngine::Build()` now scores this module as `Asian range sweep;` when enabled.
 
-This is a price-action/risk module from the requested strategy-code expansion. It is intended to avoid entries after the candle has already rejected the intended direction, without increasing risk or adding any recovery logic.
+This is a real strategy-code addition from the requested price-action/market-structure list. It adds session liquidity logic without martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `pa_full_confluence` enables opposite-wick rejection with max opposite wick `45.0%`.
-- Generated configs confirmed the module is enabled in that strict candle-anatomy profile and pinned disabled in the robust base profile.
+- `liquidity_level_reversal` now enables Asian range sweep alongside equal highs/lows, previous levels, session sweeps, and round-number rejection.
+- `pa_full_confluence` now enables Asian range sweep alongside BOS/CHoCH/FVG/order block/VWAP/candle/risk-state filters.
+- Generated configs confirmed the module is enabled only in those research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
 
@@ -40,16 +45,14 @@ This is a price-action/risk module from the requested strategy-code expansion. I
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `F6D8450685C9F4ECA558C163754B7FF3AFB695CA46C168CD9DF480FAA38C2E8B`
-- `Professional_XAUUSD_EA.mq5`: `F6D8450685C9F4ECA558C163754B7FF3AFB695CA46C168CD9DF480FAA38C2E8B`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `1A7153D40FBBC0D0F4D921B715C4451B170D2C2C3B82EA0585B2190CE5967222`
+- `outputs\Professional_XAUUSD_EA.mq5`: `B670C1412A08F56985C3927F6CB41CECA9424B7CD86B34BFFB2A67F03C8F9288`
+- `Professional_XAUUSD_EA.mq5`: `B670C1412A08F56985C3927F6CB41CECA9424B7CD86B34BFFB2A67F03C8F9288`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `620025CBEBBE8C796EE26788ACFE120618A8D57CDAFF26B17C55FE43DF5862F5`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\price_action_strategy_handoff.zip`: `37FE6D24D02B8D081B2BE1B6A82665E345EC715D372A2FAB1C84CD91E04232C2`
-- `outputs\price_action_parallel_lanes.zip`: `F0E3325D95B583D365D2C4AA1D4090354EB2369A15BC65EA3046CB35A0947F57`
-- `outputs\xauusd_micro_validation_package.zip`: `4D615E90E7EC7290E043E3D205328B78548C8B91FF68D242C1EBDFBA7544C4F7`
-- `work\test_price_action_strategy_modules.ps1`: `9AD7377EE70E91768718477DECBE6FE91EC686AE027ED2C316D75F34CA8D682A`
-- `work\test_price_action_strategy_batch.ps1`: `4B9B4747F2872AA3617E1804D5610FDB5709664D06F52635B5DF7F393697B0DC`
-- `work\build_price_action_strategy_batch.ps1`: `7C3B02607780F7634E793D1A714A2B129BECD8BF1C36865BEA77CB66D5008EF0`
+- `outputs\xauusd_micro_validation_package.zip`: `3809DB422858B089C1B86593296DBAD3A52FB824891EDDF760837320D32BCE31`
+- `work\test_price_action_strategy_modules.ps1`: `62A3C479267890F3B8F6E98629FC8AD8294F971F7926F1FF386226F0C41B2AD7`
+- `work\test_price_action_strategy_batch.ps1`: `66E6A5E650D4A9DB4C221FE3B7CD78ADE87EF3E9D275B3F425FBE75A73EAADAE`
+- `work\build_price_action_strategy_batch.ps1`: `54B1531509F8954A4B8BA652F5D4F6674D2A8196A4158017680AB05A4C332DA5`
 
 ## Background-Safety Note
 
