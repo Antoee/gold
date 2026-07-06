@@ -59,6 +59,21 @@ Add-Check $rows "Reports return folder exists" (Test-Path -LiteralPath $reportsD
 Add-Check $rows "README included" (Test-Path -LiteralPath $readmePath) $readmePath "Generate README_EXTERNAL_MT5.md."
 Add-Check $rows "Package contents inventory included" ($contents.Count -gt 0) "$contentsPath rows=$($contents.Count)" "Generate PACKAGE_CONTENTS.csv."
 
+$manifestProfiles = @($manifest | Select-Object -ExpandProperty Profile -Unique | Sort-Object)
+$profileNames = @($profiles | Select-Object -ExpandProperty Name)
+$hasRiskAdjustedShape = (
+   $manifest.Count -eq 12 -and
+   ($manifestProfiles -contains "baseline_promoted") -and
+   ($manifestProfiles -contains "risk12_tp38_sl18") -and
+   ($manifestProfiles -contains "baseline_dd4")
+)
+Add-Check $rows "Risk-adjusted package shape" $hasRiskAdjustedShape `
+   "Rows=$($manifest.Count); profiles=$($manifestProfiles -join ',')" `
+   "Rebuild with work\build_external_mt5_validation_package.ps1 using outputs\risk_adjusted_micro_handoff."
+Add-Check $rows "Lower-risk candidate profile snapshot included" ($profileNames -contains "risk12_tp38_sl18.set") `
+   "Profile snapshots: $($profileNames -join ',')" `
+   "Regenerate profit-search profiles and rebuild the external package."
+
 $zipEntries = @()
 if(Test-Path -LiteralPath $ZipPath) {
    $zip = [IO.Compression.ZipFile]::OpenRead((Resolve-Path -LiteralPath $ZipPath))
