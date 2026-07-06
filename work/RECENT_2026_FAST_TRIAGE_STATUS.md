@@ -11,24 +11,24 @@ Updated: 2026-07-06
 
 ## Latest Entry-Code Change
 
-Added optional directional loss quality gate:
+Added optional directional loss risk scaling:
 
-- `InpUseDirectionalLossQualityGate`
-- `InpDirectionalLossQualityLookbackTrades`
-- `InpDirectionalLossQualityThreshold`
-- `InpDirectionalLossMinQualityScore`
-- `CRiskManager::DirectionalLossQualityAllows()` scans recent closed deals and counts losing closes by inferred original trade direction.
-- `OpenSignal()` now requires a higher configurable quality score only for the attempted direction when recent losses in that same direction exceed the configured threshold.
-- Block reasons are `buy directional quality` or `sell directional quality`.
+- `InpUseDirectionalLossRiskScaling`
+- `InpDirectionalLossRiskLookbackTrades`
+- `InpDirectionalLossRiskThreshold`
+- `InpDirectionalLossRiskMultiplier`
+- `CRiskManager::DirectionalLossRiskMultiplier()` scans recent closed deals and counts losing closes by inferred original trade direction.
+- `OpenSignal()` now multiplies normal quality/session/day risk by the directional risk multiplier when recent losses in the attempted direction exceed the configured threshold.
+- Entries log `Directional risk x...` when the feature is enabled.
 
-This is a risk-control module for demanding stronger evidence after the market has recently punished one direction. Unlike the directional cooldown gate, it does not fully pause that side; it lets only higher-quality setups through, preserving potential reversal opportunities while raising the bar. It is disabled in the robust base profile and enabled only in strict risk-management research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
+This is a risk-control module for reducing position size after the market has recently punished one direction. Unlike the directional cooldown and quality gates, it still allows normal entries but cuts exposure on the struggling side. It is disabled in the robust base profile and enabled only in strict risk-management research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables directional loss quality gate with lookback `4`, loss threshold `2`, and minimum quality score `9`.
-- `pa_full_confluence` enables a stricter version with lookback `5`, loss threshold `2`, and minimum quality score `10`.
+- `weighted_quality_confluence` enables directional loss risk scaling with lookback `4`, loss threshold `2`, and risk multiplier `0.50`.
+- `pa_full_confluence` enables a stricter version with lookback `5`, loss threshold `2`, and risk multiplier `0.40`.
 - Generated configs confirmed the module is enabled in strict risk-management research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -44,14 +44,14 @@ This is a risk-control module for demanding stronger evidence after the market h
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `BCF9DB6C3812CE74045D3B4819B1FDD880D77161E261A9BFA933695D77FE7BFA`
-- `Professional_XAUUSD_EA.mq5`: `BCF9DB6C3812CE74045D3B4819B1FDD880D77161E261A9BFA933695D77FE7BFA`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `4EBCD152C496A7EE6567CF968E57C51DABBF928F646437761BD1E1ACEE3A1121`
+- `outputs\Professional_XAUUSD_EA.mq5`: `71C9A88FEBAFD879C7978B052A715963C13A42CF193A61B6CBEAE84A852CD070`
+- `Professional_XAUUSD_EA.mq5`: `71C9A88FEBAFD879C7978B052A715963C13A42CF193A61B6CBEAE84A852CD070`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `F8ED5A3F9109E9EA1CB2017A6C4162A4C102FC6ADBAE8D1A59C78533612E9C20`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `1885F4DF60D3567AC9267D9A31CAB23C63A11DA45A813FAE1A7B5F2367E4D825`
-- `work\test_price_action_strategy_modules.ps1`: `E58984DCD7B8150789BDF29E95C6B699DD61A2386629EDB7235388BB3BAE546D`
-- `work\test_price_action_strategy_batch.ps1`: `2A19B6549DA0358F92C1D60E764945874998D75EA20967CDBF13EF767003D6A4`
-- `work\build_price_action_strategy_batch.ps1`: `1379889FA76B74183DF99A1E1309C53607BDF9C5D4858EA6FAC75F6835A3AFD6`
+- `outputs\xauusd_micro_validation_package.zip`: `7B4B47AE313647566455458DDBA000E72FC002BB49C82A4DA866E9548FC887D7`
+- `work\test_price_action_strategy_modules.ps1`: `1C775D606FB6D7B62A526A2484E24081FB29FB452F34833DEDDBD5C48E5B0775`
+- `work\test_price_action_strategy_batch.ps1`: `CBFC034BD7BD8630DFE856B6553C675718601BB2F06E19727D71F87941429850`
+- `work\build_price_action_strategy_batch.ps1`: `EC3C51CC28CB4AEB2CA4EC742C5E181AC26C251F8AA97C78385EB0538EF63828`
 
 ## Background-Safety Note
 
