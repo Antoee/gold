@@ -11,24 +11,23 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional session-end exposure close protection:
+Added optional chop/noise entry filter:
 
-- `InpCloseBeforeSessionEnd`
-- `InpSessionEndCloseMinutes`
-- `InpCloseAtLondonEnd`
-- `InpCloseAtNewYorkEnd`
-- `InpCloseAtCustomEnd`
-- `CSessionFilter::CloseWindowActive()` detects the configured flatten window before London, New York, or custom session close.
-- `OnTick()` now calls `positionManager.CloseAll("session end close")` during the configured close window when the feature is enabled.
+- `InpUseChopFilter`
+- `InpChopLookbackBars`
+- `InpChopMaxNetMoveATR`
+- `InpChopMinAlternationPercent`
+- `CEntryEngine::ChopFilterAllows()` detects alternating candle direction with small net movement versus ATR.
+- `CEntryEngine::Build()` now rejects low-progress alternating conditions with `Chop reject;` when the feature is enabled.
 
-This is a risk-first XAUUSD session-control module. It is intended to compare holding trades across session transitions versus flattening before lower-quality periods. It stays optional, configurable, and disabled in the robust base profile. It adds no martingale, grid, averaging down, or recovery behavior.
+This is a price-action quality filter for XAUUSD. It is intended to avoid low-probability chop where breakout/crossover logic can get whipsawed. It stays optional, configurable, and disabled in the robust base profile. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables session-end close for London and New York with a `15` minute flatten window.
-- `pa_full_confluence` enables session-end close for London and New York with a stricter `20` minute flatten window.
+- `weighted_quality_confluence` enables chop filtering with lookback `10`, max net move `0.60 ATR`, and minimum alternation `65.0%`.
+- `pa_full_confluence` enables stricter chop filtering with lookback `12`, max net move `0.55 ATR`, and minimum alternation `70.0%`.
 - Generated configs confirmed the module is enabled in the strict research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -44,14 +43,14 @@ This is a risk-first XAUUSD session-control module. It is intended to compare ho
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `F3A523DD484A2E5DA1CD34E2D4958E662F5673204F77D3DC0D4E3AB5CF479CF6`
-- `Professional_XAUUSD_EA.mq5`: `F3A523DD484A2E5DA1CD34E2D4958E662F5673204F77D3DC0D4E3AB5CF479CF6`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `A403734A0AAEEF050620322CBD4B3AEC91886AC6CE4649DE327B14659242EFB4`
+- `outputs\Professional_XAUUSD_EA.mq5`: `5A3DB64BC261C4E8091D48F0A6D38A772346F6D57662F65280A4CBC9DB350C9E`
+- `Professional_XAUUSD_EA.mq5`: `5A3DB64BC261C4E8091D48F0A6D38A772346F6D57662F65280A4CBC9DB350C9E`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `FB319E370193CB97A5F02BC1E11EA378C0849ADFB3FB184A80DB2CFEFF65E4D0`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `6374A968A4EEB851287EE937DF3DAF05FFB02F07B7EEF4D82164E841F167F995`
-- `work\test_price_action_strategy_modules.ps1`: `479F6BA239E52784F6D849256AFF0A2BBBC5AD0B9635C8AC2E5F66F73919DA73`
-- `work\test_price_action_strategy_batch.ps1`: `7D59903548F367DA18865FB471D72811F0C0ACA9C46E13AB1916E0B1E7EC5C34`
-- `work\build_price_action_strategy_batch.ps1`: `59DEB9A4800E3F98EA4550B69E9450F982681635F12367659A941558C89A6C7F`
+- `outputs\xauusd_micro_validation_package.zip`: `B8D948F40B842096CC25338F21AE8C4B199D65027936D529299C95B678E5C2D0`
+- `work\test_price_action_strategy_modules.ps1`: `DA121E96274ED96E64845EE1C7E39DE17B575BA8AB3E0F4503615487F4080052`
+- `work\test_price_action_strategy_batch.ps1`: `75B79462FA3895E3F8143CBA17CEAA349166C1E78BFFDBC102BB3C4800FD0FF5`
+- `work\build_price_action_strategy_batch.ps1`: `278342D1F6EC7CFD1F2AB230F6B77BAF1DCA91B252E354C800AAF49F462EC3F7`
 
 ## Background-Safety Note
 
