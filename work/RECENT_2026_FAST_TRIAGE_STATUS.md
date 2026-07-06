@@ -11,23 +11,23 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional chop/noise entry filter:
+Added optional impulse-exhaustion entry guard:
 
-- `InpUseChopFilter`
-- `InpChopLookbackBars`
-- `InpChopMaxNetMoveATR`
-- `InpChopMinAlternationPercent`
-- `CEntryEngine::ChopFilterAllows()` detects alternating candle direction with small net movement versus ATR.
-- `CEntryEngine::Build()` now rejects low-progress alternating conditions with `Chop reject;` when the feature is enabled.
+- `InpUseImpulseExhaustionGuard`
+- `InpImpulseExhaustionLookbackBars`
+- `InpImpulseExhaustionMaxMoveATR`
+- `InpImpulseExhaustionClosePercent`
+- `CEntryEngine::ImpulseExhaustionAllows()` detects when recent price has already moved too far in the intended direction and closed near the range extreme.
+- `CEntryEngine::Build()` now rejects late chase entries with `Impulse exhaustion reject;` when the feature is enabled.
 
-This is a price-action quality filter for XAUUSD. It is intended to avoid low-probability chop where breakout/crossover logic can get whipsawed. It stays optional, configurable, and disabled in the robust base profile. It adds no martingale, grid, averaging down, or recovery behavior.
+This is a price-action quality filter for XAUUSD. It is intended to avoid buying after an already-stretched bullish impulse or selling after an already-stretched bearish impulse. It stays optional, configurable, and disabled in the robust base profile. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables chop filtering with lookback `10`, max net move `0.60 ATR`, and minimum alternation `65.0%`.
-- `pa_full_confluence` enables stricter chop filtering with lookback `12`, max net move `0.55 ATR`, and minimum alternation `70.0%`.
+- `weighted_quality_confluence` enables impulse exhaustion guard with lookback `6`, max move `1.80 ATR`, and close extreme `80.0%`.
+- `pa_full_confluence` enables stricter impulse exhaustion guard with lookback `8`, max move `1.60 ATR`, and close extreme `82.0%`.
 - Generated configs confirmed the module is enabled in the strict research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -43,14 +43,14 @@ This is a price-action quality filter for XAUUSD. It is intended to avoid low-pr
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `5A3DB64BC261C4E8091D48F0A6D38A772346F6D57662F65280A4CBC9DB350C9E`
-- `Professional_XAUUSD_EA.mq5`: `5A3DB64BC261C4E8091D48F0A6D38A772346F6D57662F65280A4CBC9DB350C9E`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `FB319E370193CB97A5F02BC1E11EA378C0849ADFB3FB184A80DB2CFEFF65E4D0`
+- `outputs\Professional_XAUUSD_EA.mq5`: `073C353E7D77ECDCCA45E1E65AFE3834BD3255DBB013046FFCBB0DD4AA82C823`
+- `Professional_XAUUSD_EA.mq5`: `073C353E7D77ECDCCA45E1E65AFE3834BD3255DBB013046FFCBB0DD4AA82C823`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `BDC512950CE5772F60F4972DB9797546C476392FC6BDC257BE689B994B8D9F73`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `B8D948F40B842096CC25338F21AE8C4B199D65027936D529299C95B678E5C2D0`
-- `work\test_price_action_strategy_modules.ps1`: `DA121E96274ED96E64845EE1C7E39DE17B575BA8AB3E0F4503615487F4080052`
-- `work\test_price_action_strategy_batch.ps1`: `75B79462FA3895E3F8143CBA17CEAA349166C1E78BFFDBC102BB3C4800FD0FF5`
-- `work\build_price_action_strategy_batch.ps1`: `278342D1F6EC7CFD1F2AB230F6B77BAF1DCA91B252E354C800AAF49F462EC3F7`
+- `outputs\xauusd_micro_validation_package.zip`: `6F305C3D1128E0E71CD3D73B91F9B57DAA377CAE220852F7A0E799001D9608B1`
+- `work\test_price_action_strategy_modules.ps1`: `3D2AE0B2124B708F3227D328CFCC949AAD769F47C302AE6C939DE3103D88FE5A`
+- `work\test_price_action_strategy_batch.ps1`: `3D57242DBBF443C77FE1FEF6E0C03204DE8D96C25917AFA6EABCA524D11B8E76`
+- `work\build_price_action_strategy_batch.ps1`: `01C33DB9DACA5F91EC3C9DE46523E9314EC8F44E68C9B98821B0D53CB9954BB6`
 
 ## Background-Safety Note
 
