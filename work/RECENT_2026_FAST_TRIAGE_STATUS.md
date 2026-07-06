@@ -11,25 +11,27 @@ Updated: 2026-07-06
 
 ## Latest Entry-Code Change
 
-Added optional directional loss risk scaling:
+Added an optional Smart Money Quality Gate:
 
-- `InpUseDirectionalLossRiskScaling`
-- `InpDirectionalLossRiskLookbackTrades`
-- `InpDirectionalLossRiskThreshold`
-- `InpDirectionalLossRiskMultiplier`
-- `CRiskManager::DirectionalLossRiskMultiplier()` scans recent closed deals and counts losing closes by inferred original trade direction.
-- `OpenSignal()` now multiplies normal quality/session/day risk by the directional risk multiplier when recent losses in the attempted direction exceed the configured threshold.
-- Entries log `Directional risk x...` when the feature is enabled.
+- `InpUseSmartMoneyQualityGate`
+- `InpSmartMoneyMinScore`
+- `InpSmartMoneyRequireStructure`
+- `InpSmartMoneyRequireLiquidityOrImbalance`
+- `InpSmartMoneyRequireExecution`
+- `InpSmartMoneyRequireOrderFlow`
+- `InpWeightSmartMoneyQuality`
+- `CEntryEngine::SmartMoneyQuality()` scores structure, liquidity sweeps, FVG/order-block imbalance, displacement candles, VWAP pullbacks, tick-pressure/tick-speed, cumulative-delta proxy, tick microstructure, daily-open bias, previous-day range bias, and regime quality.
+- `CEntryEngine::Build()` can reject weak entries with `SMQ reject score ...` or add one weighted confirmation with `SMQ score ...`.
 
-This is a risk-control module for reducing position size after the market has recently punished one direction. Unlike the directional cooldown and quality gates, it still allows normal entries but cuts exposure on the struggling side. It is disabled in the robust base profile and enabled only in strict risk-management research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
+This changes strategy logic instead of only changing settings. The goal is to require a coherent price-action story before strict profiles trade: structure plus liquidity or imbalance plus execution quality, with optional order-flow proxy evidence. It is disabled in the robust base profile and enabled only in strict research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables directional loss risk scaling with lookback `4`, loss threshold `2`, and risk multiplier `0.50`.
-- `pa_full_confluence` enables a stricter version with lookback `5`, loss threshold `2`, and risk multiplier `0.40`.
-- Generated configs confirmed the module is enabled in strict risk-management research profiles and pinned disabled in the robust base profile.
+- `weighted_quality_confluence` enables Smart Money Quality Gate with minimum score `6`, structure required, liquidity/imbalance required, execution required, and order-flow optional.
+- `pa_full_confluence` enables a stricter version with minimum score `8` and order-flow proxy evidence required.
+- Generated configs confirmed the module is enabled in strict price-action research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
 
@@ -44,14 +46,15 @@ This is a risk-control module for reducing position size after the market has re
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `71C9A88FEBAFD879C7978B052A715963C13A42CF193A61B6CBEAE84A852CD070`
-- `Professional_XAUUSD_EA.mq5`: `71C9A88FEBAFD879C7978B052A715963C13A42CF193A61B6CBEAE84A852CD070`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `F8ED5A3F9109E9EA1CB2017A6C4162A4C102FC6ADBAE8D1A59C78533612E9C20`
+- `outputs\Professional_XAUUSD_EA.mq5`: `BFBD1B36A14F2CEF8A4A6926EE5EC610E0D904F3ACD51489B5908AEF16C0E8CE`
+- `Professional_XAUUSD_EA.mq5`: `BFBD1B36A14F2CEF8A4A6926EE5EC610E0D904F3ACD51489B5908AEF16C0E8CE`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `BFBD1B36A14F2CEF8A4A6926EE5EC610E0D904F3ACD51489B5908AEF16C0E8CE`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `0C0CB900F0DFAF1BA0B7FBBD4D7EBA76B855C7BD605FF756CF338D62282466FF`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `7B4B47AE313647566455458DDBA000E72FC002BB49C82A4DA866E9548FC887D7`
-- `work\test_price_action_strategy_modules.ps1`: `1C775D606FB6D7B62A526A2484E24081FB29FB452F34833DEDDBD5C48E5B0775`
-- `work\test_price_action_strategy_batch.ps1`: `CBFC034BD7BD8630DFE856B6553C675718601BB2F06E19727D71F87941429850`
-- `work\build_price_action_strategy_batch.ps1`: `EC3C51CC28CB4AEB2CA4EC742C5E181AC26C251F8AA97C78385EB0538EF63828`
+- `outputs\xauusd_micro_validation_package.zip`: `AAC9B05A90D7A10C49013F1C38E6C765AE02BB44FAB7CA9DD06774ACCA4346BF`
+- `work\test_price_action_strategy_modules.ps1`: `682696A4ECCE3E309AC7B37F3AAA6BCCC931E192FC28199D734B84C644183700`
+- `work\test_price_action_strategy_batch.ps1`: `48F4A4B16F52891BB2EEDAB95B3C047E5002679EA6259C384C393664D4574A7B`
+- `work\build_price_action_strategy_batch.ps1`: `BDC2335701787AA1C1DE7CF93247B7CF0DB1DC91BFA498597A130572381B75DD`
 
 ## Background-Safety Note
 
@@ -59,4 +62,4 @@ The stop marker remains expected at `work\STOP_MT5_FOCUS_WATCHDOG`. Any future M
 
 ## GitHub Source Caveat
 
-The status note is committed through the GitHub connector. The local shell still has no usable `git` or `gh` path in this workspace, and the full EA source is large enough that the status note plus hashes remains the safer connector artifact until a normal git push or non-truncated upload path is available.
+The status note can be committed through the GitHub connector. The local shell still has no usable `git` or `gh` path in this workspace, and the full EA source is large enough that the status note plus hashes remains the safer connector artifact until a normal git push or non-truncated upload path is available.
