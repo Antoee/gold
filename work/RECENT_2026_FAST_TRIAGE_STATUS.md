@@ -11,23 +11,21 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional stochastic momentum confirmation and exhaustion protection:
+Added optional CCI momentum confirmation and CCI exhaustion protection:
 
-- `InpUseStochasticConfirmation`
-- `InpStochasticKPeriod`
-- `InpStochasticDPeriod`
-- `InpStochasticSlowing`
-- `InpStochasticBuyMin`
-- `InpStochasticSellMax`
-- `InpUseStochasticExhaustionGuard`
-- `InpStochasticBuyMax`
-- `InpStochasticSellMin`
-- `InpWeightStochastic`
-- Native MT5 stochastic indicator handle in `CIndicators`
-- `StochasticConfirmation(...)`
-- `StochasticExhaustionAllows(...)`
-- Entry scoring reason `Stochastic;`
-- Reject reason `Stochastic exhaustion reject;`
+- `InpUseCCIConfirmation`
+- `InpCCIPeriod`
+- `InpCCIBuyMin`
+- `InpCCISellMax`
+- `InpUseCCIExhaustionGuard`
+- `InpCCIBuyMax`
+- `InpCCISellMin`
+- `InpWeightCCI`
+- Native MT5 CCI indicator handle in `CIndicators`
+- `CCIConfirmation(...)`
+- `CCIExhaustionAllows(...)`
+- Entry scoring reason `CCI;`
+- Reject reason `CCI exhaustion reject;`
 
 This is a real strategy-code addition from the requested indicator and momentum feature list. It is optional, configurable, weighted, and pinned disabled in the robust base profile. It is enabled only in indicator/regime and full-confluence research profiles for fast triage. It adds no martingale, grid, averaging down, or recovery behavior.
 
@@ -35,8 +33,8 @@ This is a real strategy-code addition from the requested indicator and momentum 
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `indicator_phase_filter` enables stochastic confirmation plus stochastic exhaustion guard.
-- `pa_full_confluence` enables a stricter stochastic confirmation plus stochastic exhaustion guard.
+- `indicator_phase_filter` enables CCI confirmation plus CCI exhaustion guard.
+- `pa_full_confluence` enables a stricter CCI confirmation plus CCI exhaustion guard.
 - Generated configs confirmed the module is enabled only in the intended research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -52,14 +50,14 @@ This is a real strategy-code addition from the requested indicator and momentum 
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `9866A50DD4020166B47D51E7419256EF655995334A2A765805B2B32AE334000F`
-- `Professional_XAUUSD_EA.mq5`: `9866A50DD4020166B47D51E7419256EF655995334A2A765805B2B32AE334000F`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `83E1F20C49AE6F8A1543202C32752B3FD41CE31CF09751807417B759360DC05C`
+- `outputs\Professional_XAUUSD_EA.mq5`: `3C687B84AFB5411EF28CBF0C733E31CC0EB814E15335709B1A90B3F9C1561DB4`
+- `Professional_XAUUSD_EA.mq5`: `3C687B84AFB5411EF28CBF0C733E31CC0EB814E15335709B1A90B3F9C1561DB4`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `E2F689AB153F7F38D45BE1325FA93B3B5EF9E458E8A8F1C018CF5591A536E24F`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `4406D77DBDF6C60EABB66323A84BB6BE8C5F70430F96868AFC4E22D6313EF9C1`
-- `work\test_price_action_strategy_modules.ps1`: `C3EE02748077A8370BF69B59A944187198A2F9AD5EDCC7B42001681FBB4C817B`
-- `work\test_price_action_strategy_batch.ps1`: `6BBFBC7D9E56A914236E43A382DD5162F96D8343ECD3CC2C890D17FFC68737C2`
-- `work\build_price_action_strategy_batch.ps1`: `140918ED17D55EDC5BB2A029C59B95F6DAB4265589983E90B89D4E29DE3634B4`
+- `outputs\xauusd_micro_validation_package.zip`: `8C4E404D86F74A67C19428C75B64428D69A782DAB227C7C85503D7298E894856`
+- `work\test_price_action_strategy_modules.ps1`: `3FDC7E9128B9C310916305B3D3BBDA8A11CDE347184FA4AD477D52866D780CCF`
+- `work\test_price_action_strategy_batch.ps1`: `7E7D36CF47B2634D526584DC7E8A91436C05E5464560B2B39BEF433E6D95D2F4`
+- `work\build_price_action_strategy_batch.ps1`: `C64073DAC573447064667BCFA97C0A277689DB198C4A85FB0BA6D8FA12BC12B1`
 
 ## Background-Safety Note
 
