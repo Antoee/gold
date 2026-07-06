@@ -11,26 +11,22 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional compression-breakout confirmation:
+Added optional daily-open directional bias confirmation:
 
-- `InpUseCompressionBreakout`
-- `InpCompressionLookbackBars`
-- `InpCompressionMaxRangeATR`
-- `InpCompressionBreakBufferPoints`
-- `InpCompressionMinBodyPercent`
-- `InpWeightCompressionBreakout`
-- `CMarketStructure::CompressionBreakout()` requires the prior range to be narrow relative to ATR, then requires the latest closed candle to break out with configurable buffer and body strength.
-- `CEntryEngine::Build()` now scores those setups with `Compression breakout;` when enabled.
+- `InpUseDailyOpenBias`
+- `InpDailyOpenBiasBufferPoints`
+- `InpWeightDailyOpenBias`
+- `CMarketStructure::DailyOpenBias()` confirms buys only when the latest closed signal candle is above the current day open plus buffer, and confirms sells only when it is below the current day open minus buffer.
+- `CEntryEngine::Build()` now scores those setups with `Daily open bias;` when enabled.
 
-This is a real strategy-code addition from the requested OHLC/candle-size/ATR/volatility-regime list. It is designed to test expansion-after-compression behavior without martingale, grid, averaging down, or recovery behavior.
+This is a real strategy-code addition from the requested OHLC/time-feature/market-phase list. It tests whether intraday XAUUSD entries perform better when aligned with the current day open, without martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `vwap_momentum_phase` enables compression breakout with 12-bar compression, max range `1.10 ATR`, and `45%` minimum body.
-- `weighted_quality_confluence` enables compression breakout with 12-bar compression and max range `1.15 ATR`.
-- `pa_full_confluence` enables compression breakout with 14-bar compression, max range `1.05 ATR`, and a `20 point` breakout buffer.
+- `vwap_momentum_phase` and `tick_vwap_momentum` enable daily-open bias with a `25 point` buffer.
+- `weighted_quality_confluence` and `pa_full_confluence` enable daily-open bias with a `30 point` buffer.
 - Generated configs confirmed the module is enabled only in research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -46,14 +42,14 @@ This is a real strategy-code addition from the requested OHLC/candle-size/ATR/vo
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `A289854C89C59680840B66F6CB1441D12C150864F4CAD4B20B53F4CFE183DE1A`
-- `Professional_XAUUSD_EA.mq5`: `A289854C89C59680840B66F6CB1441D12C150864F4CAD4B20B53F4CFE183DE1A`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `BE3720793E5850ADC5922EDAA955CF4DF36DC479EFCC4036E8B28F143899CEB5`
+- `outputs\Professional_XAUUSD_EA.mq5`: `3D256447405EDA2197254A19193F49B24BBC609F869FF147CD79CA3DCE29638E`
+- `Professional_XAUUSD_EA.mq5`: `3D256447405EDA2197254A19193F49B24BBC609F869FF147CD79CA3DCE29638E`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `4EFA1B8DD348DA0485065DDB77E7240F94B3AD263BEED32D2916F7F8C9E5B201`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `024B65BE965560AA0CFD48340A1E3526533C6E17FFB329DDD70FBF36B409B715`
-- `work\test_price_action_strategy_modules.ps1`: `FFCAB174B4C598045E7A9AC6E6EBDDD441BD079794E22F6EEA86021D5E3D07AB`
-- `work\test_price_action_strategy_batch.ps1`: `13F59EBEB64F1AE80AD4D7BA000822DC19ACA051D12BBEFFB8A20BF7BE1C6F6A`
-- `work\build_price_action_strategy_batch.ps1`: `1734E7B1CC7F0F5F72F606578D6243B0BBD8C207242D2234A0A6C62A4C9847AD`
+- `outputs\xauusd_micro_validation_package.zip`: `52672FAE2B4287548B8BD501F4B1ED6FAA2D241C78B0B2D58C6FD0E97E4A8622`
+- `work\test_price_action_strategy_modules.ps1`: `23277F15599D37828FC2BC41667E9F3A94EFAFB28CACF5E1A998ABB726DAE2A0`
+- `work\test_price_action_strategy_batch.ps1`: `6204628EC9CEC404599F8362CC388D921AB6C21AD148A3893D7B7F1BC2E76F51`
+- `work\build_price_action_strategy_batch.ps1`: `96ABA66A5035EA328AB7D456B155019D437B55B6AC160C8C50A3E6988F3CC77F`
 
 ## Background-Safety Note
 
