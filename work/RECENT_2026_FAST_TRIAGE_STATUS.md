@@ -11,24 +11,23 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional OBV volume-flow confirmation:
+Added optional ADX DI direction confirmation:
 
-- `InpUseOBVConfirmation`
-- `InpOBVLookbackBars`
-- `InpOBVMinChange`
-- `InpWeightOBV`
-- Native MT5 OBV indicator handle in `CIndicators`
-- `OBVConfirmation(...)`
-- Entry scoring reason `OBV;`
+- `InpUseDIDirectionConfirmation`
+- `InpMinDIDifference`
+- `InpWeightDIDirection`
+- `PlusDI(...)` and `MinusDI(...)` accessors from the existing native MT5 ADX handle
+- `DIDirectionConfirmation(...)`
+- Entry scoring reason `DI direction;`
 
-This is a real strategy-code addition from the requested volume/order-flow and indicator feature list. It is optional, configurable, weighted, and pinned disabled in the robust base profile. It is enabled only in indicator/regime and full-confluence research profiles for fast triage. It adds no martingale, grid, averaging down, or recovery behavior.
+This is a real strategy-code addition from the requested trend strength, market phase, and indicator feature list. It is optional, configurable, weighted, and pinned disabled in the robust base profile. It is enabled only in indicator/regime and full-confluence research profiles for fast triage. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `indicator_phase_filter` enables OBV confirmation with 8-bar lookback.
-- `pa_full_confluence` enables OBV confirmation with 10-bar lookback.
+- `indicator_phase_filter` enables DI direction confirmation with minimum DI difference 2.0.
+- `pa_full_confluence` enables stricter DI direction confirmation with minimum DI difference 3.0.
 - Generated configs confirmed the module is enabled only in the intended research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -44,14 +43,14 @@ This is a real strategy-code addition from the requested volume/order-flow and i
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `A143325398C29CEE5CA7DA7C9BAEBD62EEFA7B7DFF0CBF6CC2A2A8F287728140`
-- `Professional_XAUUSD_EA.mq5`: `A143325398C29CEE5CA7DA7C9BAEBD62EEFA7B7DFF0CBF6CC2A2A8F287728140`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `DA7B3933C6FF1D241E6721B201D3AB017E22D59627185CD8207BC39F3F20CF76`
+- `outputs\Professional_XAUUSD_EA.mq5`: `528AD604026C378F068B31DFACD634E79F55A4C68D9A051FA2118A9EF6E3523F`
+- `Professional_XAUUSD_EA.mq5`: `528AD604026C378F068B31DFACD634E79F55A4C68D9A051FA2118A9EF6E3523F`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `ACEE6CD7F96462DC2164EF9737EE066A06E4D5C44E0EBC597491B98241A4C28C`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `8DAAD7590A1312B53EE0F0FEFAC54C21649C8D44224C3F594DD613A99B5C3572`
-- `work\test_price_action_strategy_modules.ps1`: `3CAEC7B71EADEFC053BFF32FADC468AD0BF70BC687C85EB3B12401FA82D2A823`
-- `work\test_price_action_strategy_batch.ps1`: `7501128159FB9D28E363F9A9B5006518D9508F78B756CFA7868F5049CB73F28A`
-- `work\build_price_action_strategy_batch.ps1`: `905802C70175B2981380CEE614AEACAABE6897EA4D5A00BBE4E8F8D2179CA64A`
+- `outputs\xauusd_micro_validation_package.zip`: `9DD386393BAEAFE0609CDAB8195F8801685E0FB2AEDF5C817A0E411FD4124362`
+- `work\test_price_action_strategy_modules.ps1`: `AE4659419DCC478C4BC9BDE465520B522253E6206BA64A4915C3A6E535ACF005`
+- `work\test_price_action_strategy_batch.ps1`: `07E83D9CD7691E91DCAC8CF68D35856B05B17339C352801B5C974338280A06E6`
+- `work\build_price_action_strategy_batch.ps1`: `87AAD943C9299EF0A638A5B04A76705DDAC56F66C61D25CAB03300115E2F3E48`
 
 ## Background-Safety Note
 
