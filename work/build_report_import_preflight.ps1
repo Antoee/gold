@@ -174,6 +174,40 @@ try {
 Add-Row $rows "Risk lot-sizing guard smoke" $riskSizingSmokeStatus $riskSizingSmokeEvidence `
    $(if($riskSizingSmokeStatus -eq "PASS") { "EA rejects entries when broker minimum lot would exceed configured risk." } else { "Fix lot-sizing guard before trusting risk-controlled tests." })
 
+$openRiskSmokeStatus = "FAIL"
+$openRiskSmokeEvidence = ""
+try {
+   $openRiskSmokeOutput = Invoke-NoWindowPowerShell @("-File", "work\test_open_risk_exposure_guard.ps1")
+   if($openRiskSmokeOutput.ExitCode -eq 0 -and $openRiskSmokeOutput.Output -match "OPEN_RISK_EXPOSURE_GUARD_SMOKE_PASS") {
+      $openRiskSmokeStatus = "PASS"
+      $openRiskSmokeEvidence = "OPEN_RISK_EXPOSURE_GUARD_SMOKE_PASS"
+   } else {
+      $openRiskSmokeEvidence = $openRiskSmokeOutput.Output
+   }
+} catch {
+   $openRiskSmokeEvidence = $_.Exception.Message
+}
+
+Add-Row $rows "Open risk exposure guard smoke" $openRiskSmokeStatus $openRiskSmokeEvidence `
+   $(if($openRiskSmokeStatus -eq "PASS") { "EA can cap combined open risk before order placement." } else { "Fix open-risk exposure guard before allowing multi-position optimization." })
+
+$sourceSyncSmokeStatus = "FAIL"
+$sourceSyncSmokeEvidence = ""
+try {
+   $sourceSyncSmokeOutput = Invoke-NoWindowPowerShell @("-File", "work\test_ea_source_artifact_sync.ps1")
+   if($sourceSyncSmokeOutput.ExitCode -eq 0 -and $sourceSyncSmokeOutput.Output -match "EA_SOURCE_ARTIFACT_SYNC_SMOKE_PASS") {
+      $sourceSyncSmokeStatus = "PASS"
+      $sourceSyncSmokeEvidence = "EA_SOURCE_ARTIFACT_SYNC_SMOKE_PASS"
+   } else {
+      $sourceSyncSmokeEvidence = $sourceSyncSmokeOutput.Output
+   }
+} catch {
+   $sourceSyncSmokeEvidence = $_.Exception.Message
+}
+
+Add-Row $rows "EA source artifact sync smoke" $sourceSyncSmokeStatus $sourceSyncSmokeEvidence `
+   $(if($sourceSyncSmokeStatus -eq "PASS") { "Canonical, root, and package EA source sync behavior is covered." } else { "Fix EA source artifact sync before publishing or packaging." })
+
 $sourceHashSmokeStatus = "FAIL"
 $sourceHashSmokeEvidence = ""
 try {
@@ -190,6 +224,23 @@ try {
 
 Add-Row $rows "Source hash status smoke" $sourceHashSmokeStatus $sourceHashSmokeEvidence `
    $(if($sourceHashSmokeStatus -eq "PASS") { "Package source hash matches the current EA source." } else { "Rebuild external package status before trusting returned compile/report evidence." })
+
+$compileHashGateSmokeStatus = "FAIL"
+$compileHashGateSmokeEvidence = ""
+try {
+   $compileHashGateSmokeOutput = Invoke-NoWindowPowerShell @("-File", "work\test_mt5_compile_log_import_hash_gate.ps1")
+   if($compileHashGateSmokeOutput.ExitCode -eq 0 -and $compileHashGateSmokeOutput.Output -match "MT5_COMPILE_LOG_IMPORT_HASH_GATE_SMOKE_PASS") {
+      $compileHashGateSmokeStatus = "PASS"
+      $compileHashGateSmokeEvidence = "MT5_COMPILE_LOG_IMPORT_HASH_GATE_SMOKE_PASS"
+   } else {
+      $compileHashGateSmokeEvidence = $compileHashGateSmokeOutput.Output
+   }
+} catch {
+   $compileHashGateSmokeEvidence = $_.Exception.Message
+}
+
+Add-Row $rows "Compile hash gate smoke" $compileHashGateSmokeStatus $compileHashGateSmokeEvidence `
+   $(if($compileHashGateSmokeStatus -eq "PASS") { "Compile import requires SourceHashStatus=MATCH before trust." } else { "Fix compile hash gate before accepting returned compile logs." })
 
 if($manifest.Count -gt 0) {
    $phase1 = @($manifest | Where-Object { (Get-Value $_ "Phase") -eq "phase1_fast_triage" }).Count
@@ -319,6 +370,10 @@ if($compileStatus.Count -gt 0) {
    if($sourceHashStatus -eq "MISMATCH") {
       $compileIsStale = $true
       $compileStaleEvidence = "Compile log source hash does not match expected EA source hash."
+   }
+   if(!$compileIsStale -and (Get-Value $compileRow "Status") -eq "PASS" -and $sourceHashStatus -ne "MATCH") {
+      $compileIsStale = $true
+      $compileStaleEvidence = "Compile status is PASS but SourceHashStatus is '$sourceHashStatus'; require MATCH before trusting reports."
    }
    if((Test-Path -LiteralPath $sourceFile) -and (Test-Path -LiteralPath $CompileStatusPath)) {
       $sourceTime = (Get-Item -LiteralPath $sourceFile).LastWriteTimeUtc
