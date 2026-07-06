@@ -13,100 +13,44 @@ Updated locally on 2026-07-06.
 ## Current EA Source
 
 - Canonical source: `outputs/Professional_XAUUSD_EA.mq5`.
-- Root/package source sync: PASS.
 - Current synced source SHA256: `4EE1484812ED6148B154D0B0CB2807A110F1A1846C47673083CF7AA8F12E1E34`.
+- EA source did not change in this pass.
 
-## Strategy-Code Work
+## Multi-Window Decision Gate Addition
+
+The price-action fast-triage summary now requires explicit recent/stress coverage before a profile can receive `PASS_FAST_TRIAGE`:
+
+- Summary rows now track `RecentParsedWindows`, `StressParsedWindows`, `RecentPassWindows`, `StressPassWindows`, and `CompleteWindowCoverage`.
+- `PASS_FAST_TRIAGE` now requires complete parsed coverage across all expected windows.
+- `PASS_FAST_TRIAGE` also requires at least one passing recent window and one passing stress window.
+- Added `REVIEW_INCOMPLETE_WINDOW_COVERAGE` for candidates that otherwise look acceptable but lack complete parsed recent/stress coverage.
+- The markdown summary now displays recent/stress parsed and pass counts.
+- The decision smoke now checks that a passing synthetic profile shows both recent and stress pass coverage.
+
+This makes the gate harder to fool with one good recent run. A candidate must survive both recent data and the stress window before it can even pass fast triage, and promotion still requires broader validation.
+
+## Existing Decision Gate Discipline
+
+The offline price-action decision gate also rejects or reviews aggressively on quality metrics:
+
+- `MinTradesPerWindow=5`.
+- `MinProfitFactor=1.10`.
+- `MinRecoveryFactor=1.00`.
+- `MaxProfitFactorDegradation=0.05`.
+- Higher net profit alone is not enough when PF, recovery, drawdown, compile proof, report coverage, or recent/stress consistency is weak.
+
+## Current EA Strategy Features
 
 The EA includes optional, independently configurable strategy modules for actual price-action, market-state, tick-tape, intermarket confirmation, weighted setup-quality logic, profit targeting, profit protection, and early loss control:
 
 - CHoCH, FVG, order-block retest, liquidity sweep, previous/session levels, VWAP, candle anatomy, market phase, RSI, MACD, Bollinger, and tick microstructure confirmations.
-- Correlated-market confirmation using configurable same-direction or inverse-direction symbol momentum.
+- Correlated-market confirmation.
 - Weighted entry-quality score.
 - Quality-based risk scaling.
 - Quality-based take-profit scaling.
 - Regime-quality confirmation using ADX, EMA slope, and ATR regime.
 - ATR-based profit-lock stop.
 - Adverse-R early exit.
-
-## Quality Take-Profit Scaling Addition
-
-Added optional quality-based TP scaling so stronger setups can target more while weaker qualifying setups can stay more conservative:
-
-- `InpUseQualityTakeProfitScaling=false` by default.
-- `InpQualityTPMinScore=7`.
-- `InpQualityTPFullScore=12`.
-- `InpMinQualityTPMultiplier=0.85`.
-- `InpMaxQualityTPMultiplier=1.35`.
-- `QualityTakeProfitMultiplier()` maps setup quality to a bounded TP multiplier.
-- `OpenSignal()` applies the multiplier after final stop-distance calculation, so the minimum-RR check uses the actual structure-adjusted stop.
-- Trade logs append `Quality TP x...` when enabled.
-
-The `weighted_quality_confluence` research profile now enables quality TP scaling with a `0.90x` to `1.35x` TP range.
-
-## Correlated-Market Confirmation
-
-Intermarket confirmation remains available for testing:
-
-- `InpUseCorrelationConfirmation=false` by default.
-- `InpCorrelationSymbol=XAGUSD` by default.
-- Same-direction and inverse-direction modes are supported.
-- `vwap_momentum_phase` and `weighted_quality_confluence` enable XAGUSD same-direction confirmation.
-
-## Decision Gate Discipline
-
-The offline price-action decision gate rejects or reviews aggressively before any candidate can pass fast triage:
-
-- `MinTradesPerWindow=5`.
-- `MinProfitFactor=1.10`.
-- `MinRecoveryFactor=1.00`.
-- `MaxProfitFactorDegradation=0.05`.
-- Higher net profit alone is not enough when PF, recovery, drawdown, compile proof, or report coverage is weak.
-
-## Recent EA Risk Features
-
-Adverse-R early exit:
-
-- `InpUseAdverseRExit=false` by default.
-- `InpAdverseExitR=0.75`.
-- Selected high-confluence research profiles enable this with `0.75R` to `0.80R` thresholds.
-
-Profit-lock stop:
-
-- `InpUseProfitLockStop=false` by default.
-- `InpProfitLockTriggerATR=1.50`.
-- `InpProfitLockATR=0.35`.
-- Selected high-confluence research profiles enable this for testing.
-
-Regime-quality score:
-
-- `InpUseRegimeQualityScore=false` by default.
-- Uses ADX, EMA slope direction, and current ATR versus recent ATR average.
-
-## Price-Action Research Batch
-
-Fast research batch for actual strategy-code variants:
-
-- Batch: `outputs/PRICE_ACTION_STRATEGY_BATCH.csv`.
-- Profiles: 10.
-- Runs: 30.
-- Windows: `2026_Q2`, `2026_ytd`, `2025_Q2`.
-- Estimated tester runtime: about 10.5 minutes before platform overhead.
-- Handoff zip: `outputs/price_action_strategy_handoff.zip`.
-- Parallel lanes zip: `outputs/price_action_parallel_lanes.zip`.
-
-Research profiles:
-
-- `baseline_promoted`
-- `fvg_sweep_confluence`
-- `choch_bos_shift`
-- `orderblock_fvg_retest`
-- `liquidity_level_reversal`
-- `vwap_momentum_phase`
-- `tick_vwap_momentum`
-- `indicator_phase_filter`
-- `weighted_quality_confluence` includes quality TP scaling.
-- `pa_full_confluence`
 
 ## Current Decision State
 
@@ -120,14 +64,10 @@ Research profiles:
 
 ## Offline Evidence
 
-- `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`.
-- `PRICE_ACTION_STRATEGY_BATCH_SMOKE_PASS`.
-- `EA_SOURCE_ARTIFACT_SYNC_SMOKE_PASS`.
+- `PRICE_ACTION_STRATEGY_DECISION_SMOKE_PASS`.
+- `REPORT_IMPORT_PREFLIGHT_SMOKE_PASS`.
 - Full offline refresh: PASS, 39 steps, 0 failed.
 - Report import preflight rows:
-  - Price-action strategy modules smoke: PASS.
-  - Price-action strategy batch smoke: PASS.
-  - Price-action strategy handoff smoke: PASS.
   - Price-action strategy decision: `COMPILE_REQUIRED`, with 27 waiting report decisions and stale compile trust.
   - Source hash status smoke: PASS.
   - Local safety: PASS, 39 safety checks pass.
@@ -138,15 +78,14 @@ Research profiles:
 ## Hashes
 
 - EA source: `4EE1484812ED6148B154D0B0CB2807A110F1A1846C47673083CF7AA8F12E1E34`.
-- Base profile: `B4CA8C7BCF63CFD2979D4A7569405CE3D4783EB310402E596FD5AFA8F7B50783`.
-- Price-action batch CSV: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`.
-- Price-action handoff zip: `082D661BA27ABC46004C2D62E0316CD701A3CDCA0028FF435CEF61655A0F598F`.
-- Price-action parallel lanes zip: `8E75CE333DF6A674A23742451EBD7FDDC492AD8C55B215CB4D13FC9F0397F266`.
-- External validation package zip: `DB922F94C68665613AEE028F0CCEDD60449CB57B6D6071CFB250964F2CC59634`.
-- Price-action modules smoke: `A654B7670F6264E3CE1E51F8356636CCB8415005DAC8EA3ACBE07BBA05C06135`.
-- Price-action batch smoke: `DA333983D5E86547EB7A77BDFD4EBD94574FD232304208A30F8BE883722D2E72`.
-- Price-action batch builder: `D598CF75807789375F69CAA2C984C2956AF8E98DB3A281C730DE44214E276672`.
+- Price-action decision CSV: `7646F4CD657C3A15DD1ED1E1A8393F6F1F462826FB38793FF6F5D4C88277C00F`.
+- Price-action decision report: `ABA5EBBCABF558C3357F1F4E23158972B7A2F21316BAF8936D26B29AE61BFC60`.
+- Report import preflight CSV: `FAC97A86AB47EC8429C22E135D7E012173FEEBA4D7CDC1894A8525E7321E29E1`.
+- External validation package zip: `EDA3FA7A367BA00B04DCA09AAA4F3148E25E1D63670F9199774916C275C676F6`.
+- Decision builder: `E1A3A8D50F74BA748A55A74CB6FF94A5FD7F725FF1C3540FAA6E0FC1849E3AA9`.
+- Decision smoke: `B40CB73E4D6E0D80E18E157A13B747AF903807DA7E1DE4979244FD275FED31A8`.
+- Report preflight smoke: `F05D46D11B3FBE71FAEDBA475EDAF3BAE7133008FDC0677BA95230DCC6541BB8`.
 
 ## Caveat
 
-No profit claim is made from this update. Compile/test evidence is intentionally stale because MT5 and MetaEditor were not launched to avoid interrupting normal PC usage. Next performance step is a controlled external or truly non-interactive MT5 compile and backtest run using the rebuilt package or the new price-action lane zips, followed by importing reports through the stricter decision gate.
+No profit claim is made from this update. Compile/test evidence is intentionally stale because MT5 and MetaEditor were not launched to avoid interrupting normal PC usage. Next performance step is a controlled external or truly non-interactive MT5 compile and backtest run, then importing reports through this stricter multi-window decision gate.
