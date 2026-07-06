@@ -11,25 +11,29 @@ Updated: 2026-07-06
 
 ## Latest Entry-Code Change
 
-Added optional sweep rejection confirmation:
+Added optional range expansion breakout confirmation:
 
-- `InpUseSweepRejection`
-- `InpSweepRejectionMinWickPercent`
-- `InpSweepRejectionMinCloseLocation`
-- `InpWeightSweepRejection`
-- `CMarketStructure::SweepRejection()` requires the latest closed candle to take liquidity beyond the prior swing level, close back through that level, close in the trade direction, and show a configurable rejection wick plus close-location quality.
-- `CEntryEngine::Build()` now records `Sweep rejection;` as an independent weighted entry reason when the feature is enabled.
+- `InpUseRangeExpansionBreakout`
+- `InpRangeExpansionLookbackBars`
+- `InpRangeExpansionMinRangeRatio`
+- `InpRangeExpansionMinATR`
+- `InpRangeExpansionMinBodyPercent`
+- `InpRangeExpansionCloseLocation`
+- `InpRangeExpansionBufferPoints`
+- `InpWeightRangeExpansionBreakout`
+- `CMarketStructure::RangeExpansionBreakout()` requires the latest closed candle to break beyond the prior range, expand versus recent average candle range, meet a minimum ATR-normalized range, show a minimum body percentage, and close near the directional extreme.
+- `CEntryEngine::Build()` now records `Range expansion breakout;` as an independent weighted entry reason when the feature is enabled.
 
-This is a price-action selectivity module for liquidity-sweep setups. The existing liquidity sweep confirmation can detect a stop-run through prior structure; sweep rejection requires evidence that price rejected the run instead of simply continuing through it. It is disabled in the robust base profile and enabled only in liquidity/confluence research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
+This is a price-action/OHLC selectivity module for continuation setups. It tries to separate real impulsive range expansion from ordinary channel breaks by requiring both historical expansion and strong candle anatomy. It is disabled in the robust base profile and enabled only in momentum/confluence research profiles. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `liquidity_level_reversal` enables sweep rejection with minimum wick `35%` and close-location threshold `0.60`.
-- `weighted_quality_confluence` enables sweep rejection with minimum wick `35%`, close-location threshold `0.60`, and weight `2`.
-- `pa_full_confluence` enables a stricter version with minimum wick `40%` and close-location threshold `0.62`.
-- Generated configs confirmed the module is enabled in liquidity/confluence research profiles and pinned disabled in the robust base profile.
+- `vwap_momentum_phase` enables range expansion breakout with lookback `12`, range ratio `1.35`, minimum `0.55 ATR`, body `45%`, and close-location threshold `0.65`.
+- `weighted_quality_confluence` enables range expansion breakout with lookback `12`, range ratio `1.40`, minimum `0.60 ATR`, body `45%`, close-location threshold `0.66`, and weight `2`.
+- `pa_full_confluence` enables a stricter version with lookback `14`, range ratio `1.45`, minimum `0.65 ATR`, body `50%`, and close-location threshold `0.68`.
+- Generated configs confirmed the module is enabled in momentum/confluence research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
 
@@ -44,14 +48,14 @@ This is a price-action selectivity module for liquidity-sweep setups. The existi
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `294168E5339771C23566F98712CBFF507F309BAA9CDEBC51545167D1607CC6DC`
-- `Professional_XAUUSD_EA.mq5`: `294168E5339771C23566F98712CBFF507F309BAA9CDEBC51545167D1607CC6DC`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `2022665AB38DC64F0F214FDCA058CED168F9AF465D12710D4104BFDF68163CD5`
+- `outputs\Professional_XAUUSD_EA.mq5`: `0E00B7BBB9B700824F76EB56B6F11E7F43951264EF7A3804878658C5791D038A`
+- `Professional_XAUUSD_EA.mq5`: `0E00B7BBB9B700824F76EB56B6F11E7F43951264EF7A3804878658C5791D038A`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `A2FF2F19CFA437B1AD507243F582FA2CF1DECC2351E53219B2AA21522160DC1A`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `F940CB87E31C1288DFC5AF6669D25F31BD74C1042AD4C3318D7DB11B08D5CFEC`
-- `work\test_price_action_strategy_modules.ps1`: `E572BFBDA84E08F914361AE9CAB4658955BD0D6E97BF7F02F0CB6E73404C3ECD`
-- `work\test_price_action_strategy_batch.ps1`: `0AF4C0E8DDBABAFDE1895CCC52443834D9FF4AEB5486ABFB0676B6027AAE2D61`
-- `work\build_price_action_strategy_batch.ps1`: `32107935D8C9EEF6089684445FDED363EB19CB4816C577722293E54AF220F248`
+- `outputs\xauusd_micro_validation_package.zip`: `3FC9FD8AEB298717728A325BF5CE33B7D66936C1AA0D43DFFF69E6BAC55D9FA5`
+- `work\test_price_action_strategy_modules.ps1`: `2ACAD4E13B8A0FE2E72686D2E56734DB8C571791BBABE081B56FC3EFF19294C9`
+- `work\test_price_action_strategy_batch.ps1`: `CF1CCA3C5AB9757425B34C1FBD0D9B632B0493DDF2B797E5E3A453BF8362DF4E`
+- `work\build_price_action_strategy_batch.ps1`: `808506C9AD6B7EE191FF21D6F00744B41A5E3D833989D7BC3D0EB4E626D51560`
 
 ## Background-Safety Note
 
