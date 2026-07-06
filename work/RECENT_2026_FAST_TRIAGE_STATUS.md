@@ -11,22 +11,25 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional daily-open directional bias confirmation:
+Added optional previous-day range-location confirmation:
 
-- `InpUseDailyOpenBias`
-- `InpDailyOpenBiasBufferPoints`
-- `InpWeightDailyOpenBias`
-- `CMarketStructure::DailyOpenBias()` confirms buys only when the latest closed signal candle is above the current day open plus buffer, and confirms sells only when it is below the current day open minus buffer.
-- `CEntryEngine::Build()` now scores those setups with `Daily open bias;` when enabled.
+- `ENUM_PREVIOUS_DAY_RANGE_MODE`
+- `InpUsePreviousDayRangeBias`
+- `InpPreviousDayRangeMode`
+- `InpPreviousDayRangeBufferPoints`
+- `InpWeightPreviousDayRangeBias`
+- `CMarketStructure::PreviousDayRangeBias()` supports half-range bias mode and previous-day breakout mode.
+- In half-range mode, buys confirm above yesterday's midpoint plus buffer and sells confirm below yesterday's midpoint minus buffer.
+- In breakout mode, buys confirm above yesterday's high plus buffer and sells confirm below yesterday's low minus buffer.
+- `CEntryEngine::Build()` now scores those setups with `Previous day range bias;` when enabled.
 
-This is a real strategy-code addition from the requested OHLC/time-feature/market-phase list. It tests whether intraday XAUUSD entries perform better when aligned with the current day open, without martingale, grid, averaging down, or recovery behavior.
+This is a real strategy-code addition from the requested daily highs/lows, previous-day levels, OHLC, and time-feature list. It tests whether XAUUSD entries improve when aligned with yesterday's range context, without martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `vwap_momentum_phase` and `tick_vwap_momentum` enable daily-open bias with a `25 point` buffer.
-- `weighted_quality_confluence` and `pa_full_confluence` enable daily-open bias with a `30 point` buffer.
+- `liquidity_level_reversal`, `vwap_momentum_phase`, `tick_vwap_momentum`, `weighted_quality_confluence`, and `pa_full_confluence` enable previous-day range bias in half-range mode.
 - Generated configs confirmed the module is enabled only in research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -42,14 +45,14 @@ This is a real strategy-code addition from the requested OHLC/time-feature/marke
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `3D256447405EDA2197254A19193F49B24BBC609F869FF147CD79CA3DCE29638E`
-- `Professional_XAUUSD_EA.mq5`: `3D256447405EDA2197254A19193F49B24BBC609F869FF147CD79CA3DCE29638E`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `4EFA1B8DD348DA0485065DDB77E7240F94B3AD263BEED32D2916F7F8C9E5B201`
+- `outputs\Professional_XAUUSD_EA.mq5`: `411EBF5433F51ABA7DA3B86C68E32A809B80F48A7E21E1A43353CA5A6FED08DD`
+- `Professional_XAUUSD_EA.mq5`: `411EBF5433F51ABA7DA3B86C68E32A809B80F48A7E21E1A43353CA5A6FED08DD`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `8F12C20BBE422803A2765FD17B5C63FE045FCC8778D8E7C9061415D600F2CFA8`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `52672FAE2B4287548B8BD501F4B1ED6FAA2D241C78B0B2D58C6FD0E97E4A8622`
-- `work\test_price_action_strategy_modules.ps1`: `23277F15599D37828FC2BC41667E9F3A94EFAFB28CACF5E1A998ABB726DAE2A0`
-- `work\test_price_action_strategy_batch.ps1`: `6204628EC9CEC404599F8362CC388D921AB6C21AD148A3893D7B7F1BC2E76F51`
-- `work\build_price_action_strategy_batch.ps1`: `96ABA66A5035EA328AB7D456B155019D437B55B6AC160C8C50A3E6988F3CC77F`
+- `outputs\xauusd_micro_validation_package.zip`: `5306318E049B6CF3D7571FDACEDF81428DDBAFE8F1F3751EF54B8AACE12443C9`
+- `work\test_price_action_strategy_modules.ps1`: `D646C9F2D7B8702039BCB6CFF8F7AC52E2CF9035FD136327D82B2FB0E8966015`
+- `work\test_price_action_strategy_batch.ps1`: `628AE39C492D1B5DF386BE1878064EC0F59443DFDF4AF3DF227CDC799576F6EF`
+- `work\build_price_action_strategy_batch.ps1`: `71CEBC75AD81D7CBE694E658F086EBB2B9F8997E1F31522EF40004CB7D9A4A3E`
 
 ## Background-Safety Note
 
