@@ -13,7 +13,21 @@ Updated locally on 2026-07-06.
 ## Current EA Source
 
 - Canonical source: `outputs/Professional_XAUUSD_EA.mq5`.
-- Current synced source SHA256: `D3B7E5B38F0483E32283A1F88A2FF4DC03D2E3D6E79AB180356E8BA71760A99D`.
+- Current synced source SHA256: `FC500A897E195EF50A2369351D03DC1307C8821AECDD83CBC8B1921CFE6874B4`.
+
+## Reversal-Pressure Exit Addition
+
+Added an optional reversal-pressure exit so the position manager can protect trades when fresh opposite price-action evidence appears after the trade has reached a configurable minimum R:
+
+- `InpUseReversalPressureExit=false` by default.
+- `InpReversalPressureMinR=0.25`.
+- `InpReversalPressureLookbackBars=12`.
+- `InpReversalPressureMinSignals=2`.
+- Opposite pressure can come from opposite BOS, CHoCH, liquidity sweep, equal-level sweep, or breakout-retest evidence.
+- Exit logs use event `exit`, bias `reversal_pressure`, and the detected opposite-pressure reasons.
+- This is strategy/risk-control code, not a settings-only change.
+
+The `weighted_quality_confluence` and `pa_full_confluence` research profiles now enable reversal-pressure exit for fast-triage testing.
 
 ## Underwater Time Exit Addition
 
@@ -26,7 +40,7 @@ Added an optional underwater time exit so the EA can cut trades that stay negati
 - Exit logs use event `exit`, bias `underwater_time`, and reason `underwater time exit`.
 - This is risk-control strategy code, not a settings-only change.
 
-The `weighted_quality_confluence` and `pa_full_confluence` research profiles now enable underwater time exit for fast-triage testing.
+The `weighted_quality_confluence` and `pa_full_confluence` research profiles enable underwater time exit for fast-triage testing.
 
 ## Breakout-Retest Confirmation Addition
 
@@ -55,6 +69,7 @@ The EA includes optional, independently configurable strategy modules for actual
 - ATR-based profit-lock stop.
 - Adverse-R early exit.
 - Underwater time exit.
+- Reversal-pressure exit.
 
 ## Decision Gate Discipline
 
@@ -79,6 +94,11 @@ Fast research batch for actual strategy-code variants:
 - Estimated tester runtime: about 10.5 minutes before platform overhead.
 - Handoff zip: `outputs/price_action_strategy_handoff.zip`.
 - Parallel lanes zip: `outputs/price_action_parallel_lanes.zip`.
+
+Research profiles with reversal-pressure exit enabled:
+
+- `weighted_quality_confluence`.
+- `pa_full_confluence`.
 
 Research profiles with underwater time exit enabled:
 
@@ -119,15 +139,15 @@ Research profiles with breakout retest enabled:
 
 ## Hashes
 
-- EA source: `D3B7E5B38F0483E32283A1F88A2FF4DC03D2E3D6E79AB180356E8BA71760A99D`.
-- Base profile: `0BE9399A315EE2D091F67521FB975D1A7508CCD1174CFDCF9D8B95823B62397E`.
+- EA source: `FC500A897E195EF50A2369351D03DC1307C8821AECDD83CBC8B1921CFE6874B4`.
+- Base profile: `D945C4C343031235A6A22905C4725873FD85AD4ECE2124742A87911748639A35`.
 - Price-action batch CSV: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`.
-- Price-action handoff zip: `2C073050E54FDEAB2E08A3F92DE33677DB31F9AD07DB9DE1CB2B4ED4C9491A93`.
-- Price-action parallel lanes zip: `BA33F1ED2535E03C84AAC67EF804A5122C642F537D2C0E92F956FDE8C3491363`.
-- External validation package zip: `A284B08C01042D8B5129A8B9CF3078F134488429FAF75D0FBD5E538965B4083A`.
-- Price-action modules smoke: `8BAFC01CC47F1C7BDAC9641C4448F4FACA7C74C5AE5A233EA6BF9C75E6C67681`.
-- Price-action batch smoke: `D537AB82D89B3C8F388BB80D1010EA69B3640B9698D45CADAE1BA87A1205E53B`.
-- Price-action batch builder: `502F350D8755EC1C35CE5752A7FECAB497314393EE8D5074219060FF3A01356F`.
+- Price-action handoff zip: `924A8320171CA57E7E61E4FA8E2854DC355DD05F49F50B75CA8312BE37CD3DBC`.
+- Price-action parallel lanes zip: `8102F0A8561E9E984BE47D599742131543FBCB4B287CE6BE25C26991A54CADD3`.
+- External validation package zip: `298BFF905755629341D4B1F45813FA3A443A98D4147C40B5935DA375DDEF9839`.
+- Price-action modules smoke: `E7E7ABB011B1C25E166F8AC08CC3EA2C81FCFAFA5E3F5D9DFC9FDB9DE3F80419`.
+- Price-action batch smoke: `6C8F583FFDAE02BF3677B0FE296963BE2D1F4789943EB292E585BB1F270B917B`.
+- Price-action batch builder: `20D978B55D53D9C636721F7BA2CE837E2C45BB710B64C0D6C628C5AB23B1B0E0`.
 
 ## Caveat
 
