@@ -9,24 +9,25 @@ Updated: 2026-07-06
 - No profit claim is made from this offline-only validation.
 - Full EA source exists locally, but this note is the GitHub-safe status/evidence artifact.
 
-## Latest Risk-Code Change
+## Latest Exit-Code Change
 
-Added optional daily equity trailing guard:
+Added optional opposite-displacement emergency exit:
 
-- `InpUseDailyEquityTrailGuard`
-- `InpDailyEquityTrailGivebackPercent`
-- `InpDailyEquityTrailMinProfitPercent`
-- `CRiskManager::DailyEquityTrailHit()` tracks the current trading day's starting equity and peak equity, then blocks new entries after a configurable giveback from the day's equity high once minimum protected daily profit exists.
-- `CRiskManager::RiskLimitHit()` now reports `daily equity trail` when the guard trips. If `InpClosePositionsOnRiskLimit` is enabled, the existing risk-limit close path can close open exposure when this condition appears.
+- `InpUseOppositeDisplacementExit`
+- `InpOppositeDisplacementExitMinR`
+- `InpOppositeDisplacementMinRangeATR`
+- `InpOppositeDisplacementMinBodyPercent`
+- `CPositionManager::OppositeDisplacementExitHit()` checks the latest closed signal-timeframe candle. If it is a large, high-body candle against the open position and the trade is above the configurable minimum R threshold, the EA can close before waiting for the stop or slower reversal logic.
+- `CPositionManager::Manage()` now logs this as `opposite_displacement` with reason `opposite displacement exit`.
 
-This is a risk-first protection module for the "trying not to lose money" side of the goal. It is disabled in the robust base profile and enabled only in stricter research profiles that already use profit locks, session guards, and reduced-risk behavior. It adds no martingale, grid, averaging down, or recovery behavior.
+This is a risk-first price-action exit for cutting exposure when XAUUSD prints a decisive adverse candle. It is disabled in the robust base profile and enabled only in stricter research profiles that already use other protective exits. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables daily equity trail with `40.0%` giveback after `0.50%` protected daily equity profit.
-- `pa_full_confluence` enables a stricter daily equity trail with `35.0%` giveback after `0.40%` protected daily equity profit.
+- `weighted_quality_confluence` enables the exit with min R `-0.20`, minimum range `0.80 ATR`, and minimum body `55%`.
+- `pa_full_confluence` enables a stricter version with min R `-0.15`, minimum range `0.90 ATR`, and minimum body `58%`.
 - Generated configs confirmed the module is enabled in strict risk-managed research profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -42,14 +43,14 @@ This is a risk-first protection module for the "trying not to lose money" side o
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `5A30D120788558CF5B8147C205A0A7C1032B4708C4CD63EA20EB2ADBA8B4D999`
-- `Professional_XAUUSD_EA.mq5`: `5A30D120788558CF5B8147C205A0A7C1032B4708C4CD63EA20EB2ADBA8B4D999`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `99EE633E4F716BA11486F1D81F282A4309AF58917897BC4A55F57FB2824F1635`
+- `outputs\Professional_XAUUSD_EA.mq5`: `18BDE311A913A4745245AC7B310F68B7C074326ABA4A2E780E94E130B9F46BF0`
+- `Professional_XAUUSD_EA.mq5`: `18BDE311A913A4745245AC7B310F68B7C074326ABA4A2E780E94E130B9F46BF0`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `6DF87856978F9ACC4DAC1657DD8F119A56D267342542280CFC1C28D5A953AC90`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `546D6653CAC43B4C7F11D3B8684B3F80744D91ADC9F210668A4BF5F47444DE6C`
-- `work\test_price_action_strategy_modules.ps1`: `CB866F89B388101A98B4AB103031E8F3EF100CD4777EA9609D592F342C1C8542`
-- `work\test_price_action_strategy_batch.ps1`: `E5F7BB17E64A48AD16460A2BB7BDAFE9C8595E2BBAD45572786CC56D76F444D6`
-- `work\build_price_action_strategy_batch.ps1`: `19F35C7FD20788C46DED3075C7DCC7A370F896256BF877B95384FC9542BDC325`
+- `outputs\xauusd_micro_validation_package.zip`: `EE1B2C011DA68789F1EA5969C5F6B6D5CD1799E079086D4187C1A56AB0A2E224`
+- `work\test_price_action_strategy_modules.ps1`: `4CB641E99631EF99A192D6DF879BE2AAD5027ABC1425E4B2B8C955C083E8F98D`
+- `work\test_price_action_strategy_batch.ps1`: `CB73A3EC5F830A4A4FEAAFED27F5574076748778EE349E7EA1CB278224A91501`
+- `work\build_price_action_strategy_batch.ps1`: `A1CD744D0260D60D617D3FE37F316540ADAFB9FC8AA244AFA398FCC53E317EB4`
 
 ## Background-Safety Note
 
