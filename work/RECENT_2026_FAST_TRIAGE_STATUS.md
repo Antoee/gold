@@ -11,24 +11,23 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional swing-recency structure filter:
+Added optional spread-regime execution guard:
 
-- `InpUseSwingRecencyFilter`
-- `InpSwingLeftBars`
-- `InpSwingRightBars`
-- `InpMaxBarsSinceSwing`
-- `CMarketStructure::IsSwingHigh()` and `CMarketStructure::IsSwingLow()` detect completed swing points.
-- `CMarketStructure::RecentSwingAllows()` requires a recent directional swing before entry when enabled.
-- `CEntryEngine::Build()` now rejects stale structure setups with `Swing recency reject;` before counting confirmations.
+- `InpUseSpreadRegimeGuard`
+- `InpSpreadRegimeLookbackBars`
+- `InpMaxSpreadRegimeRatio`
+- `InpMinSpreadRegimePoints`
+- `SpreadRegimeAllows()` compares current spread against recent bar spread history.
+- `OpenSignal()` now rejects abnormal execution conditions with `spread regime` before sizing/opening a trade.
 
-This is a market-structure/time-since-swing module from the requested strategy-code expansion. It is intended to reduce late entries after old structure has already played out, without increasing risk or adding any recovery logic.
+This is an execution-cost/risk module from the requested strategy-code expansion. It is intended to avoid trades during abnormal broker spread spikes without increasing risk or adding any recovery logic.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables swing recency with left/right `2/2` and max bars since swing `30`.
-- `pa_full_confluence` enables swing recency with left/right `2/2` and max bars since swing `24`.
+- `weighted_quality_confluence` enables spread-regime protection with lookback `24`, max ratio `2.00`, min spread `50.0`.
+- `pa_full_confluence` enables spread-regime protection with lookback `30`, max ratio `1.80`, min spread `45.0`.
 - Generated configs confirmed the module is enabled in those strict profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
@@ -44,16 +43,16 @@ This is a market-structure/time-since-swing module from the requested strategy-c
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `8BAB261DAB60477DFB090850A12BA70C022A50C21AFF34BC20CADEA0FE1A3FBA`
-- `Professional_XAUUSD_EA.mq5`: `8BAB261DAB60477DFB090850A12BA70C022A50C21AFF34BC20CADEA0FE1A3FBA`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `19B5966AEA24DB8E9418469E48695CECBC2FD9E910CE4AF1F43628D5EEB79C53`
+- `outputs\Professional_XAUUSD_EA.mq5`: `3A4F3E55DC4965B86E7CAFAFD2A63A6B5001D25860424EA7FF72EFEED134B31C`
+- `Professional_XAUUSD_EA.mq5`: `3A4F3E55DC4965B86E7CAFAFD2A63A6B5001D25860424EA7FF72EFEED134B31C`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `81929889E21D4C1864BF53174D742FF83B0BE0BAE9AF05918F9F7E82032A7CB0`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\price_action_strategy_handoff.zip`: `33AAE77CB0303B60851CD33E01BDEDF0FA92FF0D5C8B431E4585015F36F056DC`
-- `outputs\price_action_parallel_lanes.zip`: `C20CD8DE4F5594E8BFEC7F1CF09D184FED07AB98AF82BF3D73284957CF4BACB9`
-- `outputs\xauusd_micro_validation_package.zip`: `459B9B788E577E5F9572DAAA10F58423FC0727B55683C016AB0AD4ADE92C8E7C`
-- `work\test_price_action_strategy_modules.ps1`: `8FFF22EF6682F8313C34B42AAAB629C79EEE5EAEC07FE994154E4EC52232BFA2`
+- `outputs\price_action_strategy_handoff.zip`: `2B5CBB5C3EA89054F842116512C2430F0EBEA353791A66B4EAE4C9863F7E5CA4`
+- `outputs\price_action_parallel_lanes.zip`: `9776465D885D0FBE0DE15AAF6005727BB017F86161FFE467302067CA8ADA96E1`
+- `outputs\xauusd_micro_validation_package.zip`: `49D399893E726EA0A3CF671EA09D98AC9AD4146670DAB2503C7351872F91F600`
+- `work\test_price_action_strategy_modules.ps1`: `030A99CD08713272BB0219B2669EDC358AC9B58EC8DE3C4A004A0635EAF3C467`
 - `work\test_price_action_strategy_batch.ps1`: `4B9B4747F2872AA3617E1804D5610FDB5709664D06F52635B5DF7F393697B0DC`
-- `work\build_price_action_strategy_batch.ps1`: `63D099C80ACAD2110ECF375565B914BD434165908809FCEC3F2DA39776A2A353`
+- `work\build_price_action_strategy_batch.ps1`: `53F0A2C9B07A38D0DA5B5BAF6298B0DAA545D0A30EA41286E9F4B2C2039065F3`
 
 ## Background-Safety Note
 
