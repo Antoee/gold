@@ -1,271 +1,53 @@
 # Recent 2026 Fast Triage Status
 
-Updated locally on 2026-07-06.
+Updated: 2026-07-06
 
-## Safety
+## Current State
 
-- Local MT5/MetaEditor/Strategy Tester launch remains locked.
-- Current work was done with hidden/no-window PowerShell only.
-- Final local scan before this status update: no `terminal`, `terminal64`, `metatester`, `metatester64`, `MetaEditor`, or `metaeditor64` processes found.
-- Quiet stop marker remains present: `work/STOP_MT5_FOCUS_WATCHDOG`.
-- No watchdog process is intentionally running right now; the repo is in quiet no-resident-helper mode.
+- MT5, MetaEditor, terminal64, metatester, and Strategy Tester were not launched.
+- Compile/backtest status is still `STALE` because GUI MT5 validation is intentionally disabled to avoid focus stealing.
+- No profit claim is made from this offline-only validation.
+- Full EA source exists locally, but this note is the GitHub-safe status/evidence artifact.
 
-## Current EA Source
+## Latest Strategy-Code Change
 
-- Canonical source: `outputs/Professional_XAUUSD_EA.mq5`.
-- Current synced source SHA256: `948CCD21D1828DA31F47BDB19036F897ED66C2AACAA987A8C7D887B0AFD42E7E`.
+Added tester-fitness robustness controls so optimizer results are penalized when profitable settings have weak recovery factor or weak/negative Sharpe:
 
-## Spread-Adjusted RR Filter Addition
+- `InpTesterMinRecoveryFactor`
+- `InpTesterMinSharpeRatio`
+- `InpTesterRecoveryPenalty`
+- `InpTesterSharpePenalty`
+- `OnTester()` now applies recovery and Sharpe penalties in both robust-profit and recovery/Sharpe fitness modes.
 
-Added an optional spread-adjusted risk/reward filter so the entry engine can reject trades whose raw RR becomes unattractive after spread cost:
+This does not force a trade signal by itself. It changes how MT5 optimization ranks candidates so fragile high-profit curves are less attractive.
 
-- `InpUseSpreadAdjustedRRFilter=false` by default.
-- `InpMinSpreadAdjustedRR=1.20`.
-- When enabled, the entry engine estimates adjusted reward as `tpDistance - spread` and adjusted risk as `stopDistance + spread`.
-- If adjusted RR is below the configured threshold, entry is blocked with status `spread adjusted RR`.
-- This is execution-quality filtering intended to avoid paying too much spread for marginal reward.
+## Quiet Validation Results
 
-The `weighted_quality_confluence` and `pa_full_confluence` research profiles now enable spread-adjusted RR filtering for fast-triage testing.
+- `work\sync_ea_source_artifacts.ps1`: PASS
+- `work\test_price_action_strategy_modules.ps1`: PASS
+- `work\test_price_action_strategy_batch.ps1`: PASS
+- `work\test_ea_source_artifact_sync.ps1`: PASS
+- `work\refresh_offline_validation_state.ps1`: PASS, 39 steps, 0 failed
+- `work\build_external_mt5_validation_package.ps1`: PASS, package configs 20, profiles 9
+- `work\test_external_mt5_validation_package.ps1`: PASS, 26 checks, 0 failed
 
-## R-Based Profit Lock Addition
+## Latest Hashes
 
-Added an optional R-based profit-lock stop so position protection scales from the trade's own risk distance instead of only raw ATR:
+- `outputs\Professional_XAUUSD_EA.mq5`: `CBAA53D30CFC87E15E90429EA8A5C87EC3B41E9D8CF53BF92C65C96FCF7ED8C9`
+- `Professional_XAUUSD_EA.mq5`: `CBAA53D30CFC87E15E90429EA8A5C87EC3B41E9D8CF53BF92C65C96FCF7ED8C9`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `33FF3153AE24B74EB4FDF2C6F8E948E879C64236FD5F2475D115FBB2313DCD3E`
+- `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
+- `outputs\price_action_strategy_handoff.zip`: `ECAD80422A0A1A6B480C50A24DFD28BBC16E093C6667611B226681A7A6EFAC8E`
+- `outputs\price_action_parallel_lanes.zip`: `745F7C9955ABB9200F9780CA35A7930A8DCC91F6C96034A5BCBC957CF970093B`
+- `outputs\xauusd_micro_validation_package.zip`: `02D7D110C7762E5F233B38AF30050C79E39541123C4A253192B4E5FF56185554`
+- `work\test_price_action_strategy_modules.ps1`: `F0E6E4702658688A9C3D551EDD67A1922C54DBB3A3757087A1912586DF45C133`
+- `work\test_price_action_strategy_batch.ps1`: `4B9B4747F2872AA3617E1804D5610FDB5709664D06F52635B5DF7F393697B0DC`
+- `work\build_price_action_strategy_batch.ps1`: `E98B28443233128CB6C585BD102F3EDCAE4AEE4DA5811D586F28F7F940FB5D97`
 
-- `InpUseRProfitLockStop=false` by default.
-- `InpRProfitLockTriggerR=1.25`.
-- `InpRProfitLockR=0.25`.
-- When enabled, once a trade reaches the trigger R, the position manager can move stop loss to lock in a configurable R amount.
-- This is profit protection and risk reduction, not a recovery or position-adding system.
+## Background-Safety Note
 
-The `weighted_quality_confluence` and `pa_full_confluence` research profiles enable R-based profit lock for fast-triage testing.
-
-## Recent-Performance Risk Throttle Addition
-
-Added an optional recent-performance risk throttle so the risk manager can reduce position risk after a weak recent trade sample:
-
-- `InpUseRecentPerformanceRiskThrottle=false` by default.
-- `InpRecentPerformanceLookbackTrades=5`.
-- `InpRecentPerformanceMinNetPercent=0.00`.
-- `InpRecentPerformanceRiskFactor=0.50`.
-- When enabled, the risk manager sums the last configured number of closed trades for the EA symbol/magic and reduces effective risk if net profit as a percent of balance is at or below the threshold.
-- This is risk throttling, not martingale, grid, averaging down, or recovery logic; it reduces exposure after weak performance instead of increasing it.
-
-The `weighted_quality_confluence` and `pa_full_confluence` research profiles enable recent-performance risk throttle for fast-triage testing.
-
-## Dynamic ATR Regime Guard Addition
-
-Added an optional dynamic ATR regime guard so the entry engine can reject setups when current ATR is too compressed or too expanded versus recent ATR average:
-
-- `InpUseDynamicATRRegimeGuard=false` by default.
-- `InpATRRegimeLookbackBars=20`.
-- `InpMinATRRegimeRatio=0.75`.
-- `InpMaxATRRegimeRatio=1.80`.
-- When enabled, the entry engine compares current ATR to the average ATR over the configured lookback and rejects entries outside the ratio band.
-- Rejected setups log the internal reason `ATR regime reject;`.
-- This is strategy/risk-control code intended to avoid dead chop and extreme volatility regimes without relying only on static ATR point limits.
-
-The `weighted_quality_confluence` and `pa_full_confluence` research profiles enable dynamic ATR regime guard for fast-triage testing.
-
-## Entry Shock Guard Addition
-
-Added an optional entry shock guard so the entry engine can reject setups immediately after oversized or low-body signal candles:
-
-- `InpUseEntryShockGuard=false` by default.
-- `InpMaxEntryCandleATR=2.20`.
-- `InpMinEntryBodyPercent=30.0`.
-- When enabled, the entry engine rejects a setup if the most recent closed signal candle range is too large versus ATR or has too little body relative to total range.
-- Rejected setups log the internal reason `Entry shock reject;`.
-- This is strategy/risk-control code intended to avoid chasing XAUUSD spike candles, poor fills, and immediate liquidity reversals.
-
-The `weighted_quality_confluence` and `pa_full_confluence` research profiles enable entry shock guard for fast-triage testing.
-
-## Stagnation Exit Addition
-
-Added an optional stagnation exit so the position manager can close trades that have been open for a configurable number of bars but still have not reached a minimum R threshold:
-
-- `InpUseStagnationExit=false` by default.
-- `InpStagnationExitBars=24`.
-- `InpStagnationExitMaxR=0.10`.
-- When enabled, the position manager closes a trade if `r <= InpStagnationExitMaxR` after at least `InpStagnationExitBars` signal-timeframe bars.
-- Exit logs use event `exit`, bias `stagnation`, and reason `stagnation exit`.
-- This is strategy/risk-control code intended to reduce dead-time exposure and slow loss drift, not a settings-only change.
-
-The `weighted_quality_confluence` and `pa_full_confluence` research profiles enable stagnation exit for fast-triage testing.
-
-## Reversal-Pressure Exit Addition
-
-Added an optional reversal-pressure exit so the position manager can protect trades when fresh opposite price-action evidence appears after the trade has reached a configurable minimum R:
-
-- `InpUseReversalPressureExit=false` by default.
-- `InpReversalPressureMinR=0.25`.
-- `InpReversalPressureLookbackBars=12`.
-- `InpReversalPressureMinSignals=2`.
-- Opposite pressure can come from opposite BOS, CHoCH, liquidity sweep, equal-level sweep, or breakout-retest evidence.
-- Exit logs use event `exit`, bias `reversal_pressure`, and the detected opposite-pressure reasons.
-- This is strategy/risk-control code, not a settings-only change.
-
-The `weighted_quality_confluence` and `pa_full_confluence` research profiles enable reversal-pressure exit for fast-triage testing.
-
-## Underwater Time Exit Addition
-
-Added an optional underwater time exit so the EA can cut trades that stay negative for too long instead of only waiting for full stop loss or the adverse-R exit:
-
-- `InpUseUnderwaterTimeExit=false` by default.
-- `InpUnderwaterExitBars=12`.
-- `InpUnderwaterExitMaxR=-0.25`.
-- When enabled, the position manager closes a trade if its current R is at or below `InpUnderwaterExitMaxR` after at least `InpUnderwaterExitBars` signal-timeframe bars.
-- Exit logs use event `exit`, bias `underwater_time`, and reason `underwater time exit`.
-- This is risk-control strategy code, not a settings-only change.
-
-The `weighted_quality_confluence` and `pa_full_confluence` research profiles enable underwater time exit for fast-triage testing.
-
-## Breakout-Retest Confirmation Addition
-
-Added optional breakout-retest confirmation so the EA can test structure breaks that pull back to the broken level before continuation:
-
-- `InpUseBreakoutRetest=false` by default.
-- `InpBreakoutRetestLookbackBars=20`.
-- `InpBreakoutRetestATR=0.25`.
-- `InpBreakoutRetestCloseBufferPoints=10.0`.
-- `InpWeightBreakoutRetest=2`.
-- `CMarketStructure::BreakoutRetest()` checks that the prior bar broke the structure level, the current bar retested near that level, and the current close continued back through the level with a buffer.
-- The entry engine adds `Breakout retest;` as a normal confirmation and quality-score contributor when enabled.
-
-The `orderblock_fvg_retest` and `weighted_quality_confluence` research profiles enable breakout-retest confirmation without increasing the 30-run batch size.
-
-## Current EA Strategy Features
-
-The EA includes optional, independently configurable strategy modules for actual price-action, market-state, tick-tape, intermarket confirmation, weighted setup-quality logic, profit targeting, profit protection, and early loss control:
-
-- CHoCH, BOS, breakout retests, FVG, order-block retest, liquidity sweep, previous/session levels, session sweeps, opening-range breakouts, VWAP, candle anatomy, market phase, RSI, MACD, Bollinger, and tick microstructure confirmations.
-- Entry shock guard.
-- Dynamic ATR regime guard.
-- Spread-adjusted RR filter.
-- Correlated-market confirmation.
-- Weighted entry-quality score.
-- Quality-based risk scaling.
-- Recent-performance risk throttle.
-- Quality-based take-profit scaling.
-- Regime-quality confirmation using ADX, EMA slope, and ATR regime.
-- ATR-based profit-lock stop.
-- R-based profit-lock stop.
-- Adverse-R early exit.
-- Underwater time exit.
-- Stagnation exit.
-- Reversal-pressure exit.
-
-## Decision Gate Discipline
-
-The offline price-action decision gate rejects or reviews aggressively before any candidate can pass fast triage:
-
-- Complete parsed coverage across recent and stress windows is required for `PASS_FAST_TRIAGE`.
-- At least one passing recent window and one passing stress window are required.
-- `MinTradesPerWindow=5`.
-- `MinProfitFactor=1.10`.
-- `MinRecoveryFactor=1.00`.
-- `MaxProfitFactorDegradation=0.05`.
-- Higher net profit alone is not enough when PF, recovery, drawdown, compile proof, report coverage, or recent/stress consistency is weak.
-
-## Price-Action Research Batch
-
-Fast research batch for actual strategy-code variants:
-
-- Batch: `outputs/PRICE_ACTION_STRATEGY_BATCH.csv`.
-- Profiles: 10.
-- Runs: 30.
-- Windows: `2026_Q2`, `2026_ytd`, `2025_Q2`.
-- Estimated tester runtime: about 10.5 minutes before platform overhead.
-- Handoff zip: `outputs/price_action_strategy_handoff.zip`.
-- Parallel lanes zip: `outputs/price_action_parallel_lanes.zip`.
-
-Research profiles with spread-adjusted RR filter enabled:
-
-- `weighted_quality_confluence`.
-- `pa_full_confluence`.
-
-Research profiles with R-based profit lock enabled:
-
-- `weighted_quality_confluence`.
-- `pa_full_confluence`.
-
-Research profiles with recent-performance risk throttle enabled:
-
-- `weighted_quality_confluence`.
-- `pa_full_confluence`.
-
-Research profiles with dynamic ATR regime guard enabled:
-
-- `weighted_quality_confluence`.
-- `pa_full_confluence`.
-
-Research profiles with entry shock guard enabled:
-
-- `weighted_quality_confluence`.
-- `pa_full_confluence`.
-
-Research profiles with stagnation exit enabled:
-
-- `weighted_quality_confluence`.
-- `pa_full_confluence`.
-
-Research profiles with reversal-pressure exit enabled:
-
-- `weighted_quality_confluence`.
-- `pa_full_confluence`.
-
-Research profiles with underwater time exit enabled:
-
-- `weighted_quality_confluence`.
-- `pa_full_confluence`.
-
-Research profiles with breakout retest enabled:
-
-- `orderblock_fvg_retest`.
-- `weighted_quality_confluence`.
-
-## Current Decision State
-
-- Overall: `COMPILE_REQUIRED`.
-- Decisions: 27.
-- Pass: 0.
-- Reject: 0.
-- Waiting: 27.
-- Compile trust: `STALE`.
-- No profit claim is made.
-
-## Offline Evidence
-
-- `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`.
-- `PRICE_ACTION_STRATEGY_BATCH_SMOKE_PASS`.
-- `EA_SOURCE_ARTIFACT_SYNC_SMOKE_PASS`.
-- Full offline refresh: PASS, 39 steps, 0 failed.
-- Report import preflight rows:
-  - Price-action strategy modules smoke: PASS.
-  - Price-action strategy batch smoke: PASS.
-  - Price-action strategy handoff smoke: PASS.
-  - Price-action strategy decision: `COMPILE_REQUIRED`, with 27 waiting report decisions and stale compile trust.
-  - Source hash status smoke: PASS.
-  - Local safety: PASS, 39 safety checks pass.
-  - Compile status: `STALE`.
-  - External MT5 package: PASS, 26 package checks pass.
-- External MT5 package audit: PASS, 26 checks passed, 0 failed.
-
-## Hashes
-
-- EA source: `948CCD21D1828DA31F47BDB19036F897ED66C2AACAA987A8C7D887B0AFD42E7E`.
-- Base profile: `C53C7C5B9E779A8B145B15B6A4024B6D45EF56B575306EFA734CECEE9D110C64`.
-- Price-action batch CSV: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`.
-- Price-action handoff zip: `FFC5EF2FCBED8A59CBA9BE32D931FFD591DD487137BFB55A32912A45324DCA32`.
-- Price-action parallel lanes zip: `A68439574AE27F4805A723B4F52A4560916BB206A0E45487955086333F27FB5F`.
-- External validation package zip: `B3F26D101FF77507B37E8A83AA11AE6860386A6810364E3FF82B724A64E6AB92`.
-- Price-action modules smoke: `D705CA0CC36931319D9EC5C646F9A206790BF2710446EDB117D5A769FA98FE57`.
-- Price-action batch smoke: `4B9B4747F2872AA3617E1804D5610FDB5709664D06F52635B5DF7F393697B0DC`.
-- Price-action batch builder: `E98B28443233128CB6C585BD102F3EDCAE4AEE4DA5811D586F28F7F940FB5D97`.
+The stop marker remains expected at `work\STOP_MT5_FOCUS_WATCHDOG`. Any future MT5 validation should be treated as external/manual or run only after the no-focus/no-popup issue is solved.
 
 ## GitHub Source Caveat
 
-The status note is committed through the GitHub connector. The local shell still has no `git`, no `gh`, and no GitHub token exposed, and the 103 KB EA source is too large to safely pass through connector text parameters without risking truncation. The authoritative local artifacts and hashes above should be used for source integrity until a normal git push or non-truncated upload path is available.
-
-## Caveat
-
-No profit claim is made from this update. Compile/test evidence is intentionally stale because MT5 and MetaEditor were not launched to avoid interrupting normal PC usage. Next performance step is a controlled external or truly non-interactive MT5 compile and backtest run, then importing reports through the stricter multi-window decision gate.
+The status note is committed through the GitHub connector. The local shell still has no usable `git` or `gh` path in this workspace, and the full EA source is large enough that the status note plus hashes remains the safer connector artifact until a normal git push or non-truncated upload path is available.
