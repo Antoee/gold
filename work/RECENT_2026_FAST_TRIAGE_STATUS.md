@@ -11,27 +11,25 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added optional day-of-week risk scaling:
+Added optional swing-recency structure filter:
 
-- `InpUseDayOfWeekRiskScaling`
-- `InpMondayRiskMultiplier`
-- `InpTuesdayRiskMultiplier`
-- `InpWednesdayRiskMultiplier`
-- `InpThursdayRiskMultiplier`
-- `InpFridayRiskMultiplier`
-- `CSessionFilter::DayOfWeekRiskMultiplier()` returns a configurable risk multiplier for the active weekday.
-- `OpenSignal()` now combines quality-risk, session-risk, and day-of-week-risk scaling before lot sizing.
-- Entry logs add `Day risk x...;` when the module is enabled.
+- `InpUseSwingRecencyFilter`
+- `InpSwingLeftBars`
+- `InpSwingRightBars`
+- `InpMaxBarsSinceSwing`
+- `CMarketStructure::IsSwingHigh()` and `CMarketStructure::IsSwingLow()` detect completed swing points.
+- `CMarketStructure::RecentSwingAllows()` requires a recent directional swing before entry when enabled.
+- `CEntryEngine::Build()` now rejects stale structure setups with `Swing recency reject;` before counting confirmations.
 
-This is a time-feature/risk-control module from the requested strategy-code expansion. It lets optimization reduce exposure on weaker weekdays such as Monday or Friday without changing the core entry logic or increasing risk after losses.
+This is a market-structure/time-since-swing module from the requested strategy-code expansion. It is intended to reduce late entries after old structure has already played out, without increasing risk or adding any recovery logic.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- `weighted_quality_confluence` enables day-of-week risk scaling with Monday `0.90`, Tuesday `1.00`, Wednesday `1.00`, Thursday `1.00`, Friday `0.75`.
-- `pa_full_confluence` enables day-of-week risk scaling with Monday `0.85`, Tuesday `1.00`, Wednesday `1.00`, Thursday `0.95`, Friday `0.65`.
-- Generated configs confirmed the module is enabled in those defensive profiles and pinned disabled in the robust base profile.
+- `weighted_quality_confluence` enables swing recency with left/right `2/2` and max bars since swing `30`.
+- `pa_full_confluence` enables swing recency with left/right `2/2` and max bars since swing `24`.
+- Generated configs confirmed the module is enabled in those strict profiles and pinned disabled in the robust base profile.
 
 ## Quiet Validation Results
 
@@ -46,16 +44,16 @@ This is a time-feature/risk-control module from the requested strategy-code expa
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `FF551F6502FDF63FFF89BD443C41DBEEA0E4786D8BB11E80917554A202E04C3A`
-- `Professional_XAUUSD_EA.mq5`: `FF551F6502FDF63FFF89BD443C41DBEEA0E4786D8BB11E80917554A202E04C3A`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `519B5D3AD5A28A4A7813F5609AE3BAD692001CD6DCA61EC483961262A223C9CC`
+- `outputs\Professional_XAUUSD_EA.mq5`: `8BAB261DAB60477DFB090850A12BA70C022A50C21AFF34BC20CADEA0FE1A3FBA`
+- `Professional_XAUUSD_EA.mq5`: `8BAB261DAB60477DFB090850A12BA70C022A50C21AFF34BC20CADEA0FE1A3FBA`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `19B5966AEA24DB8E9418469E48695CECBC2FD9E910CE4AF1F43628D5EEB79C53`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\price_action_strategy_handoff.zip`: `A10F80D1B6470C83407E3A5AD5545370ED94BFAFB0837918FD8445F269C2397B`
-- `outputs\price_action_parallel_lanes.zip`: `4CD2713BF05FE59359DB6C6E1E2E7F4C42E79D5E6A127A19E177BFADAD4A45EE`
-- `outputs\xauusd_micro_validation_package.zip`: `AFC082EE0288DF224B083FF1EA3EC228E686FF6D24DA74F851A5634DF0A986CD`
-- `work\test_price_action_strategy_modules.ps1`: `0D768C5CB09863273763EB78222142A1BCA3044DE98AA5DA17C04AA997A71852`
+- `outputs\price_action_strategy_handoff.zip`: `33AAE77CB0303B60851CD33E01BDEDF0FA92FF0D5C8B431E4585015F36F056DC`
+- `outputs\price_action_parallel_lanes.zip`: `C20CD8DE4F5594E8BFEC7F1CF09D184FED07AB98AF82BF3D73284957CF4BACB9`
+- `outputs\xauusd_micro_validation_package.zip`: `459B9B788E577E5F9572DAAA10F58423FC0727B55683C016AB0AD4ADE92C8E7C`
+- `work\test_price_action_strategy_modules.ps1`: `8FFF22EF6682F8313C34B42AAAB629C79EEE5EAEC07FE994154E4EC52232BFA2`
 - `work\test_price_action_strategy_batch.ps1`: `4B9B4747F2872AA3617E1804D5610FDB5709664D06F52635B5DF7F393697B0DC`
-- `work\build_price_action_strategy_batch.ps1`: `98C0BA4EF2A57DCBF999EA08F1A284C2AE726A281AC9718E28CDB1EFAEE2F478`
+- `work\build_price_action_strategy_batch.ps1`: `63D099C80ACAD2110ECF375565B914BD434165908809FCEC3F2DA39776A2A353`
 
 ## Background-Safety Note
 
