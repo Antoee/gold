@@ -11,22 +11,23 @@ Updated: 2026-07-06
 
 ## Latest Risk-Code Change
 
-Enabled optional Flatten On Hard Risk Limits in generated research profiles:
+Added optional Daily Loss Pressure Risk Scaling:
 
-- `InpClosePositionsOnRiskLimit`
-- Existing `OnTick()` logic checks `riskManager.RiskLimitHit(riskExitReason)` before normal position management.
-- When enabled, the EA calls `positionManager.CloseAll(riskExitReason)` if a hard account guard trips.
-- Covered guard reasons include equity drawdown limit, daily/weekly/monthly loss limits, daily/weekly/monthly profit locks, daily equity trail, and profit giveback guards.
+- `InpUseDailyLossRiskScaling`
+- `InpDailyLossRiskStartFraction`
+- `InpMinDailyLossRiskMultiplier`
+- `DailyLossPressureRiskMultiplier()` uses current-day realized P/L and `InpMaxDailyLossPercent` to taper risk before the hard daily loss limit is reached.
+- `OpenSignal()` now multiplies daily-loss pressure risk into final lot sizing and logs `Daily loss risk x...` when enabled.
 
-This improves risk behavior without adding recovery logic. The baseline anchor remains pinned disabled for comparison, while generated research profiles enable it so hard account guards can flatten exposure instead of only blocking new entries. It adds no martingale, grid, averaging down, or recovery behavior.
+This changes risk strategy code, not only settings. The goal is to reduce exposure as the current day deteriorates, instead of waiting until the daily loss limit blocks trading or flattens positions. The baseline anchor remains pinned disabled for comparison, while generated research profiles enable it. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor remains `InpClosePositionsOnRiskLimit=false` for clean comparison.
-- Generated research profiles enable `InpClosePositionsOnRiskLimit=true`.
-- Generated configs confirmed the risk-flatten setting is enabled in research profiles and pinned disabled in the robust base profile.
+- Baseline anchor remains `InpUseDailyLossRiskScaling=false` for clean comparison.
+- Generated research profiles enable `InpUseDailyLossRiskScaling=true`.
+- Research profiles use start fraction `0.35` and minimum multiplier `0.50`, so risk starts tapering after 35% of the daily loss budget is used.
 
 ## Quiet Validation Results
 
@@ -41,15 +42,15 @@ This improves risk behavior without adding recovery logic. The baseline anchor r
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `8FAD7C06613565E8D6BCF5E0AE4213F949B8837678714184937BD76BF7138834`
-- `Professional_XAUUSD_EA.mq5`: `8FAD7C06613565E8D6BCF5E0AE4213F949B8837678714184937BD76BF7138834`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `8FAD7C06613565E8D6BCF5E0AE4213F949B8837678714184937BD76BF7138834`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `42C18B320A2AFB29F6C125EA511D03C233AD4BD5D1E074A35117AE9861A52D80`
+- `outputs\Professional_XAUUSD_EA.mq5`: `5EAE2D170D51A4A75832978B21C1C7BDAA5BA9B72B8DBDD20D151F8C3F4436BB`
+- `Professional_XAUUSD_EA.mq5`: `5EAE2D170D51A4A75832978B21C1C7BDAA5BA9B72B8DBDD20D151F8C3F4436BB`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `5EAE2D170D51A4A75832978B21C1C7BDAA5BA9B72B8DBDD20D151F8C3F4436BB`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `E4767F717632A810F5702F84DB57565C95588D7DB5334E1643D62D11AF176148`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `903827B590601032A7A70DABEBD76776A74CDD40CD4C103FEB0574FC2D00BED6`
-- `outputs\xauusd_micro_validation_package.zip`: `920027B3641FB88C5BD7FB62FE459C3C98FE28596DCD9A67B068A147F1501429`
-- `work\test_price_action_strategy_modules.ps1`: `6C4216633FE47DFF0956B2E59743D7B9585725A5034B521467D2BBD3CFA5F08C`
-- `work\test_price_action_strategy_batch.ps1`: `4D3406DCD4DE68A9C2E618E668720418F1D5CABA947FB279BB7D4B9D7F3401FB`
-- `work\build_price_action_strategy_batch.ps1`: `E3E5485D6C430714E1E3A5B2FC0CE97F53A40C6EA5A5EB173C207CE9C37466E9`
+- `outputs\xauusd_micro_validation_package.zip`: `922AB2DDC5CE6B4317A8F67EC0AE08B80EF9FBB75ABA05A40BB23EA316F5B843`
+- `work\test_price_action_strategy_modules.ps1`: `C459A7E17A7DF2925C6618EF17E027E826366C74BCC6F8EED45A222689E4A5D5`
+- `work\test_price_action_strategy_batch.ps1`: `65949D1A28A4728D598C10443D638EB0A3A69E6D682D542FC6BB504ABB51EFB9`
+- `work\build_price_action_strategy_batch.ps1`: `DF13A73023ED34F7D2B68D318D7AEB1CFC3317ECFBA77654F78B38F9F9CBFF07`
 
 ## Background-Safety Note
 
