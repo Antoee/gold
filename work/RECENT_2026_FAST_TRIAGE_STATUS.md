@@ -9,26 +9,35 @@ Updated: 2026-07-06
 - No profit claim is made from this offline-only validation.
 - Full EA source exists locally, but this note is the GitHub-safe status/evidence artifact.
 
-## Latest Strategy-Code Fix
+## Latest Strategy-Code Change
 
-Fixed open-risk accounting for positions whose stop loss has already moved to breakeven or profit.
+Added an hour-of-day performance quality gate. This builds on hour-performance risk scaling by requiring stronger setup quality during broker/server hours that have recently performed poorly.
 
-Before this fix, `PositionRiskMoney()` treated a BUY position with `SL >= open price`, or a SELL position with `SL <= open price`, as `unprotected`. That was wrong: those positions have no remaining loss-side open risk. This could overstate exposure, show `Unprotected: Yes` on the dashboard, and block valid winner scale-ins or new entries under the open-risk guard even when existing positions were protected.
+New inputs and logic:
 
-New behavior:
+- `InpUseHourPerformanceQualityGate`
+- `InpHourPerformanceMinQualityScore`
+- `HourPerformanceSample()` now serves both risk scaling and quality gating.
+- `HourPerformanceQualityAllows()` lets weak-hour trades through only when setup quality is high enough.
+- `OpenSignal()` can now reject with `hour performance quality`.
 
-- Missing/invalid stop loss still counts as unprotected.
-- Loss-side stop loss still contributes open risk.
-- Breakeven/profit-side stop loss contributes `0.0` open risk and is not marked unprotected.
+This supports the goal by allowing the EA to keep trading elite setups in weak hours while filtering lower-quality entries that historically hurt the account. It adds no martingale, grid, averaging down, or recovery behavior.
 
-This supports the goal directly: protected winners can be pressed more correctly, while genuinely unprotected positions still block exposure as intended.
+## Fast Batch Impact
+
+- Batch size stayed at 10 profiles and 30 runs.
+- Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
+- Baseline anchor keeps `InpUseHourPerformanceQualityGate=false`.
+- Generated research profiles use:
+  - `InpUseHourPerformanceQualityGate=true`
+  - `InpHourPerformanceMinQualityScore=12`
 
 ## Quiet Validation Results
 
-- `work\test_open_risk_exposure_guard.ps1`: PASS
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `D7BC081C95349AE214E936C04B6834CA77E3BA0014AA8299DAAF45DB8FAF5FD9`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `0CE5B1D148FAC84B1DF5CE6423E3DACD866DB16C594B95430C07E8923FAA184A`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
+- `work\test_open_risk_exposure_guard.ps1`: PASS
 - `work\test_price_action_strategy_decision.ps1`: PASS
 - `work\test_loss_streak_risk_reduction.ps1`: PASS
 - `work\test_ea_source_artifact_sync.ps1`: PASS
@@ -40,12 +49,14 @@ This supports the goal directly: protected winners can be pressed more correctly
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `D7BC081C95349AE214E936C04B6834CA77E3BA0014AA8299DAAF45DB8FAF5FD9`
-- `Professional_XAUUSD_EA.mq5`: `D7BC081C95349AE214E936C04B6834CA77E3BA0014AA8299DAAF45DB8FAF5FD9`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `D7BC081C95349AE214E936C04B6834CA77E3BA0014AA8299DAAF45DB8FAF5FD9`
-- `outputs\xauusd_micro_validation_package.zip`: `323DE606A68C2A367CFB16FD2E8209808090D3007CFCF5748F32F8257C13843F`
-- `work\test_open_risk_exposure_guard.ps1`: `6E55F4739F4ED111F85A7F8A103FF32E8E6674710C81FEE9374A77EB0B27E444`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `7281DD4DDED9CB12B339FFAC4995B577A610CEFC6ACC7D59485886962EA09664`
+- `outputs\Professional_XAUUSD_EA.mq5`: `0CE5B1D148FAC84B1DF5CE6423E3DACD866DB16C594B95430C07E8923FAA184A`
+- `Professional_XAUUSD_EA.mq5`: `0CE5B1D148FAC84B1DF5CE6423E3DACD866DB16C594B95430C07E8923FAA184A`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `0CE5B1D148FAC84B1DF5CE6423E3DACD866DB16C594B95430C07E8923FAA184A`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `0FB1D599CB19540D8A1B550CFEA994576924D145A0FB6BB98B855E830D3B2965`
+- `outputs\xauusd_micro_validation_package.zip`: `959FAC6308D9E16940D62D4A5392D4321B22BEBC291C057D0E8197DB2DBA32C6`
+- `work\build_price_action_strategy_batch.ps1`: `C4ABCF7A937026799E848090E2DF9324A3EC7D90885D638A53E0589FCC526DD4`
+- `work\test_price_action_strategy_modules.ps1`: `57CB781F275E744631695F4AF624F8368EC1C60BE978A3CF65682DF33935B6CC`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `336B6F30A799EAE869CBD91AD193FC3A1E127A77B0038A83B7ABF1A628EA39CA`
 
 ## Background-Safety Note
 
