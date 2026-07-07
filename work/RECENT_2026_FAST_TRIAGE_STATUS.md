@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-07 16:25:00 -05:00
+Updated: 2026-07-07 16:31:50 -05:00
 
 ## Current State
 
@@ -11,32 +11,36 @@ Updated: 2026-07-07 16:25:00 -05:00
 
 ## Latest Strategy-Code Change
 
-Added an open-profit risk coverage gate for winner scale-ins. This is meant to let the EA press strong winning trades only when existing open profit can absorb the new add-on's estimated stop-loss risk.
+Added a house-money MFE profit-lock stretch. This lets exceptional winning trades keep more breathing room after they are already protected and the account has enough house-money cushion.
 
 New inputs and logic:
 
-- `InpWinnerScaleInRequireOpenProfitRiskCover`
-- `InpWinnerScaleInOpenProfitRiskCoverage`
-- `ScaleInOpenProfitCoversRisk(...)`
-- The entry path calls the coverage check after final lot sizing, so it uses the actual add-on lots and stop distance.
-- Generated research profiles enable the gate with `InpWinnerScaleInOpenProfitRiskCoverage=1.25`.
+- `InpUseHouseMoneyMFEProfitLockStretch`
+- `InpHouseMoneyMFELockStretchStartCushionPercent`
+- `InpHouseMoneyMFELockStretchFullCushionPercent`
+- `InpHouseMoneyMFEProfitLockMaxGivebackR`
+- `InpHouseMoneyMFELockStretchRequireProtectedStop`
+- `EffectiveMFEProfitLockGivebackR(...)`
+- The MFE profit-lock stop now uses the effective giveback value when deciding how tightly to lock profit.
 
-This supports the goal by allowing more profit-seeking winner scale-ins while requiring the current basket's open profit cushion to cover at least 125% of the new trade's estimated risk. It does not add martingale, grid, averaging down, or recovery behavior.
+This supports the goal by giving the strongest protected runners more room to become large winners without increasing initial trade risk. It does not add martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor remains conservative and keeps the new coverage gate disabled.
+- Baseline anchor remains conservative and keeps the new stretch disabled.
 - Generated research profiles now use:
-  - `InpWinnerScaleInRequireOpenProfitRiskCover=true`
-  - `InpWinnerScaleInOpenProfitRiskCoverage=1.25`
-  - Existing house-money, protected-stop, locked-R, trend-regime, and giveback-quality scale-in gates remain active.
+  - `InpUseHouseMoneyMFEProfitLockStretch=true`
+  - `InpHouseMoneyMFELockStretchStartCushionPercent=6.0`
+  - `InpHouseMoneyMFELockStretchFullCushionPercent=18.0`
+  - `InpHouseMoneyMFEProfitLockMaxGivebackR=1.25`
+  - `InpHouseMoneyMFELockStretchRequireProtectedStop=true`
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `E94E247D5A9D3393DE50B463CE55F1475E40745BA3DC3F78176E6768A4ED7144`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `B91EA27B6FF557CA5CFE4BEA71F6698A7A46BAAF73EA246EE2CEE360EA56ACDF`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_open_risk_exposure_guard.ps1`: PASS
 - `work\test_price_action_strategy_decision.ps1`: PASS
@@ -51,15 +55,15 @@ This supports the goal by allowing more profit-seeking winner scale-ins while re
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `E94E247D5A9D3393DE50B463CE55F1475E40745BA3DC3F78176E6768A4ED7144`
-- `Professional_XAUUSD_EA.mq5`: `E94E247D5A9D3393DE50B463CE55F1475E40745BA3DC3F78176E6768A4ED7144`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `E94E247D5A9D3393DE50B463CE55F1475E40745BA3DC3F78176E6768A4ED7144`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `B4F6D37CF5F5D1A13BF74AFBA68E4F25F6DEDCC84E90E205D7872058B94AAE71`
-- `outputs\xauusd_micro_validation_package.zip`: `66003EEC8384EACE88D7343937BC54D9AC64AD9E2F7B63ECA7FB7AEDF9A195AE`
-- `work\build_price_action_strategy_batch.ps1`: `967BCC6AF1419033F71547B4A464EBC7D6FA6C66553F34BB074A1D98E650B2F5`
-- `work\test_price_action_strategy_modules.ps1`: `AE84698B89E859D01E432217193D0E1EFEF8FFBD32301F9806CA56123968757D`
-- `work\test_price_action_strategy_batch.ps1`: `8DCA5DDD5222AEDBC9173A50F7F2C9A5C9B69F95D559EC3347AA0712923034AC`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `9282104566F74749EF70C3429E92901D42B8FB04BEF48580C4B043DC2B095BB1`
+- `outputs\Professional_XAUUSD_EA.mq5`: `B91EA27B6FF557CA5CFE4BEA71F6698A7A46BAAF73EA246EE2CEE360EA56ACDF`
+- `Professional_XAUUSD_EA.mq5`: `B91EA27B6FF557CA5CFE4BEA71F6698A7A46BAAF73EA246EE2CEE360EA56ACDF`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `B91EA27B6FF557CA5CFE4BEA71F6698A7A46BAAF73EA246EE2CEE360EA56ACDF`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `C0D1DF0182FBAAE0008D16D5C39806D8FC4B6EC5C8388CEE4BBF113F0ED0DC8B`
+- `outputs\xauusd_micro_validation_package.zip`: `712FD0B3472EEFF451FCE4CCE6B3A40121FBAE3E98F98925D0ECF0F50C73A998`
+- `work\build_price_action_strategy_batch.ps1`: `0CCA2B91DF3CAAA8371262E4F8C3DCE563C2C660AD4FAFD620A5AFAC8BE36F13`
+- `work\test_price_action_strategy_modules.ps1`: `5DD1CBD3D7C36F2C25E5E3FD66466B196E4F966FED81C9CADA896DF314F73561`
+- `work\test_price_action_strategy_batch.ps1`: `CC317884E0E75B74F331334ECC2CD75BD27858ECFB9482A5C5F22E9186C9267E`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `53D2694E021F3751BFB948A0F907D5ADD9F780C362A366E65E27E9CB07DC52DC`
 
 ## Background-Safety Note
 
