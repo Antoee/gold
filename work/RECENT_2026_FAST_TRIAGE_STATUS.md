@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-07 16:31:50 -05:00
+Updated: 2026-07-07 16:39:17 -05:00
 
 ## Current State
 
@@ -11,19 +11,20 @@ Updated: 2026-07-07 16:31:50 -05:00
 
 ## Latest Strategy-Code Change
 
-Added a house-money MFE profit-lock stretch. This lets exceptional winning trades keep more breathing room after they are already protected and the account has enough house-money cushion.
+Added a house-money ATR trailing-stop stretch. This lets protected high-MFE runners use a wider ATR trail when the account has enough house-money cushion.
 
 New inputs and logic:
 
-- `InpUseHouseMoneyMFEProfitLockStretch`
-- `InpHouseMoneyMFELockStretchStartCushionPercent`
-- `InpHouseMoneyMFELockStretchFullCushionPercent`
-- `InpHouseMoneyMFEProfitLockMaxGivebackR`
-- `InpHouseMoneyMFELockStretchRequireProtectedStop`
-- `EffectiveMFEProfitLockGivebackR(...)`
-- The MFE profit-lock stop now uses the effective giveback value when deciding how tightly to lock profit.
+- `InpUseHouseMoneyATRTrailStretch`
+- `InpHouseMoneyATRTrailStretchStartCushionPercent`
+- `InpHouseMoneyATRTrailStretchFullCushionPercent`
+- `InpHouseMoneyATRTrailMaxMultiplier`
+- `InpHouseMoneyATRTrailMinMFER`
+- `InpHouseMoneyATRTrailRequireProtectedStop`
+- `EffectiveATRTrailMultiplier(...)`
+- ATR trailing now uses the effective multiplier instead of the fixed `InpTrailATRMultiplier` when the protected house-money conditions are met.
 
-This supports the goal by giving the strongest protected runners more room to become large winners without increasing initial trade risk. It does not add martingale, grid, averaging down, or recovery behavior.
+This supports the goal by giving the strongest protected runners more room to survive normal XAUUSD noise and potentially become larger winners without increasing initial trade risk. It does not add martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
@@ -31,16 +32,17 @@ This supports the goal by giving the strongest protected runners more room to be
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
 - Baseline anchor remains conservative and keeps the new stretch disabled.
 - Generated research profiles now use:
-  - `InpUseHouseMoneyMFEProfitLockStretch=true`
-  - `InpHouseMoneyMFELockStretchStartCushionPercent=6.0`
-  - `InpHouseMoneyMFELockStretchFullCushionPercent=18.0`
-  - `InpHouseMoneyMFEProfitLockMaxGivebackR=1.25`
-  - `InpHouseMoneyMFELockStretchRequireProtectedStop=true`
+  - `InpUseHouseMoneyATRTrailStretch=true`
+  - `InpHouseMoneyATRTrailStretchStartCushionPercent=6.0`
+  - `InpHouseMoneyATRTrailStretchFullCushionPercent=18.0`
+  - `InpHouseMoneyATRTrailMaxMultiplier=2.40`
+  - `InpHouseMoneyATRTrailMinMFER=1.50`
+  - `InpHouseMoneyATRTrailRequireProtectedStop=true`
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `B91EA27B6FF557CA5CFE4BEA71F6698A7A46BAAF73EA246EE2CEE360EA56ACDF`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `6B194FE22BBF4057C6DE44F06EE157D964527E3116E32A8C3D0DC6F3C64C5B7F`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_open_risk_exposure_guard.ps1`: PASS
 - `work\test_price_action_strategy_decision.ps1`: PASS
@@ -55,15 +57,15 @@ This supports the goal by giving the strongest protected runners more room to be
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `B91EA27B6FF557CA5CFE4BEA71F6698A7A46BAAF73EA246EE2CEE360EA56ACDF`
-- `Professional_XAUUSD_EA.mq5`: `B91EA27B6FF557CA5CFE4BEA71F6698A7A46BAAF73EA246EE2CEE360EA56ACDF`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `B91EA27B6FF557CA5CFE4BEA71F6698A7A46BAAF73EA246EE2CEE360EA56ACDF`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `C0D1DF0182FBAAE0008D16D5C39806D8FC4B6EC5C8388CEE4BBF113F0ED0DC8B`
-- `outputs\xauusd_micro_validation_package.zip`: `712FD0B3472EEFF451FCE4CCE6B3A40121FBAE3E98F98925D0ECF0F50C73A998`
-- `work\build_price_action_strategy_batch.ps1`: `0CCA2B91DF3CAAA8371262E4F8C3DCE563C2C660AD4FAFD620A5AFAC8BE36F13`
-- `work\test_price_action_strategy_modules.ps1`: `5DD1CBD3D7C36F2C25E5E3FD66466B196E4F966FED81C9CADA896DF314F73561`
-- `work\test_price_action_strategy_batch.ps1`: `CC317884E0E75B74F331334ECC2CD75BD27858ECFB9482A5C5F22E9186C9267E`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `53D2694E021F3751BFB948A0F907D5ADD9F780C362A366E65E27E9CB07DC52DC`
+- `outputs\Professional_XAUUSD_EA.mq5`: `6B194FE22BBF4057C6DE44F06EE157D964527E3116E32A8C3D0DC6F3C64C5B7F`
+- `Professional_XAUUSD_EA.mq5`: `6B194FE22BBF4057C6DE44F06EE157D964527E3116E32A8C3D0DC6F3C64C5B7F`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `6B194FE22BBF4057C6DE44F06EE157D964527E3116E32A8C3D0DC6F3C64C5B7F`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `0D0AD4C0660D668265D91A1ED4013DACE36B32D43F36DC33485705330EEB2F3A`
+- `outputs\xauusd_micro_validation_package.zip`: `D1723DA7C8452A062D399ADD2CDD7D4744CA671891EEBEC24A0346861573D28F`
+- `work\build_price_action_strategy_batch.ps1`: `58620BA9CC49DCB6409C2EB0F9DFE3655403B54955751881DCFE109538142246`
+- `work\test_price_action_strategy_modules.ps1`: `C1494639FA31316D83CCA78B8E9CACBB9BC542AA73DFE5A5C2BAFDCE224BB642`
+- `work\test_price_action_strategy_batch.ps1`: `0F63770535582F80AA5368D52408179CF979E93A1117F8505DF0AF4FE9D2693A`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `1FAB20018589363C60202F733452564897726CABD6BB2E04974DD6AF19E757E7`
 
 ## Background-Safety Note
 
