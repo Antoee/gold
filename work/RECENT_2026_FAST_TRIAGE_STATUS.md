@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-07 18:33:18 -05:00
+Updated: 2026-07-07 18:55:12 -05:00
 
 ## Current State
 
@@ -11,29 +11,32 @@ Updated: 2026-07-07 18:33:18 -05:00
 
 ## Latest Strategy-Code Change
 
-Added a protected-aggression breakout research lane to the fast price-action batch. This is a better-logic profit-seeking candidate, not just a bigger-risk setting: it tests faster breakout/continuation entries using compression breakout, range expansion, narrow-range breakout, Donchian breakout, displacement BOS, breakout retest, FVG retest, VWAP continuation, tick microstructure, cumulative-delta proxy, ADX strengthening, and regime filters.
+Added a breakout-continuation quality composite to the EA source and enabled it in the protected-aggression research profile. This is a better-logic profit-seeking feature, not just a bigger-risk setting: it only scores a breakout continuation when breakout structure is backed by execution quality plus optional order-flow and regime confirmation.
 
-Protected-aggression controls:
+New inputs and logic:
 
-- Profile: `protected_aggression_breakout`
-- Windows: `2026_Q2`, `2026_ytd`, `2025_Q2`
-- Wider base target: `InpTakeProfitATRMultiplier=4.20`
-- Faster entry threshold: `InpMinimumEntryScore=6`, `InpMinimumConfirmations=2`
-- Still keeps shared safety rails: starting-equity protection, close-on-risk-limit, max equity drawdown, max effective risk cap, open-risk cap, protected-floor gates, house-money gates, spread/cost/margin guards, and no martingale/grid/averaging down.
+- `InpUseBreakoutContinuationQuality`
+- `InpBreakoutContinuationMinScore`
+- `InpBreakoutContinuationRequireExecution`
+- `InpBreakoutContinuationRequireOrderFlow`
+- `InpBreakoutContinuationRequireRegime`
+- `InpWeightBreakoutContinuationQuality`
+- `BreakoutContinuationQuality(...)`
+- Entry logs add `Breakout continuation score ...` when the composite confirms.
 
-This supports the updated goal by giving MT5 a higher-upside logic candidate to prove or reject while keeping the capital-protection framework intact. The EA source itself did not change in this turn; the generated research and validation artifacts changed.
+The composite scores compression breakout, range expansion, narrow-range breakout, Donchian breakout, displacement BOS, breakout retest, displacement candle, tick pressure, tick speed, momentum, VWAP pullback, cumulative-delta proxy, tick tape, ADX strengthening, VWAP, daily-open bias, previous-day range bias, and regime quality. It still keeps the shared safety rails: starting-equity protection, close-on-risk-limit, max equity drawdown, max effective risk cap, open-risk cap, protected-floor gates, house-money gates, spread/cost/margin guards, and no martingale/grid/averaging down.
 
 ## Fast Batch Impact
 
-- Batch size increased from 10 profiles / 30 runs to 11 profiles / 33 runs.
-- Estimated tester runtime increased from about 10.5 minutes to about 11.55 minutes before platform overhead.
-- New profile added: `protected_aggression_breakout`.
+- Batch size remains 11 profiles / 33 runs.
+- Estimated tester runtime remains about 11.55 minutes before platform overhead.
+- `protected_aggression_breakout` now enables `InpUseBreakoutContinuationQuality=true`.
 - The batch still uses fast no-visual tester configs with `Model=2`, `Visual=0`, `ShutdownTerminal=1`, and `ReplaceReport=1`.
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `BF3D8244AD39D85E95DD663FFED1B4DEC9F3373BC5D99E9A89AACF2B0118784A`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `6C5B0F82EA75469517826C2667AE8864CF64596C49D496FB510A027B6E256715`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 11 profiles, 33 runs, estimated 11.55 minutes
 - `work\test_open_risk_exposure_guard.ps1`: PASS
 - `work\test_price_action_strategy_decision.ps1`: PASS
@@ -49,17 +52,17 @@ This supports the updated goal by giving MT5 a higher-upside logic candidate to 
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `BF3D8244AD39D85E95DD663FFED1B4DEC9F3373BC5D99E9A89AACF2B0118784A`
-- `Professional_XAUUSD_EA.mq5`: `BF3D8244AD39D85E95DD663FFED1B4DEC9F3373BC5D99E9A89AACF2B0118784A`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `BF3D8244AD39D85E95DD663FFED1B4DEC9F3373BC5D99E9A89AACF2B0118784A`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `E2835758726ADCF61D8B35FFE76F05B61BD449A53B3E1FB5D47AEA7FFD21107C`
-- `outputs\xauusd_micro_validation_package.zip`: `911AAA00CD862327E24F27E1953DD9B2C606F7E7278A2A45601AE41B99087BE5`
-- `work\build_price_action_strategy_batch.ps1`: `F6AE6F5AFC0B999DE6D8AA7FC29D3A17720A61DB0FD0ECFCD253368D581D5B40`
-- `work\test_price_action_strategy_modules.ps1`: `6CCCB5599FAB6D0330A382778B9CA0BE44A9CC7393824484B622D7737251B4C8`
-- `work\test_price_action_strategy_batch.ps1`: `F6E0FE38AC06402B5529A13798E79B8E6999DFBB8757F67FD5EBB6C8E22926FC`
+- `outputs\Professional_XAUUSD_EA.mq5`: `6C5B0F82EA75469517826C2667AE8864CF64596C49D496FB510A027B6E256715`
+- `Professional_XAUUSD_EA.mq5`: `6C5B0F82EA75469517826C2667AE8864CF64596C49D496FB510A027B6E256715`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `6C5B0F82EA75469517826C2667AE8864CF64596C49D496FB510A027B6E256715`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `064D0A347970E93CA127575CD8EB24652B2C81AF49F17E3A8308921BBC6A9A03`
+- `outputs\xauusd_micro_validation_package.zip`: `921ECB0381064796CD2C78336BB850337DA24DC1CF46D8F7D13218D590E46DA8`
+- `work\build_price_action_strategy_batch.ps1`: `088128B2635E7690B09BFD3733FBAB6741A4EB5C20345EC379C708D0CD954F2C`
+- `work\test_price_action_strategy_modules.ps1`: `F0143218747AEBFE60EDD7979C24B24296659BBDEFB048791E5344C2A7952E5B`
+- `work\test_price_action_strategy_batch.ps1`: `6F9EE972DC87940ACB3A5C0CD7E99A4F5AE1E8605A9D4F6F5854C780259841DE`
 - `work\test_price_action_strategy_handoff.ps1`: `F8B5503E3B72DD32EDAA79630D758693E41E3E851D5B56ED75CC7820C80F9BBF`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `1BD59B253422253BF095B10B2146CD88406F7C2CC06D23FA1A79831947594BD1`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `B8F830CFC9EDE7F94FA1D5A6B611DAEDC7BBEFCCDAFFA28F6FAE2CB1B661CB35`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `A4132526B1F3DE5290F62B0F4D88B9CD953BD03331B2B41A1C89B5FA5E644597`
 
 ## Background-Safety Note
 
