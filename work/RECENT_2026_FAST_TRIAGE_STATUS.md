@@ -11,38 +11,34 @@ Updated: 2026-07-07
 
 ## Latest Strategy-Code Change
 
-Added a starting-equity recovery quality gate. This optional entry filter raises the required setup quality whenever account equity is below the starting equity level.
+Added starting-equity recovery risk scaling. This optional risk-management layer reduces position risk whenever account equity is below the original starting equity.
 
 New inputs and logic:
 
-- `InpUseStartingEquityRecoveryQualityGate`
-- `InpStartingEquityRecoveryStartDrawdownPercent`
-- `InpStartingEquityRecoveryFullDrawdownPercent`
-- `InpStartingEquityRecoveryMinQualityScore`
-- `InpStartingEquityRecoveryMaxQualityScore`
-- `StartingEquityRecoveryQualityAllows()` measures equity drawdown from the original starting equity.
-- When equity is below start by the configured threshold, required quality rises from the min score toward the max score.
-- Weak new entries are blocked with `starting equity recovery quality`.
-- Generated research profiles enable the gate from 0.25% to 3.00% below starting equity, requiring quality score 12 to 18.
+- `InpUseStartingEquityRecoveryRiskScaling`
+- `InpStartingEquityRecoveryRiskStartDrawdownPercent`
+- `InpStartingEquityRecoveryRiskFullDrawdownPercent`
+- `InpMinStartingEquityRecoveryRiskMultiplier`
+- `EffectiveRiskPercent()` now applies a below-start risk multiplier before profit-pressing boosts.
+- Generated research profiles reduce risk from normal down toward 0.35x as equity moves from 0.25% to 3.00% below starting equity.
 
-This supports the goal by making the EA much pickier while it is below starting equity instead of letting ordinary-quality trades dig deeper. It does not add martingale, grid, averaging down, or recovery behavior.
+This supports the goal by making red-zone trades smaller as well as rarer. It does not add martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor keeps starting-equity recovery quality gate disabled.
+- Baseline anchor keeps starting-equity recovery risk scaling disabled.
 - Generated research profiles use:
-  - `InpUseStartingEquityRecoveryQualityGate=true`
-  - `InpStartingEquityRecoveryStartDrawdownPercent=0.25`
-  - `InpStartingEquityRecoveryFullDrawdownPercent=3.00`
-  - `InpStartingEquityRecoveryMinQualityScore=12`
-  - `InpStartingEquityRecoveryMaxQualityScore=18`
+  - `InpUseStartingEquityRecoveryRiskScaling=true`
+  - `InpStartingEquityRecoveryRiskStartDrawdownPercent=0.25`
+  - `InpStartingEquityRecoveryRiskFullDrawdownPercent=3.00`
+  - `InpMinStartingEquityRecoveryRiskMultiplier=0.35`
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `11E44DFA30D5F365014E412E581927CBC549DA35FAB4F51217E74B9806172F70`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `B024E606FE6D5894715BF0D4085F33E9F16B6B8FE1F76754A33CF48337C1BBE7`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_open_risk_exposure_guard.ps1`: PASS
 - `work\test_price_action_strategy_decision.ps1`: PASS
@@ -56,15 +52,15 @@ This supports the goal by making the EA much pickier while it is below starting 
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `11E44DFA30D5F365014E412E581927CBC549DA35FAB4F51217E74B9806172F70`
-- `Professional_XAUUSD_EA.mq5`: `11E44DFA30D5F365014E412E581927CBC549DA35FAB4F51217E74B9806172F70`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `11E44DFA30D5F365014E412E581927CBC549DA35FAB4F51217E74B9806172F70`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `2FEA4159B1AC5F01D796C87851797DA46A025049E887EEA0500E1F89CC856A5E`
-- `outputs\xauusd_micro_validation_package.zip`: `FDB68B230003754DC72BC7E5526A56DEEF7C31E492099ADF18A3C5C50476730A`
-- `work\build_price_action_strategy_batch.ps1`: `79E4F076ECD72951D6E4A35FFD55B5179C50CD2EA215BFCB50F4C198DD807561`
-- `work\test_price_action_strategy_modules.ps1`: `5A5BF09D0D9EE9CC06F3C215D8E78D80D208865408FC0628BBC12BF8E0386766`
-- `work\test_price_action_strategy_batch.ps1`: `B2D9E6C0E96C20A96A632DE8676F8E8A2F47752C67EC0F36387810F8C6B6FEE4`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `DD3989D1D804BE985D8BF2C17C60FACC980ECF5D9991BBF14B37AD442D7E6BAB`
+- `outputs\Professional_XAUUSD_EA.mq5`: `B024E606FE6D5894715BF0D4085F33E9F16B6B8FE1F76754A33CF48337C1BBE7`
+- `Professional_XAUUSD_EA.mq5`: `B024E606FE6D5894715BF0D4085F33E9F16B6B8FE1F76754A33CF48337C1BBE7`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `B024E606FE6D5894715BF0D4085F33E9F16B6B8FE1F76754A33CF48337C1BBE7`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `B84D912E06A68B30E57200055451F403E93319417437A8BB8B45D98AD08059BB`
+- `outputs\xauusd_micro_validation_package.zip`: `E8BAC5C4D2BF75E10F5735BD05D366DBC6EE2F16387C75706FE04F84971BE10C`
+- `work\build_price_action_strategy_batch.ps1`: `76F25072049D9E18AD3ABA71714A1ABC535777A2E138D983C3D45F01908128E1`
+- `work\test_price_action_strategy_modules.ps1`: `EFD58A2CF03AD8A6B5D08D1395BA57D15B09903EB7C9538B7AA2BE90E861CABA`
+- `work\test_price_action_strategy_batch.ps1`: `437A1AEFDB7F0DB0DE16FA65919142EF65406E3D9E6C047BFB707FC262979CA4`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `D03A225732F13C93C1C5D5A4EA95A9FF4254D8D29A8018D9F19680461EB39100`
 
 ## Background-Safety Note
 
