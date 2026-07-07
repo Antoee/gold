@@ -11,36 +11,39 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added an open-profit add-on quality gate. When the EA already has a profitable open basket, new entries must meet stronger quality and price-action thresholds before adding more exposure.
+Added open basket partial harvest. When the full basket is in profit by a configurable percent of balance, the EA can bank part of each profitable open position once and optionally lock the remaining stop into positive R.
 
 New inputs and logic:
 
-- `InpUseOpenProfitAddOnQualityGate`
-- `InpOpenProfitAddOnMinProfitPercent`
-- `InpOpenProfitAddOnMinPositions`
-- `InpOpenProfitAddOnMinQualityScore`
-- `InpOpenProfitAddOnMinPriceActionScore`
-- `OpenProfitAddOnQualityAllows()` checks current open basket profit as a percent of balance.
-- `OpenSignal()` can now reject lower-quality add-ons with `open profit add-on quality`.
+- `InpUseOpenBasketPartialHarvest`
+- `InpOpenBasketHarvestMinProfitPercent`
+- `InpOpenBasketHarvestClosePercent`
+- `InpOpenBasketHarvestMinPositions`
+- `InpOpenBasketHarvestMoveStop`
+- `InpOpenBasketHarvestStopLockR`
+- `OpenBasketPartialHarvest()` harvests profitable open positions only.
+- The harvest uses a separate `PXEA_BASKET_HARVEST_` marker so it does not collide with per-trade partial-close logic.
+- The event logs `open basket partial harvest` and `open basket harvest stop lock`.
 
-This supports the goal by protecting open winners from being diluted by weaker follow-on trades. Generated research profiles require quality score 13 and price-action score 15 once open basket profit is at least 0.50% of balance. It adds no martingale, grid, averaging down, or recovery behavior.
+This supports the goal by banking a portion of a winning basket before a reversal can erase it, while leaving runners alive for additional upside. Generated research profiles harvest 25% of profitable positions when basket profit reaches 0.75% of balance, then lock the remaining stop at +0.10R when possible. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor keeps open-profit add-on quality gate disabled.
+- Baseline anchor keeps open basket partial harvest disabled.
 - Generated research profiles use:
-  - `InpUseOpenProfitAddOnQualityGate=true`
-  - `InpOpenProfitAddOnMinProfitPercent=0.50`
-  - `InpOpenProfitAddOnMinPositions=1`
-  - `InpOpenProfitAddOnMinQualityScore=13`
-  - `InpOpenProfitAddOnMinPriceActionScore=15`
+  - `InpUseOpenBasketPartialHarvest=true`
+  - `InpOpenBasketHarvestMinProfitPercent=0.75`
+  - `InpOpenBasketHarvestClosePercent=25.0`
+  - `InpOpenBasketHarvestMinPositions=1`
+  - `InpOpenBasketHarvestMoveStop=true`
+  - `InpOpenBasketHarvestStopLockR=0.10`
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `B0669028E12AB5A32DC16EA552A7ADB64827B65D26CCB6E9BF4EB9024F96DC24`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `3E1935A087C3E80C0F8EF8A9FCFFA43ED4367443971B927A6F5E77DB99D9E5AA`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_open_risk_exposure_guard.ps1`: PASS
 - `work\test_price_action_strategy_decision.ps1`: PASS
@@ -54,14 +57,14 @@ This supports the goal by protecting open winners from being diluted by weaker f
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `B0669028E12AB5A32DC16EA552A7ADB64827B65D26CCB6E9BF4EB9024F96DC24`
-- `Professional_XAUUSD_EA.mq5`: `B0669028E12AB5A32DC16EA552A7ADB64827B65D26CCB6E9BF4EB9024F96DC24`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `B0669028E12AB5A32DC16EA552A7ADB64827B65D26CCB6E9BF4EB9024F96DC24`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `5FC75FD2453B4FECE5457BCDE8DA26F7D5C1BF8F0C702528372396A12B8C8D42`, 35,124 bytes
-- `outputs\xauusd_micro_validation_package.zip`: `465A237F2D838012F8CB24D7011F417334A5E493BB344A8BEABB8181550B51AE`
-- `work\build_price_action_strategy_batch.ps1`: `A10A8504418A7DB88DDE54C03E3AF5D90E1C9FF59347DB30EDE0465C2B8B27AF`
-- `work\test_price_action_strategy_modules.ps1`: `AA798E4DD04A085674A2CF531EA523D268B71BDBC875F6ACE9AD8530DD9D53F3`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `26D2322DFED4AC863002E4AD7329FA37FD45BEB78C8308F6EBC2414E3FAD177D`
+- `outputs\Professional_XAUUSD_EA.mq5`: `3E1935A087C3E80C0F8EF8A9FCFFA43ED4367443971B927A6F5E77DB99D9E5AA`
+- `Professional_XAUUSD_EA.mq5`: `3E1935A087C3E80C0F8EF8A9FCFFA43ED4367443971B927A6F5E77DB99D9E5AA`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `3E1935A087C3E80C0F8EF8A9FCFFA43ED4367443971B927A6F5E77DB99D9E5AA`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `040CBD74A50F2E42605A8854280BD0E6598D7759A54438D8C9159C478ECA39B0`, 35,456 bytes
+- `outputs\xauusd_micro_validation_package.zip`: `ED61AFC4809AE7EBE15708926021AEF408C24FDC83E61B1D9F09FAD330EEB68E`
+- `work\build_price_action_strategy_batch.ps1`: `6EFD8ABAC97732075C87C6873488888A08A4763FDB95816899C512DB7804A82B`
+- `work\test_price_action_strategy_modules.ps1`: `5D69A5B6A06CA8E8831F91E6FEF1F831A6C1293F64EEB028EDDB7739CE25511D`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `E532CC970D631196F32D9E313BF85498851909DC83D3B5F29BE86B5AA8945AD1`
 
 ## Background-Safety Note
 
