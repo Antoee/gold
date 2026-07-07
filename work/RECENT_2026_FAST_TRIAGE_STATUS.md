@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-07 15:39:34 -05:00
+Updated: 2026-07-07 15:46:34 -05:00
 
 ## Current State
 
@@ -11,37 +11,32 @@ Updated: 2026-07-07 15:39:34 -05:00
 
 ## Latest Strategy-Code Change
 
-Added a house-money acceleration gate. This optional health check lets the EA pursue larger upside through existing growth modules only after closed profit and protected-floor cushion are present, while blocking acceleration during realized-profit or equity-peak giveback.
+Added a lifetime equity profit peak trail. This optional account-level ratchet lets the EA pursue larger upside, but closes/blocks when equity gives back too much after building a configurable profit peak.
 
 New inputs and logic:
 
-- `InpUseHouseMoneyAccelerationGate`
-- `InpHouseMoneyMinClosedProfitPercent`
-- `InpHouseMoneyMinProtectedCushionPercent`
-- `InpHouseMoneyMaxRealizedGivebackPercent`
-- `InpHouseMoneyMaxEquityPeakGivebackPercent`
-- `InpHouseMoneyRequireEquityAboveStarting`
-- `HouseMoneyAccelerationAllowed()` gates profit-only risk boosts, hot-streak/recent-PF growth boosts, daily/closed-profit opportunity boosts, trend-regime risk boosts, TP expansion, and protected unlimited runners.
+- `InpUseEquityProfitPeakTrail`
+- `InpEquityProfitPeakTrailMinProfitPercent`
+- `InpEquityProfitPeakTrailGivebackPercent`
+- `EquityProfitPeakTrailHit()` tracks lifetime peak equity after the configured minimum profit is reached.
+- `RiskLimitHit(...)` now returns `equity profit peak trail` when the account gives back more than the allowed share of peak profit.
 
-This supports the goal by allowing bigger upside only when the EA is trading with a protected profit cushion. It does not add martingale, grid, averaging down, or recovery behavior.
+This supports the goal by pairing aggressive profit pursuit with a higher-watermark giveback stop. It does not add martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor keeps the house-money acceleration gate disabled.
+- Baseline anchor keeps the lifetime equity profit peak trail disabled.
 - Generated research profiles use:
-  - `InpUseHouseMoneyAccelerationGate=true`
-  - `InpHouseMoneyMinClosedProfitPercent=1.00`
-  - `InpHouseMoneyMinProtectedCushionPercent=3.00`
-  - `InpHouseMoneyMaxRealizedGivebackPercent=25.0`
-  - `InpHouseMoneyMaxEquityPeakGivebackPercent=25.0`
-  - `InpHouseMoneyRequireEquityAboveStarting=true`
+  - `InpUseEquityProfitPeakTrail=true`
+  - `InpEquityProfitPeakTrailMinProfitPercent=3.00`
+  - `InpEquityProfitPeakTrailGivebackPercent=30.0`
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `B425DAB00D7E11AD652D3559E666ABD6555072F017F4BD055A3EFFBEA21901F2`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `51DE6A3201CF179BA79BF5AF7533A96F25E411EF47177BFC6BB0BDFC787EF4EC`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_open_risk_exposure_guard.ps1`: PASS
 - `work\test_price_action_strategy_decision.ps1`: PASS
@@ -56,15 +51,15 @@ This supports the goal by allowing bigger upside only when the EA is trading wit
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `B425DAB00D7E11AD652D3559E666ABD6555072F017F4BD055A3EFFBEA21901F2`
-- `Professional_XAUUSD_EA.mq5`: `B425DAB00D7E11AD652D3559E666ABD6555072F017F4BD055A3EFFBEA21901F2`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `B425DAB00D7E11AD652D3559E666ABD6555072F017F4BD055A3EFFBEA21901F2`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `6036D2A31401D3725BF1351BF6F96E591ED37D531CEC03DE7DD99805D2A76894`
-- `outputs\xauusd_micro_validation_package.zip`: `9D075DC428CA913AEB71C92BE8E82C5F25C242B33CA3C124CCA044EAB5CEB949`
-- `work\build_price_action_strategy_batch.ps1`: `2A8DE9DC240C6F2F969A23CFE20CF4667D9483BB24BC0106FF2B53362AB0E9C8`
-- `work\test_price_action_strategy_modules.ps1`: `F23449AF1AE4B10BE95C008FF15B0DE83451059CA7910A4F469F78F4FDCCAF06`
-- `work\test_price_action_strategy_batch.ps1`: `8ABE6DB50C238750B961C2BB7932EC7803A18A30449061CD100E5C36B2129EDD`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `636A811F2DACE3F9BB3B71625BBC839E5B2A5730C96443CBE4A7A3328D08E548`
+- `outputs\Professional_XAUUSD_EA.mq5`: `51DE6A3201CF179BA79BF5AF7533A96F25E411EF47177BFC6BB0BDFC787EF4EC`
+- `Professional_XAUUSD_EA.mq5`: `51DE6A3201CF179BA79BF5AF7533A96F25E411EF47177BFC6BB0BDFC787EF4EC`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `51DE6A3201CF179BA79BF5AF7533A96F25E411EF47177BFC6BB0BDFC787EF4EC`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `73B4460867346EB1E0F78048F1E8272CA404B1446444B7AC4E30E6058A4AD0E4`
+- `outputs\xauusd_micro_validation_package.zip`: `B08ED276DD9FA1C1ECC41ABD3069102D24CBAB1436BE2624B10D01E4113EC659`
+- `work\build_price_action_strategy_batch.ps1`: `D4084D8CA87113CBF605395055CAA850EFAB1DA81CDFFD8067CA17D93B8D616F`
+- `work\test_price_action_strategy_modules.ps1`: `8B5257B1FC529FCD516DD461FAD986E93F2F3EBD03220DADA3DED39917153292`
+- `work\test_price_action_strategy_batch.ps1`: `091F255FDB6B776932A585D8846F8BD54D46E744EF2766390B184437893BD618`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `600D8AA15F2E603A426BB5A2FBB611B05AE09F8F552F28C2EE15257DA7DC3465`
 
 ## Background-Safety Note
 
