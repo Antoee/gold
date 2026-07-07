@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-07 15:46:34 -05:00
+Updated: 2026-07-07 15:53:51 -05:00
 
 ## Current State
 
@@ -11,32 +11,34 @@ Updated: 2026-07-07 15:46:34 -05:00
 
 ## Latest Strategy-Code Change
 
-Added a lifetime equity profit peak trail. This optional account-level ratchet lets the EA pursue larger upside, but closes/blocks when equity gives back too much after building a configurable profit peak.
+Added a house-money winner scale-in risk ramp. This optional add-on sizing layer keeps normal winner scale-ins conservative, but can increase scale-in risk only after the house-money gate passes and the account has built a protected-floor cushion.
 
 New inputs and logic:
 
-- `InpUseEquityProfitPeakTrail`
-- `InpEquityProfitPeakTrailMinProfitPercent`
-- `InpEquityProfitPeakTrailGivebackPercent`
-- `EquityProfitPeakTrailHit()` tracks lifetime peak equity after the configured minimum profit is reached.
-- `RiskLimitHit(...)` now returns `equity profit peak trail` when the account gives back more than the allowed share of peak profit.
+- `InpUseHouseMoneyScaleInRiskRamp`
+- `InpHouseMoneyScaleInRiskStartCushionPercent`
+- `InpHouseMoneyScaleInRiskFullCushionPercent`
+- `InpMaxHouseMoneyScaleInRiskMultiplier`
+- `WinnerScaleInRiskMultiplier()` ramps add-on risk from `InpWinnerScaleInRiskMultiplier` toward the configured cap only when `HouseMoneyAccelerationAllowed()` is true.
+- Entry logging now records the actual ramped winner scale-in risk multiplier.
 
-This supports the goal by pairing aggressive profit pursuit with a higher-watermark giveback stop. It does not add martingale, grid, averaging down, or recovery behavior.
+This supports the goal by letting the EA press already-protected winners harder without raising first-entry risk. It does not add martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor keeps the lifetime equity profit peak trail disabled.
+- Baseline anchor keeps the house-money scale-in risk ramp disabled.
 - Generated research profiles use:
-  - `InpUseEquityProfitPeakTrail=true`
-  - `InpEquityProfitPeakTrailMinProfitPercent=3.00`
-  - `InpEquityProfitPeakTrailGivebackPercent=30.0`
+  - `InpUseHouseMoneyScaleInRiskRamp=true`
+  - `InpHouseMoneyScaleInRiskStartCushionPercent=6.0`
+  - `InpHouseMoneyScaleInRiskFullCushionPercent=18.0`
+  - `InpMaxHouseMoneyScaleInRiskMultiplier=0.85`
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `51DE6A3201CF179BA79BF5AF7533A96F25E411EF47177BFC6BB0BDFC787EF4EC`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `0D0538718FE15C55F35A6920E924A4F36C17AC5EB2781C64A16BE58A7BBE8B2E`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_open_risk_exposure_guard.ps1`: PASS
 - `work\test_price_action_strategy_decision.ps1`: PASS
@@ -51,15 +53,15 @@ This supports the goal by pairing aggressive profit pursuit with a higher-waterm
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `51DE6A3201CF179BA79BF5AF7533A96F25E411EF47177BFC6BB0BDFC787EF4EC`
-- `Professional_XAUUSD_EA.mq5`: `51DE6A3201CF179BA79BF5AF7533A96F25E411EF47177BFC6BB0BDFC787EF4EC`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `51DE6A3201CF179BA79BF5AF7533A96F25E411EF47177BFC6BB0BDFC787EF4EC`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `73B4460867346EB1E0F78048F1E8272CA404B1446444B7AC4E30E6058A4AD0E4`
-- `outputs\xauusd_micro_validation_package.zip`: `B08ED276DD9FA1C1ECC41ABD3069102D24CBAB1436BE2624B10D01E4113EC659`
-- `work\build_price_action_strategy_batch.ps1`: `D4084D8CA87113CBF605395055CAA850EFAB1DA81CDFFD8067CA17D93B8D616F`
-- `work\test_price_action_strategy_modules.ps1`: `8B5257B1FC529FCD516DD461FAD986E93F2F3EBD03220DADA3DED39917153292`
-- `work\test_price_action_strategy_batch.ps1`: `091F255FDB6B776932A585D8846F8BD54D46E744EF2766390B184437893BD618`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `600D8AA15F2E603A426BB5A2FBB611B05AE09F8F552F28C2EE15257DA7DC3465`
+- `outputs\Professional_XAUUSD_EA.mq5`: `0D0538718FE15C55F35A6920E924A4F36C17AC5EB2781C64A16BE58A7BBE8B2E`
+- `Professional_XAUUSD_EA.mq5`: `0D0538718FE15C55F35A6920E924A4F36C17AC5EB2781C64A16BE58A7BBE8B2E`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `0D0538718FE15C55F35A6920E924A4F36C17AC5EB2781C64A16BE58A7BBE8B2E`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `4F42ACB6244BB1E82F218E78AF8281B9D4D753D5E4329DDC0A0D2C8AD4C79587`
+- `outputs\xauusd_micro_validation_package.zip`: `7661B0CE45948912E066C2C6AE40D107323EC9135A067E316214C62AB6BFC9F4`
+- `work\build_price_action_strategy_batch.ps1`: `CF98AA3A8723D9CB98DE63A6A20325775CA0252366CC8B94A849A376E20F9F4C`
+- `work\test_price_action_strategy_modules.ps1`: `160903B0C314B0C8FA0CA101920FE5B47B874BB3FD1FD175EAB1435CE0980CEE`
+- `work\test_price_action_strategy_batch.ps1`: `791FC6BBE0AF89EC24475190501861C89B0B6D3DC8EE3EAB9FDBF15E81DD3C31`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `620EC2D50FAE93DC1FE3F515FFFD4B0156795F7D99DD8A748FDA8AD3FB8CB49D`
 
 ## Background-Safety Note
 
