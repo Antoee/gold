@@ -11,37 +11,43 @@ Updated: 2026-07-07
 
 ## Latest Strategy-Code Change
 
-Added a realized closed-profit opportunity risk boost. This is an optional capped risk multiplier that can increase position risk only after the account has banked realized balance profit above the starting balance.
+Added a realized closed-profit take-profit expansion. This is an optional capped TP-distance multiplier that reaches for larger winners only after the account has banked realized balance profit above the starting balance.
 
 New inputs and logic:
 
-- `InpUseClosedProfitOpportunityRiskBoost`
-- `InpClosedProfitOpportunityStartPercent`
-- `InpClosedProfitOpportunityFullPercent`
-- `InpMaxClosedProfitOpportunityRiskMultiplier`
-- `InpClosedProfitOpportunityRequiresProtectedFloor`
-- `ClosedProfitOpportunityRiskMultiplier()` returns `1.0` until realized balance profit clears the configured start threshold.
-- When protected-floor gating is enabled, the boost also requires equity to remain above the active protected floor.
-- Entry logs include `Closed profit opportunity risk x...` when the multiplier is active.
+- `InpUseClosedProfitTakeProfitExpansion`
+- `InpClosedProfitTPMinQualityScore`
+- `InpClosedProfitTPMinPriceActionScore`
+- `InpClosedProfitTPStartPercent`
+- `InpClosedProfitTPFullPercent`
+- `InpClosedProfitTPMultiplier`
+- `InpClosedProfitTPRequireTrailing`
+- `InpClosedProfitTPRequiresProtectedFloor`
+- `ClosedProfitTakeProfitMultiplier()` returns `1.0` until realized balance profit clears the configured start threshold.
+- When protected-floor gating is enabled, the expansion also requires equity to remain above the active protected floor.
+- Entry logs include `Closed profit TP x...` when the multiplier is active.
 
-This supports the goal of trying to make more while avoiding red-account behavior: the EA can press harder only after closed profit exists, and the generated research profiles cap the boost at 1.35x from 2% to 8% realized balance profit. It adds no martingale, grid, averaging down, or recovery behavior.
+This supports the goal of trying to make more without simply raising initial risk: after banked profit exists, high-quality protected setups can target farther. Generated research profiles cap the expansion at 1.35x from 2% to 8% realized balance profit. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor keeps closed-profit opportunity risk boost disabled.
+- Baseline anchor keeps closed-profit TP expansion disabled.
 - Generated research profiles use:
-  - `InpUseClosedProfitOpportunityRiskBoost=true`
-  - `InpClosedProfitOpportunityStartPercent=2.00`
-  - `InpClosedProfitOpportunityFullPercent=8.00`
-  - `InpMaxClosedProfitOpportunityRiskMultiplier=1.35`
-  - `InpClosedProfitOpportunityRequiresProtectedFloor=true`
+  - `InpUseClosedProfitTakeProfitExpansion=true`
+  - `InpClosedProfitTPMinQualityScore=13`
+  - `InpClosedProfitTPMinPriceActionScore=15`
+  - `InpClosedProfitTPStartPercent=2.00`
+  - `InpClosedProfitTPFullPercent=8.00`
+  - `InpClosedProfitTPMultiplier=1.35`
+  - `InpClosedProfitTPRequireTrailing=true`
+  - `InpClosedProfitTPRequiresProtectedFloor=true`
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `C1342949614F06D71BB874B53BFB807C43CFDB604275C308909C647717E768CC`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `6615A5FE719733F7096FD3C76306041B7010A1AECA70B9636964E8FEFE7BCE87`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_open_risk_exposure_guard.ps1`: PASS
 - `work\test_price_action_strategy_decision.ps1`: PASS
@@ -55,15 +61,15 @@ This supports the goal of trying to make more while avoiding red-account behavio
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `C1342949614F06D71BB874B53BFB807C43CFDB604275C308909C647717E768CC`
-- `Professional_XAUUSD_EA.mq5`: `C1342949614F06D71BB874B53BFB807C43CFDB604275C308909C647717E768CC`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `C1342949614F06D71BB874B53BFB807C43CFDB604275C308909C647717E768CC`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `4AA8A917D6FF68CFBD57E98BC43BE87B51F1376B5719DDE418F51BC648117846`
-- `outputs\xauusd_micro_validation_package.zip`: `132D5FB74B9DFEF8A6EE656DB1A8D3E7CBEB44D3F99F2D40FB5FC15E565B8D88`
-- `work\build_price_action_strategy_batch.ps1`: `BBCB6BCAFF36580C46904F097B3C2DCAA988AE554AD7FEAC059EEF69C2ACBC55`
-- `work\test_price_action_strategy_modules.ps1`: `9BFF8713589FE4BEBEF82DB107235C4F7A08DEC3C5D47D38A667FFFCA116D39C`
-- `work\test_price_action_strategy_batch.ps1`: `E536095B7D4269E7337E5F6FD62A9F845141A94F2C83CE9306A095C501C30ECD`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `44E4844D778E563C3E07EE77DD0077E5998736C583A924953C66A685266954A5`
+- `outputs\Professional_XAUUSD_EA.mq5`: `6615A5FE719733F7096FD3C76306041B7010A1AECA70B9636964E8FEFE7BCE87`
+- `Professional_XAUUSD_EA.mq5`: `6615A5FE719733F7096FD3C76306041B7010A1AECA70B9636964E8FEFE7BCE87`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `6615A5FE719733F7096FD3C76306041B7010A1AECA70B9636964E8FEFE7BCE87`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `4A31995BA92209BAB1EA5DBF0FBB114F253EEC90D9D94E9FC4FE2AAB233BF87B`
+- `outputs\xauusd_micro_validation_package.zip`: `EB80D77331BC3F875D1D3E51E9864B812BAAD94A45B2B9CE5EB277F763148FFB`
+- `work\build_price_action_strategy_batch.ps1`: `D4F73AA2B5638A9455CECEFC35896E1E9A169CCCDD466111549D932F7F6F901B`
+- `work\test_price_action_strategy_modules.ps1`: `D67BD4C73B39DDB783C08B410F3F37789EB8AA0F47810842A28B143A3B100D78`
+- `work\test_price_action_strategy_batch.ps1`: `21293C8C7BFC6E0789E27F0839D63F0526D9AFBCBC6D3727D16B2106059EE657`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `C74957F9C23B76BCBD259C41D5FCEB42BDE8306608F479BB7E483DF4441E18F0`
 
 ## Background-Safety Note
 
