@@ -11,37 +11,36 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added an R-based partial profit lock. This is a broader profit-preservation control than the existing protected-runner partial close because it can work on normal TP-based trades too.
+Added an open-profit add-on quality gate. When the EA already has a profitable open basket, new entries must meet stronger quality and price-action thresholds before adding more exposure.
 
 New inputs and logic:
 
-- `InpUseRPartialProfitLock`
-- `InpRPartialProfitLockAtR`
-- `InpRPartialProfitLockPercent`
-- `InpRPartialProfitLockMoveStop`
-- `InpRPartialProfitLockStopR`
-- Position management can now close a configurable part of a winning trade at a target R multiple.
-- After the partial close, the EA can move the remaining position stop into locked positive R.
-- The event logs `R partial profit lock` and `R partial profit lock stop`.
+- `InpUseOpenProfitAddOnQualityGate`
+- `InpOpenProfitAddOnMinProfitPercent`
+- `InpOpenProfitAddOnMinPositions`
+- `InpOpenProfitAddOnMinQualityScore`
+- `InpOpenProfitAddOnMinPriceActionScore`
+- `OpenProfitAddOnQualityAllows()` checks current open basket profit as a percent of balance.
+- `OpenSignal()` can now reject lower-quality add-ons with `open profit add-on quality`.
 
-This supports the goal by banking part of winners and protecting the remaining runner without increasing initial risk. Generated research profiles use a modest 35% partial at +1R and a +0.10R stop lock. It adds no martingale, grid, averaging down, or recovery behavior.
+This supports the goal by protecting open winners from being diluted by weaker follow-on trades. Generated research profiles require quality score 13 and price-action score 15 once open basket profit is at least 0.50% of balance. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor keeps R partial profit lock disabled.
+- Baseline anchor keeps open-profit add-on quality gate disabled.
 - Generated research profiles use:
-  - `InpUseRPartialProfitLock=true`
-  - `InpRPartialProfitLockAtR=1.00`
-  - `InpRPartialProfitLockPercent=35.0`
-  - `InpRPartialProfitLockMoveStop=true`
-  - `InpRPartialProfitLockStopR=0.10`
+  - `InpUseOpenProfitAddOnQualityGate=true`
+  - `InpOpenProfitAddOnMinProfitPercent=0.50`
+  - `InpOpenProfitAddOnMinPositions=1`
+  - `InpOpenProfitAddOnMinQualityScore=13`
+  - `InpOpenProfitAddOnMinPriceActionScore=15`
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `44BC42E93855926670FDC0BDA51759BCDD2452A1C863D322FCBE0F47CB404863`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `B0669028E12AB5A32DC16EA552A7ADB64827B65D26CCB6E9BF4EB9024F96DC24`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_open_risk_exposure_guard.ps1`: PASS
 - `work\test_price_action_strategy_decision.ps1`: PASS
@@ -55,14 +54,14 @@ This supports the goal by banking part of winners and protecting the remaining r
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `44BC42E93855926670FDC0BDA51759BCDD2452A1C863D322FCBE0F47CB404863`
-- `Professional_XAUUSD_EA.mq5`: `44BC42E93855926670FDC0BDA51759BCDD2452A1C863D322FCBE0F47CB404863`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `44BC42E93855926670FDC0BDA51759BCDD2452A1C863D322FCBE0F47CB404863`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `BCF77D3EAF53472B98BA8134D4EE5B97E4FCF2A3E21FD59A72BC9EDCD891B9E3`, 34,854 bytes
-- `outputs\xauusd_micro_validation_package.zip`: `0A762280337A78AF8FF55FFC37A969D88CDE5A15E3CA88B5E4A036D397981C20`
-- `work\build_price_action_strategy_batch.ps1`: `68162EBD79DB8E16A1FC25EB6E249F276D7E28F6BAED2EC2A796E3D493172729`
-- `work\test_price_action_strategy_modules.ps1`: `79FA4D169D68BECE9ED949572769272604B840281912550186D17D1F50449FB7`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `613B4C8C8643A38C37B268F0398D782721177ABC922547EAC8C90DE8A5A1EC61`
+- `outputs\Professional_XAUUSD_EA.mq5`: `B0669028E12AB5A32DC16EA552A7ADB64827B65D26CCB6E9BF4EB9024F96DC24`
+- `Professional_XAUUSD_EA.mq5`: `B0669028E12AB5A32DC16EA552A7ADB64827B65D26CCB6E9BF4EB9024F96DC24`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `B0669028E12AB5A32DC16EA552A7ADB64827B65D26CCB6E9BF4EB9024F96DC24`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `5FC75FD2453B4FECE5457BCDE8DA26F7D5C1BF8F0C702528372396A12B8C8D42`, 35,124 bytes
+- `outputs\xauusd_micro_validation_package.zip`: `465A237F2D838012F8CB24D7011F417334A5E493BB344A8BEABB8181550B51AE`
+- `work\build_price_action_strategy_batch.ps1`: `A10A8504418A7DB88DDE54C03E3AF5D90E1C9FF59347DB30EDE0465C2B8B27AF`
+- `work\test_price_action_strategy_modules.ps1`: `AA798E4DD04A085674A2CF531EA523D268B71BDBC875F6ACE9AD8530DD9D53F3`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `26D2322DFED4AC863002E4AD7329FA37FD45BEB78C8308F6EBC2414E3FAD177D`
 
 ## Background-Safety Note
 
