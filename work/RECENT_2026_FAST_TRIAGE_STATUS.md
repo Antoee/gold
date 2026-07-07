@@ -9,57 +9,57 @@ Updated: 2026-07-06
 - No profit claim is made from this offline-only validation.
 - Full EA source exists locally, but this note is the GitHub-safe status/evidence artifact.
 
-## Latest Strategy-Code Change
+## Latest Workflow Change
 
-Added an open-basket profit trailing guard. This lets the EA protect floating profit across all currently open positions for the symbol/magic number, not just one trade at a time.
+Strengthened the profit-search analyzer so high net profit is no longer enough for a candidate to receive a promotion grade.
 
-New inputs and logic:
+New robust promotion gates in `work\analyze_profit_search.ps1`:
 
-- `InpUseOpenBasketProfitTrail`
-- `InpOpenBasketTrailMinProfitPercent`
-- `InpOpenBasketTrailGivebackPercent`
-- `InpOpenBasketTrailMinPositions`
-- `OpenBasketProfit()` sums current open basket profit for matching positions.
-- `OpenBasketProfitTrailHit()` tracks peak floating basket profit and triggers a risk exit after configurable giveback.
-- `RiskLimitHit()` can now return `open basket profit trail`, which routes through the existing `positionManager.CloseAll(...)` path.
+- Minimum trades per parsed window.
+- Minimum per-window profit factor.
+- Minimum per-window recovery factor.
+- Maximum drawdown-to-total-profit ratio.
+- Positive recent/2026 net profit.
+- Continued requirement for complete evidence, no losing windows, and non-negative worst window.
 
-This is a profit-protection feature for aggressive runs: it allows strong multi-position moves to keep running, then closes the basket if floating profit gives back too much. It adds no martingale, grid, averaging down, or recovery behavior.
+The analyzer now outputs additional ranking columns:
 
-## Fast Batch Impact
+- `MinProfitFactor`
+- `AverageRecoveryFactor`
+- `MinRecoveryFactor`
+- `MinTrades`
+- `DrawdownToProfitRatio`
+- `RecentNetProfit`
+- `RobustEnough`
 
-- Batch size stayed at 10 profiles and 30 runs.
-- Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor keeps `InpUseOpenBasketProfitTrail=false`.
-- Generated research profiles use:
-  - `InpUseOpenBasketProfitTrail=true`
-  - `InpOpenBasketTrailMinProfitPercent=0.75`
-  - `InpOpenBasketTrailGivebackPercent=35.0`
-  - `InpOpenBasketTrailMinPositions=1`
+Added `work\test_profit_search_robust_ranking.ps1`, which proves that only a profitable candidate with enough trades, acceptable PF/recovery, positive recent profit, and controlled drawdown can receive `PromotionReview`. Positive-profit candidates with weak PF, weak recovery, too few trades, bad drawdown, or weak recent evidence are downgraded to `ProfitButRisky`.
+
+This does not change live trade behavior, but it directly supports the goal by preventing fragile settings from being promoted just because they make more historical money.
+
+## Current Ranking Result
+
+`outputs\PROFIT_SEARCH_RANKING.md` now reports:
+
+- Complete evidence rows: `0`
+- Promotion review: no complete robust profitable evidence yet
+- Required promotion evidence: complete phase-2 real-tick reports, profit above baseline, zero losing windows, non-negative worst window, minimum trades, minimum PF, minimum recovery, positive recent/2026 net, and acceptable drawdown-to-profit ratio.
 
 ## Quiet Validation Results
 
-- `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `EDA7D1CE1555EC0803FFF6C280843F7D69304F9AEB8E43628D2A51CD386ECC4E`
-- `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
-- `work\test_price_action_strategy_decision.ps1`: PASS
-- `work\test_loss_streak_risk_reduction.ps1`: PASS
-- `work\test_ea_source_artifact_sync.ps1`: PASS
-- `work\test_price_action_strategy_batch.ps1`: PASS
-- `work\build_external_mt5_validation_package.ps1`: PASS, package configs 20, profiles 9
-- `work\test_external_mt5_validation_package.ps1`: PASS, 26 checks, 0 failed
-- `work\refresh_offline_validation_state.ps1`: PASS, 39 steps, 0 failed
+- `work\test_profit_search_robust_ranking.ps1`: PASS
+- `work\analyze_profit_search.ps1`: PASS
+- `work\refresh_offline_validation_state.ps1`: PASS, 40 steps, 0 failed
+- MT5-family process scan: empty
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `EDA7D1CE1555EC0803FFF6C280843F7D69304F9AEB8E43628D2A51CD386ECC4E`
-- `Professional_XAUUSD_EA.mq5`: `EDA7D1CE1555EC0803FFF6C280843F7D69304F9AEB8E43628D2A51CD386ECC4E`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `EDA7D1CE1555EC0803FFF6C280843F7D69304F9AEB8E43628D2A51CD386ECC4E`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `17BC346B4432FF3634D31AD7C21B8930B0396660C311CFA1D124C2BEFFA6B62C`
-- `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `6887C7B2EE4D4D91A5BB05D817F303AA608F807C276142686247ED0AB5998D99`
-- `outputs\xauusd_micro_validation_package.zip`: `139B654BA120AAE30AF0906C6C36373C4C34EC5017C9BF7EB30C5D6658EEAB5A`
-- `work\test_price_action_strategy_modules.ps1`: `553D9F5E3688963999B58A55AA038F2E7793286E1DCD5B4E7CBC4B87D7996198`
-- `work\test_price_action_strategy_batch.ps1`: `D546C9556DD34AC509EDC8706D57B7D5CDD7B9B0AECFB6BD1097B28F962C4874`
-- `work\build_price_action_strategy_batch.ps1`: `908F2332A7A9A129F028ED52754019A49B02298FD470166CF475E8443D0A5391`
+- `work\analyze_profit_search.ps1`: `639B246B16DBEA0D874E5A7A877C17BEDAE3CF56D60D899ABDD8DBB13691CB0F`
+- `work\test_profit_search_robust_ranking.ps1`: `4F741C30A9976FD579A3741CE5DA52CCE6128CBB2ED4C90DABB6C99E35BF551F`
+- `work\refresh_offline_validation_state.ps1`: `8FD77D06025D2B4ACB6A080C1B2543EC6DD81543EEE3B4F6F205698E5694D71A`
+- `outputs\PROFIT_SEARCH_RANKING.csv`: `E8C92F10D6D471DE829C0FB11008F6E071062C5F0F83A4D3E5DA2B81E9D65A25`
+- `outputs\PROFIT_SEARCH_RANKING.md`: `A8E30E1BE68F0AE2C0C0541889877EE139A81AD14E7D49FDFF3E585E973FF474`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `5623AB713CE24358C7A7055C26961F7A6BB51D7BCF7DE130BB3805F6BF495C75`
+- `outputs\OFFLINE_VALIDATION_REFRESH.md`: `688A4A9814A88CCCCAABDD180CD97DAC54FFBDAD869159B496823B3456685966`
 
 ## Background-Safety Note
 
