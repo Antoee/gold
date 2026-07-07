@@ -11,31 +11,46 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added an hour-of-day performance quality gate. This builds on hour-performance risk scaling by requiring stronger setup quality during broker/server hours that have recently performed poorly.
+Added directional hour-of-day performance controls. The EA can now treat buy and sell performance separately for the current broker/server hour, instead of assuming both sides behave the same.
 
 New inputs and logic:
 
-- `InpUseHourPerformanceQualityGate`
-- `InpHourPerformanceMinQualityScore`
-- `HourPerformanceSample()` now serves both risk scaling and quality gating.
-- `HourPerformanceQualityAllows()` lets weak-hour trades through only when setup quality is high enough.
-- `OpenSignal()` can now reject with `hour performance quality`.
+- `InpUseDirectionalHourPerformanceRiskScaling`
+- `InpDirectionalHourPerformanceLookbackDays`
+- `InpDirectionalHourPerformanceMinTrades`
+- `InpDirectionalHourPerformanceWeakNetPercent`
+- `InpDirectionalHourPerformanceStrongNetPercent`
+- `InpMinDirectionalHourPerformanceRiskMultiplier`
+- `InpMaxDirectionalHourPerformanceRiskMultiplier`
+- `InpDirectionalHourPerformanceBoostRequiresClosedProfit`
+- `InpUseDirectionalHourPerformanceQualityGate`
+- `InpDirectionalHourPerformanceMinQualityScore`
+- `EntryBiasForPosition()` maps closed deals back to the original entry side.
+- `DirectionalHourPerformanceSample()` samples same-hour, same-direction closed trade performance.
+- `DirectionalHourPerformanceRiskMultiplier()` can reduce weak directional hours and modestly boost strong ones.
+- `DirectionalHourPerformanceQualityAllows()` blocks low-quality trades when the same side has recently performed poorly in that hour.
+- `OpenSignal()` can now reject with `directional hour performance quality`.
 
-This supports the goal by allowing the EA to keep trading elite setups in weak hours while filtering lower-quality entries that historically hurt the account. It adds no martingale, grid, averaging down, or recovery behavior.
+This supports the goal by letting research profiles press a proven side during good hours while cutting or blocking the side that has recently hurt the account. The boost remains optional, capped, and closed-profit gated by default. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor keeps `InpUseHourPerformanceQualityGate=false`.
+- Baseline anchor keeps directional-hour controls disabled.
 - Generated research profiles use:
-  - `InpUseHourPerformanceQualityGate=true`
-  - `InpHourPerformanceMinQualityScore=12`
+  - `InpUseDirectionalHourPerformanceRiskScaling=true`
+  - `InpDirectionalHourPerformanceLookbackDays=60`
+  - `InpDirectionalHourPerformanceMinTrades=3`
+  - `InpMaxDirectionalHourPerformanceRiskMultiplier=1.20`
+  - `InpDirectionalHourPerformanceBoostRequiresClosedProfit=true`
+  - `InpUseDirectionalHourPerformanceQualityGate=true`
+  - `InpDirectionalHourPerformanceMinQualityScore=13`
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `0CE5B1D148FAC84B1DF5CE6423E3DACD866DB16C594B95430C07E8923FAA184A`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `28C794F01328170B6708A95742A2DFD2CDC4891E8686DC6226511249CE40DF6D`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_open_risk_exposure_guard.ps1`: PASS
 - `work\test_price_action_strategy_decision.ps1`: PASS
@@ -47,20 +62,20 @@ This supports the goal by allowing the EA to keep trading elite setups in weak h
 - `work\refresh_offline_validation_state.ps1`: PASS, 40 steps, 0 failed
 - MT5-family process scan: empty
 
-## Latest Hashes
+## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `0CE5B1D148FAC84B1DF5CE6423E3DACD866DB16C594B95430C07E8923FAA184A`
-- `Professional_XAUUSD_EA.mq5`: `0CE5B1D148FAC84B1DF5CE6423E3DACD866DB16C594B95430C07E8923FAA184A`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `0CE5B1D148FAC84B1DF5CE6423E3DACD866DB16C594B95430C07E8923FAA184A`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `0FB1D599CB19540D8A1B550CFEA994576924D145A0FB6BB98B855E830D3B2965`
-- `outputs\xauusd_micro_validation_package.zip`: `959FAC6308D9E16940D62D4A5392D4321B22BEBC291C057D0E8197DB2DBA32C6`
-- `work\build_price_action_strategy_batch.ps1`: `C4ABCF7A937026799E848090E2DF9324A3EC7D90885D638A53E0589FCC526DD4`
-- `work\test_price_action_strategy_modules.ps1`: `57CB781F275E744631695F4AF624F8368EC1C60BE978A3CF65682DF33935B6CC`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `336B6F30A799EAE869CBD91AD193FC3A1E127A77B0038A83B7ABF1A628EA39CA`
+- `outputs\Professional_XAUUSD_EA.mq5`: `28C794F01328170B6708A95742A2DFD2CDC4891E8686DC6226511249CE40DF6D`
+- `Professional_XAUUSD_EA.mq5`: `28C794F01328170B6708A95742A2DFD2CDC4891E8686DC6226511249CE40DF6D`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `28C794F01328170B6708A95742A2DFD2CDC4891E8686DC6226511249CE40DF6D`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: 34,177 bytes; contains the new directional-hour input block.
+- `outputs\xauusd_micro_validation_package.zip`: `B72F92ED8A78ABAE8BC8747455047DDAA422EB55BA921E47B51F50D49741049C`
+- `work\build_price_action_strategy_batch.ps1`: `91DFAB26FDF50B3FB30B909C19EB50051E259B48F7BC0DB67E5ABAD810952B05`
+- `work\test_price_action_strategy_modules.ps1`: `ED6D348AC1D080A2F17C583D1A25CE472A18D61D56366F11F0212B5D6929922B`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `F6B0DCB5D2521F02E04D7F703F2A8CCD95E03014822DEDAE36A0240D05799210`
 
 ## Background-Safety Note
 
-The stop marker remains expected at `work\STOP_MT5_FOCUS_WATCHDOG`. Any future MT5 validation should be treated as external/manual or run only after the no-focus/no-popup issue is solved.
+The stop marker remains present at `work\STOP_MT5_FOCUS_WATCHDOG`. Any future MT5 validation should be treated as external/manual or run only after the no-focus/no-popup issue is solved.
 
 ## GitHub Source Caveat
 
