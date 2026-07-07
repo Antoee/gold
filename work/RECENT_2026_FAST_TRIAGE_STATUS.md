@@ -11,46 +11,41 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added directional hour-of-day performance controls. The EA can now treat buy and sell performance separately for the current broker/server hour, instead of assuming both sides behave the same.
+Added directional hour-of-day take-profit expansion. This builds on the same-side, same-hour performance sample added previously, but uses it to widen reward targets instead of increasing initial stop risk.
 
 New inputs and logic:
 
-- `InpUseDirectionalHourPerformanceRiskScaling`
-- `InpDirectionalHourPerformanceLookbackDays`
-- `InpDirectionalHourPerformanceMinTrades`
-- `InpDirectionalHourPerformanceWeakNetPercent`
-- `InpDirectionalHourPerformanceStrongNetPercent`
-- `InpMinDirectionalHourPerformanceRiskMultiplier`
-- `InpMaxDirectionalHourPerformanceRiskMultiplier`
-- `InpDirectionalHourPerformanceBoostRequiresClosedProfit`
-- `InpUseDirectionalHourPerformanceQualityGate`
-- `InpDirectionalHourPerformanceMinQualityScore`
-- `EntryBiasForPosition()` maps closed deals back to the original entry side.
-- `DirectionalHourPerformanceSample()` samples same-hour, same-direction closed trade performance.
-- `DirectionalHourPerformanceRiskMultiplier()` can reduce weak directional hours and modestly boost strong ones.
-- `DirectionalHourPerformanceQualityAllows()` blocks low-quality trades when the same side has recently performed poorly in that hour.
-- `OpenSignal()` can now reject with `directional hour performance quality`.
+- `InpUseDirectionalHourTakeProfitExpansion`
+- `InpDirectionalHourTPMinQualityScore`
+- `InpDirectionalHourTPMinPriceActionScore`
+- `InpDirectionalHourTPMinNetPercent`
+- `InpDirectionalHourTPMultiplier`
+- `InpDirectionalHourTPRequireTrailing`
+- `InpDirectionalHourTPRequiresClosedProfit`
+- `DirectionalHourTakeProfitMultiplier()` expands TP only when directional-hour performance is strong enough.
+- `DirectionalHourPerformanceSample()` now also activates when directional-hour TP expansion is enabled.
+- `OpenSignal()` multiplies the TP distance by the directional-hour TP multiplier and logs `Directional hour TP x...`.
 
-This supports the goal by letting research profiles press a proven side during good hours while cutting or blocking the side that has recently hurt the account. The boost remains optional, capped, and closed-profit gated by default. It adds no martingale, grid, averaging down, or recovery behavior.
+This supports the goal by seeking more profit from the exact side/hour that has recently shown edge, while leaving initial risk unchanged. The default research setting requires trailing capability and closed account profit before expansion. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor keeps directional-hour controls disabled.
+- Baseline anchor keeps directional-hour TP expansion disabled.
 - Generated research profiles use:
-  - `InpUseDirectionalHourPerformanceRiskScaling=true`
-  - `InpDirectionalHourPerformanceLookbackDays=60`
-  - `InpDirectionalHourPerformanceMinTrades=3`
-  - `InpMaxDirectionalHourPerformanceRiskMultiplier=1.20`
-  - `InpDirectionalHourPerformanceBoostRequiresClosedProfit=true`
-  - `InpUseDirectionalHourPerformanceQualityGate=true`
-  - `InpDirectionalHourPerformanceMinQualityScore=13`
+  - `InpUseDirectionalHourTakeProfitExpansion=true`
+  - `InpDirectionalHourTPMinQualityScore=13`
+  - `InpDirectionalHourTPMinPriceActionScore=15`
+  - `InpDirectionalHourTPMinNetPercent=0.25`
+  - `InpDirectionalHourTPMultiplier=1.35`
+  - `InpDirectionalHourTPRequireTrailing=true`
+  - `InpDirectionalHourTPRequiresClosedProfit=true`
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `28C794F01328170B6708A95742A2DFD2CDC4891E8686DC6226511249CE40DF6D`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `CD96285BB7F942BEF48C6E1D5BF6B07CA2845198E958536BF2D4A8A9F07D2A08`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_open_risk_exposure_guard.ps1`: PASS
 - `work\test_price_action_strategy_decision.ps1`: PASS
@@ -64,14 +59,14 @@ This supports the goal by letting research profiles press a proven side during g
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `28C794F01328170B6708A95742A2DFD2CDC4891E8686DC6226511249CE40DF6D`
-- `Professional_XAUUSD_EA.mq5`: `28C794F01328170B6708A95742A2DFD2CDC4891E8686DC6226511249CE40DF6D`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `28C794F01328170B6708A95742A2DFD2CDC4891E8686DC6226511249CE40DF6D`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: 34,177 bytes; contains the new directional-hour input block.
-- `outputs\xauusd_micro_validation_package.zip`: `B72F92ED8A78ABAE8BC8747455047DDAA422EB55BA921E47B51F50D49741049C`
-- `work\build_price_action_strategy_batch.ps1`: `91DFAB26FDF50B3FB30B909C19EB50051E259B48F7BC0DB67E5ABAD810952B05`
-- `work\test_price_action_strategy_modules.ps1`: `ED6D348AC1D080A2F17C583D1A25CE472A18D61D56366F11F0212B5D6929922B`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `F6B0DCB5D2521F02E04D7F703F2A8CCD95E03014822DEDAE36A0240D05799210`
+- `outputs\Professional_XAUUSD_EA.mq5`: `CD96285BB7F942BEF48C6E1D5BF6B07CA2845198E958536BF2D4A8A9F07D2A08`
+- `Professional_XAUUSD_EA.mq5`: `CD96285BB7F942BEF48C6E1D5BF6B07CA2845198E958536BF2D4A8A9F07D2A08`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `CD96285BB7F942BEF48C6E1D5BF6B07CA2845198E958536BF2D4A8A9F07D2A08`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `EFC8C60EC60B283DED1770FD1C4EFBDAD9A7AD05729E99E31135739D5646DD73`, 34,593 bytes
+- `outputs\xauusd_micro_validation_package.zip`: `882F1020289E77780211C415FBEB576D1954A55E150930287204DC24B52E1D33`
+- `work\build_price_action_strategy_batch.ps1`: `0C832849D5BC755FE3DE2CD950C5214A36291958C8B79F948F8AE6D89E6891DC`
+- `work\test_price_action_strategy_modules.ps1`: `AC1473824E75847C904A99B99EA40A9BED298A4475E32C4420D75DCD2DBF2690`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `0DA32054FCAF27F6F446DDCB3AF033EFA26AD165BF59F88E519F8001024B0083`
 
 ## Background-Safety Note
 
