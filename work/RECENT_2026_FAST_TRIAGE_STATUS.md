@@ -11,41 +11,37 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added directional hour-of-day take-profit expansion. This builds on the same-side, same-hour performance sample added previously, but uses it to widen reward targets instead of increasing initial stop risk.
+Added an R-based partial profit lock. This is a broader profit-preservation control than the existing protected-runner partial close because it can work on normal TP-based trades too.
 
 New inputs and logic:
 
-- `InpUseDirectionalHourTakeProfitExpansion`
-- `InpDirectionalHourTPMinQualityScore`
-- `InpDirectionalHourTPMinPriceActionScore`
-- `InpDirectionalHourTPMinNetPercent`
-- `InpDirectionalHourTPMultiplier`
-- `InpDirectionalHourTPRequireTrailing`
-- `InpDirectionalHourTPRequiresClosedProfit`
-- `DirectionalHourTakeProfitMultiplier()` expands TP only when directional-hour performance is strong enough.
-- `DirectionalHourPerformanceSample()` now also activates when directional-hour TP expansion is enabled.
-- `OpenSignal()` multiplies the TP distance by the directional-hour TP multiplier and logs `Directional hour TP x...`.
+- `InpUseRPartialProfitLock`
+- `InpRPartialProfitLockAtR`
+- `InpRPartialProfitLockPercent`
+- `InpRPartialProfitLockMoveStop`
+- `InpRPartialProfitLockStopR`
+- Position management can now close a configurable part of a winning trade at a target R multiple.
+- After the partial close, the EA can move the remaining position stop into locked positive R.
+- The event logs `R partial profit lock` and `R partial profit lock stop`.
 
-This supports the goal by seeking more profit from the exact side/hour that has recently shown edge, while leaving initial risk unchanged. The default research setting requires trailing capability and closed account profit before expansion. It adds no martingale, grid, averaging down, or recovery behavior.
+This supports the goal by banking part of winners and protecting the remaining runner without increasing initial risk. Generated research profiles use a modest 35% partial at +1R and a +0.10R stop lock. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor keeps directional-hour TP expansion disabled.
+- Baseline anchor keeps R partial profit lock disabled.
 - Generated research profiles use:
-  - `InpUseDirectionalHourTakeProfitExpansion=true`
-  - `InpDirectionalHourTPMinQualityScore=13`
-  - `InpDirectionalHourTPMinPriceActionScore=15`
-  - `InpDirectionalHourTPMinNetPercent=0.25`
-  - `InpDirectionalHourTPMultiplier=1.35`
-  - `InpDirectionalHourTPRequireTrailing=true`
-  - `InpDirectionalHourTPRequiresClosedProfit=true`
+  - `InpUseRPartialProfitLock=true`
+  - `InpRPartialProfitLockAtR=1.00`
+  - `InpRPartialProfitLockPercent=35.0`
+  - `InpRPartialProfitLockMoveStop=true`
+  - `InpRPartialProfitLockStopR=0.10`
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `CD96285BB7F942BEF48C6E1D5BF6B07CA2845198E958536BF2D4A8A9F07D2A08`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `44BC42E93855926670FDC0BDA51759BCDD2452A1C863D322FCBE0F47CB404863`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_open_risk_exposure_guard.ps1`: PASS
 - `work\test_price_action_strategy_decision.ps1`: PASS
@@ -59,14 +55,14 @@ This supports the goal by seeking more profit from the exact side/hour that has 
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `CD96285BB7F942BEF48C6E1D5BF6B07CA2845198E958536BF2D4A8A9F07D2A08`
-- `Professional_XAUUSD_EA.mq5`: `CD96285BB7F942BEF48C6E1D5BF6B07CA2845198E958536BF2D4A8A9F07D2A08`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `CD96285BB7F942BEF48C6E1D5BF6B07CA2845198E958536BF2D4A8A9F07D2A08`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `EFC8C60EC60B283DED1770FD1C4EFBDAD9A7AD05729E99E31135739D5646DD73`, 34,593 bytes
-- `outputs\xauusd_micro_validation_package.zip`: `882F1020289E77780211C415FBEB576D1954A55E150930287204DC24B52E1D33`
-- `work\build_price_action_strategy_batch.ps1`: `0C832849D5BC755FE3DE2CD950C5214A36291958C8B79F948F8AE6D89E6891DC`
-- `work\test_price_action_strategy_modules.ps1`: `AC1473824E75847C904A99B99EA40A9BED298A4475E32C4420D75DCD2DBF2690`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `0DA32054FCAF27F6F446DDCB3AF033EFA26AD165BF59F88E519F8001024B0083`
+- `outputs\Professional_XAUUSD_EA.mq5`: `44BC42E93855926670FDC0BDA51759BCDD2452A1C863D322FCBE0F47CB404863`
+- `Professional_XAUUSD_EA.mq5`: `44BC42E93855926670FDC0BDA51759BCDD2452A1C863D322FCBE0F47CB404863`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `44BC42E93855926670FDC0BDA51759BCDD2452A1C863D322FCBE0F47CB404863`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `BCF77D3EAF53472B98BA8134D4EE5B97E4FCF2A3E21FD59A72BC9EDCD891B9E3`, 34,854 bytes
+- `outputs\xauusd_micro_validation_package.zip`: `0A762280337A78AF8FF55FFC37A969D88CDE5A15E3CA88B5E4A036D397981C20`
+- `work\build_price_action_strategy_batch.ps1`: `68162EBD79DB8E16A1FC25EB6E249F276D7E28F6BAED2EC2A796E3D493172729`
+- `work\test_price_action_strategy_modules.ps1`: `79FA4D169D68BECE9ED949572769272604B840281912550186D17D1F50449FB7`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `613B4C8C8643A38C37B268F0398D782721177ABC922547EAC8C90DE8A5A1EC61`
 
 ## Background-Safety Note
 
