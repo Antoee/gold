@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-07 16:54:52 -05:00
+Updated: 2026-07-07 17:23:18 -05:00
 
 ## Current State
 
@@ -11,35 +11,36 @@ Updated: 2026-07-07 16:54:52 -05:00
 
 ## Latest Strategy-Code Change
 
-Added a house-money open-risk cap expansion. This optional exposure feature keeps the normal open-risk cap intact, then progressively expands it only when the house-money gate and protected-cushion thresholds are satisfied.
+Added a mediocre/weak-setup risk throttle. This optional feature still allows trades, but cuts position risk when the setup quality and price-action scores are below the configured high-upside thresholds.
 
 New inputs and logic:
 
-- `InpUseHouseMoneyOpenRiskExpansion`
-- `InpHouseMoneyOpenRiskStartCushionPercent`
-- `InpHouseMoneyOpenRiskFullCushionPercent`
-- `InpHouseMoneyMaxOpenRiskPercent`
-- `EffectiveMaxOpenRiskPercent(...)`
-- `ExposureAllows(...)` now checks the effective cap instead of only the static `InpMaxOpenRiskPercent`.
+- `InpUseMediocreSetupRiskThrottle`
+- `InpMediocreSetupMinQualityScore`
+- `InpMediocreSetupMinPriceActionScore`
+- `InpMediocreSetupRiskMultiplier`
+- `InpMediocreSetupBypassWithHouseMoney`
+- `MediocreSetupRiskMultiplier(...)`
+- Entry logs add `Mediocre setup risk x...` when the throttle reduces risk.
 
-This supports the goal by allowing the generated research profiles to press harder only after the account has earned a protected profit cushion. The baseline remains unchanged, and this does not add martingale, grid, averaging down, or recovery behavior.
+This supports the goal by protecting risk budget during mediocre setups while leaving the "press harder with protected house money" path intact. The baseline remains unchanged, and this does not add martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor remains conservative and keeps the new expansion disabled.
+- Baseline anchor remains conservative and keeps the new throttle disabled.
 - Generated research profiles now use:
-  - `InpMaxOpenRiskPercent=8.00`
-  - `InpUseHouseMoneyOpenRiskExpansion=true`
-  - `InpHouseMoneyOpenRiskStartCushionPercent=6.0`
-  - `InpHouseMoneyOpenRiskFullCushionPercent=18.0`
-  - `InpHouseMoneyMaxOpenRiskPercent=12.00`
+  - `InpUseMediocreSetupRiskThrottle=true`
+  - `InpMediocreSetupMinQualityScore=12`
+  - `InpMediocreSetupMinPriceActionScore=14`
+  - `InpMediocreSetupRiskMultiplier=0.50`
+  - `InpMediocreSetupBypassWithHouseMoney=true`
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `7E491232A6AEA3EC0D0B441D56FAABE363A3F268E4B1B0101738D116CCA0DC97`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `BF3D8244AD39D85E95DD663FFED1B4DEC9F3373BC5D99E9A89AACF2B0118784A`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_open_risk_exposure_guard.ps1`: PASS
 - `work\test_price_action_strategy_decision.ps1`: PASS
@@ -54,15 +55,15 @@ This supports the goal by allowing the generated research profiles to press hard
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `7E491232A6AEA3EC0D0B441D56FAABE363A3F268E4B1B0101738D116CCA0DC97`
-- `Professional_XAUUSD_EA.mq5`: `7E491232A6AEA3EC0D0B441D56FAABE363A3F268E4B1B0101738D116CCA0DC97`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `7E491232A6AEA3EC0D0B441D56FAABE363A3F268E4B1B0101738D116CCA0DC97`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `6AAC260566613E6AFCF18DE470CC5493BE9F57A8CC8F08B1601EB6798BD35AA1`
-- `outputs\xauusd_micro_validation_package.zip`: `866568BF98B87676C4F369FEDEAF2CEC8D45EFF8AAC05D4EA1D56753A626E8F3`
-- `work\build_price_action_strategy_batch.ps1`: `FB70FE1A08F55805BB399049B9E23B8E5F3AD9FCFEEE31BB37671A71A84551A5`
-- `work\test_price_action_strategy_modules.ps1`: `652E31886F813DCA8E6B1E3B40DAABA18C29FFE02D03DE924C6B3A2DF21B2BAE`
-- `work\test_price_action_strategy_batch.ps1`: `BFB4DB5F817F45A411ED9EB8749FEADEFCB53001452EFF8D9D931D90F8E5111F`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `5575719EF605755EF6BB149AD81F7040BD103634B9DEE4FEBA226ECA702683AF`
+- `outputs\Professional_XAUUSD_EA.mq5`: `BF3D8244AD39D85E95DD663FFED1B4DEC9F3373BC5D99E9A89AACF2B0118784A`
+- `Professional_XAUUSD_EA.mq5`: `BF3D8244AD39D85E95DD663FFED1B4DEC9F3373BC5D99E9A89AACF2B0118784A`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `BF3D8244AD39D85E95DD663FFED1B4DEC9F3373BC5D99E9A89AACF2B0118784A`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `E2835758726ADCF61D8B35FFE76F05B61BD449A53B3E1FB5D47AEA7FFD21107C`
+- `outputs\xauusd_micro_validation_package.zip`: `6F0DDF972934DCAE66C90F3F76B47B6D1E341192A713DE31248095F36B1711DA`
+- `work\build_price_action_strategy_batch.ps1`: `53F0CB561DFE8478472D69F3733CADA8FFDA58C2EFF34649F1AC5843A6B4955F`
+- `work\test_price_action_strategy_modules.ps1`: `6CCCB5599FAB6D0330A382778B9CA0BE44A9CC7393824484B622D7737251B4C8`
+- `work\test_price_action_strategy_batch.ps1`: `BD818A2E18552769E69CAB593A2A423919065D230908DE3FAF87C93BC614BD09`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `79AE01A0F0C864E17DE2831470A2D4FD5A2C014700A0ED11E64E9145AABFDDBC`
 
 ## Background-Safety Note
 
