@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-07 16:02:30 -05:00
+Updated: 2026-07-07 16:09:37 -05:00
 
 ## Current State
 
@@ -11,36 +11,38 @@ Updated: 2026-07-07 16:02:30 -05:00
 
 ## Latest Strategy-Code Change
 
-Added a house-money MFE giveback stretch. This optional exit layer lets already-protected strong runners breathe more by widening the MFE giveback allowance only when the house-money gate passes and the account has built a protected-floor cushion.
+Added an elite confluence take-profit expansion. This optional target-expansion layer lets the strongest quality and price-action setups aim farther when trailing support exists and the house-money gate permits it.
 
 New inputs and logic:
 
-- `InpUseHouseMoneyMFEGivebackStretch`
-- `InpHouseMoneyMFEStretchStartCushionPercent`
-- `InpHouseMoneyMFEStretchFullCushionPercent`
-- `InpHouseMoneyMFEGivebackMaxR`
-- `InpHouseMoneyMFEStretchRequireProtectedStop`
-- `EffectiveMFEGivebackR(...)` stretches the MFE giveback exit distance only when house-money conditions pass.
-- Exit logging records `MFE giveback exit stretched ...R` when the stretch is active.
+- `InpUseEliteConfluenceTakeProfitExpansion`
+- `InpEliteConfluenceTPMinQualityScore`
+- `InpEliteConfluenceTPMinPriceActionScore`
+- `InpEliteConfluenceTPMultiplier`
+- `InpEliteConfluenceTPRequireTrailing`
+- `InpEliteConfluenceTPRequiresHouseMoney`
+- `EliteConfluenceTakeProfitMultiplier(...)` expands TP distance only for high-confluence setups.
+- Entry logging records `Elite confluence TP x...` when the expansion is active.
 
-This supports the goal by giving protected runners more room to compound instead of clipping them too early. It does not add martingale, grid, averaging down, or recovery behavior.
+This supports the goal by seeking more profit from the rare highest-quality setups without raising first-entry risk. It does not add martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor keeps the house-money MFE giveback stretch disabled.
+- Baseline anchor keeps the elite confluence TP expansion disabled.
 - Generated research profiles use:
-  - `InpUseHouseMoneyMFEGivebackStretch=true`
-  - `InpHouseMoneyMFEStretchStartCushionPercent=6.0`
-  - `InpHouseMoneyMFEStretchFullCushionPercent=18.0`
-  - `InpHouseMoneyMFEGivebackMaxR=1.25`
-  - `InpHouseMoneyMFEStretchRequireProtectedStop=true`
+  - `InpUseEliteConfluenceTakeProfitExpansion=true`
+  - `InpEliteConfluenceTPMinQualityScore=15`
+  - `InpEliteConfluenceTPMinPriceActionScore=18`
+  - `InpEliteConfluenceTPMultiplier=1.40`
+  - `InpEliteConfluenceTPRequireTrailing=true`
+  - `InpEliteConfluenceTPRequiresHouseMoney=true`
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `4298EB74E4607D53974E9DA95F0CC5DDF22E7B840F9532A329DA462D2F26157F`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `DA51EB121AEDEF4D3569ACF77BC9EC1AA9B6D9FCFACD750C7AD552A67AFC33EF`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_open_risk_exposure_guard.ps1`: PASS
 - `work\test_price_action_strategy_decision.ps1`: PASS
@@ -55,15 +57,15 @@ This supports the goal by giving protected runners more room to compound instead
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `4298EB74E4607D53974E9DA95F0CC5DDF22E7B840F9532A329DA462D2F26157F`
-- `Professional_XAUUSD_EA.mq5`: `4298EB74E4607D53974E9DA95F0CC5DDF22E7B840F9532A329DA462D2F26157F`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `4298EB74E4607D53974E9DA95F0CC5DDF22E7B840F9532A329DA462D2F26157F`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `FBACB54312D8549A5FF385119E1D3798A1427DE0CC028C2244A514E91A014A35`
-- `outputs\xauusd_micro_validation_package.zip`: `5497BC0D93982B76BF5E86C0A85C18E6DFC261F5BC48D2EAD768788228CE4C85`
-- `work\build_price_action_strategy_batch.ps1`: `8D86618479CA1613A78FD463DE35563298D8C44199138AF25906C11072037575`
-- `work\test_price_action_strategy_modules.ps1`: `9BC1F0FDD2EA0454F0D0105FFAB4749731CFE074659C4AF3D006E9E40D996564`
-- `work\test_price_action_strategy_batch.ps1`: `6E6129AF9E19CDD8970728B9C3BB35E262168529ABCDAE79D0EEF3E847A80CDA`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `B8FFA1BCD69C9AF3E6095E89885B8420DEA4E7B1C8112699DF5AF49ADC850515`
+- `outputs\Professional_XAUUSD_EA.mq5`: `DA51EB121AEDEF4D3569ACF77BC9EC1AA9B6D9FCFACD750C7AD552A67AFC33EF`
+- `Professional_XAUUSD_EA.mq5`: `DA51EB121AEDEF4D3569ACF77BC9EC1AA9B6D9FCFACD750C7AD552A67AFC33EF`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `DA51EB121AEDEF4D3569ACF77BC9EC1AA9B6D9FCFACD750C7AD552A67AFC33EF`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `7300178FD3CF05AF1BD2D84227ABC8C47CC16DEE56552B8B849866E9884F4EAC`
+- `outputs\xauusd_micro_validation_package.zip`: `0D5AC7A88A17E3B75F6D3332A84DB3B787EA275CCCAB260B7EF8BF03C4EEC4B1`
+- `work\build_price_action_strategy_batch.ps1`: `4D0C7686711BFC228C4433475B189D7B66132E54E3FF66247640B28433112BC9`
+- `work\test_price_action_strategy_modules.ps1`: `C7BDCD53CAE8DDBB5DE3A18D9B2BC975D0C86C3B6EFF773FD72311CDFB9F8B78`
+- `work\test_price_action_strategy_batch.ps1`: `3DECB4A2503C0FC153F3A22796546B1486C0CF37B86E5BC305CD38D22BFB04E4`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `096CDBE3A8A3F155A2A777ADB7906B14EA82F846E93A394F9D0884BDB0F039B4`
 
 ## Background-Safety Note
 
