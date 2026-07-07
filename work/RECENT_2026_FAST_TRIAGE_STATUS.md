@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-07 17:23:18 -05:00
+Updated: 2026-07-07 18:33:18 -05:00
 
 ## Current State
 
@@ -11,42 +11,36 @@ Updated: 2026-07-07 17:23:18 -05:00
 
 ## Latest Strategy-Code Change
 
-Added a mediocre/weak-setup risk throttle. This optional feature still allows trades, but cuts position risk when the setup quality and price-action scores are below the configured high-upside thresholds.
+Added a protected-aggression breakout research lane to the fast price-action batch. This is a better-logic profit-seeking candidate, not just a bigger-risk setting: it tests faster breakout/continuation entries using compression breakout, range expansion, narrow-range breakout, Donchian breakout, displacement BOS, breakout retest, FVG retest, VWAP continuation, tick microstructure, cumulative-delta proxy, ADX strengthening, and regime filters.
 
-New inputs and logic:
+Protected-aggression controls:
 
-- `InpUseMediocreSetupRiskThrottle`
-- `InpMediocreSetupMinQualityScore`
-- `InpMediocreSetupMinPriceActionScore`
-- `InpMediocreSetupRiskMultiplier`
-- `InpMediocreSetupBypassWithHouseMoney`
-- `MediocreSetupRiskMultiplier(...)`
-- Entry logs add `Mediocre setup risk x...` when the throttle reduces risk.
+- Profile: `protected_aggression_breakout`
+- Windows: `2026_Q2`, `2026_ytd`, `2025_Q2`
+- Wider base target: `InpTakeProfitATRMultiplier=4.20`
+- Faster entry threshold: `InpMinimumEntryScore=6`, `InpMinimumConfirmations=2`
+- Still keeps shared safety rails: starting-equity protection, close-on-risk-limit, max equity drawdown, max effective risk cap, open-risk cap, protected-floor gates, house-money gates, spread/cost/margin guards, and no martingale/grid/averaging down.
 
-This supports the goal by protecting risk budget during mediocre setups while leaving the "press harder with protected house money" path intact. The baseline remains unchanged, and this does not add martingale, grid, averaging down, or recovery behavior.
+This supports the updated goal by giving MT5 a higher-upside logic candidate to prove or reject while keeping the capital-protection framework intact. The EA source itself did not change in this turn; the generated research and validation artifacts changed.
 
 ## Fast Batch Impact
 
-- Batch size stayed at 10 profiles and 30 runs.
-- Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor remains conservative and keeps the new throttle disabled.
-- Generated research profiles now use:
-  - `InpUseMediocreSetupRiskThrottle=true`
-  - `InpMediocreSetupMinQualityScore=12`
-  - `InpMediocreSetupMinPriceActionScore=14`
-  - `InpMediocreSetupRiskMultiplier=0.50`
-  - `InpMediocreSetupBypassWithHouseMoney=true`
+- Batch size increased from 10 profiles / 30 runs to 11 profiles / 33 runs.
+- Estimated tester runtime increased from about 10.5 minutes to about 11.55 minutes before platform overhead.
+- New profile added: `protected_aggression_breakout`.
+- The batch still uses fast no-visual tester configs with `Model=2`, `Visual=0`, `ShutdownTerminal=1`, and `ReplaceReport=1`.
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
 - `work\sync_ea_source_artifacts.ps1`: PASS, hash `BF3D8244AD39D85E95DD663FFED1B4DEC9F3373BC5D99E9A89AACF2B0118784A`
-- `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
+- `work\build_price_action_strategy_batch.ps1`: PASS, 11 profiles, 33 runs, estimated 11.55 minutes
 - `work\test_open_risk_exposure_guard.ps1`: PASS
 - `work\test_price_action_strategy_decision.ps1`: PASS
 - `work\test_loss_streak_risk_reduction.ps1`: PASS
 - `work\test_ea_source_artifact_sync.ps1`: PASS
 - `work\test_price_action_strategy_batch.ps1`: PASS
+- `work\test_price_action_strategy_handoff.ps1`: PASS
 - `work\build_external_mt5_validation_package.ps1`: PASS, package configs 20, profiles 9
 - `work\test_external_mt5_validation_package.ps1`: PASS, 26 checks, 0 failed
 - `work\refresh_offline_validation_state.ps1`: PASS, 40 steps, 0 failed
@@ -59,11 +53,13 @@ This supports the goal by protecting risk budget during mediocre setups while le
 - `Professional_XAUUSD_EA.mq5`: `BF3D8244AD39D85E95DD663FFED1B4DEC9F3373BC5D99E9A89AACF2B0118784A`
 - `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `BF3D8244AD39D85E95DD663FFED1B4DEC9F3373BC5D99E9A89AACF2B0118784A`
 - `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `E2835758726ADCF61D8B35FFE76F05B61BD449A53B3E1FB5D47AEA7FFD21107C`
-- `outputs\xauusd_micro_validation_package.zip`: `6F0DDF972934DCAE66C90F3F76B47B6D1E341192A713DE31248095F36B1711DA`
-- `work\build_price_action_strategy_batch.ps1`: `53F0CB561DFE8478472D69F3733CADA8FFDA58C2EFF34649F1AC5843A6B4955F`
+- `outputs\xauusd_micro_validation_package.zip`: `911AAA00CD862327E24F27E1953DD9B2C606F7E7278A2A45601AE41B99087BE5`
+- `work\build_price_action_strategy_batch.ps1`: `F6AE6F5AFC0B999DE6D8AA7FC29D3A17720A61DB0FD0ECFCD253368D581D5B40`
 - `work\test_price_action_strategy_modules.ps1`: `6CCCB5599FAB6D0330A382778B9CA0BE44A9CC7393824484B622D7737251B4C8`
-- `work\test_price_action_strategy_batch.ps1`: `BD818A2E18552769E69CAB593A2A423919065D230908DE3FAF87C93BC614BD09`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `79AE01A0F0C864E17DE2831470A2D4FD5A2C014700A0ED11E64E9145AABFDDBC`
+- `work\test_price_action_strategy_batch.ps1`: `F6E0FE38AC06402B5529A13798E79B8E6999DFBB8757F67FD5EBB6C8E22926FC`
+- `work\test_price_action_strategy_handoff.ps1`: `F8B5503E3B72DD32EDAA79630D758693E41E3E851D5B56ED75CC7820C80F9BBF`
+- `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `1BD59B253422253BF095B10B2146CD88406D23FA1A79831947594BD1`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `B8F830CFC9EDE7F94FA1D5A6B611DAEDC7BBEFCCDAFFA28F6FAE2CB1B661CB35`
 
 ## Background-Safety Note
 
