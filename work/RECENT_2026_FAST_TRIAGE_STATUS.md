@@ -11,30 +11,35 @@ Updated: 2026-07-06
 
 ## Latest Strategy-Code Change
 
-Added persistent initial-risk tracking for open positions. The EA now stores the original stop distance when a position opens and uses that value for R-based trade management instead of recalculating R from a stop that may already have moved.
+Added an open-basket profit trailing guard. This lets the EA protect floating profit across all currently open positions for the symbol/magic number, not just one trade at a time.
 
-New/changed logic:
+New inputs and logic:
 
-- `PXEA_INITIAL_RISK_` global-variable keys store original position risk distance.
-- `InitialRiskDistance()` returns the stored risk distance with a fallback for legacy/open positions.
-- `RegisterInitialRiskForNewestPosition()` captures risk immediately after a successful entry.
-- Winner scale-in locked-R checks now use stored initial risk.
-- Position-manager `ProfitR()` now uses stored initial risk.
-- Protected-runner partial stop locks, R profit locks, and MFE profit-lock stops now use stored initial risk.
+- `InpUseOpenBasketProfitTrail`
+- `InpOpenBasketTrailMinProfitPercent`
+- `InpOpenBasketTrailGivebackPercent`
+- `InpOpenBasketTrailMinPositions`
+- `OpenBasketProfit()` sums current open basket profit for matching positions.
+- `OpenBasketProfitTrailHit()` tracks peak floating basket profit and triggers a risk exit after configurable giveback.
+- `RiskLimitHit()` can now return `open basket profit trail`, which routes through the existing `positionManager.CloseAll(...)` path.
 
-This is a profit-seeking quality fix: it lets the EA press real winners and manage runners based on true original risk, while avoiding distorted R values after stops move to breakeven/profit. It adds no martingale, grid, averaging down, or recovery behavior.
+This is a profit-protection feature for aggressive runs: it allows strong multi-position moves to keep running, then closes the basket if floating profit gives back too much. It adds no martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Existing aggressive profile settings remain unchanged.
-- The behavior change applies to all profiles that use R-based partials, profit locks, MFE locks, and winner scale-ins.
+- Baseline anchor keeps `InpUseOpenBasketProfitTrail=false`.
+- Generated research profiles use:
+  - `InpUseOpenBasketProfitTrail=true`
+  - `InpOpenBasketTrailMinProfitPercent=0.75`
+  - `InpOpenBasketTrailGivebackPercent=35.0`
+  - `InpOpenBasketTrailMinPositions=1`
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `1E7B264596B077D820C126E6B86CD368B6B815B274BE91CD4EF9705DC79ABC1B`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `EDA7D1CE1555EC0803FFF6C280843F7D69304F9AEB8E43628D2A51CD386ECC4E`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_price_action_strategy_decision.ps1`: PASS
 - `work\test_loss_streak_risk_reduction.ps1`: PASS
@@ -46,15 +51,15 @@ This is a profit-seeking quality fix: it lets the EA press real winners and mana
 
 ## Latest Hashes
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `1E7B264596B077D820C126E6B86CD368B6B815B274BE91CD4EF9705DC79ABC1B`
-- `Professional_XAUUSD_EA.mq5`: `1E7B264596B077D820C126E6B86CD368B6B815B274BE91CD4EF9705DC79ABC1B`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `1E7B264596B077D820C126E6B86CD368B6B815B274BE91CD4EF9705DC79ABC1B`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `563810FE314F220B9ADCA65EDD55402D357BAE5EEE056C620F96D130C23EB378`
+- `outputs\Professional_XAUUSD_EA.mq5`: `EDA7D1CE1555EC0803FFF6C280843F7D69304F9AEB8E43628D2A51CD386ECC4E`
+- `Professional_XAUUSD_EA.mq5`: `EDA7D1CE1555EC0803FFF6C280843F7D69304F9AEB8E43628D2A51CD386ECC4E`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `EDA7D1CE1555EC0803FFF6C280843F7D69304F9AEB8E43628D2A51CD386ECC4E`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `17BC346B4432FF3634D31AD7C21B8930B0396660C311CFA1D124C2BEFFA6B62C`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `6887C7B2EE4D4D91A5BB05D817F303AA608F807C276142686247ED0AB5998D99`
-- `outputs\xauusd_micro_validation_package.zip`: `A8E63C81D9C0F5EEBC371C7BEE383517F7382878335AB88EB343394AD0D67608`
-- `work\test_price_action_strategy_modules.ps1`: `E32F1BD68768FA312657AC6EF922607917E11C49A4D84DCA666A2640D6FCA6F5`
+- `outputs\xauusd_micro_validation_package.zip`: `139B654BA120AAE30AF0906C6C36373C4C34EC5017C9BF7EB30C5D6658EEAB5A`
+- `work\test_price_action_strategy_modules.ps1`: `553D9F5E3688963999B58A55AA038F2E7793286E1DCD5B4E7CBC4B87D7996198`
 - `work\test_price_action_strategy_batch.ps1`: `D546C9556DD34AC509EDC8706D57B7D5CDD7B9B0AECFB6BD1097B28F962C4874`
-- `work\build_price_action_strategy_batch.ps1`: `6D41142D9D74BEC4077168839A31EA209FACF563D17BC6639DB1E2B1C86A11D0`
+- `work\build_price_action_strategy_batch.ps1`: `908F2332A7A9A129F028ED52754019A49B02298FD470166CF475E8443D0A5391`
 
 ## Background-Safety Note
 
