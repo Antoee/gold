@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-07 16:09:37 -05:00
+Updated: 2026-07-07 16:27:31 -05:00
 
 ## Current State
 
@@ -11,38 +11,34 @@ Updated: 2026-07-07 16:09:37 -05:00
 
 ## Latest Strategy-Code Change
 
-Added an elite confluence take-profit expansion. This optional target-expansion layer lets the strongest quality and price-action setups aim farther when trailing support exists and the house-money gate permits it.
+Added a maximum protected-profit optimizer fitness mode. This does not change live entries by itself; it changes what future MT5 optimization passes reward when we intentionally run Strategy Tester.
 
 New inputs and logic:
 
-- `InpUseEliteConfluenceTakeProfitExpansion`
-- `InpEliteConfluenceTPMinQualityScore`
-- `InpEliteConfluenceTPMinPriceActionScore`
-- `InpEliteConfluenceTPMultiplier`
-- `InpEliteConfluenceTPRequireTrailing`
-- `InpEliteConfluenceTPRequiresHouseMoney`
-- `EliteConfluenceTakeProfitMultiplier(...)` expands TP distance only for high-confluence setups.
-- Entry logging records `Elite confluence TP x...` when the expansion is active.
+- `FITNESS_MAX_PROFIT_PROTECTED = 5`
+- `InpTesterMaxProfitNetPower`
+- `InpTesterMaxProfitDrawdownPower`
+- `InpTesterMaxProfitQualityPower`
+- `OnTester()` now has a profit-seeking protected score that amplifies net profit while compounding penalties for weak profit factor, weak recovery, excess drawdown, Sharpe shortfall, and too few trades.
 
-This supports the goal by seeking more profit from the rare highest-quality setups without raising first-entry risk. It does not add martingale, grid, averaging down, or recovery behavior.
+This supports the goal by letting optimizer passes push harder for larger profit while still avoiding parameter sets that only look good because they tolerate ugly risk. It does not add martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor keeps the elite confluence TP expansion disabled.
-- Generated research profiles use:
-  - `InpUseEliteConfluenceTakeProfitExpansion=true`
-  - `InpEliteConfluenceTPMinQualityScore=15`
-  - `InpEliteConfluenceTPMinPriceActionScore=18`
-  - `InpEliteConfluenceTPMultiplier=1.40`
-  - `InpEliteConfluenceTPRequireTrailing=true`
-  - `InpEliteConfluenceTPRequiresHouseMoney=true`
+- Baseline anchor remains conservative.
+- Generated research profiles now use:
+  - `InpTesterFitnessMode=5`
+  - `InpTesterMaxProfitNetPower=1.35`
+  - `InpTesterMaxProfitDrawdownPower=2.25`
+  - `InpTesterMaxProfitQualityPower=0.75`
+  - Existing protected-profit penalties remain active.
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `DA51EB121AEDEF4D3569ACF77BC9EC1AA9B6D9FCFACD750C7AD552A67AFC33EF`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `942CD005D4104C730E3AFF52E63DEB8A5E86890B1B5214C45F89831122A96E02`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_open_risk_exposure_guard.ps1`: PASS
 - `work\test_price_action_strategy_decision.ps1`: PASS
@@ -57,15 +53,15 @@ This supports the goal by seeking more profit from the rare highest-quality setu
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `DA51EB121AEDEF4D3569ACF77BC9EC1AA9B6D9FCFACD750C7AD552A67AFC33EF`
-- `Professional_XAUUSD_EA.mq5`: `DA51EB121AEDEF4D3569ACF77BC9EC1AA9B6D9FCFACD750C7AD552A67AFC33EF`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `DA51EB121AEDEF4D3569ACF77BC9EC1AA9B6D9FCFACD750C7AD552A67AFC33EF`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `7300178FD3CF05AF1BD2D84227ABC8C47CC16DEE56552B8B849866E9884F4EAC`
-- `outputs\xauusd_micro_validation_package.zip`: `0D5AC7A88A17E3B75F6D3332A84DB3B787EA275CCCAB260B7EF8BF03C4EEC4B1`
-- `work\build_price_action_strategy_batch.ps1`: `4D0C7686711BFC228C4433475B189D7B66132E54E3FF66247640B28433112BC9`
-- `work\test_price_action_strategy_modules.ps1`: `C7BDCD53CAE8DDBB5DE3A18D9B2BC975D0C86C3B6EFF773FD72311CDFB9F8B78`
-- `work\test_price_action_strategy_batch.ps1`: `3DECB4A2503C0FC153F3A22796546B1486C0CF37B86E5BC305CD38D22BFB04E4`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `096CDBE3A8A3F155A2A777ADB7906B14EA82F846E93A394F9D0884BDB0F039B4`
+- `outputs\Professional_XAUUSD_EA.mq5`: `942CD005D4104C730E3AFF52E63DEB8A5E86890B1B5214C45F89831122A96E02`
+- `Professional_XAUUSD_EA.mq5`: `942CD005D4104C730E3AFF52E63DEB8A5E86890B1B5214C45F89831122A96E02`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `942CD005D4104C730E3AFF52E63DEB8A5E86890B1B5214C45F89831122A96E02`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `CF6A89029FCEF8CD419B1DFC106EE0013D78A5595B163A8DC0E7D6F5B4F69405`
+- `outputs\xauusd_micro_validation_package.zip`: `86E76D55B908B4F53098D8F74DD2DF004377030E4A0A9C7896CA22DC6660FD7A`
+- `work\build_price_action_strategy_batch.ps1`: `440465B05029757AF098EDEB57CF5E74BBA8170A58978DF60DF4F819CED3DB3E`
+- `work\test_price_action_strategy_modules.ps1`: `FD8DAB68A017943209E7F0566F6FC3BFA1444B8D7C4DDCFEC1F085738C7BAADB`
+- `work\test_price_action_strategy_batch.ps1`: `2C18E9B7890DCA6623B740D7F95E6E7CA232EB9206D2F9536A411F2207F95EEE`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `AADB1388549A80F6427C80B8777363C564669AE03769075461DF892E80FB315A`
 
 ## Background-Safety Note
 
