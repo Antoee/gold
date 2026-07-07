@@ -11,38 +11,39 @@ Updated: 2026-07-07
 
 ## Latest Strategy-Code Change
 
-Added a realized-profit giveback quality gate. This is an optional profit-preservation entry filter that raises the required entry quality when open equity drawdown is eating into already banked realized profit.
+Added an equity-peak giveback quality gate. This is an optional profit-preservation entry filter that raises the required entry quality when equity pulls back from a meaningful high-watermark profit cushion.
 
 New inputs and logic:
 
-- `InpUseRealizedProfitGivebackQualityGate`
-- `InpRealizedProfitGivebackStartPercent`
-- `InpRealizedProfitGivebackFullPercent`
-- `InpRealizedProfitGivebackMinQualityScore`
-- `InpRealizedProfitGivebackMaxQualityScore`
-- `RealizedProfitGivebackQualityAllows()` compares realized balance profit against current equity profit.
-- When giveback reaches the configured start threshold, required quality rises from the min score toward the max score.
-- Weak new entries are blocked with `realized profit giveback quality`.
-- Generated research profiles enable the gate from 25% to 60% giveback, requiring quality score 12 to 16.
+- `InpUseEquityPeakGivebackQualityGate`
+- `InpEquityPeakGivebackMinPeakProfitPercent`
+- `InpEquityPeakGivebackStartPercent`
+- `InpEquityPeakGivebackFullPercent`
+- `InpEquityPeakGivebackMinQualityScore`
+- `InpEquityPeakGivebackMaxQualityScore`
+- `EquityPeakGivebackQualityAllows()` tracks peak equity, requires a minimum peak-profit cushion, then raises required entry quality as giveback grows.
+- Weak new entries are blocked with `equity peak giveback quality`.
+- Generated research profiles enable the gate after a 2% peak-profit cushion, from 25% to 60% giveback, requiring quality score 12 to 16.
 
-This supports the goal by protecting banked profit earlier than the hard protected-floor guard while still allowing high-quality opportunities to continue trading. It does not add martingale, grid, averaging down, or recovery behavior.
+This supports the goal by protecting both floating and realized gains before they become deep drawdown, while still allowing high-quality opportunities to keep trading. It does not add martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor keeps realized-profit giveback quality gate disabled.
+- Baseline anchor keeps equity-peak giveback quality gate disabled.
 - Generated research profiles use:
-  - `InpUseRealizedProfitGivebackQualityGate=true`
-  - `InpRealizedProfitGivebackStartPercent=25.0`
-  - `InpRealizedProfitGivebackFullPercent=60.0`
-  - `InpRealizedProfitGivebackMinQualityScore=12`
-  - `InpRealizedProfitGivebackMaxQualityScore=16`
+  - `InpUseEquityPeakGivebackQualityGate=true`
+  - `InpEquityPeakGivebackMinPeakProfitPercent=2.00`
+  - `InpEquityPeakGivebackStartPercent=25.0`
+  - `InpEquityPeakGivebackFullPercent=60.0`
+  - `InpEquityPeakGivebackMinQualityScore=12`
+  - `InpEquityPeakGivebackMaxQualityScore=16`
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `0F1CD8EA6F15DB320D1008BA54FA4C57E6B20057870A7B3DBDAC7BE36FE10E10`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `2D5CA7D2AF69B25BED4B08DB03463E6B585C633B2EA4A2DD8D7871CB64D0D33D`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_open_risk_exposure_guard.ps1`: PASS
 - `work\test_price_action_strategy_decision.ps1`: PASS
@@ -56,15 +57,15 @@ This supports the goal by protecting banked profit earlier than the hard protect
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `0F1CD8EA6F15DB320D1008BA54FA4C57E6B20057870A7B3DBDAC7BE36FE10E10`
-- `Professional_XAUUSD_EA.mq5`: `0F1CD8EA6F15DB320D1008BA54FA4C57E6B20057870A7B3DBDAC7BE36FE10E10`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `0F1CD8EA6F15DB320D1008BA54FA4C57E6B20057870A7B3DBDAC7BE36FE10E10`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `08ED2C5CD40AD6AB3FF8839D8D17071CA50852B2D256C47153F1A0AC21134CAF`
-- `outputs\xauusd_micro_validation_package.zip`: `C55763D875D453275DA19D875E93482EF367BC4C99C194D89B64113C8719B874`
-- `work\build_price_action_strategy_batch.ps1`: `FB7716EEB71D156F543580EE5A97C3763F83EF57F48CA3267BA8B384632558B4`
-- `work\test_price_action_strategy_modules.ps1`: `EF580368F93C42ACC5F0FE7AE388DEBCA8797C0691DED6B860C81AF50C3F9655`
-- `work\test_price_action_strategy_batch.ps1`: `4AC10B08F987249E8BCB9A3691C9E9DEEDB3F6CDEA88F4BE44DC272C723B5E74`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `1C00BF74ED744D222C09FF6D93BF649F9E354B498E19A697750475ABEF9697F3`
+- `outputs\Professional_XAUUSD_EA.mq5`: `2D5CA7D2AF69B25BED4B08DB03463E6B585C633B2EA4A2DD8D7871CB64D0D33D`
+- `Professional_XAUUSD_EA.mq5`: `2D5CA7D2AF69B25BED4B08DB03463E6B585C633B2EA4A2DD8D7871CB64D0D33D`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `2D5CA7D2AF69B25BED4B08DB03463E6B585C633B2EA4A2DD8D7871CB64D0D33D`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `A91FE48C4A4FB65897788726C7DADB44214357EBE8C9C508322238C9B9482672`
+- `outputs\xauusd_micro_validation_package.zip`: `14F5E4632F52B5C8BD22DA5E5D0F99173138603C883B8E908BFF55B97670338B`
+- `work\build_price_action_strategy_batch.ps1`: `73A551767D62A71BA1D80A48B7A573DDED1EFA1CE88D79C5BBAE9D0166C9201C`
+- `work\test_price_action_strategy_modules.ps1`: `9D4A07BA2FA215F451C7CD18264B3E04D95B9B909D8E0E53196BF3434533B25E`
+- `work\test_price_action_strategy_batch.ps1`: `0D171CF29D4E99E4AE0D7B0EC62F4B84A584EB72107A35DC7DD8D55B37F4E854`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `775C1AF704F34546549506D747BB53EC89BF45F6C1D6AC3959A0C7807696F530`
 
 ## Background-Safety Note
 
