@@ -11,37 +11,41 @@ Updated: 2026-07-07
 
 ## Latest Strategy-Code Change
 
-Added a stricter protected-profit optimizer fitness mode: `FITNESS_PROFIT_RECOVERY_FLOOR`.
+Added a recent profit-factor risk boost. This is an optional capped risk multiplier that lets the EA press harder only when recent closed trades show a strong gross-profit versus gross-loss edge.
 
 New inputs and logic:
 
-- `FITNESS_PROFIT_RECOVERY_FLOOR = 4`
-- `InpTesterProtectedProfitNetPower`
-- `InpTesterRecoveryFloorPenaltyPower`
-- `InpTesterDrawdownExcessPenaltyPower`
-- `OnTester()` now has a mode that still rewards net profit, but downranks results with weak profit factor, weak recovery factor, or equity drawdown above the configured drawdown budget.
-- Generated research profiles use this mode while `baseline_promoted` remains a comparison anchor.
+- `InpUseRecentProfitFactorRiskBoost`
+- `InpRecentProfitFactorLookbackTrades`
+- `InpRecentProfitFactorStart`
+- `InpRecentProfitFactorFull`
+- `InpMaxRecentProfitFactorRiskMultiplier`
+- `InpRecentProfitFactorRequiresClosedProfit`
+- `InpRecentProfitFactorRequiresEquityProfit`
+- `RecentProfitFactorSample()` calculates recent closed-trade profit factor from account history for the EA symbol and magic number.
+- `RecentProfitFactorRiskMultiplier()` returns `1.0` until sample size, profit-factor threshold, closed-profit gating, and equity-profit gating all pass.
+- Generated research profiles cap the boost at 1.35x from PF 1.25 to PF 2.00 over the last 8 closed trades.
 
-This supports the goal by making future MT5 optimization chase aggressive profit only when the run also maintains recovery and drawdown quality. It does not add martingale, grid, averaging down, or recovery behavior.
+This supports the goal by adding a measured advantage-pressing layer that is gross-loss-aware. It does not add martingale, grid, averaging down, or recovery behavior.
 
 ## Fast Batch Impact
 
 - Batch size stayed at 10 profiles and 30 runs.
 - Estimated tester runtime stayed at about 10.5 minutes before platform overhead.
-- Baseline anchor keeps its comparison behavior.
+- Baseline anchor keeps recent profit-factor risk boost disabled.
 - Generated research profiles use:
-  - `InpTesterFitnessMode=4`
-  - `InpTesterProfitFactorRewardPower=0.75`
-  - `InpTesterRecoveryRewardPower=0.75`
-  - `InpTesterDrawdownRewardPower=1.25`
-  - `InpTesterProtectedProfitNetPower=1.00`
-  - `InpTesterRecoveryFloorPenaltyPower=2.00`
-  - `InpTesterDrawdownExcessPenaltyPower=2.00`
+  - `InpUseRecentProfitFactorRiskBoost=true`
+  - `InpRecentProfitFactorLookbackTrades=8`
+  - `InpRecentProfitFactorStart=1.25`
+  - `InpRecentProfitFactorFull=2.00`
+  - `InpMaxRecentProfitFactorRiskMultiplier=1.35`
+  - `InpRecentProfitFactorRequiresClosedProfit=true`
+  - `InpRecentProfitFactorRequiresEquityProfit=true`
 
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `90A1A1E7E6C86EB014CCAF8EC22DEB3024747234E0BC03239DD84D9C03FA4956`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `3E91F0AF5C6BBA74F8D80B468A77F5E56C26C5413DCBA055F1E5F01FBF74D83D`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 10 profiles, 30 runs, estimated 10.5 minutes
 - `work\test_open_risk_exposure_guard.ps1`: PASS
 - `work\test_price_action_strategy_decision.ps1`: PASS
@@ -55,15 +59,15 @@ This supports the goal by making future MT5 optimization chase aggressive profit
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `90A1A1E7E6C86EB014CCAF8EC22DEB3024747234E0BC03239DD84D9C03FA4956`
-- `Professional_XAUUSD_EA.mq5`: `90A1A1E7E6C86EB014CCAF8EC22DEB3024747234E0BC03239DD84D9C03FA4956`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `90A1A1E7E6C86EB014CCAF8EC22DEB3024747234E0BC03239DD84D9C03FA4956`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `8415510A65D4FDDCAD2EA67272D6566DE583B43CE3EBA37A5571EF7746A1FDED`
-- `outputs\xauusd_micro_validation_package.zip`: `A76F3328234ADF6C2020B504FF74A9831AC914EF3693C7693AB487B4833547C8`
-- `work\build_price_action_strategy_batch.ps1`: `D66C00898E1677EA71F77F802C57F2E305546CB805A766380B41BC7797FE48E7`
-- `work\test_price_action_strategy_modules.ps1`: `5B29F6D20866A5687F870C062E5C00B4B0E1D6DD74D5C73636A3C9FA7767D775`
-- `work\test_price_action_strategy_batch.ps1`: `E12C6D7A4ED0707D4D5A5F84FBD32DBDE2737FB7337DB541816F0D22FB70EC36`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `A6387BA442796AB8184777A86027209E4403480D92820E2F7FFCC8746E901E80`
+- `outputs\Professional_XAUUSD_EA.mq5`: `3E91F0AF5C6BBA74F8D80B468A77F5E56C26C5413DCBA055F1E5F01FBF74D83D`
+- `Professional_XAUUSD_EA.mq5`: `3E91F0AF5C6BBA74F8D80B468A77F5E56C26C5413DCBA055F1E5F01FBF74D83D`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `3E91F0AF5C6BBA74F8D80B468A77F5E56C26C5413DCBA055F1E5F01FBF74D83D`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `11F7ACC07DA38658027F3BCDC851D54492292E2D5D21E7BD139FBC3FF2B6C088`
+- `outputs\xauusd_micro_validation_package.zip`: `7B1F9886C5D5E91B176B6460F419B46075DFBA0DB476DAF1B0289169F184D95A`
+- `work\build_price_action_strategy_batch.ps1`: `30D401C8223619264F73DECD0EEFCF38BC270D4CCD4285C98B795229D64DD354`
+- `work\test_price_action_strategy_modules.ps1`: `C907A794A4CD98D72B10A3BE6D663436C2FFCE18F5291BBFE1E6D4D91FCCA0FA`
+- `work\test_price_action_strategy_batch.ps1`: `B2FFFD6EB4EF37C40BF2871437FDD9EDB5BC8FF96CE232C2A24F2E11F46FE362`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `E4F3B8857D58AB869781738D5BCFF1C47C9E82668D7560479E10D64006282097`
 
 ## Background-Safety Note
 
