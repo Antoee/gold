@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-07 22:24:00 -05:00
+Updated: 2026-07-07 23:04:00 -05:00
 
 ## Current State
 
@@ -11,42 +11,41 @@ Updated: 2026-07-07 22:24:00 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **adaptive-reverse loss cooldown**.
+Added **flat-month breakout-continuation probe risk lane**.
 
-Adaptive reverse already had a market-context whipsaw guard, but it did not remember whether recent adaptive flips had actually lost money. The EA now scans closed trade history for entries tagged with `Adaptive reverse guarded;`, counts recent losing reverse trades in the same intended direction, and blocks weak-quality repeat flips during a cooldown window.
+The previous flat-month probe work could sample range-reversion opportunities at reduced risk, but the protected-aggression profile kept breakout-continuation probes outside that reduced-risk lane. That left two bad choices during quiet months: stay too passive, or allow breakout probes without the same small-size research control.
 
-New configurable inputs:
+The EA now supports a separate reduced-risk breakout-continuation probe lane:
 
-- `InpUseAdaptiveReverseLossCooldown=true`
-- `InpAdaptiveReverseLossLookbackTrades=6`
-- `InpAdaptiveReverseLossThreshold=2`
-- `InpAdaptiveReverseLossCooldownMinutes=360`
-- `InpAdaptiveReverseLossMinQualityScore=12`
+- `InpFlatMonthProbeAllowBreakoutContinuation`
+- `InpFlatMonthProbeBreakoutRiskMultiplier`
+- `InpFlatMonthProbeBreakoutMinQualityScore`
 
-New helper logic:
+When flat-month probe mode is active:
 
-- `EntryCommentForHistoryPosition(...)`
-- `AdaptiveReverseLossCooldownActive(...)`
+- range-reversion probes still use `InpFlatMonthProbeRiskMultiplier`
+- breakout-continuation probes can use `InpFlatMonthProbeBreakoutRiskMultiplier`
+- breakout probes must meet `InpFlatMonthProbeBreakoutMinQualityScore`
+- same-lane spacing still applies through `FlatMonthProbeLaneSpacingAllows(...)`
 
-If the recent adaptive-reverse loss threshold is reached, lower-quality reverse attempts are blocked through the existing `Adaptive reverse whipsaw guard;` path. High-quality reverse attempts can still pass, which keeps the EA from becoming permanently passive when a true high-confluence reversal appears.
+This is meant to attack the flat-month efficiency bottleneck without simply raising risk everywhere.
 
 ## Protected-Aggression Settings
 
 `protected_aggression_breakout` now uses:
 
-- `InpUseAdaptiveReverseLossCooldown=true`
-- `InpAdaptiveReverseLossLookbackTrades=6`
-- `InpAdaptiveReverseLossThreshold=2`
-- `InpAdaptiveReverseLossCooldownMinutes=360`
-- `InpAdaptiveReverseLossMinQualityScore=12`
+- `InpFlatMonthProbeAllowBreakoutContinuation=true`
+- `InpFlatMonthProbeBreakoutRiskMultiplier=0.35`
+- `InpFlatMonthProbeBreakoutMinQualityScore=8`
 
 This complements the existing work already in the EA:
 
 - flat-month opportunity mode
 - flat-month probe mode
 - flat-month probe lane spacing
-- setup-lane performance risk scaling
 - adaptive-reverse whipsaw guard
+- adaptive-reverse loss cooldown
+- setup-lane performance risk scaling
 - liquidity-aware structural stops
 - protected runner exit patience
 - protected-aggression breakout/continuation lane
@@ -70,15 +69,15 @@ This complements the existing work already in the EA:
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `B00F4F0DA6B972946394BB2B1ACFAF707D38FD0ABF82B3A9974E03E8D9AB30CA`
-- `Professional_XAUUSD_EA.mq5`: `B00F4F0DA6B972946394BB2B1ACFAF707D38FD0ABF82B3A9974E03E8D9AB30CA`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `B00F4F0DA6B972946394BB2B1ACFAF707D38FD0ABF82B3A9974E03E8D9AB30CA`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `A41FD0C9ACFE35B5A5F4457A55D4F0AE506EAF69E7EE56A18C206332DD613EBA`
-- `outputs\xauusd_micro_validation_package.zip`: `D7EEFDFC4422C7FD3EA525A964A11B9FE47437384726E1CD8AD236A34E1B0DF3`
-- `work\build_price_action_strategy_batch.ps1`: `9A91AA10C76C3F7B2C31A9BFF949FE34C8522949C250880183444E1AD6A062CB`
-- `work\test_price_action_strategy_modules.ps1`: `D6DA073FF43799CAAD6F1DD6A14AB0E99763248E22FBFA558C97E3287C0EA62A`
-- `work\test_price_action_strategy_batch.ps1`: `D7BFB012163ED2058E54AF20AA0F4D596651255EB98CC76C2371B993623A0DBE`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `37D562C2D8086EEFD0B9BC1BEA4267264B1BB0321514678CB12A5DE34F3723D8`
+- `outputs\Professional_XAUUSD_EA.mq5`: `280D44AA59141B6ABD87467D6634C00007347DC0C1F8018D52E117271785E83A`
+- `Professional_XAUUSD_EA.mq5`: `280D44AA59141B6ABD87467D6634C00007347DC0C1F8018D52E117271785E83A`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `280D44AA59141B6ABD87467D6634C00007347DC0C1F8018D52E117271785E83A`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `636AF54F65E431360ECD2284CC8FFEE23ACB368F3BEC1C607EE539DC20064BA3`
+- `outputs\xauusd_micro_validation_package.zip`: `5163909DAF8DF23B37AB08A42EADE983BB9599E3FE5ED1CAE1D22B28A5DE3786`
+- `work\build_price_action_strategy_batch.ps1`: `C03E78A3E209499158D676416E6FA7F42444F227BDBB56648E1F1E526145D28C`
+- `work\test_price_action_strategy_modules.ps1`: `263BF934EA41E3DD5D891F2EE6C8299C43432D2DEC38E44067B528313E3FA0D2`
+- `work\test_price_action_strategy_batch.ps1`: `D468F7EAEB1BC77DE271F1015B8358FAD74E3DDE73E4D1816FF8DE4A11D64A81`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `477391DF7BAFC8D53252843711526B2765D8F8BD1069C0F85FA267A7E1614261`
 
 ## Background-Safety Note
 
