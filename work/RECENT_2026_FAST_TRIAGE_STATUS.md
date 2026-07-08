@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-07 21:23:00 -05:00
+Updated: 2026-07-07 21:38:00 -05:00
 
 ## Current State
 
@@ -11,31 +11,33 @@ Updated: 2026-07-07 21:23:00 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **flat-month probe mode**. This changes flat-month behavior from a simple aggression boost into a safer probe-to-confirm workflow.
+Added **flat-month probe lane spacing**.
 
-When a month is under target and under-traded, the EA can now:
+Flat-month probe mode now has a same-lane spacing guard so reduced-risk probes do not cluster into the same dead zone. The EA checks the most recent entry comment for the same setup lane:
 
-- apply additional entry-score and RR flexibility
-- place early exploratory trades at reduced risk
-- optionally limit probes to range-reversion setups
-- log `Flat month probe risk x...` for later attribution
+- `SetupLaneNeedle(...)`
+- `LastSetupLaneEntryTime(...)`
+- `FlatMonthProbeLaneSpacingAllows(...)`
 
-This is meant to attack the idle-month problem without pretending that bigger risk is the same thing as better strategy. The protected-aggression profile uses range-reversion-only probes so the EA can sample sweep/mean-reversion opportunities while keeping early exposure smaller.
+If the current flat-month probe is a range-reversion trade and another range-reversion probe was just placed, the EA can block the new entry with `flat-month probe lane spacing`. Same idea for breakout-continuation probes if that lane is enabled later.
+
+This improves the flat-month workflow:
+
+- probe mode increases sampling when the month is too quiet
+- lane spacing prevents rapid repeated probes in the same setup family
+- setup-lane performance scaling can then learn from cleaner samples
 
 ## Protected-Aggression Settings
 
 `protected_aggression_breakout` now uses:
 
-- `InpUseFlatMonthProbeMode=true`
-- `InpFlatMonthProbeMaxEntryCount=5`
-- `InpFlatMonthProbeScoreDiscount=1`
-- `InpFlatMonthProbeRRDiscount=0.05`
-- `InpFlatMonthProbeRiskMultiplier=0.45`
-- `InpFlatMonthProbeRangeOnly=true`
+- `InpUseFlatMonthProbeLaneSpacing=true`
+- `InpFlatMonthProbeLaneSpacingMinutes=45`
 
 This complements the existing work already in the EA:
 
 - flat-month opportunity mode
+- flat-month probe mode
 - setup-lane performance risk scaling
 - adaptive-reverse whipsaw guard
 - liquidity-aware structural stops
@@ -61,15 +63,15 @@ This complements the existing work already in the EA:
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `DB7BD9B0B9F19D1AB2852B585AEBD16E11CC8EA21C2D4E68C2572D46C3E3A89A`
-- `Professional_XAUUSD_EA.mq5`: `DB7BD9B0B9F19D1AB2852B585AEBD16E11CC8EA21C2D4E68C2572D46C3E3A89A`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `DB7BD9B0B9F19D1AB2852B585AEBD16E11CC8EA21C2D4E68C2572D46C3E3A89A`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `35A73FF3A9A4CFC3B226670E5957BFA894FE15C73BB720BC9248014A96E54575`
-- `outputs\xauusd_micro_validation_package.zip`: `7AD3F9B675882FAA6F9C0E731F24D15611859C5F2130A3A1F25FF34499DDD494`
-- `work\build_price_action_strategy_batch.ps1`: `24EE562AD6E27460B03F10D670B738A3CD4C2A3A9CD72E1F055C2FB3E53790EC`
-- `work\test_price_action_strategy_modules.ps1`: `C9F5E6EF53A4F0CAAAE922E85ABCC48EAFC38411E444174404BFDE270CB20A31`
-- `work\test_price_action_strategy_batch.ps1`: `9C05FA1E8D07CBCCC914E878EE9B1E9938F21A52F636B631B7806F7BE272DCB8`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `0835D94CD0A0AB24B42995A61F46EF5DD0E006C6B96CE68F24D89B4B51C91577`
+- `outputs\Professional_XAUUSD_EA.mq5`: `45B05E925412AB2A1A85F901E6DD34A87CBF0F8C44B2266C175B06589B4ABA08`
+- `Professional_XAUUSD_EA.mq5`: `45B05E925412AB2A1A85F901E6DD34A87CBF0F8C44B2266C175B06589B4ABA08`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `45B05E925412AB2A1A85F901E6DD34A87CBF0F8C44B2266C175B06589B4ABA08`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `1445BE0F1B8E6EF243A7757D030A3EBB1229EFE6D3929B2B08CC4EBA047BE283`
+- `outputs\xauusd_micro_validation_package.zip`: `9DDD1BCF3D85665B7F620EF840E6EF57EB9C4857ECE2F29687A5F4786EBCEC8F`
+- `work\build_price_action_strategy_batch.ps1`: `D4C2EE4308B00464BEBE799A2EC8E9B47045633AEED267FF3B900CE7847EA392`
+- `work\test_price_action_strategy_modules.ps1`: `2E27EA32956617E80A75A8F1758C5B9D0AC6D20F45A59EFA733823CBC9549E38`
+- `work\test_price_action_strategy_batch.ps1`: `387B60758C48EF7764935136547171AE838B4F9F0437BBB8925110EF7456EF3B`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `BAC5CF42B29FB050FB956D726B7CAAABE2B57C0A7275583194AFC1F66CE1A4AE`
 
 ## Background-Safety Note
 
