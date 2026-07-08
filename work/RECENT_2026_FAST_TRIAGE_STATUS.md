@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-07 21:38:00 -05:00
+Updated: 2026-07-07 22:24:00 -05:00
 
 ## Current State
 
@@ -11,33 +11,40 @@ Updated: 2026-07-07 21:38:00 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **flat-month probe lane spacing**.
+Added **adaptive-reverse loss cooldown**.
 
-Flat-month probe mode now has a same-lane spacing guard so reduced-risk probes do not cluster into the same dead zone. The EA checks the most recent entry comment for the same setup lane:
+Adaptive reverse already had a market-context whipsaw guard, but it did not remember whether recent adaptive flips had actually lost money. The EA now scans closed trade history for entries tagged with `Adaptive reverse guarded;`, counts recent losing reverse trades in the same intended direction, and blocks weak-quality repeat flips during a cooldown window.
 
-- `SetupLaneNeedle(...)`
-- `LastSetupLaneEntryTime(...)`
-- `FlatMonthProbeLaneSpacingAllows(...)`
+New configurable inputs:
 
-If the current flat-month probe is a range-reversion trade and another range-reversion probe was just placed, the EA can block the new entry with `flat-month probe lane spacing`. Same idea for breakout-continuation probes if that lane is enabled later.
+- `InpUseAdaptiveReverseLossCooldown=true`
+- `InpAdaptiveReverseLossLookbackTrades=6`
+- `InpAdaptiveReverseLossThreshold=2`
+- `InpAdaptiveReverseLossCooldownMinutes=360`
+- `InpAdaptiveReverseLossMinQualityScore=12`
 
-This improves the flat-month workflow:
+New helper logic:
 
-- probe mode increases sampling when the month is too quiet
-- lane spacing prevents rapid repeated probes in the same setup family
-- setup-lane performance scaling can then learn from cleaner samples
+- `EntryCommentForHistoryPosition(...)`
+- `AdaptiveReverseLossCooldownActive(...)`
+
+If the recent adaptive-reverse loss threshold is reached, lower-quality reverse attempts are blocked through the existing `Adaptive reverse whipsaw guard;` path. High-quality reverse attempts can still pass, which keeps the EA from becoming permanently passive when a true high-confluence reversal appears.
 
 ## Protected-Aggression Settings
 
 `protected_aggression_breakout` now uses:
 
-- `InpUseFlatMonthProbeLaneSpacing=true`
-- `InpFlatMonthProbeLaneSpacingMinutes=45`
+- `InpUseAdaptiveReverseLossCooldown=true`
+- `InpAdaptiveReverseLossLookbackTrades=6`
+- `InpAdaptiveReverseLossThreshold=2`
+- `InpAdaptiveReverseLossCooldownMinutes=360`
+- `InpAdaptiveReverseLossMinQualityScore=12`
 
 This complements the existing work already in the EA:
 
 - flat-month opportunity mode
 - flat-month probe mode
+- flat-month probe lane spacing
 - setup-lane performance risk scaling
 - adaptive-reverse whipsaw guard
 - liquidity-aware structural stops
@@ -63,15 +70,15 @@ This complements the existing work already in the EA:
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `45B05E925412AB2A1A85F901E6DD34A87CBF0F8C44B2266C175B06589B4ABA08`
-- `Professional_XAUUSD_EA.mq5`: `45B05E925412AB2A1A85F901E6DD34A87CBF0F8C44B2266C175B06589B4ABA08`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `45B05E925412AB2A1A85F901E6DD34A87CBF0F8C44B2266C175B06589B4ABA08`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `1445BE0F1B8E6EF243A7757D030A3EBB1229EFE6D3929B2B08CC4EBA047BE283`
-- `outputs\xauusd_micro_validation_package.zip`: `9DDD1BCF3D85665B7F620EF840E6EF57EB9C4857ECE2F29687A5F4786EBCEC8F`
-- `work\build_price_action_strategy_batch.ps1`: `D4C2EE4308B00464BEBE799A2EC8E9B47045633AEED267FF3B900CE7847EA392`
-- `work\test_price_action_strategy_modules.ps1`: `2E27EA32956617E80A75A8F1758C5B9D0AC6D20F45A59EFA733823CBC9549E38`
-- `work\test_price_action_strategy_batch.ps1`: `387B60758C48EF7764935136547171AE838B4F9F0437BBB8925110EF7456EF3B`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `BAC5CF42B29FB050FB956D726B7CAAABE2B57C0A7275583194AFC1F66CE1A4AE`
+- `outputs\Professional_XAUUSD_EA.mq5`: `B00F4F0DA6B972946394BB2B1ACFAF707D38FD0ABF82B3A9974E03E8D9AB30CA`
+- `Professional_XAUUSD_EA.mq5`: `B00F4F0DA6B972946394BB2B1ACFAF707D38FD0ABF82B3A9974E03E8D9AB30CA`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `B00F4F0DA6B972946394BB2B1ACFAF707D38FD0ABF82B3A9974E03E8D9AB30CA`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `A41FD0C9ACFE35B5A5F4457A55D4F0AE506EAF69E7EE56A18C206332DD613EBA`
+- `outputs\xauusd_micro_validation_package.zip`: `D7EEFDFC4422C7FD3EA525A964A11B9FE47437384726E1CD8AD236A34E1B0DF3`
+- `work\build_price_action_strategy_batch.ps1`: `9A91AA10C76C3F7B2C31A9BFF949FE34C8522949C250880183444E1AD6A062CB`
+- `work\test_price_action_strategy_modules.ps1`: `D6DA073FF43799CAAD6F1DD6A14AB0E99763248E22FBFA558C97E3287C0EA62A`
+- `work\test_price_action_strategy_batch.ps1`: `D7BFB012163ED2058E54AF20AA0F4D596651255EB98CC76C2371B993623A0DBE`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `37D562C2D8086EEFD0B9BC1BEA4267264B1BB0321514678CB12A5DE34F3723D8`
 
 ## Background-Safety Note
 
