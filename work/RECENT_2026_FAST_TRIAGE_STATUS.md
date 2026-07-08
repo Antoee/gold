@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-07 19:50:30 -05:00
+Updated: 2026-07-07 20:02:59 -05:00
 
 ## Current State
 
@@ -20,6 +20,7 @@ Follow-up for the active 2-3% monthly objective: the current bottleneck is not j
 - Flat-month efficiency: `protected_aggression_breakout` now allows `InpMaxTradesPerDay=10` and `InpMinMinutesBetweenTrades=5`, instead of the shared `6` / `15` settings, while keeping the risk/exposure caps.
 - Adaptive reverse whipsaws: adaptive reverse now has a whipsaw guard requiring ADX/structure confirmation, and the protected-aggression lane additionally requires sweep rejection before allowing adaptive reverse.
 - ATR-only stops: structure stops can now expand beyond recent sweep/equal-level liquidity with a configurable buffer, so the stop is not blindly parked inside a likely liquidity pool.
+- Flat-month opportunity mode: when the current month is under the 2-3% target and trade count is still low, the protected-aggression lane can temporarily reduce entry score/RR requirements and apply a controlled opportunity risk multiplier. It does not activate during a monthly loss when `InpFlatMonthRequireNoMonthlyLoss=true`.
 
 New inputs and logic:
 
@@ -45,6 +46,16 @@ New inputs and logic:
 - `InpLiquidityStopBufferPoints`
 - `LastSweepStopLevel(...)`
 - `EqualLiquidityStopLevel(...)`
+- `InpUseFlatMonthOpportunityMode`
+- `InpFlatMonthTargetPercent`
+- `InpFlatMonthMaxEntryCount`
+- `InpFlatMonthEntryScoreDiscount`
+- `InpFlatMonthRRDiscount`
+- `InpFlatMonthRiskMultiplier`
+- `FlatMonthOpportunityActive()`
+- `ActiveMinimumEntryScore()`
+- `ActiveMinimumRiskReward()`
+- `FlatMonthOpportunityRiskMultiplier()`
 
 The feature stretches the MFE giveback exit and blocks no-follow-through/stagnation exits only for positions that meet minimum current R, minimum max-favorable R, protected-stop, house-money, trend-regime, and continuation-structure checks. It still keeps the shared safety rails: starting-equity protection, close-on-risk-limit, max equity drawdown, max effective risk cap, open-risk cap, protected-floor gates, house-money gates, spread/cost/margin guards, and no martingale/grid/averaging down.
 
@@ -55,6 +66,14 @@ Protected-aggression upside tuning now applies after shared conservative default
 - `InpBreakoutContinuationRequireRegime=false`
 - `InpMaxTradesPerDay=10`
 - `InpMinMinutesBetweenTrades=5`
+- `InpUseFlatMonthOpportunityMode=true`
+- `InpFlatMonthTargetPercent=2.50`
+- `InpFlatMonthMaxEntryCount=10`
+- `InpFlatMonthMaxProfitPercent=0.90`
+- `InpFlatMonthEntryScoreDiscount=1`
+- `InpFlatMonthRRDiscount=0.10`
+- `InpFlatMonthRiskMultiplier=1.20`
+- `InpFlatMonthRequireNoMonthlyLoss=true`
 - `InpUseAdaptiveReverseWhipsawGuard=true`
 - `InpAdaptiveReverseMinADX=20.0`
 - `InpAdaptiveReverseRequireStructure=true`
@@ -84,7 +103,7 @@ Protected-aggression upside tuning now applies after shared conservative default
 ## Quiet Validation Results
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS, hash `98BE545F7A4631A2BE793242D4A6EBFC8FFE3DACE52D1CFF63A2D6A298F6941A`
+- `work\sync_ea_source_artifacts.ps1`: PASS, hash `4A2C6FD50C7C9A71D3703E3B1E3092E04E7F8E3A307DAC8A1E37CD2169414153`
 - `work\build_price_action_strategy_batch.ps1`: PASS, 11 profiles, 33 runs, estimated 11.55 minutes
 - `work\test_open_risk_exposure_guard.ps1`: PASS
 - `work\test_price_action_strategy_decision.ps1`: PASS
@@ -100,17 +119,17 @@ Protected-aggression upside tuning now applies after shared conservative default
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `071E3723E40406C48929BD78FDC8B2E1681E8464F4491AC0A18B522344E8BC14`
-- `Professional_XAUUSD_EA.mq5`: `071E3723E40406C48929BD78FDC8B2E1681E8464F4491AC0A18B522344E8BC14`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `071E3723E40406C48929BD78FDC8B2E1681E8464F4491AC0A18B522344E8BC14`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `A822D22AE2E8D3C7CDF73F104EC9CF852AB3EAC6DDCD2D29FEBACA76AF695F52`
-- `outputs\xauusd_micro_validation_package.zip`: `8D470946FB81E3D9B013BCE0D172B886F267940DBC400348045F2FAD3A13E4D3`
-- `work\build_price_action_strategy_batch.ps1`: `797AADD4A30C63ABF5BDA307ECAA5B8348B433CB5342998751AE9836A7195D66`
-- `work\test_price_action_strategy_modules.ps1`: `B324E5DB31BE7332484230AC25D5B83553487429620F041E4BEA26E574C75516`
-- `work\test_price_action_strategy_batch.ps1`: `740CD23D4D5151D1C3AD1688B0B9955ACC46F003F378AD196DA4BBB57F9F23C7`
+- `outputs\Professional_XAUUSD_EA.mq5`: `4A2C6FD50C7C9A71D3703E3B1E3092E04E7F8E3A307DAC8A1E37CD2169414153`
+- `Professional_XAUUSD_EA.mq5`: `4A2C6FD50C7C9A71D3703E3B1E3092E04E7F8E3A307DAC8A1E37CD2169414153`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `4A2C6FD50C7C9A71D3703E3B1E3092E04E7F8E3A307DAC8A1E37CD2169414153`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `30E3EA1040722926C0308B36C7543194AAD3540C0BC100A1913A46170EF916B4`
+- `outputs\xauusd_micro_validation_package.zip`: `1B614671D09CF038DF4DE028FCAAB41A3E19C1992EF7CF528A397736A993EC8B`
+- `work\build_price_action_strategy_batch.ps1`: `43B9EDFE41580B969EBCF7E15F6359C90C7609BA495EB36E289566A33D863F73`
+- `work\test_price_action_strategy_modules.ps1`: `B5896DE73F05A6881B2E82CDC6318BB9AEEB672E43A2E132C3975A2B5926F890`
+- `work\test_price_action_strategy_batch.ps1`: `8DEEF3D83A08391D85F7CE346CF3B2ED92223EF766AFD92BA1501B8EDC7D782D`
 - `work\test_price_action_strategy_handoff.ps1`: `F8B5503E3B72DD32EDAA79630D758693E41E3E851D5B56ED75CC7820C80F9BBF`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `1BD59B253422253BF095B10B2146CD88406F7C2CC06D23FA1A79831947594BD1`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `4B1399B159C4C73019E7914FF67B8590E4563F04E5B1699AA4EE44677B442472`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `D9F1AE64D6DDEFE0EA2870D61AC73497CBFDD44D66B9A7ABED9AA18CAAD18567`
 
 ## Background-Safety Note
 
