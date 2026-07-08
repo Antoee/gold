@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-07 19:12:33 -05:00
+Updated: 2026-07-07 19:50:30 -05:00
 
 ## Current State
 
@@ -15,6 +15,12 @@ Added protected runner exit patience to the EA source and enabled it in the prot
 
 Follow-up after reviewing the GitHub-visible `$866.59` / 2.5-year result: that result is not enough for the stated goal. Older local notes show higher historical figures when date-specific buy/sell blocks were used, but those are treated as curve-fit evidence and should not be promoted as live-ready. The next research change keeps the fast batch size unchanged while making `protected_aggression_breakout` more ambitious.
 
+Follow-up for the active 2-3% monthly objective: the current bottleneck is not just risk size; it is too much idle time plus whipsaw risk from adaptive reverse and ATR-only stop placement. The current code change directly targets those three issues:
+
+- Flat-month efficiency: `protected_aggression_breakout` now allows `InpMaxTradesPerDay=10` and `InpMinMinutesBetweenTrades=5`, instead of the shared `6` / `15` settings, while keeping the risk/exposure caps.
+- Adaptive reverse whipsaws: adaptive reverse now has a whipsaw guard requiring ADX/structure confirmation, and the protected-aggression lane additionally requires sweep rejection before allowing adaptive reverse.
+- ATR-only stops: structure stops can now expand beyond recent sweep/equal-level liquidity with a configurable buffer, so the stop is not blindly parked inside a likely liquidity pool.
+
 New inputs and logic:
 
 - `InpUseRunnerExitPatience`
@@ -28,6 +34,17 @@ New inputs and logic:
 - `RunnerExitPatienceAllows(...)`
 - `ContinuationStructureSupports(...)`
 - Exit logs can add `runner patience MFE giveback exit ...` when a protected runner receives the wider giveback threshold.
+- `InpUseAdaptiveReverseWhipsawGuard`
+- `InpAdaptiveReverseMinADX`
+- `InpAdaptiveReverseRequireStructure`
+- `InpAdaptiveReverseRequireSweepReject`
+- `AdaptiveReverseWhipsawGuardAllows(...)`
+- `InpUseLiquidityAwareStructureStop`
+- `InpLiquidityStopLookbackBars`
+- `InpLiquidityStopBufferATR`
+- `InpLiquidityStopBufferPoints`
+- `LastSweepStopLevel(...)`
+- `EqualLiquidityStopLevel(...)`
 
 The feature stretches the MFE giveback exit and blocks no-follow-through/stagnation exits only for positions that meet minimum current R, minimum max-favorable R, protected-stop, house-money, trend-regime, and continuation-structure checks. It still keeps the shared safety rails: starting-equity protection, close-on-risk-limit, max equity drawdown, max effective risk cap, open-risk cap, protected-floor gates, house-money gates, spread/cost/margin guards, and no martingale/grid/averaging down.
 
@@ -36,6 +53,17 @@ Protected-aggression upside tuning now applies after shared conservative default
 - `InpMinimumEntryScore=5`
 - `InpBreakoutContinuationMinScore=6`
 - `InpBreakoutContinuationRequireRegime=false`
+- `InpMaxTradesPerDay=10`
+- `InpMinMinutesBetweenTrades=5`
+- `InpUseAdaptiveReverseWhipsawGuard=true`
+- `InpAdaptiveReverseMinADX=20.0`
+- `InpAdaptiveReverseRequireStructure=true`
+- `InpAdaptiveReverseRequireSweepReject=true`
+- `InpUseLiquidityAwareStructureStop=true`
+- `InpLiquidityStopLookbackBars=24`
+- `InpLiquidityStopBufferATR=0.20`
+- `InpLiquidityStopBufferPoints=45.0`
+- `InpMaxStopATRMultiplier=4.00`
 - `InpTakeProfitATRMultiplier=5.50`
 - `InpMinRiskReward=1.20`
 - `InpMFEGivebackStartR=1.00`
@@ -72,17 +100,17 @@ Protected-aggression upside tuning now applies after shared conservative default
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `98BE545F7A4631A2BE793242D4A6EBFC8FFE3DACE52D1CFF63A2D6A298F6941A`
-- `Professional_XAUUSD_EA.mq5`: `98BE545F7A4631A2BE793242D4A6EBFC8FFE3DACE52D1CFF63A2D6A298F6941A`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `98BE545F7A4631A2BE793242D4A6EBFC8FFE3DACE52D1CFF63A2D6A298F6941A`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `60A05717313664F656ED02F122FC7C1DCC06AB8C873C27489CDECC1DB50B64D0`
-- `outputs\xauusd_micro_validation_package.zip`: `09C066A10B88368142D1ABC51BDA40B70B58CF2435AB0BC4269FFD5B5DB4FCCD`
-- `work\build_price_action_strategy_batch.ps1`: `6C13090EC351B86E9378E7A7F2B7AE922CEFB7D0E8D290796B166FDA466C8506`
-- `work\test_price_action_strategy_modules.ps1`: `070DC5FB98FD42F479AF5DE759038952D4322E3DCD29542F468E23B31844503C`
-- `work\test_price_action_strategy_batch.ps1`: `AF6D6AF1D2BD2CB46F89509DDBE64C57BDB78510EBAE1AB10D157BBCA16F6A7B`
+- `outputs\Professional_XAUUSD_EA.mq5`: `071E3723E40406C48929BD78FDC8B2E1681E8464F4491AC0A18B522344E8BC14`
+- `Professional_XAUUSD_EA.mq5`: `071E3723E40406C48929BD78FDC8B2E1681E8464F4491AC0A18B522344E8BC14`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `071E3723E40406C48929BD78FDC8B2E1681E8464F4491AC0A18B522344E8BC14`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `A822D22AE2E8D3C7CDF73F104EC9CF852AB3EAC6DDCD2D29FEBACA76AF695F52`
+- `outputs\xauusd_micro_validation_package.zip`: `8D470946FB81E3D9B013BCE0D172B886F267940DBC400348045F2FAD3A13E4D3`
+- `work\build_price_action_strategy_batch.ps1`: `797AADD4A30C63ABF5BDA307ECAA5B8348B433CB5342998751AE9836A7195D66`
+- `work\test_price_action_strategy_modules.ps1`: `B324E5DB31BE7332484230AC25D5B83553487429620F041E4BEA26E574C75516`
+- `work\test_price_action_strategy_batch.ps1`: `740CD23D4D5151D1C3AD1688B0B9955ACC46F003F378AD196DA4BBB57F9F23C7`
 - `work\test_price_action_strategy_handoff.ps1`: `F8B5503E3B72DD32EDAA79630D758693E41E3E851D5B56ED75CC7820C80F9BBF`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `1BD59B253422253BF095B10B2146CD88406F7C2CC06D23FA1A79831947594BD1`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `F8C09D4E83EF47B0811BEACD5BB7E15CDC12178BF45D924886857AA9C180B1BE`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `4B1399B159C4C73019E7914FF67B8590E4563F04E5B1699AA4EE44677B442472`
 
 ## Background-Safety Note
 
