@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-07 21:02:00 -05:00
+Updated: 2026-07-07 21:23:00 -05:00
 
 ## Current State
 
@@ -11,37 +11,32 @@ Updated: 2026-07-07 21:02:00 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **setup-lane performance risk scaling** so breakout continuation and range reversion can learn separately from their own recent closed trades.
+Added **flat-month probe mode**. This changes flat-month behavior from a simple aggression boost into a safer probe-to-confirm workflow.
 
-The EA now tags the signal context:
+When a month is under target and under-traded, the EA can now:
 
-- `SSignal.isRangeReversion`
-- `SSignal.isBreakoutContinuation`
+- apply additional entry-score and RR flexibility
+- place early exploratory trades at reduced risk
+- optionally limit probes to range-reversion setups
+- log `Flat month probe risk x...` for later attribution
 
-The risk manager now reads historical entry comments by position ID and calculates recent average R for a specific setup lane:
-
-- `EntryCommentForPosition(...)`
-- `SetupLanePerformanceSample(...)`
-- `SetupLanePerformanceRiskMultiplier(...)`
-
-Why this matters: the bot now has two different profit engines. If range reversion is working but breakout continuation is cold, the EA can reduce breakout risk without strangling reversion trades. If a lane is producing strong recent R, it can receive a modest controlled boost, gated by closed-profit protection.
+This is meant to attack the idle-month problem without pretending that bigger risk is the same thing as better strategy. The protected-aggression profile uses range-reversion-only probes so the EA can sample sweep/mean-reversion opportunities while keeping early exposure smaller.
 
 ## Protected-Aggression Settings
 
 `protected_aggression_breakout` now uses:
 
-- `InpUseSetupLanePerformanceRiskScaling=true`
-- `InpSetupLanePerformanceLookbackTrades=6`
-- `InpSetupLanePerformanceMinTrades=3`
-- `InpSetupLaneWeakAverageR=-0.20`
-- `InpSetupLaneStrongAverageR=0.40`
-- `InpMinSetupLaneRiskMultiplier=0.50`
-- `InpMaxSetupLaneRiskMultiplier=1.30`
-- `InpSetupLaneBoostRequiresClosedProfit=true`
+- `InpUseFlatMonthProbeMode=true`
+- `InpFlatMonthProbeMaxEntryCount=5`
+- `InpFlatMonthProbeScoreDiscount=1`
+- `InpFlatMonthProbeRRDiscount=0.05`
+- `InpFlatMonthProbeRiskMultiplier=0.45`
+- `InpFlatMonthProbeRangeOnly=true`
 
 This complements the existing work already in the EA:
 
 - flat-month opportunity mode
+- setup-lane performance risk scaling
 - adaptive-reverse whipsaw guard
 - liquidity-aware structural stops
 - protected runner exit patience
@@ -66,15 +61,15 @@ This complements the existing work already in the EA:
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `B5B9B67D41C6BC06A30DDB336499BFD4CB8158587F6B98EA241BAA1EDAD045BF`
-- `Professional_XAUUSD_EA.mq5`: `B5B9B67D41C6BC06A30DDB336499BFD4CB8158587F6B98EA241BAA1EDAD045BF`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `B5B9B67D41C6BC06A30DDB336499BFD4CB8158587F6B98EA241BAA1EDAD045BF`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `8C3DA29A73D5AA50B19F012D882B6F739469CE435FF3E810026EF70AC9B9716E`
-- `outputs\xauusd_micro_validation_package.zip`: `DB728B7F27F11F85FB8656C762777E8FC975908459531EB47F99DFAE4E747A6C`
-- `work\build_price_action_strategy_batch.ps1`: `2020D72C82C447AB5565924C76BAA36398BCD7FE4A7F705360FEF87D8E0055E4`
-- `work\test_price_action_strategy_modules.ps1`: `6B09D33B14B17A8D79FFD2632D9FCABE823D5ECD73672D439CC48EADD6626400`
-- `work\test_price_action_strategy_batch.ps1`: `029027B102A186DBFC21DE3529A55B6687918A132228BDD5C16873693410B703`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `B5AB180ECF3563FDA9D47FE07075C01B93A0CDD28ADF93DBC007971A511114CB`
+- `outputs\Professional_XAUUSD_EA.mq5`: `DB7BD9B0B9F19D1AB2852B585AEBD16E11CC8EA21C2D4E68C2572D46C3E3A89A`
+- `Professional_XAUUSD_EA.mq5`: `DB7BD9B0B9F19D1AB2852B585AEBD16E11CC8EA21C2D4E68C2572D46C3E3A89A`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `DB7BD9B0B9F19D1AB2852B585AEBD16E11CC8EA21C2D4E68C2572D46C3E3A89A`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `35A73FF3A9A4CFC3B226670E5957BFA894FE15C73BB720BC9248014A96E54575`
+- `outputs\xauusd_micro_validation_package.zip`: `7AD3F9B675882FAA6F9C0E731F24D15611859C5F2130A3A1F25FF34499DDD494`
+- `work\build_price_action_strategy_batch.ps1`: `24EE562AD6E27460B03F10D670B738A3CD4C2A3A9CD72E1F055C2FB3E53790EC`
+- `work\test_price_action_strategy_modules.ps1`: `C9F5E6EF53A4F0CAAAE922E85ABCC48EAFC38411E444174404BFDE270CB20A31`
+- `work\test_price_action_strategy_batch.ps1`: `9C05FA1E8D07CBCCC914E878EE9B1E9938F21A52F636B631B7806F7BE272DCB8`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `0835D94CD0A0AB24B42995A61F46EF5DD0E006C6B96CE68F24D89B4B51C91577`
 
 ## Background-Safety Note
 
