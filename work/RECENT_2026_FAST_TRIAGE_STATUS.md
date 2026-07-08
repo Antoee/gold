@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-07 20:45:00 -05:00
+Updated: 2026-07-07 21:02:00 -05:00
 
 ## Current State
 
@@ -11,48 +11,33 @@ Updated: 2026-07-07 20:45:00 -05:00
 
 ## Latest Strategy-Code Change
 
-Improved the new **range-reversion opportunity lane** so it no longer behaves like a breakout trade after entry. The lane now carries its own trade context:
+Added **setup-lane performance risk scaling** so breakout continuation and range reversion can learn separately from their own recent closed trades.
+
+The EA now tags the signal context:
 
 - `SSignal.isRangeReversion`
-- `SSignal.rangeReversionStopPrice`
-- `SSignal.rangeReversionTargetPrice`
+- `SSignal.isBreakoutContinuation`
 
-For range-reversion trades, the EA can now:
+The risk manager now reads historical entry comments by position ID and calculates recent average R for a specific setup lane:
 
-- place the stop beyond the swept/rejected candle with ATR/point buffer
-- target VWAP/mean reversion when available
-- fall back to a configurable ATR target when VWAP is not usable
-- use a separate reversion minimum RR instead of the breakout RR
-- use a separate spread-adjusted RR threshold
-- log `Range reversion trade RR ...` for later performance attribution
+- `EntryCommentForPosition(...)`
+- `SetupLanePerformanceSample(...)`
+- `SetupLanePerformanceRiskMultiplier(...)`
 
-This addresses a real issue in the previous iteration: the range-reversion entry existed, but it was still pushed through continuation-style TP/SL and elite-gate assumptions. Mean-reversion setups now have their own stop, target, RR, and elite-quality thresholds.
+Why this matters: the bot now has two different profit engines. If range reversion is working but breakout continuation is cold, the EA can reduce breakout risk without strangling reversion trades. If a lane is producing strong recent R, it can receive a modest controlled boost, gated by closed-profit protection.
 
 ## Protected-Aggression Settings
 
-The high-upside research profile now includes:
+`protected_aggression_breakout` now uses:
 
-- `InpUseRangeReversionOpportunity=true`
-- `InpRangeReversionMinScore=6`
-- `InpWeightRangeReversionOpportunity=4`
-- `InpRangeReversionStandaloneEntry=true`
-- `InpRangeReversionMaxADX=26.0`
-- `InpRangeReversionMinWickPercent=32.0`
-- `InpRangeReversionMinCloseLocation=0.58`
-- `InpRangeReversionMinRangeATR=0.30`
-- `InpRangeReversionRequireVWAPMagnet=true`
-- `InpRangeReversionMaxVWAPDistanceATR=1.45`
-- `InpRangeReversionRequireOrderFlow=false`
-- `InpRangeReversionUseStructuralStop=true`
-- `InpRangeReversionStopBufferATR=0.10`
-- `InpRangeReversionStopBufferPoints=30.0`
-- `InpRangeReversionUseMeanTarget=true`
-- `InpRangeReversionFallbackTPATR=1.20`
-- `InpRangeReversionMinRR=0.85`
-- `InpRangeReversionUseCustomEliteGate=true`
-- `InpRangeReversionEliteMinConfirmations=2`
-- `InpRangeReversionEliteMinQualityScore=6`
-- `InpRangeReversionEliteMinPriceActionScore=0`
+- `InpUseSetupLanePerformanceRiskScaling=true`
+- `InpSetupLanePerformanceLookbackTrades=6`
+- `InpSetupLanePerformanceMinTrades=3`
+- `InpSetupLaneWeakAverageR=-0.20`
+- `InpSetupLaneStrongAverageR=0.40`
+- `InpMinSetupLaneRiskMultiplier=0.50`
+- `InpMaxSetupLaneRiskMultiplier=1.30`
+- `InpSetupLaneBoostRequiresClosedProfit=true`
 
 This complements the existing work already in the EA:
 
@@ -61,6 +46,7 @@ This complements the existing work already in the EA:
 - liquidity-aware structural stops
 - protected runner exit patience
 - protected-aggression breakout/continuation lane
+- range-reversion lane with structural stop and mean target
 
 ## Quiet Validation Results
 
@@ -80,15 +66,15 @@ This complements the existing work already in the EA:
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `53CEEF85174A89D1B8C92E170F44E58AA199993BEF106C508C3FA8E4505879C3`
-- `Professional_XAUUSD_EA.mq5`: `53CEEF85174A89D1B8C92E170F44E58AA199993BEF106C508C3FA8E4505879C3`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `53CEEF85174A89D1B8C92E170F44E58AA199993BEF106C508C3FA8E4505879C3`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `7B1488EA738411988E826F16ABC107E5EFCD45A307B075542D7991A9AB2815FB`
-- `outputs\xauusd_micro_validation_package.zip`: `53DDC8E17E72B1315483A126A8326DE74F89409FD1BBCA8D96C7F1B7BD667E44`
-- `work\build_price_action_strategy_batch.ps1`: `9AB58ACBDFE2D622C3F20737A5D27A55935D56750A27201ED807DEC8969FABF8`
-- `work\test_price_action_strategy_modules.ps1`: `3D0F629CE900DF142EBF656A1E481665B0C281BB10B882E10B2B9DFF96A029E8`
-- `work\test_price_action_strategy_batch.ps1`: `996BD9D70FAD2EE074DC1F0487382173ABF87A0DF661FC5342C550EFDDAC30FA`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `27BB7EB1378C87C76342490965DDC112FCF8C56678663982B280BDAE13FBE839`
+- `outputs\Professional_XAUUSD_EA.mq5`: `B5B9B67D41C6BC06A30DDB336499BFD4CB8158587F6B98EA241BAA1EDAD045BF`
+- `Professional_XAUUSD_EA.mq5`: `B5B9B67D41C6BC06A30DDB336499BFD4CB8158587F6B98EA241BAA1EDAD045BF`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `B5B9B67D41C6BC06A30DDB336499BFD4CB8158587F6B98EA241BAA1EDAD045BF`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `8C3DA29A73D5AA50B19F012D882B6F739469CE435FF3E810026EF70AC9B9716E`
+- `outputs\xauusd_micro_validation_package.zip`: `DB728B7F27F11F85FB8656C762777E8FC975908459531EB47F99DFAE4E747A6C`
+- `work\build_price_action_strategy_batch.ps1`: `2020D72C82C447AB5565924C76BAA36398BCD7FE4A7F705360FEF87D8E0055E4`
+- `work\test_price_action_strategy_modules.ps1`: `6B09D33B14B17A8D79FFD2632D9FCABE823D5ECD73672D439CC48EADD6626400`
+- `work\test_price_action_strategy_batch.ps1`: `029027B102A186DBFC21DE3529A55B6687918A132228BDD5C16873693410B703`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `B5AB180ECF3563FDA9D47FE07075C01B93A0CDD28ADF93DBC007971A511114CB`
 
 ## Background-Safety Note
 
