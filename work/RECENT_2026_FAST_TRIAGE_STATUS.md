@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-07 18:48:48 -05:00
+Updated: 2026-07-07 19:12:33 -05:00
 
 ## Current State
 
@@ -12,6 +12,8 @@ Updated: 2026-07-07 18:48:48 -05:00
 ## Latest Strategy-Code Change
 
 Added protected runner exit patience to the EA source and enabled it in the protected-aggression research profile. This is a better-logic profit-seeking feature, not just a bigger-risk setting: it gives already-protected winners more room only when the account is in house-money mode, trend-regime conditions are present, and current continuation structure still supports the trade.
+
+Follow-up after reviewing the GitHub-visible `$866.59` / 2.5-year result: that result is not enough for the stated goal. Older local notes show higher historical figures when date-specific buy/sell blocks were used, but those are treated as curve-fit evidence and should not be promoted as live-ready. The next research change keeps the fast batch size unchanged while making `protected_aggression_breakout` more ambitious.
 
 New inputs and logic:
 
@@ -29,11 +31,26 @@ New inputs and logic:
 
 The feature stretches the MFE giveback exit and blocks no-follow-through/stagnation exits only for positions that meet minimum current R, minimum max-favorable R, protected-stop, house-money, trend-regime, and continuation-structure checks. It still keeps the shared safety rails: starting-equity protection, close-on-risk-limit, max equity drawdown, max effective risk cap, open-risk cap, protected-floor gates, house-money gates, spread/cost/margin guards, and no martingale/grid/averaging down.
 
+Protected-aggression upside tuning now applies after shared conservative defaults so it is not overwritten:
+
+- `InpMinimumEntryScore=5`
+- `InpBreakoutContinuationMinScore=6`
+- `InpBreakoutContinuationRequireRegime=false`
+- `InpTakeProfitATRMultiplier=5.50`
+- `InpMinRiskReward=1.20`
+- `InpMFEGivebackStartR=1.00`
+- `InpMFEGivebackMaxGivebackR=0.90`
+- `InpMFEGivebackMinCloseR=0.20`
+- `InpRunnerExitPatienceMinR=0.25`
+- `InpRunnerExitPatienceMinMFER=0.75`
+- `InpRunnerExitPatienceRequireTrendRegime=false`
+- `InpRunnerExitPatienceMFEGivebackMultiplier=1.80`
+
 ## Fast Batch Impact
 
 - Batch size remains 11 profiles / 33 runs.
 - Estimated tester runtime remains about 11.55 minutes before platform overhead.
-- `protected_aggression_breakout` now enables `InpUseBreakoutContinuationQuality=true` and `InpUseRunnerExitPatience=true`.
+- `protected_aggression_breakout` now enables `InpUseBreakoutContinuationQuality=true`, `InpUseRunnerExitPatience=true`, and higher-upside TP/giveback settings.
 - The batch still uses fast no-visual tester configs with `Model=2`, `Visual=0`, `ShutdownTerminal=1`, and `ReplaceReport=1`.
 
 ## Quiet Validation Results
@@ -59,13 +76,13 @@ The feature stretches the MFE giveback exit and blocks no-follow-through/stagnat
 - `Professional_XAUUSD_EA.mq5`: `98BE545F7A4631A2BE793242D4A6EBFC8FFE3DACE52D1CFF63A2D6A298F6941A`
 - `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `98BE545F7A4631A2BE793242D4A6EBFC8FFE3DACE52D1CFF63A2D6A298F6941A`
 - `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `60A05717313664F656ED02F122FC7C1DCC06AB8C873C27489CDECC1DB50B64D0`
-- `outputs\xauusd_micro_validation_package.zip`: `0D61D973A9B861D1643A7905DD2CFAD72CE428F6A76798DACE8EFF6099A91B5B`
-- `work\build_price_action_strategy_batch.ps1`: `FD9C5747D9725F7FC44E138CC65FF47752FA822A380CD61EB13E826DFB073666`
+- `outputs\xauusd_micro_validation_package.zip`: `09C066A10B88368142D1ABC51BDA40B70B58CF2435AB0BC4269FFD5B5DB4FCCD`
+- `work\build_price_action_strategy_batch.ps1`: `6C13090EC351B86E9378E7A7F2B7AE922CEFB7D0E8D290796B166FDA466C8506`
 - `work\test_price_action_strategy_modules.ps1`: `070DC5FB98FD42F479AF5DE759038952D4322E3DCD29542F468E23B31844503C`
-- `work\test_price_action_strategy_batch.ps1`: `B6CEF5DB80A0196ABBB639B91AD3E7CF6D943608C088A02A208FCD7AE68415A9`
+- `work\test_price_action_strategy_batch.ps1`: `AF6D6AF1D2BD2CB46F89509DDBE64C57BDB78510EBAE1AB10D157BBCA16F6A7B`
 - `work\test_price_action_strategy_handoff.ps1`: `F8B5503E3B72DD32EDAA79630D758693E41E3E851D5B56ED75CC7820C80F9BBF`
 - `outputs\PRICE_ACTION_STRATEGY_BATCH.csv`: `1BD59B253422253BF095B10B2146CD88406F7C2CC06D23FA1A79831947594BD1`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `4E5D743C245FE528325B1CF16ABF3D895643331C9C89A9D036CFD0BB15E75F73`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `F8C09D4E83EF47B0811BEACD5BB7E15CDC12178BF45D924886857AA9C180B1BE`
 
 ## Background-Safety Note
 
