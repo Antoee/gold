@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-09 00:03:35 -05:00
+Updated: 2026-07-09 00:13:15 -05:00
 
 ## Current State
 
@@ -11,34 +11,52 @@ Updated: 2026-07-09 00:03:35 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **winner scale-in price-action gate**, with adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
+Added **flat-month late catch-up pressure**, with winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
 
-The EA needs more upside, but pyramiding into weak continuation candles can give back wins. This pass adds a price-action score floor to winner scale-ins, so add-on entries can still compound profitable positions but require both quality score and price-action quality.
+The EA was still too inactive for the profit objective. This pass adds a bounded late-month pressure mode so the protected-aggression profile can take more qualified opportunities when the month is late, the strategy is still flat, and the normal flat-month opportunity logic is active.
 
 New configurable inputs:
 
-- `InpWinnerScaleInMinPriceActionScore`
+- `InpUseFlatMonthLateCatchUp`
+- `InpFlatMonthLateCatchUpMinDay`
+- `InpFlatMonthLateCatchUpMaxMonthlyEntries`
+- `InpFlatMonthLateCatchUpMinProgress`
+- `InpFlatMonthLateCatchUpEntryScoreDiscount`
+- `InpFlatMonthLateCatchUpRRDiscount`
+- `InpFlatMonthLateCatchUpRiskMultiplier`
+- `InpFlatMonthLateCatchUpRequireLiquidSession`
 
-When winner scale-in is active, `WinnerScaleInAllows()` now checks `signal.priceActionScore` in addition to existing requirements: same-direction open position, protected stop, minimum locked R, minimum profit R, optional PTC lane requirement, trend-regime requirement, and open-profit risk coverage.
+`FlatMonthLateCatchUpActive()` now requires:
 
-The protected-aggression generator now enables the stricter add-on gate with:
+- flat-month opportunity mode to be active
+- current day to be at or after the configured late-month start day
+- monthly entries to remain under the configured cap
+- catch-up progress to meet the configured threshold
+- liquid-session confirmation when required
 
-- `InpWinnerScaleInMinPriceActionScore=12`
+When active, late catch-up can:
 
-Also retained from previous passes:
+- reduce the active minimum entry score by a small configured discount
+- reduce the active minimum RR by a small configured discount
+- multiply the flat-month opportunity risk multiplier by a configured factor
+- add `Flat month late catch-up;` to the entry reason log
 
-- adaptive-reverse post-stop lockout
-- liquidity-pocket stop shift
-- flat-month elite fallback
-- PTC quality-scaled risk ramp
-- `InpUseAdaptiveReverseRecentFlipCooldown`
-- `InpAdaptiveReverseRecentFlipCooldownMinutes`
-- `InpAdaptiveReverseRecentFlipMinQualityScore`
-- compact adaptive-reverse history tag: `AR;`
+The protected-aggression generator now enables this mode with:
+
+- `InpUseFlatMonthLateCatchUp=true`
+- `InpFlatMonthLateCatchUpMinDay=16`
+- `InpFlatMonthLateCatchUpMaxMonthlyEntries=12`
+- `InpFlatMonthLateCatchUpMinProgress=0.35`
+- `InpFlatMonthLateCatchUpEntryScoreDiscount=1`
+- `InpFlatMonthLateCatchUpRRDiscount=0.05`
+- `InpFlatMonthLateCatchUpRiskMultiplier=1.20`
+- `InpFlatMonthLateCatchUpRequireLiquidSession=true`
 
 ## Why This Matters
 
-This targets the profit side without simply raising base risk. Better scale-in filtering lets the aggressive profile press true winners while avoiding low-quality add-ons that can turn a good trade into noisy exposure.
+This directly targets flat-month opportunity cost and under-trading late in the month without simply opening the floodgates. The added pressure is still bounded by flat-month activation, monthly entry cap, liquid-session filtering, entry quality, RR checks, exposure limits, and the existing risk engine.
+
+It is a profit-seeking change, but it still needs MT5 compile/backtest/walk-forward evidence before treating it as profitable.
 
 ## Existing Profit-Focused Work Still Present
 
@@ -50,6 +68,7 @@ This targets the profit side without simply raising base risk. Better scale-in f
 - flat-month breakout-continuation probe risk lane
 - flat-month catch-up risk ramp
 - flat-month catch-up entry relaxation
+- flat-month late catch-up pressure
 - liquid-session catch-up relaxation guard
 - liquid-session catch-up risk guard
 - breakout-continuation standalone entry
@@ -91,15 +110,15 @@ This targets the profit side without simply raising base risk. Better scale-in f
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `0DFAA5192ADB7B2F023CD271B75101FAA9AE0F42A51B14D6B1ABA7DA69FE6D0D`
-- `Professional_XAUUSD_EA.mq5`: `0DFAA5192ADB7B2F023CD271B75101FAA9AE0F42A51B14D6B1ABA7DA69FE6D0D`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `0DFAA5192ADB7B2F023CD271B75101FAA9AE0F42A51B14D6B1ABA7DA69FE6D0D`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `B31F5833CB1E480F35A365C9234DEAD1572061F33B153E55A315945767A2ECCE`
-- `outputs\xauusd_micro_validation_package.zip`: `BBC40DA0143BE269CF39A286C03D990FB0352A7678A05EB2AF1CECFE4C286DDB`
-- `work\build_price_action_strategy_batch.ps1`: `20B01229B3D318D0092C2CE6F3699BBE14BF9AEA862109B22E7C56906A7F4123`
-- `work\test_price_action_strategy_modules.ps1`: `708D99F1375E2927CFDA379F9B972E690F42EF697AE8BB80289FF565FA212E1E`
-- `work\test_price_action_strategy_batch.ps1`: `E6F0E59FF26522FBC331C6801A651A72A3D081ED06E817D3245C92EBF5FEAFBF`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `A123FE1F989BD20DA52BBA651B1C69C63686734C7F13358937EF719B767D49CA`
+- `outputs\Professional_XAUUSD_EA.mq5`: `4BFC54347C5E48A3E2A0CCD5A96D41B83D1F7F91929F19394985973029F25D9F`
+- `Professional_XAUUSD_EA.mq5`: `4BFC54347C5E48A3E2A0CCD5A96D41B83D1F7F91929F19394985973029F25D9F`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `4BFC54347C5E48A3E2A0CCD5A96D41B83D1F7F91929F19394985973029F25D9F`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `14AE8CC75C127422038A2A13C9ABCC37D8ADB3505A7AF17E6A97A8F740F8141B`
+- `outputs\xauusd_micro_validation_package.zip`: `3E59C5EF9A12C362E8251D2E0BF17BD9EC6233EBF8F6D3C903C140FD83CC5AB0`
+- `work\build_price_action_strategy_batch.ps1`: `342D358EC797A765875D59EB606FDFDB998EA0CEA4064EFB74E839691977B4D2`
+- `work\test_price_action_strategy_modules.ps1`: `6CB2AFA44FCD2C32933C8FD27682D61C034A3794571266097045CF614C69785F`
+- `work\test_price_action_strategy_batch.ps1`: `59C5CD2B3378CDD8CD067FE28FE81E83BB1CC40C5E8A5895FB13425E9926BCB0`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `BDDB28A40D941F0CCB7FEE4AB0DA0083747CAF32C8814A5AF58349608A4A8416`
 
 ## Background-Safety Note
 
