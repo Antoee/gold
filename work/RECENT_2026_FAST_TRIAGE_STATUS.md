@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-08 02:12:00 -05:00
+Updated: 2026-07-08 02:45:00 -05:00
 
 ## Current State
 
@@ -11,21 +11,46 @@ Updated: 2026-07-08 02:12:00 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **liquid-session guard for flat-month catch-up risk ramp**.
+Added **power trend continuation lane**.
 
-The previous pass made catch-up entry relaxation require London/New York liquidity. This pass applies the same principle to the catch-up risk boost itself: the base flat-month opportunity multiplier can still apply, but the extra catch-up ramp can require a liquid session.
+This pass attacks the low-return problem directly by adding a higher-upside continuation setup that is separate from the normal breakout lane. It only activates when breakout-continuation quality is already present, ADX is strong, fresh execution/momentum exists, price is aligned with fast trend, and optional liquid-session / house-money guards allow it.
 
-New configurable input:
+New configurable inputs:
 
-- `InpFlatMonthCatchUpRiskRequiresLiquidSession`
+- `InpUsePowerTrendContinuation`
+- `InpPowerTrendContinuationMinScore`
+- `InpPowerTrendContinuationMinADX`
+- `InpPowerTrendContinuationRequireLiquidSession`
+- `InpPowerTrendContinuationRequireHouseMoney`
+- `InpPowerTrendContinuationStandaloneEntry`
+- `InpPowerTrendContinuationStandaloneMinScore`
+- `InpPowerTrendContinuationEntryScoreDiscount`
+- `InpPowerTrendContinuationRiskMultiplier`
+- `InpPowerTrendContinuationTPMultiplier`
 
-When enabled, `FlatMonthOpportunityRiskMultiplier()` returns only the base flat-month multiplier unless London or New York session is active. This prevents the EA from increasing position size in quiet hours just because the month is behind target pace.
+When enabled, the lane can:
+
+- add a distinct power-trend confirmation,
+- allow standalone high-conviction continuation entries,
+- relax entry score by a configurable amount,
+- expand take-profit distance,
+- increase risk only for this lane and only when guards allow it,
+- log `Power trend continuation` in the trade reason for later report analysis.
 
 ## Protected-Aggression Settings
 
-`protected_aggression_breakout` now uses:
+`protected_aggression_breakout` now enables:
 
-- `InpFlatMonthCatchUpRiskRequiresLiquidSession=true`
+- `InpUsePowerTrendContinuation=true`
+- `InpPowerTrendContinuationMinScore=10`
+- `InpPowerTrendContinuationMinADX=27.0`
+- `InpPowerTrendContinuationRequireLiquidSession=true`
+- `InpPowerTrendContinuationRequireHouseMoney=true`
+- `InpPowerTrendContinuationStandaloneEntry=true`
+- `InpPowerTrendContinuationStandaloneMinScore=12`
+- `InpPowerTrendContinuationEntryScoreDiscount=1`
+- `InpPowerTrendContinuationRiskMultiplier=1.35`
+- `InpPowerTrendContinuationTPMultiplier=1.40`
 
 This complements the existing work already in the EA:
 
@@ -66,15 +91,15 @@ This complements the existing work already in the EA:
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `190A98BF2431A18857A9CFB1278C5F45F2D51D68E79C54A7DE7A292A0DA1EBAD`
-- `Professional_XAUUSD_EA.mq5`: `190A98BF2431A18857A9CFB1278C5F45F2D51D68E79C54A7DE7A292A0DA1EBAD`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `190A98BF2431A18857A9CFB1278C5F45F2D51D68E79C54A7DE7A292A0DA1EBAD`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `5A3960D9174D6193D804D8617220F8938B6E9079468284845EE2E7EDE692F251`
-- `outputs\xauusd_micro_validation_package.zip`: `EE5CFF5D34C636EA9027BBAD19E0A8157F6E93AC23D3F2E8994DEDFDE897B9F2`
-- `work\build_price_action_strategy_batch.ps1`: `151E64D2FE7F092626B0054C5B3040C405B03528C564056760DA3BBE1B417E8F`
-- `work\test_price_action_strategy_modules.ps1`: `02F968BC5B2A272688E179DF3C4B0B34232786C80B16F9D917E9818C1A220996`
-- `work\test_price_action_strategy_batch.ps1`: `BCD36C1144268D81B8C045237C334D4E09D038F5F1F2889763129205D74BA4B6`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `AFF98534A56209379BA648AB0F12CAB9DA1C134E95AB976DD6E3768AD0EC59DD`
+- `outputs\Professional_XAUUSD_EA.mq5`: `C263BCBB6EC60478C35903FA5DF7B3956F118A378DDFCD484883569FE830E022`
+- `Professional_XAUUSD_EA.mq5`: `C263BCBB6EC60478C35903FA5DF7B3956F118A378DDFCD484883569FE830E022`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `C263BCBB6EC60478C35903FA5DF7B3956F118A378DDFCD484883569FE830E022`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `69717CE6F0C3D0C445D405CC878C943DF68AE1955855001AA433A07B4F3EEF6E`
+- `outputs\xauusd_micro_validation_package.zip`: `A3427BC15FF74FCCFCC2D04E1C2E229D457F5E2CCC1D56C2F4C1C79291500857`
+- `work\build_price_action_strategy_batch.ps1`: `B163753C820E48798FA7843A158CA83652B549357C74668AA459EA9179958D52`
+- `work\test_price_action_strategy_modules.ps1`: `579C747031482CF5CCE7923F877313FDD4B5DC2FA58F314F02D832A56EE29E36`
+- `work\test_price_action_strategy_batch.ps1`: `49A8C232D012B6A1E70608D9F7CE851D5683FAA33F3B5D07742A17909DAF5B23`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `96C5774773915212B7BB11D88F56CB05E4E303C9355989CDE591E7964D3ECE0C`
 
 ## Background-Safety Note
 
