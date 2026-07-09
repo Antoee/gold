@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-09 01:02:34 -05:00
+Updated: 2026-07-09 01:11:05 -05:00
 
 ## Current State
 
@@ -11,32 +11,39 @@ Updated: 2026-07-09 01:02:34 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **Flat-Month Stale SIL Wake-Up**, with Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
+Added **Adaptive-Reverse Phase Whipsaw Gate**, with Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
 
-The previous pass allowed protected, working `SIL` trades to satisfy the winner scale-in continuation gate when explicitly enabled. This pass addresses another flat-month opportunity leak: stale-month entry nudge previously supported power-trend, breakout, and range-reversion lanes, but not the Session Impulse Lane.
+The previous pass addressed a flat-month opportunity leak by allowing stale-month wake-up logic to count Session Impulse Lane trades. This pass targets adaptive-reverse churn: reverse flips can now be blocked during range or non-trend phases unless the setup quality is high enough to bypass the phase gate.
 
-New configurable input:
+New configurable inputs:
 
-- `InpFlatMonthStaleAllowSessionImpulse`
+- `InpAdaptiveReverseBlockRangePhase`
+- `InpAdaptiveReverseRequireTrendPhase`
+- `InpAdaptiveReversePhaseBypassQualityScore`
 
-`FlatMonthStaleEntryNudgeAllowed()` now treats a stale-month lane as valid when:
+`AdaptiveReverseWhipsawGuardAllows()` now rejects an adaptive reverse when:
 
-- flat-month opportunity mode is active
-- the stale-entry minimum time has passed
-- monthly entry limits still allow a new trade
-- the liquid-session requirement is satisfied, when enabled
-- `InpFlatMonthStaleAllowSessionImpulse=true`
-- the current setup is a Session Impulse Lane trade
+- `InpAdaptiveReverseBlockRangePhase=true`
+- ADX is at or below the configured range-phase threshold
+- setup quality is below `InpAdaptiveReversePhaseBypassQualityScore`
+
+It can also require a real trend phase before reversing when:
+
+- `InpAdaptiveReverseRequireTrendPhase=true`
+- ADX is below the configured trend-phase threshold
+- setup quality is below `InpAdaptiveReversePhaseBypassQualityScore`
 
 The protected-aggression generator now enables this with:
 
-- `InpFlatMonthStaleAllowSessionImpulse=true`
+- `InpAdaptiveReverseBlockRangePhase=true`
+- `InpAdaptiveReverseRequireTrendPhase=true`
+- `InpAdaptiveReversePhaseBypassQualityScore=16`
 
 ## Why This Matters
 
-The `SIL` lane is meant to address the low-profit/opportunity-cost problem without removing the risk rails. Before this change, the bot could still sit inactive during a flat month even when a liquid-session impulse appeared after the configured stale-entry window, because stale-month wake-up logic did not count `SIL` as an allowed lane.
+Adaptive reverse is dangerous in choppy gold because it can buy a failed sell, then sell a failed buy, repeatedly paying spread and stop losses. Before this change, the guard checked minimum ADX and structure, but did not explicitly reject range-phase or transition-phase flips.
 
-This change gives the bot one more controlled way to participate after inactivity: high-quality Session Impulse setups can now receive the same stale-month confirmation nudge as the other opportunity lanes. It does not add grid, martingale, averaging down, or recovery behavior.
+This change keeps adaptive reverse available for genuinely high-quality setups, but makes protected-aggression avoid low-quality flips when the market phase says chop or non-trend. It is a whipsaw-control change, not a recovery system.
 
 It is still not proof of higher profit. This needs MT5 compile/backtest evidence, then out-of-sample and walk-forward validation.
 
@@ -70,6 +77,7 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 - adaptive-reverse loss cooldown
 - adaptive-reverse recent-flip cooldown
 - adaptive-reverse post-stop lockout
+- adaptive-reverse range/transition phase gate
 - compact adaptive-reverse history tag: `AR;`
 - setup-lane performance risk scaling
 - liquidity-aware structural stops
@@ -97,15 +105,15 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `4A37A3AB26C7CB2AA8461806374EF819F1C356E529172CE022E146ACF991B262`
-- `Professional_XAUUSD_EA.mq5`: `4A37A3AB26C7CB2AA8461806374EF819F1C356E529172CE022E146ACF991B262`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `4A37A3AB26C7CB2AA8461806374EF819F1C356E529172CE022E146ACF991B262`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `5A4DF5DD49DE8E3E4110827ACE76E9EFBA8A513D20D4276C9D2D282502A44535`
-- `outputs\xauusd_micro_validation_package.zip`: `A4D48F89D578BBCC40B97917508F17955166A8161FF1C0E039ADC3BD4D15D96B`
-- `work\build_price_action_strategy_batch.ps1`: `041A5DD869F4C2B28C3A8642D5E5043A56029FF59F6B0E5CD4C893EF47D51D0A`
-- `work\test_price_action_strategy_modules.ps1`: `6F8484C8133F7A994BA13933D94428D81A955B024E99AEB2CE6181D6BB0D63A4`
-- `work\test_price_action_strategy_batch.ps1`: `9F7044B4149F0E05762E3471D3208D386463EB1A047577061B3FE36E1D1F5598`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `A6781DB543B403F191921E53BE359EDEC6173AB130C11CE17BB6101DFD55B493`
+- `outputs\Professional_XAUUSD_EA.mq5`: `047EE414830F4A672CBE4C2A41882028743722898167CAAACD608C3F3692C6A1`
+- `Professional_XAUUSD_EA.mq5`: `047EE414830F4A672CBE4C2A41882028743722898167CAAACD608C3F3692C6A1`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `047EE414830F4A672CBE4C2A41882028743722898167CAAACD608C3F3692C6A1`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `DBD36977FE6F42798E46A8B8B0D3A86DD892C38F689D5A90ED44340181C452AD`
+- `outputs\xauusd_micro_validation_package.zip`: `00A9014653CF6C1EEC96D221E2E38DF963926BFE8B6478C693E92794570C4537`
+- `work\build_price_action_strategy_batch.ps1`: `FA05DB696118C159D481663C72D41D63232375748DD12B0B1E1D2ACA2457FE46`
+- `work\test_price_action_strategy_modules.ps1`: `1C3734FC90B69A74521F372DEB0AF344F1C5E4DD22B5F06B2BD16C097F6FD6BB`
+- `work\test_price_action_strategy_batch.ps1`: `7D91C75820441C895E8498048817E535349D5E384AB275A1B7E2D37DE325DA07`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `27EC059B9146D1881E05C0C5044D8A20F6821B0DD4E60BB73ED3082765DF315D`
 
 ## Background-Safety Note
 
