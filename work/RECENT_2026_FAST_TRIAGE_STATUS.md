@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-08 04:18:00 -05:00
+Updated: 2026-07-08 23:22:36 -05:00
 
 ## Current State
 
@@ -11,40 +11,27 @@ Updated: 2026-07-08 04:18:00 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **flat-month stale-entry nudge**.
+Added **adaptive-reverse recent-flip cooldown plus compact `AR;` lane tag**.
 
-The bot has been too inactive during flat months. Existing flat-month logic could discount score and RR, but it still sat behind the same confirmation gate. This pass adds a bounded confirmation nudge after long inactivity, only while flat-month opportunity mode is active.
+The bot needs more profit, but recent adaptive-reverse logic can also create fast flip/whipsaw exposure if the market chops after a reversal. This pass adds a bounded cooldown that blocks repeated adaptive-reverse entries for a configurable period unless the new setup has enough quality score to override it.
 
 New configurable inputs:
 
-- `InpUseFlatMonthStaleEntryNudge`
-- `InpFlatMonthStaleEntryMinHours`
-- `InpFlatMonthStaleEntryMaxMonthlyEntries`
-- `InpFlatMonthStaleEntryConfirmationDiscount`
-- `InpFlatMonthStaleEntryRequireLiquidSession`
-- `InpFlatMonthStaleAllowPowerTrend`
-- `InpFlatMonthStaleAllowBreakout`
-- `InpFlatMonthStaleAllowRangeReversion`
+- `InpUseAdaptiveReverseRecentFlipCooldown`
+- `InpAdaptiveReverseRecentFlipCooldownMinutes`
+- `InpAdaptiveReverseRecentFlipMinQualityScore`
 
-When enabled, the EA can reduce required confirmations by a configurable amount if:
+When enabled, the EA scans recent entry history for adaptive-reverse trades tagged with either the new compact `AR;` marker or the legacy `Adaptive reverse guarded;` reason. If the previous adaptive-reverse entry is still inside the cooldown window, a new adaptive-reverse entry is blocked unless its quality score meets the override threshold.
 
-- flat-month opportunity mode is active,
-- monthly entries are still below the stale-entry cap,
-- there has not been a recent entry for the configured number of hours,
-- the session is liquid when required,
-- the setup is one of the allowed quality lanes: PTC, BCQ, or RRO.
+The protected-aggression generator now enables the guard with:
 
-The protected-aggression generator now enables the nudge with:
-
-- `InpUseFlatMonthStaleEntryNudge=true`
-- `InpFlatMonthStaleEntryMinHours=24`
-- `InpFlatMonthStaleEntryMaxMonthlyEntries=8`
-- `InpFlatMonthStaleEntryConfirmationDiscount=1`
-- `InpFlatMonthStaleEntryRequireLiquidSession=true`
+- `InpUseAdaptiveReverseRecentFlipCooldown=true`
+- `InpAdaptiveReverseRecentFlipCooldownMinutes=240`
+- `InpAdaptiveReverseRecentFlipMinQualityScore=13`
 
 ## Why This Matters
 
-This directly targets the flat-month efficiency bottleneck without making every weak setup tradable. The EA still needs a known quality lane, but if the month is stale and no trade has appeared for a day, it can stop being overly passive.
+This directly targets the "make as much as possible but avoid going red" objective from the risk side. It does not increase trade count by itself, but it should reduce repeated reversal churn so profit-focused lanes like PTC, BCQ, RRO, and flat-month opportunity logic are not giving money back through low-quality adaptive reverse flips.
 
 ## Existing Profit-Focused Work Still Present
 
@@ -65,6 +52,8 @@ This directly targets the flat-month efficiency bottleneck without making every 
 - PTC runner patience
 - adaptive-reverse whipsaw guard
 - adaptive-reverse loss cooldown
+- adaptive-reverse recent-flip cooldown
+- compact adaptive-reverse history tag: `AR;`
 - setup-lane performance risk scaling
 - liquidity-aware structural stops
 - liquidity-stop-aware max ATR ceiling
@@ -90,15 +79,15 @@ This directly targets the flat-month efficiency bottleneck without making every 
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `3EFF675A61A4726DCE52D072D66C290DC392C933339647795E890F7298B8EB0E`
-- `Professional_XAUUSD_EA.mq5`: `3EFF675A61A4726DCE52D072D66C290DC392C933339647795E890F7298B8EB0E`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `3EFF675A61A4726DCE52D072D66C290DC392C933339647795E890F7298B8EB0E`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `95DB9E33123497B22CA3838474E7AA0F4696148BAB86BB71B01C0B187A72CFF4`
-- `outputs\xauusd_micro_validation_package.zip`: `2DD8E40DA66F5CE18C78326A231A4A8BBDA07C804134B543C48C4D64459D0F57`
-- `work\build_price_action_strategy_batch.ps1`: `99321C51F081EE3E45E89D0D429E5C58C8556967E4C796662020BBA92A1D344C`
-- `work\test_price_action_strategy_modules.ps1`: `BAE5E19851C1D29AA1725C6CA2004C42C1C8522D4C8FFEB0334A4135109CC7C0`
-- `work\test_price_action_strategy_batch.ps1`: `E212C1DE897F50ACBC84414F1CD15E9E0D12480A747F66992610AAEA96263212`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `106F82D436B4ECC9E76A1A02DCCC8FC25D9A00C2C0ACA99B72EED578718E4891`
+- `outputs\Professional_XAUUSD_EA.mq5`: `888B13F71B608064A0FE9D06D0933721FE6CAB82667DEDAA7F3921C897777DD6`
+- `Professional_XAUUSD_EA.mq5`: `888B13F71B608064A0FE9D06D0933721FE6CAB82667DEDAA7F3921C897777DD6`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `888B13F71B608064A0FE9D06D0933721FE6CAB82667DEDAA7F3921C897777DD6`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `2E5880E81FF069209906AD4856C8718A44CD5E757F5697CA18F30D71F4A537B1`
+- `outputs\xauusd_micro_validation_package.zip`: `D75FC3FDE9B4B494594DA7D79E3DCDA3E10A7C613F3950D705D9C4DA9753FB8C`
+- `work\build_price_action_strategy_batch.ps1`: `2004E5978731079478C4F4D357BE223B63E1024AD2C0A3F5B18EECAB6EC5913E`
+- `work\test_price_action_strategy_modules.ps1`: `51CA5DD0636F30993F665AD3EFC2D6297835A7FEE71E67C12882B1E98DF758EE`
+- `work\test_price_action_strategy_batch.ps1`: `CD74C0F192885686E745A13491F1B256D6E3CB02E53C6AA7961DB869955F64F3`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `8959B2E330A685D205F26A69886E22402BFE638DC6CBDC4E7E976115696D8CA3`
 
 ## Background-Safety Note
 
