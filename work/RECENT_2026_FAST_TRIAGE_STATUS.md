@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-09 03:12:26 -05:00
+Updated: 2026-07-09 03:20:17 -05:00
 
 ## Current State
 
@@ -11,29 +11,31 @@ Updated: 2026-07-09 03:12:26 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **Adaptive-Reverse Liquidity Clearance Gate**, with Flat-Month Missed-Move Wake-Up, Liquidity Cluster Stop Extension, Adaptive-Reverse Follow-Through Close Filter, Flat-Month Probe Quality Cap Bypass, Flat-Month Probe Failure Exit, Flat-Month Probe Quality Risk Ramp, Range-Reversion Liquidity Stop Extension, Adaptive-Reverse Liquidity-Trap Guard, Flat-Month Catch-Up Standalone Relaxation, Runner MFE Profit-Lock Patience, Session Impulse Quality Risk Ramp, Flat-Month Catch-Up Take-Profit Expansion, Previous-Period Liquidity Stops, Adaptive-Reverse Phase Whipsaw Gate, Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
+Added **Flat-Month Missed-Move TP Expansion**, with Adaptive-Reverse Liquidity Clearance Gate, Flat-Month Missed-Move Wake-Up, Liquidity Cluster Stop Extension, Adaptive-Reverse Follow-Through Close Filter, Flat-Month Probe Quality Cap Bypass, Flat-Month Probe Failure Exit, Flat-Month Probe Quality Risk Ramp, Range-Reversion Liquidity Stop Extension, Adaptive-Reverse Liquidity-Trap Guard, Flat-Month Catch-Up Standalone Relaxation, Runner MFE Profit-Lock Patience, Session Impulse Quality Risk Ramp, Flat-Month Catch-Up Take-Profit Expansion, Previous-Period Liquidity Stops, Adaptive-Reverse Phase Whipsaw Gate, Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
 
-The previous pass made flat-month wake-up depend on a real ATR-sized missed move. This pass targets adaptive-reverse whipsaw risk: even if a reversal has structure and follow-through, flipping directly into nearby forward liquidity can leave the new trade with little clean runway.
+The previous pass added a clean-runway check for adaptive reverse. This pass returns to flat-month efficiency: if a missed-move wake-up trade is high quality, it should have enough take-profit room to materially affect the month rather than only adding small activity.
 
 New configurable inputs:
 
-- `InpUseAdaptiveReverseLiquidityClearance`
-- `InpAdaptiveReverseClearanceLookbackBars`
-- `InpAdaptiveReverseMinLiquidityClearanceATR`
-- `InpAdaptiveReverseClearanceBypassQualityScore`
+- `InpUseFlatMonthMissedMoveTPExpansion`
+- `InpFlatMonthMissedMoveTPMinQualityScore`
+- `InpFlatMonthMissedMoveTPMinPriceActionScore`
+- `InpFlatMonthMissedMoveTPMultiplier`
+- `InpFlatMonthMissedMoveTPRequireTrailing`
 
-`NearestForwardLiquidityDistance()` now centralizes the forward-liquidity measurement used by adaptive reverse. `AdaptiveReverseLiquidityClearanceAllows()` blocks non-elite adaptive reverses unless the nearest forward liquidity is at least the configured ATR distance away.
+`FlatMonthMissedMoveTakeProfitMultiplier()` now expands take-profit distance only for trades already tagged with `Flat month missed move wake-up`, and only when quality, price action, and trailing requirements pass. Entry logs include `Flat month missed-move TP x...` when the multiplier participates.
 
 The protected-aggression generator now enables this with:
 
-- `InpUseAdaptiveReverseLiquidityClearance=true`
-- `InpAdaptiveReverseClearanceLookbackBars=36`
-- `InpAdaptiveReverseMinLiquidityClearanceATR=1.15`
-- `InpAdaptiveReverseClearanceBypassQualityScore=17`
+- `InpUseFlatMonthMissedMoveTPExpansion=true`
+- `InpFlatMonthMissedMoveTPMinQualityScore=11`
+- `InpFlatMonthMissedMoveTPMinPriceActionScore=10`
+- `InpFlatMonthMissedMoveTPMultiplier=1.25`
+- `InpFlatMonthMissedMoveTPRequireTrailing=true`
 
 ## Why This Matters
 
-The `$866` / 2.5-year result implies the EA still leaves too much capital idle, but more trading cannot come from low-quality flips into nearby liquidity. This pass keeps adaptive reverse available while asking for a cleaner path before entering the flipped direction.
+The `$866` / 2.5-year result implies the EA still leaves too much capital idle. This pass makes the new missed-move activity more profit-aware by letting strong wake-up trades target more than the baseline TP, while keeping the feature default-off and gated.
 
 The change is default-off in the base optimization profile and enabled in the protected-aggression generator. It is not martingale, grid, averaging down, or recovery trading.
 
@@ -55,6 +57,7 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 - flat-month probe failure exit
 - flat-month probe quality cap bypass
 - flat-month missed-move wake-up
+- flat-month missed-move TP expansion
 - flat-month probe lane spacing
 - flat-month stale-entry nudge
 - flat-month elite fallback
@@ -111,15 +114,15 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `7866CE38BBCCEC3E8B5F83CB9DD2ED5C15406123592E27A08A7F0CC35A1A76E6`
-- `Professional_XAUUSD_EA.mq5`: `7866CE38BBCCEC3E8B5F83CB9DD2ED5C15406123592E27A08A7F0CC35A1A76E6`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `7866CE38BBCCEC3E8B5F83CB9DD2ED5C15406123592E27A08A7F0CC35A1A76E6`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `CF23D5DB354F389E9A7887A2FDBADED80163E25C60402C6E4C0F84999BE24ABF`
-- `outputs\xauusd_micro_validation_package.zip`: `AF812DB3C50A938CF26144E4DADAC90DA21B791AAF145878FBA5411CEDDEFB7A`
-- `work\build_price_action_strategy_batch.ps1`: `33E4418CC4B37B686FA229616526C96A2B2C1C77267BC2C00B96EBFAA3C88075`
-- `work\test_price_action_strategy_modules.ps1`: `CF4CF23DA166038EAA03132940A725A09E12BEC3035ED5F3D8C1942D6E63D2C9`
-- `work\test_price_action_strategy_batch.ps1`: `FF0D23555832E1A2A81051217700E52930E6B6AE63B4431EAFDD767260A4E45E`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `2B7767C32F45B53CB6DA74F1C1BFD693DE5855424FF818E93516E63503C5EB13`
+- `outputs\Professional_XAUUSD_EA.mq5`: `17201B05C2F9D89F4F32AC3FABD5D75C8E878297B1B37C413CA8D7EA93D8153F`
+- `Professional_XAUUSD_EA.mq5`: `17201B05C2F9D89F4F32AC3FABD5D75C8E878297B1B37C413CA8D7EA93D8153F`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `17201B05C2F9D89F4F32AC3FABD5D75C8E878297B1B37C413CA8D7EA93D8153F`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `513523F8E72E0D0C086F21A3A1F88A66D216B8E42AB71EBC8115681FC02A6DF5`
+- `outputs\xauusd_micro_validation_package.zip`: `AFBB3CDF70BBBC39D3C5BC4233229AE02D92DB621B08D29AF3960EDC0362CCA5`
+- `work\build_price_action_strategy_batch.ps1`: `6144BA199922F5BEC286091E308AC2CFE72682F0FC4801E4998C9A731D49F36C`
+- `work\test_price_action_strategy_modules.ps1`: `D601B43E28E2BD344A279D68E95655B1FB430CC17C9A10715D5432620F893E72`
+- `work\test_price_action_strategy_batch.ps1`: `253EEF28FDF18851F555CE6DDBB9317A12FFDFB25102DB2F19B4ABE368FA5FC9`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `1FA591E2ECB0C36BFB81039835975CEFCA6E20213096DA36EB7CAF00CF5B7ECA`
 
 ## Background-Safety Note
 
