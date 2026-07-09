@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-09 02:31:08 -05:00
+Updated: 2026-07-09 02:41:37 -05:00
 
 ## Current State
 
@@ -11,29 +11,31 @@ Updated: 2026-07-09 02:31:08 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **Flat-Month Probe Failure Exit**, with Flat-Month Probe Quality Risk Ramp, Range-Reversion Liquidity Stop Extension, Adaptive-Reverse Liquidity-Trap Guard, Flat-Month Catch-Up Standalone Relaxation, Runner MFE Profit-Lock Patience, Session Impulse Quality Risk Ramp, Flat-Month Catch-Up Take-Profit Expansion, Previous-Period Liquidity Stops, Adaptive-Reverse Phase Whipsaw Gate, Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
+Added **Flat-Month Probe Quality Cap Bypass**, with Flat-Month Probe Failure Exit, Flat-Month Probe Quality Risk Ramp, Range-Reversion Liquidity Stop Extension, Adaptive-Reverse Liquidity-Trap Guard, Flat-Month Catch-Up Standalone Relaxation, Runner MFE Profit-Lock Patience, Session Impulse Quality Risk Ramp, Flat-Month Catch-Up Take-Profit Expansion, Previous-Period Liquidity Stops, Adaptive-Reverse Phase Whipsaw Gate, Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
 
-The previous pass let higher-quality flat-month probes scale beyond the tiny base probe size while still respecting the protected equity floor. This pass targets the other side of that same bottleneck: if a flat-month probe is admitted, tagged, and fails to produce favorable movement quickly, it should free capital instead of sitting through low-quality drift.
+The previous pass made weak flat-month probes exit quickly if they failed to get even minor favorable movement. This pass targets a different flat-month efficiency bottleneck: the hard monthly probe cap can stop the EA from taking later high-quality opportunities even when the month is still under target and the account is protected.
 
 New configurable inputs:
 
-- `InpUseFlatMonthProbeFailureExit`
-- `InpFlatMonthProbeFailureBars`
-- `InpFlatMonthProbeFailureMinMFER`
-- `InpFlatMonthProbeFailureMaxCurrentR`
+- `InpUseFlatMonthProbeQualityCapBypass`
+- `InpFlatMonthProbeCapBypassMinQualityScore`
+- `InpFlatMonthProbeCapBypassMaxMonthlyEntries`
+- `InpFlatMonthProbeCapBypassRequireProtectedFloor`
+- `InpFlatMonthProbeCapBypassRequireLiquidSession`
 
-Flat-month probe entries now receive the compact `FMP;` tag. `FlatMonthProbeFailureExitHit()` uses that tag, held bars, max favorable excursion in R, and current R to close failed probe positions before they consume too much time/capital.
+`FlatMonthProbeQualityCapBypassAllowed()` now permits a limited number of extra flat-month probe trades after the normal probe cap is reached, but only when setup quality is high enough, the monthly flat-opportunity condition is still active, the protected floor is respected, and the liquid-session requirement passes. `CompactTradeComment()` now uses the active probe risk decision to tag these trades with `FMP;` reliably.
 
 The protected-aggression generator now enables this with:
 
-- `InpUseFlatMonthProbeFailureExit=true`
-- `InpFlatMonthProbeFailureBars=4`
-- `InpFlatMonthProbeFailureMinMFER=0.15`
-- `InpFlatMonthProbeFailureMaxCurrentR=-0.08`
+- `InpUseFlatMonthProbeQualityCapBypass=true`
+- `InpFlatMonthProbeCapBypassMinQualityScore=12`
+- `InpFlatMonthProbeCapBypassMaxMonthlyEntries=8`
+- `InpFlatMonthProbeCapBypassRequireProtectedFloor=true`
+- `InpFlatMonthProbeCapBypassRequireLiquidSession=true`
 
 ## Why This Matters
 
-The `$866` / 2.5-year result implies the EA still leaves too much capital idle. The last pass made better flat-month probes matter more; this pass tries to stop bad probes from tying up capital after they fail to get even minor favorable movement.
+The `$866` / 2.5-year result implies the EA still leaves too much capital idle. This pass lets the protected-aggression profile keep testing high-quality opportunities after the ordinary flat-month probe cap is reached, while still enforcing a second cap and risk-quality filters.
 
 The change is default-off in the base optimization profile and enabled in the protected-aggression generator. It is not martingale, grid, averaging down, or recovery trading.
 
@@ -53,6 +55,7 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 - flat-month probe mode
 - flat-month probe quality risk ramp
 - flat-month probe failure exit
+- flat-month probe quality cap bypass
 - flat-month probe lane spacing
 - flat-month stale-entry nudge
 - flat-month elite fallback
@@ -106,15 +109,15 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `4356E8C378DC000DBE634B764D90227F40F7DB689B1B0785A86CDE2603B6FDFB`
-- `Professional_XAUUSD_EA.mq5`: `4356E8C378DC000DBE634B764D90227F40F7DB689B1B0785A86CDE2603B6FDFB`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `4356E8C378DC000DBE634B764D90227F40F7DB689B1B0785A86CDE2603B6FDFB`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `54C2002E356D9641D2CE10A64FBE252A6BB976B6576A78E2E8B61BF1832D4B84`
-- `outputs\xauusd_micro_validation_package.zip`: `308BBC96FB6D8AE895C97428A425235DB1C42EA98842BA57218EC8119356FBBE`
-- `work\build_price_action_strategy_batch.ps1`: `52BA5B24DE68CFD8C4BE850A21074588D85549A11777FBCC99978A67B77024EB`
-- `work\test_price_action_strategy_modules.ps1`: `7EAA53F4142B4595527EA2A976707D9E07513E208CE6903BD53AD41ECEAD142C`
-- `work\test_price_action_strategy_batch.ps1`: `D446E5D0F6C3DE885999D26D31A7D3148C4EF78151A8645A1A5B8FCB11E07BDD`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `54D412AA7F660C9F02A11FE987A4E0D430F855CA10F67F66FC7F7A8F38870655`
+- `outputs\Professional_XAUUSD_EA.mq5`: `5CB33EF250A08DE5F1E7B102E2641A93D9C6E612BDCCFD4AE2E1A6A4256684B3`
+- `Professional_XAUUSD_EA.mq5`: `5CB33EF250A08DE5F1E7B102E2641A93D9C6E612BDCCFD4AE2E1A6A4256684B3`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `5CB33EF250A08DE5F1E7B102E2641A93D9C6E612BDCCFD4AE2E1A6A4256684B3`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `68BBF0DD759CDED2FC54FB3A1D5C473590FD805D5440F99495ECBF84D8027A52`
+- `outputs\xauusd_micro_validation_package.zip`: `E95BE98F76A0B3A95B971E9D14D787931975010546B4DB93FD4BC33525799217`
+- `work\build_price_action_strategy_batch.ps1`: `B0548AF0DEEFC4EC0FCF1114D73CD2BBA72D56BB3D30D9D16CE8B57D4D34CC00`
+- `work\test_price_action_strategy_modules.ps1`: `E35A566FA5BC55895B3CD1CEE71E777A8A9AFBE82A46CA0B304A40B459B2F00A`
+- `work\test_price_action_strategy_batch.ps1`: `D9BB36DD6E0C3DE3A10BE4A9FD7C6C6A6260F2381BD2CE0ECD3EB43EC0882944`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `D2102350DECA75A7785D99E5DDF6536A7360493E1670F75966F52110F29058CE`
 
 ## Background-Safety Note
 
