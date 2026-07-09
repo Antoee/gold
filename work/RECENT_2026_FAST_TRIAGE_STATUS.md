@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-08 23:40:03 -05:00
+Updated: 2026-07-08 23:48:09 -05:00
 
 ## Current State
 
@@ -11,34 +11,33 @@ Updated: 2026-07-08 23:40:03 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **flat-month elite fallback**, with PTC quality-scaled risk ramp and adaptive-reverse recent-flip cooldown still present.
+Added **liquidity-pocket stop shift**, with flat-month elite fallback, PTC quality-scaled risk ramp, and adaptive-reverse recent-flip cooldown still present.
 
-The `$866` / 2.5-year result is not enough, and prior stale-entry logic only helped if an existing setup lane already qualified. This pass adds a bounded fallback for flat/behind months: if the EA is short by only a small configurable number of confirmations, has strong quality and price-action scores, has waited long enough since the last entry, and is still under the monthly entry cap, it can promote the setup instead of staying idle.
+Fixed ATR and even basic structure stops can still land directly inside recent swing liquidity. This pass adds a configurable stop adjustment that scans recent swing highs/lows around the computed stop; if the stop is too close to that liquidity pocket, the EA shifts the stop beyond the pocket by an ATR/points buffer instead of leaving it in the most obvious stop-hunt zone.
 
 New configurable inputs:
 
-- `InpUseFlatMonthEliteFallback`
-- `InpFlatMonthEliteFallbackMinHours`
-- `InpFlatMonthEliteFallbackMaxMonthlyEntries`
-- `InpFlatMonthEliteFallbackMaxConfirmationShortfall`
-- `InpFlatMonthEliteFallbackMinQualityScore`
-- `InpFlatMonthEliteFallbackMinPriceActionScore`
-- `InpFlatMonthEliteFallbackRequireLiquidSession`
+- `InpUseLiquidityPocketStopShift`
+- `InpLiquidityPocketLookbackBars`
+- `InpLiquidityPocketProximityATR`
+- `InpLiquidityPocketProximityPoints`
+- `InpLiquidityPocketBufferATR`
+- `InpLiquidityPocketBufferPoints`
 
-When enabled, `FlatMonthEliteFallbackAllowed()` can fill the confirmation gap only when flat-month opportunity mode is active and the setup is close enough to the required confirmation count. It does not bypass the later weighted score, elite quality, RR, exposure, margin, spread, loss, drawdown, or cost guards.
+When enabled, `LiquidityPocketStopLevel()` checks whether the currently computed stop is near a recent swing low for buys or recent swing high for sells. If so, `StructureStopDistance()` can widen the stop beyond that pocket and mark it as a liquidity-aware stop, so the existing wider max-ATR ceiling and risk sizing path remain in control.
 
-The protected-aggression generator now enables the fallback with:
+The protected-aggression generator now enables the shift with:
 
-- `InpUseFlatMonthEliteFallback=true`
-- `InpFlatMonthEliteFallbackMinHours=36`
-- `InpFlatMonthEliteFallbackMaxMonthlyEntries=8`
-- `InpFlatMonthEliteFallbackMaxConfirmationShortfall=1`
-- `InpFlatMonthEliteFallbackMinQualityScore=12`
-- `InpFlatMonthEliteFallbackMinPriceActionScore=8`
-- `InpFlatMonthEliteFallbackRequireLiquidSession=true`
+- `InpUseLiquidityPocketStopShift=true`
+- `InpLiquidityPocketLookbackBars=28`
+- `InpLiquidityPocketProximityATR=0.20`
+- `InpLiquidityPocketProximityPoints=55.0`
+- `InpLiquidityPocketBufferATR=0.24`
+- `InpLiquidityPocketBufferPoints=65.0`
 
 Also retained from previous passes:
 
+- flat-month elite fallback
 - PTC quality-scaled risk ramp
 - `InpUseAdaptiveReverseRecentFlipCooldown`
 - `InpAdaptiveReverseRecentFlipCooldownMinutes`
@@ -47,7 +46,7 @@ Also retained from previous passes:
 
 ## Why This Matters
 
-This directly targets the flat-month efficiency bottleneck without turning the EA into an always-in-market system. The fallback gives high-quality near-miss setups a path to trade during stale months, while previous adaptive-reverse cooldowns reduce churn and the PTC quality ramp gives the strongest continuation lane more upside under house-money/liquid-session gates.
+This directly targets the "move beyond pure ATR multipliers" requirement. Instead of accepting a mechanically calculated ATR/structure stop when it sits near recent liquidity, the EA now has a configurable way to place the stop past that pocket while preserving the normal risk, exposure, RR, spread, margin, and max-stop checks.
 
 ## Existing Profit-Focused Work Still Present
 
@@ -74,6 +73,7 @@ This directly targets the flat-month efficiency bottleneck without turning the E
 - compact adaptive-reverse history tag: `AR;`
 - setup-lane performance risk scaling
 - liquidity-aware structural stops
+- liquidity-pocket stop shift
 - liquidity-stop-aware max ATR ceiling
 - protected runner exit patience
 - protected-aggression breakout/continuation lane
@@ -97,15 +97,15 @@ This directly targets the flat-month efficiency bottleneck without turning the E
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `DE3CA1754AE82B45B7F19E42FC3E33D7B82E710D96F8E55B006914DABA7EF628`
-- `Professional_XAUUSD_EA.mq5`: `DE3CA1754AE82B45B7F19E42FC3E33D7B82E710D96F8E55B006914DABA7EF628`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `DE3CA1754AE82B45B7F19E42FC3E33D7B82E710D96F8E55B006914DABA7EF628`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `16153BB79C92E7524D976FBD0F532586F9E419D53A00A33FCD0254F53077B22E`
-- `outputs\xauusd_micro_validation_package.zip`: `57914742F13B737E2AB088544CFF4B024CB75215F2A7265D4412E6563D1063F2`
-- `work\build_price_action_strategy_batch.ps1`: `A2D27F9F2EFFE246B346EE011FFE29C177AE272E985EF2C143A3E353746245C4`
-- `work\test_price_action_strategy_modules.ps1`: `D0FA163BA38946429AA9B6D740E8DC0221D80014498AA637CD6AE5406968B5AA`
-- `work\test_price_action_strategy_batch.ps1`: `20B3E6FE23FF62A66EB861FB196EF10433A9F6D8E1B140F7BAA9F4AB7F3D672D`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `4D5460041887FFFB8024F237187228502F64D130072FFB72ED79645C1B85BDF5`
+- `outputs\Professional_XAUUSD_EA.mq5`: `F5AD988DAC271C254584A87D148078DBD86A207B61F751ACD0171D82CB8EEE2A`
+- `Professional_XAUUSD_EA.mq5`: `F5AD988DAC271C254584A87D148078DBD86A207B61F751ACD0171D82CB8EEE2A`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `F5AD988DAC271C254584A87D148078DBD86A207B61F751ACD0171D82CB8EEE2A`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `4AA8385DC48178DB744D7CA2BDEF1585DB5DF92FFFC1E6AE743200336E5BA5C5`
+- `outputs\xauusd_micro_validation_package.zip`: `C2C61FCB23D36E24A9C0900523F6E112E23E7A4EEB49F78576EB99EFC38E1E51`
+- `work\build_price_action_strategy_batch.ps1`: `29FE02DCEF0B0B6EF8EEFFBEB970DEC59D622B2ABD63BDB475F742FFDD595347`
+- `work\test_price_action_strategy_modules.ps1`: `7981AFC58881F95F2A8B9FB297C7D7DBCCC99F9656A37CFA37DA99011376633E`
+- `work\test_price_action_strategy_batch.ps1`: `9FE35082CF8CD9241D59104216F4AE5ADEE76F2E16DE85BD0B0A4047FD726042`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `237A6BB10044457A6D2A005313644D684E9FFFEE6ACDF5A8BCD38F4A3B8A37C3`
 
 ## Background-Safety Note
 
