@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-08 03:28:00 -05:00
+Updated: 2026-07-08 03:52:00 -05:00
 
 ## Current State
 
@@ -11,28 +11,33 @@ Updated: 2026-07-08 03:28:00 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **power-trend-only winner scale-ins**.
+Added **power-trend runner patience**.
 
-The previous pass made setup lanes reliable with compact order-comment tags. This pass uses that better lane identity to concentrate extra exposure on the strongest continuation setup instead of allowing generic add-ons.
+The previous pass allowed winner scale-ins only from the strongest power-trend continuation lane. This pass helps those PTC-tagged winners stay open longer when they are already protected and still structurally supported.
 
-New configurable input:
+New configurable inputs:
 
-- `InpWinnerScaleInRequirePowerTrendContinuation`
+- `InpUsePowerTrendRunnerPatience`
+- `InpPowerTrendRunnerPatienceMinR`
+- `InpPowerTrendRunnerPatienceMinMFER`
+- `InpPowerTrendRunnerMFEGivebackMultiplier`
+- `InpPowerTrendRunnerRequireProtectedStop`
+- `InpPowerTrendRunnerRequireContinuation`
 
-When enabled, an existing winning position can only receive a scale-in if the fresh signal is a `Power Trend Continuation` signal. This keeps the protected-aggression profile from adding exposure on weaker or unrelated follow-up signals, while still allowing it to press a strong XAUUSD continuation move when the existing winner is already protected and all other scale-in checks pass.
+When enabled, the position manager reads the compact entry tag from history. If the open position has `PTC;`, is already favorable enough, has a protected stop when required, and still has continuation structure, then MFE giveback exit gets extra room. The exit log marks this as `PTC runner patience MFE giveback exit`.
 
 The protected-aggression generator now sets:
 
-- `InpWinnerScaleInRequirePowerTrendContinuation=true`
+- `InpUsePowerTrendRunnerPatience=true`
+- `InpPowerTrendRunnerPatienceMinR=0.20`
+- `InpPowerTrendRunnerPatienceMinMFER=0.60`
+- `InpPowerTrendRunnerMFEGivebackMultiplier=1.60`
+- `InpPowerTrendRunnerRequireProtectedStop=true`
+- `InpPowerTrendRunnerRequireContinuation=true`
 
 ## Why This Matters
 
-The goal is higher monthly return without simply raising global risk. This change targets the return bottleneck more surgically:
-
-- extra exposure is reserved for the strongest trend-continuation lane,
-- scale-ins still require the existing winner/protected-stop/spacing/risk checks,
-- the EA avoids adding on ordinary signals during chop,
-- the new compact `PTC;` tag makes later reports able to verify whether these add-ons helped.
+The bot has been too low-return. Pressing a winner only helps if the EA also gives true continuation winners enough breathing room. This change does not loosen exits globally; it only applies to tagged PTC runners that are already behaving like valid continuation trades.
 
 ## Existing Profit-Focused Work Still Present
 
@@ -49,6 +54,7 @@ The goal is higher monthly return without simply raising global risk. This chang
 - power trend continuation lane
 - compact setup-lane tags: `PTC;`, `BCQ;`, `RRO;`
 - PTC-only winner scale-in gate
+- PTC runner patience
 - adaptive-reverse whipsaw guard
 - adaptive-reverse loss cooldown
 - setup-lane performance risk scaling
@@ -76,15 +82,15 @@ The goal is higher monthly return without simply raising global risk. This chang
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `097649E092089562AFCE034D08993402FA16FA759BDDEB0F0CFD043EDB3FB893`
-- `Professional_XAUUSD_EA.mq5`: `097649E092089562AFCE034D08993402FA16FA759BDDEB0F0CFD043EDB3FB893`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `097649E092089562AFCE034D08993402FA16FA759BDDEB0F0CFD043EDB3FB893`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `24ABF5099F5164318AD8D87854B53D0DB2EDA1BF0C8E27BD6DB3AD9788C0996B`
-- `outputs\xauusd_micro_validation_package.zip`: `C224AFFB0F09830052752C0151A04242A6F4F2B582A1B0BE90260E432CEB2342`
-- `work\build_price_action_strategy_batch.ps1`: `029163978857EA4CC2E47AF7187F9158183BA278F94965436838216D310C53CD`
-- `work\test_price_action_strategy_modules.ps1`: `4C044AE605BA6B1C03CBA04EDC884C5E9D61D83182A09C19EF2C0BF29DFB0AC3`
-- `work\test_price_action_strategy_batch.ps1`: `8B86B11ABBC205C73C85B40E896966E0A08FDF5E0C45F73D8CEED4696420E455`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `BB971DAD28194484111AAA63F569A1CFD6351197D6BD8C134DA552333009841B`
+- `outputs\Professional_XAUUSD_EA.mq5`: `C8CB8AF62DEDF56DB5EC2DDD615A6725B89E881FAFB133141913D9BDC7E3001C`
+- `Professional_XAUUSD_EA.mq5`: `C8CB8AF62DEDF56DB5EC2DDD615A6725B89E881FAFB133141913D9BDC7E3001C`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `C8CB8AF62DEDF56DB5EC2DDD615A6725B89E881FAFB133141913D9BDC7E3001C`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `C29E3CE35E23083527ED10615BE3072BB3B71E65FE74315814854D0A7141B225`
+- `outputs\xauusd_micro_validation_package.zip`: `DEB0FCAE7D545C9E13B9294B65976615B73C798386B57C4372618FE588FA741C`
+- `work\build_price_action_strategy_batch.ps1`: `105117AF62020564CF2A86A48402926B4180F0387C14784F0DBAE111BDE2CF38`
+- `work\test_price_action_strategy_modules.ps1`: `3CB185380CE8A7E6DE30637CD129970016130C391147CCEAAC7090D1929026C6`
+- `work\test_price_action_strategy_batch.ps1`: `3BD8E2DD0F4F2600698A4E37948C2EE2C8F0F75306644F8EB35156C0FA509577`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `304DD60C7ACA8F78DAD5177A936EE4E18706C7ED88AC0E5F05B9E85D2D4DB478`
 
 ## Background-Safety Note
 
