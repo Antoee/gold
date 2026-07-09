@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-08 01:28:00 -05:00
+Updated: 2026-07-08 01:52:00 -05:00
 
 ## Current State
 
@@ -11,31 +11,33 @@ Updated: 2026-07-08 01:28:00 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **flat-month catch-up entry relaxation**.
+Added **liquid-session guard for flat-month catch-up entry relaxation**.
 
-The prior pass added a catch-up risk ramp. This pass makes the under-target state also adjust selectivity, but only for controlled setup lanes instead of loosening the whole EA.
+The prior pass allowed under-target months to slightly relax score/RR for controlled setup lanes. This pass prevents that extra selectivity relaxation from activating in dead hours by requiring London or New York session conditions when enabled.
 
-New configurable inputs:
+New configurable input:
 
-- `InpUseFlatMonthCatchUpEntryRelaxation`
-- `InpFlatMonthCatchUpEntryScoreDiscount`
-- `InpFlatMonthCatchUpRRDiscount`
-- `InpFlatMonthCatchUpRelaxBreakout`
-- `InpFlatMonthCatchUpRelaxRangeReversion`
+- `InpFlatMonthCatchUpRequireLiquidSession`
 
-The EA now calculates `FlatMonthCatchUpProgress()` from the same monthly target-pace gap used by the risk ramp. When enabled, breakout-continuation and/or range-reversion lanes can receive a small extra score/RR relaxation only when the month is behind target pace.
+New helper:
 
-This targets flat-month opportunity cost while avoiding a global quality downgrade.
+- `CSessionFilter::LiquidSessionActive()`
+- `FlatMonthCatchUpEntryRelaxationAllowed()`
+
+When enabled, catch-up entry relaxation requires:
+
+- flat-month opportunity mode is active
+- the monthly target-pace gap is large enough
+- the setup is an allowed catch-up lane
+- London or New York session is active
+
+This keeps the extra flat-month activity focused in liquid conditions rather than spending risk in low-quality hours.
 
 ## Protected-Aggression Settings
 
 `protected_aggression_breakout` now uses:
 
-- `InpUseFlatMonthCatchUpEntryRelaxation=true`
-- `InpFlatMonthCatchUpEntryScoreDiscount=1`
-- `InpFlatMonthCatchUpRRDiscount=0.05`
-- `InpFlatMonthCatchUpRelaxBreakout=true`
-- `InpFlatMonthCatchUpRelaxRangeReversion=true`
+- `InpFlatMonthCatchUpRequireLiquidSession=true`
 
 This complements the existing work already in the EA:
 
@@ -45,6 +47,7 @@ This complements the existing work already in the EA:
 - flat-month breakout-continuation probe risk lane
 - flat-month catch-up risk ramp
 - flat-month catch-up entry relaxation
+- liquid-session catch-up relaxation guard
 - breakout-continuation standalone entry
 - breakout-continuation follow-through close gate
 - adaptive-reverse whipsaw guard
@@ -74,15 +77,15 @@ This complements the existing work already in the EA:
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `0D04082AD6EC4F5A69B79013EE2F074F6DDA3350D53FFF8E473B0CC04269BECA`
-- `Professional_XAUUSD_EA.mq5`: `0D04082AD6EC4F5A69B79013EE2F074F6DDA3350D53FFF8E473B0CC04269BECA`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `0D04082AD6EC4F5A69B79013EE2F074F6DDA3350D53FFF8E473B0CC04269BECA`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `22D9B8C0606958A34A15869A3FCDE8443C71236EF9ED9B48F89CB9E0E677A970`
-- `outputs\xauusd_micro_validation_package.zip`: `498077559E2C064DAFEC908B2BB401F1CD49B307BBC253B48BF257CF549050E2`
-- `work\build_price_action_strategy_batch.ps1`: `F7BEB8DDDB14DBCFC609F1C2790BAD042D663EE839BEE1187FC6CA101D792C8E`
-- `work\test_price_action_strategy_modules.ps1`: `E7ADDD6486246BC1A694CAA532493328DA67B327C7B2FDD2408C9CECFB7F62BB`
-- `work\test_price_action_strategy_batch.ps1`: `5F3FDB0E3A856BFC7E449EFCF665943EB75E6CBAFB416905FB1DAC684A7A76FA`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `EF9971581517CAD574308F742F8466F0F14CDE0429ED88E016E6FF75014B09B2`
+- `outputs\Professional_XAUUSD_EA.mq5`: `BB3D012D5D3E90061340FD344B31965657C9A791386BA65D37A436532BDC3D71`
+- `Professional_XAUUSD_EA.mq5`: `BB3D012D5D3E90061340FD344B31965657C9A791386BA65D37A436532BDC3D71`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `BB3D012D5D3E90061340FD344B31965657C9A791386BA65D37A436532BDC3D71`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `D6FA115931141265F86A7810D13138EF4A56C34F1524AA1369087C4585F4A21D`
+- `outputs\xauusd_micro_validation_package.zip`: `5CADEFF669220BE658CE635B7AAB497D1F23E90069EF8EE34902B9D536D16EEB`
+- `work\build_price_action_strategy_batch.ps1`: `CF763AF43DDC66FC72E10561A63CA8E695ACC09F2B8E4BD079F8E53D5CF73ABC`
+- `work\test_price_action_strategy_modules.ps1`: `49C4BAD374EC03A00C1E26B19E776F540863A32E8D30B70D8DDA51459D92BBE7`
+- `work\test_price_action_strategy_batch.ps1`: `8A45AEF54900C065C0E5369C983206EE8C7C5A45085E87909F8411A0B94073B8`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `0557FB91FC3CF5DEAF0A0D582315DBE2110B677CD8EEDF62CEF58698B0EF5A4A`
 
 ## Background-Safety Note
 
