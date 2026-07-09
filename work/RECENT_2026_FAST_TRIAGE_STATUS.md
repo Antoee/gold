@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-09 01:21:34 -05:00
+Updated: 2026-07-09 01:29:59 -05:00
 
 ## Current State
 
@@ -11,34 +11,41 @@ Updated: 2026-07-09 01:21:34 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **Previous-Period Liquidity Stops**, with Adaptive-Reverse Phase Whipsaw Gate, Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
+Added **Flat-Month Catch-Up Take-Profit Expansion**, with Previous-Period Liquidity Stops, Adaptive-Reverse Phase Whipsaw Gate, Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
 
-The previous pass targeted adaptive-reverse churn by blocking range/non-trend flips unless setup quality is high enough. This pass targets stop placement: liquidity-aware structure stops can now account for previous day, week, and month highs/lows instead of relying only on local ATR, sweep, equal-level, and pocket checks.
+The previous pass moved stops farther beyond higher-timeframe liquidity when enabled. This pass targets the low-profit/flat-month problem from the exit side: when the bot is behind monthly pace, high-quality catch-up trades can now aim for a larger take-profit instead of only increasing entry pressure.
 
 New configurable inputs:
 
-- `InpLiquidityStopUsePreviousDay`
-- `InpLiquidityStopUsePreviousWeek`
-- `InpLiquidityStopUsePreviousMonth`
+- `InpUseFlatMonthCatchUpTakeProfitExpansion`
+- `InpFlatMonthCatchUpTPMinQualityScore`
+- `InpFlatMonthCatchUpTPMinPriceActionScore`
+- `InpFlatMonthCatchUpTPMultiplier`
+- `InpFlatMonthCatchUpTPRequireLiquidSession`
+- `InpFlatMonthCatchUpTPRequireTrailing`
 
-`StructureStopDistance()` now can widen the stop behind the stop-side previous-period level when liquidity-aware structure stops are enabled:
+`FlatMonthCatchUpTakeProfitMultiplier()` now expands take-profit distance when:
 
-- buy trades can protect below previous D1/W1/MN1 lows
-- sell trades can protect above previous D1/W1/MN1 highs
-- the existing liquidity stop buffer is applied
-- the existing liquidity-aware max-ATR ceiling still applies
+- flat-month opportunity mode is active
+- monthly catch-up progress is positive, or late catch-up is active
+- setup quality and price-action scores meet the configured floor
+- the liquid-session requirement is satisfied, when enabled
+- trailing or MFE-giveback infrastructure is available, when required
 
 The protected-aggression generator now enables this with:
 
-- `InpLiquidityStopUsePreviousDay=true`
-- `InpLiquidityStopUsePreviousWeek=true`
-- `InpLiquidityStopUsePreviousMonth=false`
+- `InpUseFlatMonthCatchUpTakeProfitExpansion=true`
+- `InpFlatMonthCatchUpTPMinQualityScore=12`
+- `InpFlatMonthCatchUpTPMinPriceActionScore=14`
+- `InpFlatMonthCatchUpTPMultiplier=1.35`
+- `InpFlatMonthCatchUpTPRequireLiquidSession=true`
+- `InpFlatMonthCatchUpTPRequireTrailing=true`
 
 ## Why This Matters
 
-Gold often runs prior day/week highs and lows before moving. Before this change, liquidity-aware stops could shift beyond recent sweeps, equal levels, and nearby pockets, but not the major prior-period levels that many discretionary traders watch.
+The `$866` / 2.5-year result is not only an entry-frequency problem. It can also be a winner-size problem: if the bot is behind monthly pace but keeps capping good trades at the same target as normal conditions, it may never catch up even when it finally finds a strong setup.
 
-This change moves further away from pure ATR stops by letting the stop engine protect beyond previous D1/W1 levels when enabled. It can reduce premature stop-outs around obvious liquidity pools, while still letting the max-ATR guard reject unreasonably wide stops.
+This change lets high-quality flat-month catch-up trades seek larger winners while preserving quality, session, and trailing requirements. It does not increase losing-trade recovery behavior.
 
 It is still not proof of higher profit. This needs MT5 compile/backtest evidence, then out-of-sample and walk-forward validation.
 
@@ -57,6 +64,7 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 - flat-month breakout-continuation probe risk lane
 - flat-month catch-up risk ramp
 - flat-month catch-up entry relaxation
+- flat-month catch-up take-profit expansion
 - flat-month late catch-up pressure
 - liquid-session catch-up relaxation guard
 - liquid-session catch-up risk guard
@@ -101,15 +109,15 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `801C0B6F1FFF956791174332C2A167BCC3E1F6E62D0477D66E1FF80816D115B4`
-- `Professional_XAUUSD_EA.mq5`: `801C0B6F1FFF956791174332C2A167BCC3E1F6E62D0477D66E1FF80816D115B4`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `801C0B6F1FFF956791174332C2A167BCC3E1F6E62D0477D66E1FF80816D115B4`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `584754F1CBAF7A487904B9823A75EF9C40B1A82B2F8B23CEC47B17835DE0100B`
-- `outputs\xauusd_micro_validation_package.zip`: `5E8E419AD3D133AEAAAD55D2D4E955E10FE66331EA89FC1C58B6A9FF6DAB0039`
-- `work\build_price_action_strategy_batch.ps1`: `11DE89C0C878975A708B3E8C5BE3B5BB54246042F4F310B8B413D4835F9D8D4C`
-- `work\test_price_action_strategy_modules.ps1`: `4FFA971B6338BF58B04D5B8EECF0FB70B41EDE79684A32458165AB6E5EA12910`
-- `work\test_price_action_strategy_batch.ps1`: `173F9FDFA68337B542F4B3BFC61C876C2CA4CCD6931760E0E9C786942EA8F16D`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `83C044E777E0115DD6CA368B84D32210F177E05ED8E09CD6B7F221CEFDF01775`
+- `outputs\Professional_XAUUSD_EA.mq5`: `A6FC8605FBB2CD4389A592A5DA21CF08812B8C9453B80A57CCE36C19BE6BDA9D`
+- `Professional_XAUUSD_EA.mq5`: `A6FC8605FBB2CD4389A592A5DA21CF08812B8C9453B80A57CCE36C19BE6BDA9D`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `A6FC8605FBB2CD4389A592A5DA21CF08812B8C9453B80A57CCE36C19BE6BDA9D`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `DB87B557E97CC08E623662270EFFC06D8A67DCBD99329F615C4AE39134741F5A`
+- `outputs\xauusd_micro_validation_package.zip`: `10816B01D03024F1DECE52E352B74C75AF24C553A6583F42DED1445AEDFD1879`
+- `work\build_price_action_strategy_batch.ps1`: `7C78A916B51C39AF798DB71042A067CF73779EC457C1B8EFECF0E7A56C4217FE`
+- `work\test_price_action_strategy_modules.ps1`: `793329E349B4441F7E7B9AEC4BFB92E8DF8862EA8E9FE72CFC3A7EF9082B48FF`
+- `work\test_price_action_strategy_batch.ps1`: `02D39268985DD57C6F4F7F83A1E0A7599A0D26E1B8D80A57690664A6A1EEE211`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `885F8FC9D7652B50B273F5EC020EE12675441758B76B7F4491F7B04E9089F553`
 
 ## Background-Safety Note
 
