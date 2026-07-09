@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-09 01:11:05 -05:00
+Updated: 2026-07-09 01:21:34 -05:00
 
 ## Current State
 
@@ -11,39 +11,34 @@ Updated: 2026-07-09 01:11:05 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **Adaptive-Reverse Phase Whipsaw Gate**, with Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
+Added **Previous-Period Liquidity Stops**, with Adaptive-Reverse Phase Whipsaw Gate, Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
 
-The previous pass addressed a flat-month opportunity leak by allowing stale-month wake-up logic to count Session Impulse Lane trades. This pass targets adaptive-reverse churn: reverse flips can now be blocked during range or non-trend phases unless the setup quality is high enough to bypass the phase gate.
+The previous pass targeted adaptive-reverse churn by blocking range/non-trend flips unless setup quality is high enough. This pass targets stop placement: liquidity-aware structure stops can now account for previous day, week, and month highs/lows instead of relying only on local ATR, sweep, equal-level, and pocket checks.
 
 New configurable inputs:
 
-- `InpAdaptiveReverseBlockRangePhase`
-- `InpAdaptiveReverseRequireTrendPhase`
-- `InpAdaptiveReversePhaseBypassQualityScore`
+- `InpLiquidityStopUsePreviousDay`
+- `InpLiquidityStopUsePreviousWeek`
+- `InpLiquidityStopUsePreviousMonth`
 
-`AdaptiveReverseWhipsawGuardAllows()` now rejects an adaptive reverse when:
+`StructureStopDistance()` now can widen the stop behind the stop-side previous-period level when liquidity-aware structure stops are enabled:
 
-- `InpAdaptiveReverseBlockRangePhase=true`
-- ADX is at or below the configured range-phase threshold
-- setup quality is below `InpAdaptiveReversePhaseBypassQualityScore`
-
-It can also require a real trend phase before reversing when:
-
-- `InpAdaptiveReverseRequireTrendPhase=true`
-- ADX is below the configured trend-phase threshold
-- setup quality is below `InpAdaptiveReversePhaseBypassQualityScore`
+- buy trades can protect below previous D1/W1/MN1 lows
+- sell trades can protect above previous D1/W1/MN1 highs
+- the existing liquidity stop buffer is applied
+- the existing liquidity-aware max-ATR ceiling still applies
 
 The protected-aggression generator now enables this with:
 
-- `InpAdaptiveReverseBlockRangePhase=true`
-- `InpAdaptiveReverseRequireTrendPhase=true`
-- `InpAdaptiveReversePhaseBypassQualityScore=16`
+- `InpLiquidityStopUsePreviousDay=true`
+- `InpLiquidityStopUsePreviousWeek=true`
+- `InpLiquidityStopUsePreviousMonth=false`
 
 ## Why This Matters
 
-Adaptive reverse is dangerous in choppy gold because it can buy a failed sell, then sell a failed buy, repeatedly paying spread and stop losses. Before this change, the guard checked minimum ADX and structure, but did not explicitly reject range-phase or transition-phase flips.
+Gold often runs prior day/week highs and lows before moving. Before this change, liquidity-aware stops could shift beyond recent sweeps, equal levels, and nearby pockets, but not the major prior-period levels that many discretionary traders watch.
 
-This change keeps adaptive reverse available for genuinely high-quality setups, but makes protected-aggression avoid low-quality flips when the market phase says chop or non-trend. It is a whipsaw-control change, not a recovery system.
+This change moves further away from pure ATR stops by letting the stop engine protect beyond previous D1/W1 levels when enabled. It can reduce premature stop-outs around obvious liquidity pools, while still letting the max-ATR guard reject unreasonably wide stops.
 
 It is still not proof of higher profit. This needs MT5 compile/backtest evidence, then out-of-sample and walk-forward validation.
 
@@ -82,6 +77,7 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 - setup-lane performance risk scaling
 - liquidity-aware structural stops
 - liquidity-pocket stop shift
+- previous-period liquidity stops
 - liquidity-stop-aware max ATR ceiling
 - protected runner exit patience
 - protected-aggression breakout/continuation lane
@@ -105,15 +101,15 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `047EE414830F4A672CBE4C2A41882028743722898167CAAACD608C3F3692C6A1`
-- `Professional_XAUUSD_EA.mq5`: `047EE414830F4A672CBE4C2A41882028743722898167CAAACD608C3F3692C6A1`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `047EE414830F4A672CBE4C2A41882028743722898167CAAACD608C3F3692C6A1`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `DBD36977FE6F42798E46A8B8B0D3A86DD892C38F689D5A90ED44340181C452AD`
-- `outputs\xauusd_micro_validation_package.zip`: `00A9014653CF6C1EEC96D221E2E38DF963926BFE8B6478C693E92794570C4537`
-- `work\build_price_action_strategy_batch.ps1`: `FA05DB696118C159D481663C72D41D63232375748DD12B0B1E1D2ACA2457FE46`
-- `work\test_price_action_strategy_modules.ps1`: `1C3734FC90B69A74521F372DEB0AF344F1C5E4DD22B5F06B2BD16C097F6FD6BB`
-- `work\test_price_action_strategy_batch.ps1`: `7D91C75820441C895E8498048817E535349D5E384AB275A1B7E2D37DE325DA07`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `27EC059B9146D1881E05C0C5044D8A20F6821B0DD4E60BB73ED3082765DF315D`
+- `outputs\Professional_XAUUSD_EA.mq5`: `801C0B6F1FFF956791174332C2A167BCC3E1F6E62D0477D66E1FF80816D115B4`
+- `Professional_XAUUSD_EA.mq5`: `801C0B6F1FFF956791174332C2A167BCC3E1F6E62D0477D66E1FF80816D115B4`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `801C0B6F1FFF956791174332C2A167BCC3E1F6E62D0477D66E1FF80816D115B4`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `584754F1CBAF7A487904B9823A75EF9C40B1A82B2F8B23CEC47B17835DE0100B`
+- `outputs\xauusd_micro_validation_package.zip`: `5E8E419AD3D133AEAAAD55D2D4E955E10FE66331EA89FC1C58B6A9FF6DAB0039`
+- `work\build_price_action_strategy_batch.ps1`: `11DE89C0C878975A708B3E8C5BE3B5BB54246042F4F310B8B413D4835F9D8D4C`
+- `work\test_price_action_strategy_modules.ps1`: `4FFA971B6338BF58B04D5B8EECF0FB70B41EDE79684A32458165AB6E5EA12910`
+- `work\test_price_action_strategy_batch.ps1`: `173F9FDFA68337B542F4B3BFC61C876C2CA4CCD6931760E0E9C786942EA8F16D`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `83C044E777E0115DD6CA368B84D32210F177E05ED8E09CD6B7F221CEFDF01775`
 
 ## Background-Safety Note
 
