@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-08 01:52:00 -05:00
+Updated: 2026-07-08 02:12:00 -05:00
 
 ## Current State
 
@@ -11,33 +11,21 @@ Updated: 2026-07-08 01:52:00 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **liquid-session guard for flat-month catch-up entry relaxation**.
+Added **liquid-session guard for flat-month catch-up risk ramp**.
 
-The prior pass allowed under-target months to slightly relax score/RR for controlled setup lanes. This pass prevents that extra selectivity relaxation from activating in dead hours by requiring London or New York session conditions when enabled.
+The previous pass made catch-up entry relaxation require London/New York liquidity. This pass applies the same principle to the catch-up risk boost itself: the base flat-month opportunity multiplier can still apply, but the extra catch-up ramp can require a liquid session.
 
 New configurable input:
 
-- `InpFlatMonthCatchUpRequireLiquidSession`
+- `InpFlatMonthCatchUpRiskRequiresLiquidSession`
 
-New helper:
-
-- `CSessionFilter::LiquidSessionActive()`
-- `FlatMonthCatchUpEntryRelaxationAllowed()`
-
-When enabled, catch-up entry relaxation requires:
-
-- flat-month opportunity mode is active
-- the monthly target-pace gap is large enough
-- the setup is an allowed catch-up lane
-- London or New York session is active
-
-This keeps the extra flat-month activity focused in liquid conditions rather than spending risk in low-quality hours.
+When enabled, `FlatMonthOpportunityRiskMultiplier()` returns only the base flat-month multiplier unless London or New York session is active. This prevents the EA from increasing position size in quiet hours just because the month is behind target pace.
 
 ## Protected-Aggression Settings
 
 `protected_aggression_breakout` now uses:
 
-- `InpFlatMonthCatchUpRequireLiquidSession=true`
+- `InpFlatMonthCatchUpRiskRequiresLiquidSession=true`
 
 This complements the existing work already in the EA:
 
@@ -48,6 +36,7 @@ This complements the existing work already in the EA:
 - flat-month catch-up risk ramp
 - flat-month catch-up entry relaxation
 - liquid-session catch-up relaxation guard
+- liquid-session catch-up risk guard
 - breakout-continuation standalone entry
 - breakout-continuation follow-through close gate
 - adaptive-reverse whipsaw guard
@@ -77,15 +66,15 @@ This complements the existing work already in the EA:
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `BB3D012D5D3E90061340FD344B31965657C9A791386BA65D37A436532BDC3D71`
-- `Professional_XAUUSD_EA.mq5`: `BB3D012D5D3E90061340FD344B31965657C9A791386BA65D37A436532BDC3D71`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `BB3D012D5D3E90061340FD344B31965657C9A791386BA65D37A436532BDC3D71`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `D6FA115931141265F86A7810D13138EF4A56C34F1524AA1369087C4585F4A21D`
-- `outputs\xauusd_micro_validation_package.zip`: `5CADEFF669220BE658CE635B7AAB497D1F23E90069EF8EE34902B9D536D16EEB`
-- `work\build_price_action_strategy_batch.ps1`: `CF763AF43DDC66FC72E10561A63CA8E695ACC09F2B8E4BD079F8E53D5CF73ABC`
-- `work\test_price_action_strategy_modules.ps1`: `49C4BAD374EC03A00C1E26B19E776F540863A32E8D30B70D8DDA51459D92BBE7`
-- `work\test_price_action_strategy_batch.ps1`: `8A45AEF54900C065C0E5369C983206EE8C7C5A45085E87909F8411A0B94073B8`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `0557FB91FC3CF5DEAF0A0D582315DBE2110B677CD8EEDF62CEF58698B0EF5A4A`
+- `outputs\Professional_XAUUSD_EA.mq5`: `190A98BF2431A18857A9CFB1278C5F45F2D51D68E79C54A7DE7A292A0DA1EBAD`
+- `Professional_XAUUSD_EA.mq5`: `190A98BF2431A18857A9CFB1278C5F45F2D51D68E79C54A7DE7A292A0DA1EBAD`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `190A98BF2431A18857A9CFB1278C5F45F2D51D68E79C54A7DE7A292A0DA1EBAD`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `5A3960D9174D6193D804D8617220F8938B6E9079468284845EE2E7EDE692F251`
+- `outputs\xauusd_micro_validation_package.zip`: `EE5CFF5D34C636EA9027BBAD19E0A8157F6E93AC23D3F2E8994DEDFDE897B9F2`
+- `work\build_price_action_strategy_batch.ps1`: `151E64D2FE7F092626B0054C5B3040C405B03528C564056760DA3BBE1B417E8F`
+- `work\test_price_action_strategy_modules.ps1`: `02F968BC5B2A272688E179DF3C4B0B34232786C80B16F9D917E9818C1A220996`
+- `work\test_price_action_strategy_batch.ps1`: `BCD36C1144268D81B8C045237C334D4E09D038F5F1F2889763129205D74BA4B6`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `AFF98534A56209379BA648AB0F12CAB9DA1C134E95AB976DD6E3768AD0EC59DD`
 
 ## Background-Safety Note
 
