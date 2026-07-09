@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-08 23:48:09 -05:00
+Updated: 2026-07-08 23:55:56 -05:00
 
 ## Current State
 
@@ -11,32 +11,29 @@ Updated: 2026-07-08 23:48:09 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **liquidity-pocket stop shift**, with flat-month elite fallback, PTC quality-scaled risk ramp, and adaptive-reverse recent-flip cooldown still present.
+Added **adaptive-reverse post-stop lockout**, with liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
 
-Fixed ATR and even basic structure stops can still land directly inside recent swing liquidity. This pass adds a configurable stop adjustment that scans recent swing highs/lows around the computed stop; if the stop is too close to that liquidity pocket, the EA shifts the stop beyond the pocket by an ATR/points buffer instead of leaving it in the most obvious stop-hunt zone.
+Adaptive reverse can still whipsaw if a stop-loss just happened and the next signal immediately flips direction. This pass adds a configurable post-stop lockout: after a recent SL exit, low-quality adaptive reverse flips are blocked for a set number of minutes unless the new reversal meets a higher quality threshold.
 
 New configurable inputs:
 
-- `InpUseLiquidityPocketStopShift`
-- `InpLiquidityPocketLookbackBars`
-- `InpLiquidityPocketProximityATR`
-- `InpLiquidityPocketProximityPoints`
-- `InpLiquidityPocketBufferATR`
-- `InpLiquidityPocketBufferPoints`
+- `InpUseAdaptiveReversePostStopLockout`
+- `InpAdaptiveReversePostStopLockoutMinutes`
+- `InpAdaptiveReversePostStopMinQualityScore`
+- `InpAdaptiveReversePostStopMatchDirection`
 
-When enabled, `LiquidityPocketStopLevel()` checks whether the currently computed stop is near a recent swing low for buys or recent swing high for sells. If so, `StructureStopDistance()` can widen the stop beyond that pocket and mark it as a liquidity-aware stop, so the existing wider max-ATR ceiling and risk sizing path remain in control.
+When enabled, `AdaptiveReversePostStopLockoutActive()` scans recent exit deals for `DEAL_REASON_SL`. If a stop-loss exit is still inside the lockout window, the adaptive reverse guard blocks the flip unless the setup quality score meets the override threshold. Direction matching is configurable so the lockout can focus on flips into the stop-out exit direction.
 
-The protected-aggression generator now enables the shift with:
+The protected-aggression generator now enables the lockout with:
 
-- `InpUseLiquidityPocketStopShift=true`
-- `InpLiquidityPocketLookbackBars=28`
-- `InpLiquidityPocketProximityATR=0.20`
-- `InpLiquidityPocketProximityPoints=55.0`
-- `InpLiquidityPocketBufferATR=0.24`
-- `InpLiquidityPocketBufferPoints=65.0`
+- `InpUseAdaptiveReversePostStopLockout=true`
+- `InpAdaptiveReversePostStopLockoutMinutes=240`
+- `InpAdaptiveReversePostStopMinQualityScore=14`
+- `InpAdaptiveReversePostStopMatchDirection=true`
 
 Also retained from previous passes:
 
+- liquidity-pocket stop shift
 - flat-month elite fallback
 - PTC quality-scaled risk ramp
 - `InpUseAdaptiveReverseRecentFlipCooldown`
@@ -46,7 +43,7 @@ Also retained from previous passes:
 
 ## Why This Matters
 
-This directly targets the "move beyond pure ATR multipliers" requirement. Instead of accepting a mechanically calculated ATR/structure stop when it sits near recent liquidity, the EA now has a configurable way to place the stop past that pocket while preserving the normal risk, exposure, RR, spread, margin, and max-stop checks.
+This directly targets the hidden risk in adaptive reverse. The EA already had loss and recent-flip guards; now it also reacts to a fresh stop-loss event, reducing the chance of buying, getting stopped, immediately flipping short, and getting stopped again in choppy XAUUSD conditions.
 
 ## Existing Profit-Focused Work Still Present
 
@@ -70,6 +67,7 @@ This directly targets the "move beyond pure ATR multipliers" requirement. Instea
 - adaptive-reverse whipsaw guard
 - adaptive-reverse loss cooldown
 - adaptive-reverse recent-flip cooldown
+- adaptive-reverse post-stop lockout
 - compact adaptive-reverse history tag: `AR;`
 - setup-lane performance risk scaling
 - liquidity-aware structural stops
@@ -97,15 +95,15 @@ This directly targets the "move beyond pure ATR multipliers" requirement. Instea
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `F5AD988DAC271C254584A87D148078DBD86A207B61F751ACD0171D82CB8EEE2A`
-- `Professional_XAUUSD_EA.mq5`: `F5AD988DAC271C254584A87D148078DBD86A207B61F751ACD0171D82CB8EEE2A`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `F5AD988DAC271C254584A87D148078DBD86A207B61F751ACD0171D82CB8EEE2A`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `4AA8385DC48178DB744D7CA2BDEF1585DB5DF92FFFC1E6AE743200336E5BA5C5`
-- `outputs\xauusd_micro_validation_package.zip`: `C2C61FCB23D36E24A9C0900523F6E112E23E7A4EEB49F78576EB99EFC38E1E51`
-- `work\build_price_action_strategy_batch.ps1`: `29FE02DCEF0B0B6EF8EEFFBEB970DEC59D622B2ABD63BDB475F742FFDD595347`
-- `work\test_price_action_strategy_modules.ps1`: `7981AFC58881F95F2A8B9FB297C7D7DBCCC99F9656A37CFA37DA99011376633E`
-- `work\test_price_action_strategy_batch.ps1`: `9FE35082CF8CD9241D59104216F4AE5ADEE76F2E16DE85BD0B0A4047FD726042`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `237A6BB10044457A6D2A005313644D684E9FFFEE6ACDF5A8BCD38F4A3B8A37C3`
+- `outputs\Professional_XAUUSD_EA.mq5`: `3E5CF452609A4A25EA7DFC30A261795F7C956E7ACD8D1B6D77D9EF857C5315EF`
+- `Professional_XAUUSD_EA.mq5`: `3E5CF452609A4A25EA7DFC30A261795F7C956E7ACD8D1B6D77D9EF857C5315EF`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `3E5CF452609A4A25EA7DFC30A261795F7C956E7ACD8D1B6D77D9EF857C5315EF`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `9389076496B49866F7FF728BE95A24D7A7FE5FB23C6F1AEBBD8D1C6CB02F53A1`
+- `outputs\xauusd_micro_validation_package.zip`: `BE42D6B47FE9B99B4D83F9CD2FD9CFA5B830C4DF5194AB94D9BA30457CC90FC0`
+- `work\build_price_action_strategy_batch.ps1`: `F1DFFADB6C36451CB6DF42E4479F54E9C4F585532E11B86FF2261CFF862D450E`
+- `work\test_price_action_strategy_modules.ps1`: `0683F8ACDCFAA0F016612AC4A9D3582939FCD215206929F8A53EB0818BD25A70`
+- `work\test_price_action_strategy_batch.ps1`: `160631BF9036B73B45722ED24F69478EDC1920CB653AA296353E9DE8DAE338AF`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `1011B5F9045667A6B41975B0E4A616F93E1C817C0792878BF05D027E07E9DCD5`
 
 ## Background-Safety Note
 
