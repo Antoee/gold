@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-08 00:43:00 -05:00
+Updated: 2026-07-08 01:05:00 -05:00
 
 ## Current State
 
@@ -11,31 +11,31 @@ Updated: 2026-07-08 00:43:00 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **breakout-continuation follow-through close gate**.
+Added **flat-month catch-up risk ramp**.
 
-The prior pass added a breakout-continuation standalone entry lane. This pass tightens that lane so the protected-aggression profile can require the latest closed candle to finish decisively beyond a recent high/low before the breakout-continuation quality engine passes.
+Flat-month opportunity mode previously used a fixed risk multiplier whenever the month was under the active profit threshold. That helped activity, but it did not distinguish between a month that is barely behind pace and a month that is meaningfully lagging the target.
 
-New configurable inputs:
+The EA now has a pace-aware ramp:
 
-- `InpBreakoutContinuationRequireFollowThroughClose`
-- `InpBreakoutContinuationFollowThroughLookback`
-- `InpBreakoutContinuationFollowThroughBufferPoints`
+- `InpUseFlatMonthCatchUpRiskRamp`
+- `InpFlatMonthCatchUpStartGapPercent`
+- `InpFlatMonthCatchUpFullGapPercent`
+- `InpFlatMonthCatchUpMaxRiskMultiplier`
+- `InpFlatMonthCatchUpRequiresProtectedFloor`
 
-New helper:
+When enabled, `FlatMonthOpportunityRiskMultiplier()` compares current monthly profit to the expected target pace for the current day of the month. If the EA is behind pace, risk can scale from the base flat-month multiplier up to a capped catch-up multiplier. If protected-floor enforcement is enabled and equity is at/below the floor, the ramp does not activate.
 
-- `BreakoutContinuationFollowThroughClose(...)`
-
-When enabled, `BreakoutContinuationQuality(...)` requires a directional close beyond the recent range plus buffer. This is meant to keep the higher-activity breakout lane tied to real follow-through instead of low-quality almost-breakouts.
+This targets the flat-month efficiency bottleneck without blindly raising risk in every flat-month condition.
 
 ## Protected-Aggression Settings
 
 `protected_aggression_breakout` now uses:
 
-- `InpBreakoutContinuationStandaloneEntry=true`
-- `InpBreakoutContinuationStandaloneMinScore=8`
-- `InpBreakoutContinuationRequireFollowThroughClose=true`
-- `InpBreakoutContinuationFollowThroughLookback=12`
-- `InpBreakoutContinuationFollowThroughBufferPoints=20.0`
+- `InpUseFlatMonthCatchUpRiskRamp=true`
+- `InpFlatMonthCatchUpStartGapPercent=0.35`
+- `InpFlatMonthCatchUpFullGapPercent=1.50`
+- `InpFlatMonthCatchUpMaxRiskMultiplier=1.45`
+- `InpFlatMonthCatchUpRequiresProtectedFloor=true`
 
 This complements the existing work already in the EA:
 
@@ -43,6 +43,7 @@ This complements the existing work already in the EA:
 - flat-month probe mode
 - flat-month probe lane spacing
 - flat-month breakout-continuation probe risk lane
+- flat-month catch-up risk ramp
 - breakout-continuation standalone entry
 - breakout-continuation follow-through close gate
 - adaptive-reverse whipsaw guard
@@ -72,15 +73,15 @@ This complements the existing work already in the EA:
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `7DD2FBEDB6AF8BD248D668F12E9516F4144EAF73196833E7DA62AF49EF1D4E46`
-- `Professional_XAUUSD_EA.mq5`: `7DD2FBEDB6AF8BD248D668F12E9516F4144EAF73196833E7DA62AF49EF1D4E46`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `7DD2FBEDB6AF8BD248D668F12E9516F4144EAF73196833E7DA62AF49EF1D4E46`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `25C4CC9351A24915DB7DCD9569B7691E0E0C550D7F5F13B12BEB0029352B8AF8`
-- `outputs\xauusd_micro_validation_package.zip`: `FA48569A986A2C67EC5A86CD84DB1D42AD7911F5F02BB07616400856683E9FBC`
-- `work\build_price_action_strategy_batch.ps1`: `43E710E33FC5DF9966EE3B7CABD6E7E2F406618B75A82BB5D0D3F7612EFCEA72`
-- `work\test_price_action_strategy_modules.ps1`: `E0F72AC0DB62A9D95BBB2647027AF1C0B9F01E4F9854C206C34BA94F7C26CA62`
-- `work\test_price_action_strategy_batch.ps1`: `C0B258C81BEA122F808EA86B76E816A63EA436E5D4E47D39FF2368A1A2B5331C`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `ABFAE94887CABA2633A2D415184B72A572C289B4F3927996E967A49C9C92279F`
+- `outputs\Professional_XAUUSD_EA.mq5`: `B737E6B2E87986C24BF4232E1206174D51AF5C9949B5FD5CD50C33351225BEEC`
+- `Professional_XAUUSD_EA.mq5`: `B737E6B2E87986C24BF4232E1206174D51AF5C9949B5FD5CD50C33351225BEEC`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `B737E6B2E87986C24BF4232E1206174D51AF5C9949B5FD5CD50C33351225BEEC`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `8FFF885A4AEC4A4E5DE9012F0F8F9440F3EFF3DACA4B2EFCD11DAFE69A50D096`
+- `outputs\xauusd_micro_validation_package.zip`: `ECC24D675084A64A0B25640040BA1F2AE39E8579DDA183583541DAC37D5C723A`
+- `work\build_price_action_strategy_batch.ps1`: `600A606374BDDAC1A6B4CDC57CB5586B15C2F7F37C02BF0FBF13E24AFD88B028`
+- `work\test_price_action_strategy_modules.ps1`: `45B81C719E82672A0083900F2BE12545EDDB1C3B5B720BA22561EE0E28B55FAA`
+- `work\test_price_action_strategy_batch.ps1`: `69EA4F7665A929CB2402799ED9C715CDFBB0B36E8E364E32530AB9CDD9142E84`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `AFA29E434DFEF2671D06C9268FAD8DBE79F8111F178280E0A66697FF4DF72875`
 
 ## Background-Safety Note
 
