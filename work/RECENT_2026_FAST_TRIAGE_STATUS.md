@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-09 02:41:37 -05:00
+Updated: 2026-07-09 02:48:31 -05:00
 
 ## Current State
 
@@ -11,31 +11,31 @@ Updated: 2026-07-09 02:41:37 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **Flat-Month Probe Quality Cap Bypass**, with Flat-Month Probe Failure Exit, Flat-Month Probe Quality Risk Ramp, Range-Reversion Liquidity Stop Extension, Adaptive-Reverse Liquidity-Trap Guard, Flat-Month Catch-Up Standalone Relaxation, Runner MFE Profit-Lock Patience, Session Impulse Quality Risk Ramp, Flat-Month Catch-Up Take-Profit Expansion, Previous-Period Liquidity Stops, Adaptive-Reverse Phase Whipsaw Gate, Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
+Added **Adaptive-Reverse Follow-Through Close Filter**, with Flat-Month Probe Quality Cap Bypass, Flat-Month Probe Failure Exit, Flat-Month Probe Quality Risk Ramp, Range-Reversion Liquidity Stop Extension, Adaptive-Reverse Liquidity-Trap Guard, Flat-Month Catch-Up Standalone Relaxation, Runner MFE Profit-Lock Patience, Session Impulse Quality Risk Ramp, Flat-Month Catch-Up Take-Profit Expansion, Previous-Period Liquidity Stops, Adaptive-Reverse Phase Whipsaw Gate, Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
 
-The previous pass made weak flat-month probes exit quickly if they failed to get even minor favorable movement. This pass targets a different flat-month efficiency bottleneck: the hard monthly probe cap can stop the EA from taking later high-quality opportunities even when the month is still under target and the account is protected.
+The previous pass let protected-aggression take a limited number of extra high-quality flat-month probe opportunities after the ordinary probe cap. This pass targets the adaptive-reverse whipsaw problem: stop-and-reverse entries can be dangerous in choppy XAUUSD unless price actually closes beyond nearby structure in the new direction.
 
 New configurable inputs:
 
-- `InpUseFlatMonthProbeQualityCapBypass`
-- `InpFlatMonthProbeCapBypassMinQualityScore`
-- `InpFlatMonthProbeCapBypassMaxMonthlyEntries`
-- `InpFlatMonthProbeCapBypassRequireProtectedFloor`
-- `InpFlatMonthProbeCapBypassRequireLiquidSession`
+- `InpUseAdaptiveReverseFollowThroughClose`
+- `InpAdaptiveReverseFollowThroughLookbackBars`
+- `InpAdaptiveReverseFollowThroughBufferATR`
+- `InpAdaptiveReverseFollowThroughBufferPoints`
+- `InpAdaptiveReverseFollowThroughBypassQualityScore`
 
-`FlatMonthProbeQualityCapBypassAllowed()` now permits a limited number of extra flat-month probe trades after the normal probe cap is reached, but only when setup quality is high enough, the monthly flat-opportunity condition is still active, the protected floor is respected, and the liquid-session requirement passes. `CompactTradeComment()` now uses the active probe risk decision to tag these trades with `FMP;` reliably.
+`AdaptiveReverseFollowThroughCloseAllows()` now requires adaptive-reverse trades to close beyond the recent range high/low by a configurable ATR/points buffer, unless quality is high enough to bypass. This is wired into `AdaptiveReverseWhipsawGuardAllows()` after the existing structure checks and before sweep-rejection checks.
 
 The protected-aggression generator now enables this with:
 
-- `InpUseFlatMonthProbeQualityCapBypass=true`
-- `InpFlatMonthProbeCapBypassMinQualityScore=12`
-- `InpFlatMonthProbeCapBypassMaxMonthlyEntries=8`
-- `InpFlatMonthProbeCapBypassRequireProtectedFloor=true`
-- `InpFlatMonthProbeCapBypassRequireLiquidSession=true`
+- `InpUseAdaptiveReverseFollowThroughClose=true`
+- `InpAdaptiveReverseFollowThroughLookbackBars=10`
+- `InpAdaptiveReverseFollowThroughBufferATR=0.10`
+- `InpAdaptiveReverseFollowThroughBufferPoints=20.0`
+- `InpAdaptiveReverseFollowThroughBypassQualityScore=16`
 
 ## Why This Matters
 
-The `$866` / 2.5-year result implies the EA still leaves too much capital idle. This pass lets the protected-aggression profile keep testing high-quality opportunities after the ordinary flat-month probe cap is reached, while still enforcing a second cap and risk-quality filters.
+The `$866` / 2.5-year result implies the EA still leaves too much capital idle, but adding activity cannot come from noisy stop-and-reverse churn. This pass tries to keep adaptive reverse available only when price confirms the reversal with real follow-through beyond recent structure.
 
 The change is default-off in the base optimization profile and enabled in the protected-aggression generator. It is not martingale, grid, averaging down, or recovery trading.
 
@@ -79,6 +79,7 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 - adaptive-reverse recent-flip cooldown
 - adaptive-reverse post-stop lockout
 - adaptive-reverse liquidity-trap guard
+- adaptive-reverse follow-through close filter
 - adaptive-reverse range/transition phase gate
 - compact adaptive-reverse history tag: `AR;`
 - setup-lane performance risk scaling
@@ -109,15 +110,15 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `5CB33EF250A08DE5F1E7B102E2641A93D9C6E612BDCCFD4AE2E1A6A4256684B3`
-- `Professional_XAUUSD_EA.mq5`: `5CB33EF250A08DE5F1E7B102E2641A93D9C6E612BDCCFD4AE2E1A6A4256684B3`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `5CB33EF250A08DE5F1E7B102E2641A93D9C6E612BDCCFD4AE2E1A6A4256684B3`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `68BBF0DD759CDED2FC54FB3A1D5C473590FD805D5440F99495ECBF84D8027A52`
-- `outputs\xauusd_micro_validation_package.zip`: `E95BE98F76A0B3A95B971E9D14D787931975010546B4DB93FD4BC33525799217`
-- `work\build_price_action_strategy_batch.ps1`: `B0548AF0DEEFC4EC0FCF1114D73CD2BBA72D56BB3D30D9D16CE8B57D4D34CC00`
-- `work\test_price_action_strategy_modules.ps1`: `E35A566FA5BC55895B3CD1CEE71E777A8A9AFBE82A46CA0B304A40B459B2F00A`
-- `work\test_price_action_strategy_batch.ps1`: `D9BB36DD6E0C3DE3A10BE4A9FD7C6C6A6260F2381BD2CE0ECD3EB43EC0882944`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `D2102350DECA75A7785D99E5DDF6536A7360493E1670F75966F52110F29058CE`
+- `outputs\Professional_XAUUSD_EA.mq5`: `82A81A6297149A0347413554F224EDBA6B502CFD72F4E252CBA62779E2538FD7`
+- `Professional_XAUUSD_EA.mq5`: `82A81A6297149A0347413554F224EDBA6B502CFD72F4E252CBA62779E2538FD7`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `82A81A6297149A0347413554F224EDBA6B502CFD72F4E252CBA62779E2538FD7`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `E6DAF477C27DB93A768C725B8B4EFA40371A2ED13D2EDCFCDCA104FA9B4ADB83`
+- `outputs\xauusd_micro_validation_package.zip`: `D7F20022BFF31B6741E0B149DDD4026D6C26F9472EAAE4E5DBA42D3AF2A3C35D`
+- `work\build_price_action_strategy_batch.ps1`: `1A8F051C5F24254D979DE372B8EB6B864366B4E06732AE6CE68C1290858ADDBD`
+- `work\test_price_action_strategy_modules.ps1`: `DCA38BFC1591514F64547302C0E92294A2ECC0B6AAE8A6F3111125907E0C5698`
+- `work\test_price_action_strategy_batch.ps1`: `8140A019737466CF843FF28AAED49FCF7D7EE276EE27984ED56788E18AA06237`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `344A467C2A35440E9619B60C0BFE7E64744A6AE20113C500F17541BFDD7C4102`
 
 ## Background-Safety Note
 
