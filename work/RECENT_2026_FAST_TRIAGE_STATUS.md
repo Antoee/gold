@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-08 23:55:56 -05:00
+Updated: 2026-07-09 00:03:35 -05:00
 
 ## Current State
 
@@ -11,28 +11,23 @@ Updated: 2026-07-08 23:55:56 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **adaptive-reverse post-stop lockout**, with liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
+Added **winner scale-in price-action gate**, with adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
 
-Adaptive reverse can still whipsaw if a stop-loss just happened and the next signal immediately flips direction. This pass adds a configurable post-stop lockout: after a recent SL exit, low-quality adaptive reverse flips are blocked for a set number of minutes unless the new reversal meets a higher quality threshold.
+The EA needs more upside, but pyramiding into weak continuation candles can give back wins. This pass adds a price-action score floor to winner scale-ins, so add-on entries can still compound profitable positions but require both quality score and price-action quality.
 
 New configurable inputs:
 
-- `InpUseAdaptiveReversePostStopLockout`
-- `InpAdaptiveReversePostStopLockoutMinutes`
-- `InpAdaptiveReversePostStopMinQualityScore`
-- `InpAdaptiveReversePostStopMatchDirection`
+- `InpWinnerScaleInMinPriceActionScore`
 
-When enabled, `AdaptiveReversePostStopLockoutActive()` scans recent exit deals for `DEAL_REASON_SL`. If a stop-loss exit is still inside the lockout window, the adaptive reverse guard blocks the flip unless the setup quality score meets the override threshold. Direction matching is configurable so the lockout can focus on flips into the stop-out exit direction.
+When winner scale-in is active, `WinnerScaleInAllows()` now checks `signal.priceActionScore` in addition to existing requirements: same-direction open position, protected stop, minimum locked R, minimum profit R, optional PTC lane requirement, trend-regime requirement, and open-profit risk coverage.
 
-The protected-aggression generator now enables the lockout with:
+The protected-aggression generator now enables the stricter add-on gate with:
 
-- `InpUseAdaptiveReversePostStopLockout=true`
-- `InpAdaptiveReversePostStopLockoutMinutes=240`
-- `InpAdaptiveReversePostStopMinQualityScore=14`
-- `InpAdaptiveReversePostStopMatchDirection=true`
+- `InpWinnerScaleInMinPriceActionScore=12`
 
 Also retained from previous passes:
 
+- adaptive-reverse post-stop lockout
 - liquidity-pocket stop shift
 - flat-month elite fallback
 - PTC quality-scaled risk ramp
@@ -43,7 +38,7 @@ Also retained from previous passes:
 
 ## Why This Matters
 
-This directly targets the hidden risk in adaptive reverse. The EA already had loss and recent-flip guards; now it also reacts to a fresh stop-loss event, reducing the chance of buying, getting stopped, immediately flipping short, and getting stopped again in choppy XAUUSD conditions.
+This targets the profit side without simply raising base risk. Better scale-in filtering lets the aggressive profile press true winners while avoiding low-quality add-ons that can turn a good trade into noisy exposure.
 
 ## Existing Profit-Focused Work Still Present
 
@@ -63,6 +58,7 @@ This directly targets the hidden risk in adaptive reverse. The EA already had lo
 - PTC quality-scaled risk ramp
 - compact setup-lane tags: `PTC;`, `BCQ;`, `RRO;`
 - PTC-only winner scale-in gate
+- winner scale-in price-action gate
 - PTC runner patience
 - adaptive-reverse whipsaw guard
 - adaptive-reverse loss cooldown
@@ -95,15 +91,15 @@ This directly targets the hidden risk in adaptive reverse. The EA already had lo
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `3E5CF452609A4A25EA7DFC30A261795F7C956E7ACD8D1B6D77D9EF857C5315EF`
-- `Professional_XAUUSD_EA.mq5`: `3E5CF452609A4A25EA7DFC30A261795F7C956E7ACD8D1B6D77D9EF857C5315EF`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `3E5CF452609A4A25EA7DFC30A261795F7C956E7ACD8D1B6D77D9EF857C5315EF`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `9389076496B49866F7FF728BE95A24D7A7FE5FB23C6F1AEBBD8D1C6CB02F53A1`
-- `outputs\xauusd_micro_validation_package.zip`: `BE42D6B47FE9B99B4D83F9CD2FD9CFA5B830C4DF5194AB94D9BA30457CC90FC0`
-- `work\build_price_action_strategy_batch.ps1`: `F1DFFADB6C36451CB6DF42E4479F54E9C4F585532E11B86FF2261CFF862D450E`
-- `work\test_price_action_strategy_modules.ps1`: `0683F8ACDCFAA0F016612AC4A9D3582939FCD215206929F8A53EB0818BD25A70`
-- `work\test_price_action_strategy_batch.ps1`: `160631BF9036B73B45722ED24F69478EDC1920CB653AA296353E9DE8DAE338AF`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `1011B5F9045667A6B41975B0E4A616F93E1C817C0792878BF05D027E07E9DCD5`
+- `outputs\Professional_XAUUSD_EA.mq5`: `0DFAA5192ADB7B2F023CD271B75101FAA9AE0F42A51B14D6B1ABA7DA69FE6D0D`
+- `Professional_XAUUSD_EA.mq5`: `0DFAA5192ADB7B2F023CD271B75101FAA9AE0F42A51B14D6B1ABA7DA69FE6D0D`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `0DFAA5192ADB7B2F023CD271B75101FAA9AE0F42A51B14D6B1ABA7DA69FE6D0D`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `B31F5833CB1E480F35A365C9234DEAD1572061F33B153E55A315945767A2ECCE`
+- `outputs\xauusd_micro_validation_package.zip`: `BBC40DA0143BE269CF39A286C03D990FB0352A7678A05EB2AF1CECFE4C286DDB`
+- `work\build_price_action_strategy_batch.ps1`: `20B01229B3D318D0092C2CE6F3699BBE14BF9AEA862109B22E7C56906A7F4123`
+- `work\test_price_action_strategy_modules.ps1`: `708D99F1375E2927CFDA379F9B972E690F42EF697AE8BB80289FF565FA212E1E`
+- `work\test_price_action_strategy_batch.ps1`: `E6F0E59FF26522FBC331C6801A651A72A3D081ED06E817D3245C92EBF5FEAFBF`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `A123FE1F989BD20DA52BBA651B1C69C63686734C7F13358937EF719B767D49CA`
 
 ## Background-Safety Note
 
