@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-09 00:13:15 -05:00
+Updated: 2026-07-09 00:25:16 -05:00
 
 ## Current State
 
@@ -11,55 +11,79 @@ Updated: 2026-07-09 00:13:15 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **flat-month late catch-up pressure**, with winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
+Added **Session Impulse Lane (`SIL`)**, with flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
 
-The EA was still too inactive for the profit objective. This pass adds a bounded late-month pressure mode so the protected-aggression profile can take more qualified opportunities when the month is late, the strategy is still flat, and the normal flat-month opportunity logic is active.
+The EA still needs more opportunity capture. This pass adds a dedicated liquid-session impulse entry lane for gold so the protected-aggression profile can trade qualified London/New York impulse moves instead of waiting only for the heavier breakout-continuation or power-trend paths.
 
 New configurable inputs:
 
-- `InpUseFlatMonthLateCatchUp`
-- `InpFlatMonthLateCatchUpMinDay`
-- `InpFlatMonthLateCatchUpMaxMonthlyEntries`
-- `InpFlatMonthLateCatchUpMinProgress`
-- `InpFlatMonthLateCatchUpEntryScoreDiscount`
-- `InpFlatMonthLateCatchUpRRDiscount`
-- `InpFlatMonthLateCatchUpRiskMultiplier`
-- `InpFlatMonthLateCatchUpRequireLiquidSession`
+- `InpUseSessionImpulseLane`
+- `InpSessionImpulseMinScore`
+- `InpSessionImpulseMinADX`
+- `InpSessionImpulseRequireLiquidSession`
+- `InpSessionImpulseRequireSessionBreak`
+- `InpSessionImpulseRequireExecution`
+- `InpSessionImpulseRequireOrderFlow`
+- `InpSessionImpulseStandaloneEntry`
+- `InpSessionImpulseStandaloneMinScore`
+- `InpSessionImpulseEntryScoreDiscount`
+- `InpSessionImpulseRiskMultiplier`
+- `InpSessionImpulseTPMultiplier`
+- `InpWeightSessionImpulseLane`
 
-`FlatMonthLateCatchUpActive()` now requires:
+`SessionImpulseLaneQuality()` scores:
 
-- flat-month opportunity mode to be active
-- current day to be at or after the configured late-month start day
-- monthly entries to remain under the configured cap
-- catch-up progress to meet the configured threshold
-- liquid-session confirmation when required
+- opening-range breakout
+- session-level break/sweep
+- range expansion
+- Donchian breakout
+- OHLC impulse candle
+- displacement candle
+- momentum candle
+- tick pressure
+- tick-speed impulse
+- VWAP pullback
+- cumulative-delta proxy
+- tick microstructure
+- VWAP confluence
+- daily-open and previous-day-range context
+- regime and ADX strengthening
 
-When active, late catch-up can:
+When active, `SIL` can:
 
-- reduce the active minimum entry score by a small configured discount
-- reduce the active minimum RR by a small configured discount
-- multiply the flat-month opportunity risk multiplier by a configured factor
-- add `Flat month late catch-up;` to the entry reason log
+- add weighted confirmation through `InpWeightSessionImpulseLane`
+- force a standalone entry when the session-impulse score is strong enough
+- slightly reduce the active entry score requirement
+- receive its own risk multiplier
+- receive its own take-profit multiplier
+- use compact trade history tag `SIL;`
+- participate in setup-lane performance risk scaling, so weak `SIL` history can throttle risk and strong `SIL` history can earn more risk within caps
 
-The protected-aggression generator now enables this mode with:
+The protected-aggression generator now enables this lane with:
 
-- `InpUseFlatMonthLateCatchUp=true`
-- `InpFlatMonthLateCatchUpMinDay=16`
-- `InpFlatMonthLateCatchUpMaxMonthlyEntries=12`
-- `InpFlatMonthLateCatchUpMinProgress=0.35`
-- `InpFlatMonthLateCatchUpEntryScoreDiscount=1`
-- `InpFlatMonthLateCatchUpRRDiscount=0.05`
-- `InpFlatMonthLateCatchUpRiskMultiplier=1.20`
-- `InpFlatMonthLateCatchUpRequireLiquidSession=true`
+- `InpUseSessionImpulseLane=true`
+- `InpSessionImpulseMinScore=7`
+- `InpSessionImpulseMinADX=21.0`
+- `InpSessionImpulseRequireLiquidSession=true`
+- `InpSessionImpulseRequireSessionBreak=true`
+- `InpSessionImpulseRequireExecution=true`
+- `InpSessionImpulseRequireOrderFlow=false`
+- `InpSessionImpulseStandaloneEntry=true`
+- `InpSessionImpulseStandaloneMinScore=8`
+- `InpSessionImpulseEntryScoreDiscount=1`
+- `InpSessionImpulseRiskMultiplier=1.20`
+- `InpSessionImpulseTPMultiplier=1.25`
+- `InpWeightSessionImpulseLane=3`
 
 ## Why This Matters
 
-This directly targets flat-month opportunity cost and under-trading late in the month without simply opening the floodgates. The added pressure is still bounded by flat-month activation, monthly entry cap, liquid-session filtering, entry quality, RR checks, exposure limits, and the existing risk engine.
+This is aimed directly at the inactivity/opportunity-cost problem behind the weak `$866` result. It adds a new profit-seeking lane for high-liquidity gold impulse conditions while keeping existing spread, ATR, session, exposure, drawdown, RR, structure-stop, and setup-performance risk controls in the path.
 
-It is a profit-seeking change, but it still needs MT5 compile/backtest/walk-forward evidence before treating it as profitable.
+It is not proof of higher profit yet. It is a strategy-code expansion that must still be compiled and backtested in MT5, then validated out-of-sample and walk-forward.
 
 ## Existing Profit-Focused Work Still Present
 
+- session impulse lane: `SIL;`
 - flat-month opportunity mode
 - flat-month probe mode
 - flat-month probe lane spacing
@@ -75,7 +99,7 @@ It is a profit-seeking change, but it still needs MT5 compile/backtest/walk-forw
 - breakout-continuation follow-through close gate
 - power trend continuation lane
 - PTC quality-scaled risk ramp
-- compact setup-lane tags: `PTC;`, `BCQ;`, `RRO;`
+- compact setup-lane tags: `PTC;`, `SIL;`, `BCQ;`, `RRO;`
 - PTC-only winner scale-in gate
 - winner scale-in price-action gate
 - PTC runner patience
@@ -96,29 +120,29 @@ It is a profit-seeking change, but it still needs MT5 compile/backtest/walk-forw
 
 - `work\test_price_action_strategy_modules.ps1`: PASS
 - `work\test_price_action_strategy_batch.ps1`: PASS
-- `work\sync_ea_source_artifacts.ps1`: PASS
+- `work\sync_ea_source_artifacts.ps1`: PASS, artifacts 3
 - `work\test_open_risk_exposure_guard.ps1`: PASS
 - `work\test_price_action_strategy_decision.ps1`: PASS
 - `work\test_loss_streak_risk_reduction.ps1`: PASS
 - `work\test_ea_source_artifact_sync.ps1`: PASS
 - `work\build_external_mt5_validation_package.ps1`: PASS, package configs 20, profiles 9
-- `work\test_external_mt5_validation_package.ps1`: PASS, 26 checks, 0 failed
 - `work\test_price_action_strategy_handoff.ps1`: PASS
+- `work\test_external_mt5_validation_package.ps1`: PASS, 26 checks, 0 failed
 - `work\refresh_offline_validation_state.ps1`: PASS, 40 steps, 0 failed
 - MT5-family process scan: empty
 - Stop marker: present at `work\STOP_MT5_FOCUS_WATCHDOG`
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `4BFC54347C5E48A3E2A0CCD5A96D41B83D1F7F91929F19394985973029F25D9F`
-- `Professional_XAUUSD_EA.mq5`: `4BFC54347C5E48A3E2A0CCD5A96D41B83D1F7F91929F19394985973029F25D9F`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `4BFC54347C5E48A3E2A0CCD5A96D41B83D1F7F91929F19394985973029F25D9F`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `14AE8CC75C127422038A2A13C9ABCC37D8ADB3505A7AF17E6A97A8F740F8141B`
-- `outputs\xauusd_micro_validation_package.zip`: `3E59C5EF9A12C362E8251D2E0BF17BD9EC6233EBF8F6D3C903C140FD83CC5AB0`
-- `work\build_price_action_strategy_batch.ps1`: `342D358EC797A765875D59EB606FDFDB998EA0CEA4064EFB74E839691977B4D2`
-- `work\test_price_action_strategy_modules.ps1`: `6CB2AFA44FCD2C32933C8FD27682D61C034A3794571266097045CF614C69785F`
-- `work\test_price_action_strategy_batch.ps1`: `59C5CD2B3378CDD8CD067FE28FE81E83BB1CC40C5E8A5895FB13425E9926BCB0`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `BDDB28A40D941F0CCB7FEE4AB0DA0083747CAF32C8814A5AF58349608A4A8416`
+- `outputs\Professional_XAUUSD_EA.mq5`: `F943F17EA5260662C3CE93C25CBA0FCD22F208040D35724B05DE56B74C192240`
+- `Professional_XAUUSD_EA.mq5`: `F943F17EA5260662C3CE93C25CBA0FCD22F208040D35724B05DE56B74C192240`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `F943F17EA5260662C3CE93C25CBA0FCD22F208040D35724B05DE56B74C192240`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `872D27F28EB39E6EAE733DE8772ED51E1560522018C318741D58FC6DFE7C9D7C`
+- `outputs\xauusd_micro_validation_package.zip`: `6C5922332EACB6D89F96412E36999998BF641A45A8AF4B6DCE9AA6822317545B`
+- `work\build_price_action_strategy_batch.ps1`: `ED5727B895BF3E6AB425D9C2324DFE3CC26C64ED5A536C4FB0616E3EAEC556CF`
+- `work\test_price_action_strategy_modules.ps1`: `2942B4E4A2C52168E0D426FC8585932D564EEA6E9F472B819C136DF3C951A6D5`
+- `work\test_price_action_strategy_batch.ps1`: `ED743543242D6F38BBBD3031B59A499068809C3F9E0A10FA593D0CAFFF6CADDE`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `58F9AD4A913FE6CD6883EC930065166D6D203835087D66373EE44219205C7A9A`
 
 ## Background-Safety Note
 
