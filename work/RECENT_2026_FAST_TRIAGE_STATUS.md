@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-09 00:53:20 -05:00
+Updated: 2026-07-09 01:02:34 -05:00
 
 ## Current State
 
@@ -11,28 +11,32 @@ Updated: 2026-07-09 00:53:20 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **Protected SIL Winner Scale-In Gate**, with Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
+Added **Flat-Month Stale SIL Wake-Up**, with Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
 
-The previous pass protected the new `SIL` entry lane by giving successful impulse trades extra MFE giveback room. This pass adds a controlled compounding option: successful, protected `SIL` trades can now satisfy the winner scale-in continuation gate when explicitly enabled.
+The previous pass allowed protected, working `SIL` trades to satisfy the winner scale-in continuation gate when explicitly enabled. This pass addresses another flat-month opportunity leak: stale-month entry nudge previously supported power-trend, breakout, and range-reversion lanes, but not the Session Impulse Lane.
 
 New configurable input:
 
-- `InpWinnerScaleInAllowSessionImpulse`
+- `InpFlatMonthStaleAllowSessionImpulse`
 
-`WinnerScaleInAllows()` now treats the continuation lane as valid when either:
+`FlatMonthStaleEntryNudgeAllowed()` now treats a stale-month lane as valid when:
 
-- the setup is a power trend continuation, or
-- `InpWinnerScaleInAllowSessionImpulse=true` and the setup is a Session Impulse Lane trade.
+- flat-month opportunity mode is active
+- the stale-entry minimum time has passed
+- monthly entry limits still allow a new trade
+- the liquid-session requirement is satisfied, when enabled
+- `InpFlatMonthStaleAllowSessionImpulse=true`
+- the current setup is a Session Impulse Lane trade
 
 The protected-aggression generator now enables this with:
 
-- `InpWinnerScaleInAllowSessionImpulse=true`
+- `InpFlatMonthStaleAllowSessionImpulse=true`
 
 ## Why This Matters
 
-The `SIL` lane is meant to address the low-profit/opportunity-cost problem without removing the risk rails. Before this change, protected-aggression scale-ins were still effectively PTC-only, so a protected, working `SIL` trade could not compound even after it had moved in favor and met the existing stop-protection, locked-R, open-profit coverage, trend-regime, quality, price-action, exposure, and equity gates.
+The `SIL` lane is meant to address the low-profit/opportunity-cost problem without removing the risk rails. Before this change, the bot could still sit inactive during a flat month even when a liquid-session impulse appeared after the configured stale-entry window, because stale-month wake-up logic did not count `SIL` as an allowed lane.
 
-This change allows `SIL` winners to compound only behind the same protected winner scale-in framework. It is an attempt to make more from proven winners, not to average down or recover losers.
+This change gives the bot one more controlled way to participate after inactivity: high-quality Session Impulse setups can now receive the same stale-month confirmation nudge as the other opportunity lanes. It does not add grid, martingale, averaging down, or recovery behavior.
 
 It is still not proof of higher profit. This needs MT5 compile/backtest evidence, then out-of-sample and walk-forward validation.
 
@@ -42,6 +46,7 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 - session impulse failure exit
 - session impulse runner patience
 - protected SIL winner scale-in gate
+- flat-month stale SIL wake-up
 - flat-month opportunity mode
 - flat-month probe mode
 - flat-month probe lane spacing
@@ -92,15 +97,15 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `53DE2E5935AF1FDDA563FACDD8B4E9E9B13A20FA76191A21D72EC2C803E25A4D`
-- `Professional_XAUUSD_EA.mq5`: `53DE2E5935AF1FDDA563FACDD8B4E9E9B13A20FA76191A21D72EC2C803E25A4D`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `53DE2E5935AF1FDDA563FACDD8B4E9E9B13A20FA76191A21D72EC2C803E25A4D`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `E38BE49962CA1AB64E636DBD02FFE2B0A7C403980B8150DCB4B1324A5E8964C2`
-- `outputs\xauusd_micro_validation_package.zip`: `952A1F7B3FE4820AB333EDDF34B97044F226CAA36CA20058D43055FD3CFC7F20`
-- `work\build_price_action_strategy_batch.ps1`: `0459D81C537386304C6462E893E1370201C92025DAB842DD2DDCBC3DD4268B6E`
-- `work\test_price_action_strategy_modules.ps1`: `D11E5A6BCBD56F70DD315151C42EC8EE4605E5598FC44E73E15EEAF69A01E70A`
-- `work\test_price_action_strategy_batch.ps1`: `1A783C2F18C9A289278248E1FF93A4A1CADE373A27177AF5A2F2CB4137AA1B09`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `4296B97030762EAF838EC3F18E1B37D2A1C9F6F6B62CD3DA64CB32AA494D8887`
+- `outputs\Professional_XAUUSD_EA.mq5`: `4A37A3AB26C7CB2AA8461806374EF819F1C356E529172CE022E146ACF991B262`
+- `Professional_XAUUSD_EA.mq5`: `4A37A3AB26C7CB2AA8461806374EF819F1C356E529172CE022E146ACF991B262`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `4A37A3AB26C7CB2AA8461806374EF819F1C356E529172CE022E146ACF991B262`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `5A4DF5DD49DE8E3E4110827ACE76E9EFBA8A513D20D4276C9D2D282502A44535`
+- `outputs\xauusd_micro_validation_package.zip`: `A4D48F89D578BBCC40B97917508F17955166A8161FF1C0E039ADC3BD4D15D96B`
+- `work\build_price_action_strategy_batch.ps1`: `041A5DD869F4C2B28C3A8642D5E5043A56029FF59F6B0E5CD4C893EF47D51D0A`
+- `work\test_price_action_strategy_modules.ps1`: `6F8484C8133F7A994BA13933D94428D81A955B024E99AEB2CE6181D6BB0D63A4`
+- `work\test_price_action_strategy_batch.ps1`: `9F7044B4149F0E05762E3471D3208D386463EB1A047577061B3FE36E1D1F5598`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `A6781DB543B403F191921E53BE359EDEC6173AB130C11CE17BB6101DFD55B493`
 
 ## Background-Safety Note
 
