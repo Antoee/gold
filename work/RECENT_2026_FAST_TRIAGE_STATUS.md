@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-09 01:29:59 -05:00
+Updated: 2026-07-09 01:39:39 -05:00
 
 ## Current State
 
@@ -11,47 +11,36 @@ Updated: 2026-07-09 01:29:59 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **Flat-Month Catch-Up Take-Profit Expansion**, with Previous-Period Liquidity Stops, Adaptive-Reverse Phase Whipsaw Gate, Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
+Added **Session Impulse Quality Risk Ramp**, with Flat-Month Catch-Up Take-Profit Expansion, Previous-Period Liquidity Stops, Adaptive-Reverse Phase Whipsaw Gate, Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
 
-The previous pass moved stops farther beyond higher-timeframe liquidity when enabled. This pass targets the low-profit/flat-month problem from the exit side: when the bot is behind monthly pace, high-quality catch-up trades can now aim for a larger take-profit instead of only increasing entry pressure.
+The previous pass expanded take-profit distance for high-quality flat-month catch-up trades. This pass targets the entry sizing side of the same problem: `SIL;` Session Impulse trades no longer have to use one flat risk multiplier when setup quality is much stronger than the minimum.
 
 New configurable inputs:
 
-- `InpUseFlatMonthCatchUpTakeProfitExpansion`
-- `InpFlatMonthCatchUpTPMinQualityScore`
-- `InpFlatMonthCatchUpTPMinPriceActionScore`
-- `InpFlatMonthCatchUpTPMultiplier`
-- `InpFlatMonthCatchUpTPRequireLiquidSession`
-- `InpFlatMonthCatchUpTPRequireTrailing`
+- `InpUseSessionImpulseQualityRiskRamp`
+- `InpSessionImpulseQualityRiskFullScore`
+- `InpSessionImpulseQualityMaxRiskMultiplier`
 
-`FlatMonthCatchUpTakeProfitMultiplier()` now expands take-profit distance when:
-
-- flat-month opportunity mode is active
-- monthly catch-up progress is positive, or late catch-up is active
-- setup quality and price-action scores meet the configured floor
-- the liquid-session requirement is satisfied, when enabled
-- trailing or MFE-giveback infrastructure is available, when required
+`SessionImpulseRiskMultiplier()` now scales between the base `InpSessionImpulseRiskMultiplier` and `InpSessionImpulseQualityMaxRiskMultiplier` as quality score rises toward `InpSessionImpulseQualityRiskFullScore`.
 
 The protected-aggression generator now enables this with:
 
-- `InpUseFlatMonthCatchUpTakeProfitExpansion=true`
-- `InpFlatMonthCatchUpTPMinQualityScore=12`
-- `InpFlatMonthCatchUpTPMinPriceActionScore=14`
-- `InpFlatMonthCatchUpTPMultiplier=1.35`
-- `InpFlatMonthCatchUpTPRequireLiquidSession=true`
-- `InpFlatMonthCatchUpTPRequireTrailing=true`
+- `InpUseSessionImpulseQualityRiskRamp=true`
+- `InpSessionImpulseQualityRiskFullScore=14`
+- `InpSessionImpulseQualityMaxRiskMultiplier=1.45`
 
 ## Why This Matters
 
-The `$866` / 2.5-year result is not only an entry-frequency problem. It can also be a winner-size problem: if the bot is behind monthly pace but keeps capping good trades at the same target as normal conditions, it may never catch up even when it finally finds a strong setup.
+The `SIL;` lane exists to fix opportunity cost by capturing liquid-session impulses. Before this change, minimum-quality and high-quality session impulses used the same fixed risk multiplier. That left strong impulse setups underpowered compared with the existing power-trend continuation lane, which already had quality-scaled risk.
 
-This change lets high-quality flat-month catch-up trades seek larger winners while preserving quality, session, and trailing requirements. It does not increase losing-trade recovery behavior.
+This change gives stronger `SIL;` trades more weight while keeping the same global exposure, daily/weekly/monthly loss, protected floor, spread, and margin controls. It is not martingale, grid, or averaging down.
 
 It is still not proof of higher profit. This needs MT5 compile/backtest evidence, then out-of-sample and walk-forward validation.
 
 ## Existing Profit-Focused Work Still Present
 
 - session impulse lane: `SIL;`
+- session impulse quality risk ramp
 - session impulse failure exit
 - session impulse runner patience
 - protected SIL winner scale-in gate
@@ -109,15 +98,15 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `A6FC8605FBB2CD4389A592A5DA21CF08812B8C9453B80A57CCE36C19BE6BDA9D`
-- `Professional_XAUUSD_EA.mq5`: `A6FC8605FBB2CD4389A592A5DA21CF08812B8C9453B80A57CCE36C19BE6BDA9D`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `A6FC8605FBB2CD4389A592A5DA21CF08812B8C9453B80A57CCE36C19BE6BDA9D`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `DB87B557E97CC08E623662270EFFC06D8A67DCBD99329F615C4AE39134741F5A`
-- `outputs\xauusd_micro_validation_package.zip`: `10816B01D03024F1DECE52E352B74C75AF24C553A6583F42DED1445AEDFD1879`
-- `work\build_price_action_strategy_batch.ps1`: `7C78A916B51C39AF798DB71042A067CF73779EC457C1B8EFECF0E7A56C4217FE`
-- `work\test_price_action_strategy_modules.ps1`: `793329E349B4441F7E7B9AEC4BFB92E8DF8862EA8E9FE72CFC3A7EF9082B48FF`
-- `work\test_price_action_strategy_batch.ps1`: `02D39268985DD57C6F4F7F83A1E0A7599A0D26E1B8D80A57690664A6A1EEE211`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `885F8FC9D7652B50B273F5EC020EE12675441758B76B7F4491F7B04E9089F553`
+- `outputs\Professional_XAUUSD_EA.mq5`: `11E4699A2643F1D1D8C86772184A313EEC8FB25B5383EDB05E13D7F3DF3432FA`
+- `Professional_XAUUSD_EA.mq5`: `11E4699A2643F1D1D8C86772184A313EEC8FB25B5383EDB05E13D7F3DF3432FA`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `11E4699A2643F1D1D8C86772184A313EEC8FB25B5383EDB05E13D7F3DF3432FA`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `AB27FF80D07BE9D379DEC00967A9C4FBD1C3233CA955B5A55C6A84A15D2D7790`
+- `outputs\xauusd_micro_validation_package.zip`: `1EA073679CB706EBD39886597ADD8267BCBCFDC7A8056E93E591420FDB354F12`
+- `work\build_price_action_strategy_batch.ps1`: `2B3C5677D826C00C10D787B8557022149DD8C882F3514ED4581AFCBA4922A249`
+- `work\test_price_action_strategy_modules.ps1`: `EB5BAE79A4786D962F3052460294A3B0C75C47A373D35EE4D915836B58A66F8C`
+- `work\test_price_action_strategy_batch.ps1`: `6A397410EC7DE3F603BD18178ADE4169B8D416DFE553B85FB406FBCAF3841C59`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `7BC7346EAA7CEB64018BC9FF412BDD765C4611CFB0637F031180C4749FAA6090`
 
 ## Background-Safety Note
 
