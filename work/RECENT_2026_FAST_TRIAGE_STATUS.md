@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-09 03:20:17 -05:00
+Updated: 2026-07-09 03:30:10 -05:00
 
 ## Current State
 
@@ -11,31 +11,43 @@ Updated: 2026-07-09 03:20:17 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **Flat-Month Missed-Move TP Expansion**, with Adaptive-Reverse Liquidity Clearance Gate, Flat-Month Missed-Move Wake-Up, Liquidity Cluster Stop Extension, Adaptive-Reverse Follow-Through Close Filter, Flat-Month Probe Quality Cap Bypass, Flat-Month Probe Failure Exit, Flat-Month Probe Quality Risk Ramp, Range-Reversion Liquidity Stop Extension, Adaptive-Reverse Liquidity-Trap Guard, Flat-Month Catch-Up Standalone Relaxation, Runner MFE Profit-Lock Patience, Session Impulse Quality Risk Ramp, Flat-Month Catch-Up Take-Profit Expansion, Previous-Period Liquidity Stops, Adaptive-Reverse Phase Whipsaw Gate, Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
+Added **Elite Continuation Risk Acceleration**, with Flat-Month Missed-Move TP Expansion, Adaptive-Reverse Liquidity Clearance Gate, Flat-Month Missed-Move Wake-Up, Liquidity Cluster Stop Extension, Adaptive-Reverse Follow-Through Close Filter, Flat-Month Probe Quality Cap Bypass, Flat-Month Probe Failure Exit, Flat-Month Probe Quality Risk Ramp, Range-Reversion Liquidity Stop Extension, Adaptive-Reverse Liquidity-Trap Guard, Flat-Month Catch-Up Standalone Relaxation, Runner MFE Profit-Lock Patience, Session Impulse Quality Risk Ramp, Flat-Month Catch-Up Take-Profit Expansion, Previous-Period Liquidity Stops, Adaptive-Reverse Phase Whipsaw Gate, Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
 
-The previous pass added a clean-runway check for adaptive reverse. This pass returns to flat-month efficiency: if a missed-move wake-up trade is high quality, it should have enough take-profit room to materially affect the month rather than only adding small activity.
+The previous pass made missed-move wake-up trades more profit-aware through TP expansion. This pass targets the core `$866` / 2.5-year problem more directly: when the EA is already playing with earned/protected profit and a continuation setup is elite, it can press the position size harder without using martingale, grid, averaging down, or recovery logic.
 
 New configurable inputs:
 
-- `InpUseFlatMonthMissedMoveTPExpansion`
-- `InpFlatMonthMissedMoveTPMinQualityScore`
-- `InpFlatMonthMissedMoveTPMinPriceActionScore`
-- `InpFlatMonthMissedMoveTPMultiplier`
-- `InpFlatMonthMissedMoveTPRequireTrailing`
+- `InpUseEliteContinuationRiskAcceleration`
+- `InpEliteContinuationMinQualityScore`
+- `InpEliteContinuationMinPriceActionScore`
+- `InpEliteContinuationStartCushionPercent`
+- `InpEliteContinuationFullCushionPercent`
+- `InpEliteContinuationMaxRiskMultiplier`
+- `InpEliteContinuationRequireLiquidSession`
+- `InpEliteContinuationRequireClosedProfit`
+- `InpEliteContinuationAllowBreakout`
+- `InpEliteContinuationAllowPowerTrend`
+- `InpEliteContinuationAllowSessionImpulse`
 
-`FlatMonthMissedMoveTakeProfitMultiplier()` now expands take-profit distance only for trades already tagged with `Flat month missed move wake-up`, and only when quality, price action, and trailing requirements pass. Entry logs include `Flat month missed-move TP x...` when the multiplier participates.
+`EliteContinuationRiskAccelerationMultiplier()` now increases sizing only when house-money acceleration is allowed, the account has closed profit, protected-floor cushion is sufficient, the session is liquid if required, and the signal is an elite breakout / PTC / SIL continuation. Entry logs include `Elite continuation risk x...` when the multiplier participates.
 
 The protected-aggression generator now enables this with:
 
-- `InpUseFlatMonthMissedMoveTPExpansion=true`
-- `InpFlatMonthMissedMoveTPMinQualityScore=11`
-- `InpFlatMonthMissedMoveTPMinPriceActionScore=10`
-- `InpFlatMonthMissedMoveTPMultiplier=1.25`
-- `InpFlatMonthMissedMoveTPRequireTrailing=true`
+- `InpUseEliteContinuationRiskAcceleration=true`
+- `InpEliteContinuationMinQualityScore=14`
+- `InpEliteContinuationMinPriceActionScore=16`
+- `InpEliteContinuationStartCushionPercent=8.0`
+- `InpEliteContinuationFullCushionPercent=20.0`
+- `InpEliteContinuationMaxRiskMultiplier=1.60`
+- `InpEliteContinuationRequireLiquidSession=true`
+- `InpEliteContinuationRequireClosedProfit=true`
+- `InpEliteContinuationAllowBreakout=true`
+- `InpEliteContinuationAllowPowerTrend=true`
+- `InpEliteContinuationAllowSessionImpulse=true`
 
 ## Why This Matters
 
-The `$866` / 2.5-year result implies the EA still leaves too much capital idle. This pass makes the new missed-move activity more profit-aware by letting strong wake-up trades target more than the baseline TP, while keeping the feature default-off and gated.
+The `$866` / 2.5-year result implies the EA still leaves too much capital idle and/or earns too little from its best trades. This pass gives the optimizer a controlled way to increase upside on elite continuation trades after the account has earned a cushion, while still respecting the global effective-risk cap and existing exposure controls.
 
 The change is default-off in the base optimization profile and enabled in the protected-aggression generator. It is not martingale, grid, averaging down, or recovery trading.
 
@@ -45,6 +57,7 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 
 - session impulse lane: `SIL;`
 - session impulse quality risk ramp
+- elite continuation risk acceleration
 - session impulse failure exit
 - session impulse runner patience
 - runner MFE profit-lock patience
@@ -114,15 +127,15 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `17201B05C2F9D89F4F32AC3FABD5D75C8E878297B1B37C413CA8D7EA93D8153F`
-- `Professional_XAUUSD_EA.mq5`: `17201B05C2F9D89F4F32AC3FABD5D75C8E878297B1B37C413CA8D7EA93D8153F`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `17201B05C2F9D89F4F32AC3FABD5D75C8E878297B1B37C413CA8D7EA93D8153F`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `513523F8E72E0D0C086F21A3A1F88A66D216B8E42AB71EBC8115681FC02A6DF5`
-- `outputs\xauusd_micro_validation_package.zip`: `AFBB3CDF70BBBC39D3C5BC4233229AE02D92DB621B08D29AF3960EDC0362CCA5`
-- `work\build_price_action_strategy_batch.ps1`: `6144BA199922F5BEC286091E308AC2CFE72682F0FC4801E4998C9A731D49F36C`
-- `work\test_price_action_strategy_modules.ps1`: `D601B43E28E2BD344A279D68E95655B1FB430CC17C9A10715D5432620F893E72`
-- `work\test_price_action_strategy_batch.ps1`: `253EEF28FDF18851F555CE6DDBB9317A12FFDFB25102DB2F19B4ABE368FA5FC9`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `1FA591E2ECB0C36BFB81039835975CEFCA6E20213096DA36EB7CAF00CF5B7ECA`
+- `outputs\Professional_XAUUSD_EA.mq5`: `C143EE95485BCA59E919F756F20FD9AA68AAB3CAB85E7811B15AA4E8A5205F01`
+- `Professional_XAUUSD_EA.mq5`: `C143EE95485BCA59E919F756F20FD9AA68AAB3CAB85E7811B15AA4E8A5205F01`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `C143EE95485BCA59E919F756F20FD9AA68AAB3CAB85E7811B15AA4E8A5205F01`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `6D886BFE8C45E32ED1544299341FE4A1E31F3DB6CB8E6EBDA8766D63E27260DA`
+- `outputs\xauusd_micro_validation_package.zip`: `DD57521B6FEF40C64378F781244D6A4C035C95D25E510714E5E8A8EC0FB259A2`
+- `work\build_price_action_strategy_batch.ps1`: `63781661DE0F270278565C9ED973821D62926DE5B120261D9944E408391AFCB5`
+- `work\test_price_action_strategy_modules.ps1`: `86BA6CA616F17258AC14E3B1DEE167E832191E370A5729C5D975AA2AAB7611B3`
+- `work\test_price_action_strategy_batch.ps1`: `F727F814C4C7D2689204A3129BF0FD1FD5184AA255B81C8480EBBF3B2F2A12B2`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `8150BF3EF0119B5E1D0613325016E1A89091A42CF70676F0F13CB84C4C891CA8`
 
 ## Background-Safety Note
 
