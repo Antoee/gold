@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-08 00:12:00 -05:00
+Updated: 2026-07-08 00:25:00 -05:00
 
 ## Current State
 
@@ -11,26 +11,29 @@ Updated: 2026-07-08 00:12:00 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **liquidity-stop-aware max ATR ceiling**.
+Added **breakout-continuation standalone entry**.
 
-The EA already had liquidity-aware structural stops, but the global `InpMaxStopATRMultiplier` could still reject a stop that was correctly placed beyond a recent sweep or equal-high/equal-low liquidity pool. That meant the system could identify a better structural stop and then block it because the ATR cap was too blunt.
+Range-reversion already had a standalone entry override, but breakout continuation did not. That meant a strong continuation setup could be blocked by the generic confirmation count even when the breakout-continuation quality engine had enough evidence.
 
-The EA now tracks when `StructureStopDistance(...)` actually used a liquidity level. If so, it can apply a separate wider ceiling:
+The EA now supports a quality-gated standalone lane:
 
-- `InpLiquidityStopAllowWiderMaxATR`
-- `InpLiquidityStopMaxATRMultiplier`
+- `InpBreakoutContinuationStandaloneEntry`
+- `InpBreakoutContinuationStandaloneMinScore`
 
-The ordinary max-stop ATR guard still applies to non-liquidity stops. Liquidity-aware stops get a controlled wider ceiling, and still reject if the structural stop is too wide.
+When enabled, a breakout-continuation setup can satisfy the required confirmation count only if:
 
-This directly targets the objective to move beyond pure ATR stop placement without removing risk controls.
+- `InpUseBreakoutContinuationQuality=true`
+- `BreakoutContinuationQuality(...)` passes
+- the breakout-continuation score is at least `InpBreakoutContinuationStandaloneMinScore`
+
+This targets the flat-month efficiency bottleneck by allowing high-quality continuation setups through without loosening the whole entry system.
 
 ## Protected-Aggression Settings
 
 `protected_aggression_breakout` now uses:
 
-- `InpLiquidityStopAllowWiderMaxATR=true`
-- `InpLiquidityStopMaxATRMultiplier=5.50`
-- `InpMaxStopATRMultiplier=4.00`
+- `InpBreakoutContinuationStandaloneEntry=true`
+- `InpBreakoutContinuationStandaloneMinScore=8`
 
 This complements the existing work already in the EA:
 
@@ -38,10 +41,12 @@ This complements the existing work already in the EA:
 - flat-month probe mode
 - flat-month probe lane spacing
 - flat-month breakout-continuation probe risk lane
+- breakout-continuation standalone entry
 - adaptive-reverse whipsaw guard
 - adaptive-reverse loss cooldown
 - setup-lane performance risk scaling
 - liquidity-aware structural stops
+- liquidity-stop-aware max ATR ceiling
 - protected runner exit patience
 - protected-aggression breakout/continuation lane
 - range-reversion lane with structural stop and mean target
@@ -64,15 +69,15 @@ This complements the existing work already in the EA:
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `232B7E71B79012BC679B514E68E9A8E9784B3A11D8D18EA9759578EB8F9F1572`
-- `Professional_XAUUSD_EA.mq5`: `232B7E71B79012BC679B514E68E9A8E9784B3A11D8D18EA9759578EB8F9F1572`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `232B7E71B79012BC679B514E68E9A8E9784B3A11D8D18EA9759578EB8F9F1572`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `FA2A51D8BD1B9875B98E7C8560DE9ACFAE9E50FC51CE9FC30DBEB693D7295C3E`
-- `outputs\xauusd_micro_validation_package.zip`: `27610103F37DA0CC6F1FE8A741892BA1EEE7C0B48080B77FF12FE6817D5A199B`
-- `work\build_price_action_strategy_batch.ps1`: `CA884E1FB965CA560E2D55F4D1E9BB12B20073D9B74ADCA431CF4B54B42445DE`
-- `work\test_price_action_strategy_modules.ps1`: `342820D7A47E061E680442BCDC41ED1FBA6F87417C06AE7A6E5C7EB418A2559C`
-- `work\test_price_action_strategy_batch.ps1`: `F8F0C785AC9A500C52FA6F66F7313A80EBA55921A5398801F7874F17F1520C80`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `B5CB8F00ECEA6AD4C0340276C6C9BA3A8ADE6928F14F60CE9D0CA5599BE9AB04`
+- `outputs\Professional_XAUUSD_EA.mq5`: `E9F01C6FE56663A16341BCC940256AF8FB7CC9235E742FEFBCA0FB42A67426A7`
+- `Professional_XAUUSD_EA.mq5`: `E9F01C6FE56663A16341BCC940256AF8FB7CC9235E742FEFBCA0FB42A67426A7`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `E9F01C6FE56663A16341BCC940256AF8FB7CC9235E742FEFBCA0FB42A67426A7`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `8F5C7B91CE63045C12445BA1EC847BF7584344F00D49EE77FC7BAE99A205A08C`
+- `outputs\xauusd_micro_validation_package.zip`: `B1084739245494AE0EA188FC477B6171C93D1597597B09F6E05BED344D17C7A4`
+- `work\build_price_action_strategy_batch.ps1`: `9D273700E9B0E4657E9D4AE65AE6076EC246ECA813D6DDFEB315C0177D5AE2C6`
+- `work\test_price_action_strategy_modules.ps1`: `56E3A14E2A518915927438DF4A09B4C10D2CB553F70C006A16B6325976C5678E`
+- `work\test_price_action_strategy_batch.ps1`: `A268B806C1E4F9BA1480874A9C3B8A257E8B40F97AB0541B8A5D17DA07A436F7`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `913854EDCD828A05B0589C42F7B932B339345C3E60DC3D9C932E5EF57761739A`
 
 ## Background-Safety Note
 
