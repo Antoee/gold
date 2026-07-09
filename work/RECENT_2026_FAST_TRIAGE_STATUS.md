@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-08 23:22:36 -05:00
+Updated: 2026-07-08 23:31:39 -05:00
 
 ## Current State
 
@@ -11,27 +11,34 @@ Updated: 2026-07-08 23:22:36 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **adaptive-reverse recent-flip cooldown plus compact `AR;` lane tag**.
+Added **PTC quality-scaled risk ramp**, with the adaptive-reverse recent-flip cooldown still present.
 
-The bot needs more profit, but recent adaptive-reverse logic can also create fast flip/whipsaw exposure if the market chops after a reversal. This pass adds a bounded cooldown that blocks repeated adaptive-reverse entries for a configurable period unless the new setup has enough quality score to override it.
+The `$866` / 2.5-year result is not enough. This pass adds a profit-side accelerator for the strongest power-trend-continuation lane while keeping it behind the existing house-money and liquid-session gates. It does not blindly raise base risk; it only scales PTC risk higher as signal quality improves.
 
 New configurable inputs:
+
+- `InpUsePowerTrendQualityRiskRamp`
+- `InpPowerTrendQualityRiskFullScore`
+- `InpPowerTrendQualityMaxRiskMultiplier`
+
+When enabled, `PowerTrendContinuationRiskMultiplier()` starts from the normal PTC risk multiplier and linearly ramps toward a higher cap as `signal.qualityScore` rises from `InpPowerTrendContinuationMinScore` to `InpPowerTrendQualityRiskFullScore`.
+
+The protected-aggression generator now enables the ramp with:
+
+- `InpUsePowerTrendQualityRiskRamp=true`
+- `InpPowerTrendQualityRiskFullScore=16`
+- `InpPowerTrendQualityMaxRiskMultiplier=1.75`
+
+Also retained from the previous pass:
 
 - `InpUseAdaptiveReverseRecentFlipCooldown`
 - `InpAdaptiveReverseRecentFlipCooldownMinutes`
 - `InpAdaptiveReverseRecentFlipMinQualityScore`
-
-When enabled, the EA scans recent entry history for adaptive-reverse trades tagged with either the new compact `AR;` marker or the legacy `Adaptive reverse guarded;` reason. If the previous adaptive-reverse entry is still inside the cooldown window, a new adaptive-reverse entry is blocked unless its quality score meets the override threshold.
-
-The protected-aggression generator now enables the guard with:
-
-- `InpUseAdaptiveReverseRecentFlipCooldown=true`
-- `InpAdaptiveReverseRecentFlipCooldownMinutes=240`
-- `InpAdaptiveReverseRecentFlipMinQualityScore=13`
+- compact adaptive-reverse history tag: `AR;`
 
 ## Why This Matters
 
-This directly targets the "make as much as possible but avoid going red" objective from the risk side. It does not increase trade count by itself, but it should reduce repeated reversal churn so profit-focused lanes like PTC, BCQ, RRO, and flat-month opportunity logic are not giving money back through low-quality adaptive reverse flips.
+This directly targets the "make as much as possible but avoid going red" objective from both sides: the previous adaptive-reverse cooldown reduces churn, and the new PTC quality ramp gives the highest-quality continuation lane more upside only after the existing house-money/liquid-session checks allow it.
 
 ## Existing Profit-Focused Work Still Present
 
@@ -47,6 +54,7 @@ This directly targets the "make as much as possible but avoid going red" objecti
 - breakout-continuation standalone entry
 - breakout-continuation follow-through close gate
 - power trend continuation lane
+- PTC quality-scaled risk ramp
 - compact setup-lane tags: `PTC;`, `BCQ;`, `RRO;`
 - PTC-only winner scale-in gate
 - PTC runner patience
@@ -79,15 +87,15 @@ This directly targets the "make as much as possible but avoid going red" objecti
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `888B13F71B608064A0FE9D06D0933721FE6CAB82667DEDAA7F3921C897777DD6`
-- `Professional_XAUUSD_EA.mq5`: `888B13F71B608064A0FE9D06D0933721FE6CAB82667DEDAA7F3921C897777DD6`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `888B13F71B608064A0FE9D06D0933721FE6CAB82667DEDAA7F3921C897777DD6`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `2E5880E81FF069209906AD4856C8718A44CD5E757F5697CA18F30D71F4A537B1`
-- `outputs\xauusd_micro_validation_package.zip`: `D75FC3FDE9B4B494594DA7D79E3DCDA3E10A7C613F3950D705D9C4DA9753FB8C`
-- `work\build_price_action_strategy_batch.ps1`: `2004E5978731079478C4F4D357BE223B63E1024AD2C0A3F5B18EECAB6EC5913E`
-- `work\test_price_action_strategy_modules.ps1`: `51CA5DD0636F30993F665AD3EFC2D6297835A7FEE71E67C12882B1E98DF758EE`
-- `work\test_price_action_strategy_batch.ps1`: `CD74C0F192885686E745A13491F1B256D6E3CB02E53C6AA7961DB869955F64F3`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `8959B2E330A685D205F26A69886E22402BFE638DC6CBDC4E7E976115696D8CA3`
+- `outputs\Professional_XAUUSD_EA.mq5`: `7790DC49DB082402E7319CB0636DC7A971D3AA9894D8F868AD8B6F07D02ABEA1`
+- `Professional_XAUUSD_EA.mq5`: `7790DC49DB082402E7319CB0636DC7A971D3AA9894D8F868AD8B6F07D02ABEA1`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `7790DC49DB082402E7319CB0636DC7A971D3AA9894D8F868AD8B6F07D02ABEA1`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `39284FF5C7AC64782F8B69F9F9049D249E1B0395F7FDB6E7D65C5D49B160DF31`
+- `outputs\xauusd_micro_validation_package.zip`: `38CD5C02230C5C2D96219832AE944C095DE7175B21A930385A3DBA64C9160DC8`
+- `work\build_price_action_strategy_batch.ps1`: `D3535A9463DA3FC12740435A9E81C52D96D9B66A55409EBD91558B719F7E7372`
+- `work\test_price_action_strategy_modules.ps1`: `B39B6B92CB18CF5F5ED83D9CB78AA7A5632FD6C225A2AAE98AF2240EAC9E14AD`
+- `work\test_price_action_strategy_batch.ps1`: `E7F527507A6CB09816193144A5A387F74A9FEBB3240A77A34FC742CEA9F92D09`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `D4AE1EBC39D0C2D88774CA05ECA2E654658455744FDED97CD133D11BE10EC1E6`
 
 ## Background-Safety Note
 
