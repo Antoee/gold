@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-09 00:43:14 -05:00
+Updated: 2026-07-09 00:53:20 -05:00
 
 ## Current State
 
@@ -11,38 +11,28 @@ Updated: 2026-07-09 00:43:14 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **Session Impulse Runner Patience**, with Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
+Added **Protected SIL Winner Scale-In Gate**, with Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
 
-The previous pass protected the new `SIL` entry lane by cutting failed impulses faster. This pass adds the other side of that trade-off: successful `SIL` trades can now receive extra MFE giveback room when they are protected and continuation structure still supports the move.
+The previous pass protected the new `SIL` entry lane by giving successful impulse trades extra MFE giveback room. This pass adds a controlled compounding option: successful, protected `SIL` trades can now satisfy the winner scale-in continuation gate when explicitly enabled.
 
-New configurable inputs:
+New configurable input:
 
-- `InpUseSessionImpulseRunnerPatience`
-- `InpSessionImpulseRunnerPatienceMinR`
-- `InpSessionImpulseRunnerPatienceMinMFER`
-- `InpSessionImpulseRunnerMFEGivebackMultiplier`
-- `InpSessionImpulseRunnerRequireProtectedStop`
-- `InpSessionImpulseRunnerRequireContinuation`
+- `InpWinnerScaleInAllowSessionImpulse`
 
-`SessionImpulseRunnerPatienceAllows()` only applies to positions whose entry comment contains `SIL;`. It allows the MFE giveback exit to breathe when:
+`WinnerScaleInAllows()` now treats the continuation lane as valid when either:
 
-- the trade is already at or above the configured current-R threshold
-- max favorable R has reached the configured MFE threshold
-- the stop is protected, when required
-- continuation structure still supports the trade, when required
+- the setup is a power trend continuation, or
+- `InpWinnerScaleInAllowSessionImpulse=true` and the setup is a Session Impulse Lane trade.
 
 The protected-aggression generator now enables this with:
 
-- `InpUseSessionImpulseRunnerPatience=true`
-- `InpSessionImpulseRunnerPatienceMinR=0.15`
-- `InpSessionImpulseRunnerPatienceMinMFER=0.50`
-- `InpSessionImpulseRunnerMFEGivebackMultiplier=1.45`
-- `InpSessionImpulseRunnerRequireProtectedStop=true`
-- `InpSessionImpulseRunnerRequireContinuation=true`
+- `InpWinnerScaleInAllowSessionImpulse=true`
 
 ## Why This Matters
 
-The `SIL` lane now has a cleaner profit profile: failed impulses can be exited quickly, while confirmed winners are not forced out by the same generic giveback setting as weaker trades. That supports the goal of more opportunity capture without turning every added trade into shallow scalping.
+The `SIL` lane is meant to address the low-profit/opportunity-cost problem without removing the risk rails. Before this change, protected-aggression scale-ins were still effectively PTC-only, so a protected, working `SIL` trade could not compound even after it had moved in favor and met the existing stop-protection, locked-R, open-profit coverage, trend-regime, quality, price-action, exposure, and equity gates.
+
+This change allows `SIL` winners to compound only behind the same protected winner scale-in framework. It is an attempt to make more from proven winners, not to average down or recover losers.
 
 It is still not proof of higher profit. This needs MT5 compile/backtest evidence, then out-of-sample and walk-forward validation.
 
@@ -51,6 +41,7 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 - session impulse lane: `SIL;`
 - session impulse failure exit
 - session impulse runner patience
+- protected SIL winner scale-in gate
 - flat-month opportunity mode
 - flat-month probe mode
 - flat-month probe lane spacing
@@ -101,15 +92,15 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `AD0AFFF2B91343BCBB949D26D51F62B9AA0DC907F915F00D60D8924A5DD645DE`
-- `Professional_XAUUSD_EA.mq5`: `AD0AFFF2B91343BCBB949D26D51F62B9AA0DC907F915F00D60D8924A5DD645DE`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `AD0AFFF2B91343BCBB949D26D51F62B9AA0DC907F915F00D60D8924A5DD645DE`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `975359F9B460AFB479E131CE9BDC16EC9C302B7F363457DB2602CC2EFA04F33D`
-- `outputs\xauusd_micro_validation_package.zip`: `CBCDEF028ECB017A0288B21D0CD35E6AEE2918E51C09F4D4B99FB12F1EB616CB`
-- `work\build_price_action_strategy_batch.ps1`: `93EAE61CCD7C6FB24E23E4585637BC664A96EBD51BC29054479C6671BFA4816A`
-- `work\test_price_action_strategy_modules.ps1`: `1AE859C4D9509DAFB90002D8119EC065B1D7E1A82256985A8741E848C8C81732`
-- `work\test_price_action_strategy_batch.ps1`: `6297F4B52A3EA7AF8DCB6DCA01139367FABB127ECA1BEDE2BD0A27A2FE9EFB82`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `1D95F11C9D08BF3FE4F7226468F3BBA0FC1F3E24B0AE7F76C9F630D599E9060B`
+- `outputs\Professional_XAUUSD_EA.mq5`: `53DE2E5935AF1FDDA563FACDD8B4E9E9B13A20FA76191A21D72EC2C803E25A4D`
+- `Professional_XAUUSD_EA.mq5`: `53DE2E5935AF1FDDA563FACDD8B4E9E9B13A20FA76191A21D72EC2C803E25A4D`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `53DE2E5935AF1FDDA563FACDD8B4E9E9B13A20FA76191A21D72EC2C803E25A4D`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `E38BE49962CA1AB64E636DBD02FFE2B0A7C403980B8150DCB4B1324A5E8964C2`
+- `outputs\xauusd_micro_validation_package.zip`: `952A1F7B3FE4820AB333EDDF34B97044F226CAA36CA20058D43055FD3CFC7F20`
+- `work\build_price_action_strategy_batch.ps1`: `0459D81C537386304C6462E893E1370201C92025DAB842DD2DDCBC3DD4268B6E`
+- `work\test_price_action_strategy_modules.ps1`: `D11E5A6BCBD56F70DD315151C42EC8EE4605E5598FC44E73E15EEAF69A01E70A`
+- `work\test_price_action_strategy_batch.ps1`: `1A783C2F18C9A289278248E1FF93A4A1CADE373A27177AF5A2F2CB4137AA1B09`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `4296B97030762EAF838EC3F18E1B37D2A1C9F6F6B62CD3DA64CB32AA494D8887`
 
 ## Background-Safety Note
 
