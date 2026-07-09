@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-08 23:31:39 -05:00
+Updated: 2026-07-08 23:40:03 -05:00
 
 ## Current State
 
@@ -11,26 +11,35 @@ Updated: 2026-07-08 23:31:39 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **PTC quality-scaled risk ramp**, with the adaptive-reverse recent-flip cooldown still present.
+Added **flat-month elite fallback**, with PTC quality-scaled risk ramp and adaptive-reverse recent-flip cooldown still present.
 
-The `$866` / 2.5-year result is not enough. This pass adds a profit-side accelerator for the strongest power-trend-continuation lane while keeping it behind the existing house-money and liquid-session gates. It does not blindly raise base risk; it only scales PTC risk higher as signal quality improves.
+The `$866` / 2.5-year result is not enough, and prior stale-entry logic only helped if an existing setup lane already qualified. This pass adds a bounded fallback for flat/behind months: if the EA is short by only a small configurable number of confirmations, has strong quality and price-action scores, has waited long enough since the last entry, and is still under the monthly entry cap, it can promote the setup instead of staying idle.
 
 New configurable inputs:
 
-- `InpUsePowerTrendQualityRiskRamp`
-- `InpPowerTrendQualityRiskFullScore`
-- `InpPowerTrendQualityMaxRiskMultiplier`
+- `InpUseFlatMonthEliteFallback`
+- `InpFlatMonthEliteFallbackMinHours`
+- `InpFlatMonthEliteFallbackMaxMonthlyEntries`
+- `InpFlatMonthEliteFallbackMaxConfirmationShortfall`
+- `InpFlatMonthEliteFallbackMinQualityScore`
+- `InpFlatMonthEliteFallbackMinPriceActionScore`
+- `InpFlatMonthEliteFallbackRequireLiquidSession`
 
-When enabled, `PowerTrendContinuationRiskMultiplier()` starts from the normal PTC risk multiplier and linearly ramps toward a higher cap as `signal.qualityScore` rises from `InpPowerTrendContinuationMinScore` to `InpPowerTrendQualityRiskFullScore`.
+When enabled, `FlatMonthEliteFallbackAllowed()` can fill the confirmation gap only when flat-month opportunity mode is active and the setup is close enough to the required confirmation count. It does not bypass the later weighted score, elite quality, RR, exposure, margin, spread, loss, drawdown, or cost guards.
 
-The protected-aggression generator now enables the ramp with:
+The protected-aggression generator now enables the fallback with:
 
-- `InpUsePowerTrendQualityRiskRamp=true`
-- `InpPowerTrendQualityRiskFullScore=16`
-- `InpPowerTrendQualityMaxRiskMultiplier=1.75`
+- `InpUseFlatMonthEliteFallback=true`
+- `InpFlatMonthEliteFallbackMinHours=36`
+- `InpFlatMonthEliteFallbackMaxMonthlyEntries=8`
+- `InpFlatMonthEliteFallbackMaxConfirmationShortfall=1`
+- `InpFlatMonthEliteFallbackMinQualityScore=12`
+- `InpFlatMonthEliteFallbackMinPriceActionScore=8`
+- `InpFlatMonthEliteFallbackRequireLiquidSession=true`
 
-Also retained from the previous pass:
+Also retained from previous passes:
 
+- PTC quality-scaled risk ramp
 - `InpUseAdaptiveReverseRecentFlipCooldown`
 - `InpAdaptiveReverseRecentFlipCooldownMinutes`
 - `InpAdaptiveReverseRecentFlipMinQualityScore`
@@ -38,7 +47,7 @@ Also retained from the previous pass:
 
 ## Why This Matters
 
-This directly targets the "make as much as possible but avoid going red" objective from both sides: the previous adaptive-reverse cooldown reduces churn, and the new PTC quality ramp gives the highest-quality continuation lane more upside only after the existing house-money/liquid-session checks allow it.
+This directly targets the flat-month efficiency bottleneck without turning the EA into an always-in-market system. The fallback gives high-quality near-miss setups a path to trade during stale months, while previous adaptive-reverse cooldowns reduce churn and the PTC quality ramp gives the strongest continuation lane more upside under house-money/liquid-session gates.
 
 ## Existing Profit-Focused Work Still Present
 
@@ -46,6 +55,7 @@ This directly targets the "make as much as possible but avoid going red" objecti
 - flat-month probe mode
 - flat-month probe lane spacing
 - flat-month stale-entry nudge
+- flat-month elite fallback
 - flat-month breakout-continuation probe risk lane
 - flat-month catch-up risk ramp
 - flat-month catch-up entry relaxation
@@ -87,15 +97,15 @@ This directly targets the "make as much as possible but avoid going red" objecti
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `7790DC49DB082402E7319CB0636DC7A971D3AA9894D8F868AD8B6F07D02ABEA1`
-- `Professional_XAUUSD_EA.mq5`: `7790DC49DB082402E7319CB0636DC7A971D3AA9894D8F868AD8B6F07D02ABEA1`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `7790DC49DB082402E7319CB0636DC7A971D3AA9894D8F868AD8B6F07D02ABEA1`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `39284FF5C7AC64782F8B69F9F9049D249E1B0395F7FDB6E7D65C5D49B160DF31`
-- `outputs\xauusd_micro_validation_package.zip`: `38CD5C02230C5C2D96219832AE944C095DE7175B21A930385A3DBA64C9160DC8`
-- `work\build_price_action_strategy_batch.ps1`: `D3535A9463DA3FC12740435A9E81C52D96D9B66A55409EBD91558B719F7E7372`
-- `work\test_price_action_strategy_modules.ps1`: `B39B6B92CB18CF5F5ED83D9CB78AA7A5632FD6C225A2AAE98AF2240EAC9E14AD`
-- `work\test_price_action_strategy_batch.ps1`: `E7F527507A6CB09816193144A5A387F74A9FEBB3240A77A34FC742CEA9F92D09`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `D4AE1EBC39D0C2D88774CA05ECA2E654658455744FDED97CD133D11BE10EC1E6`
+- `outputs\Professional_XAUUSD_EA.mq5`: `DE3CA1754AE82B45B7F19E42FC3E33D7B82E710D96F8E55B006914DABA7EF628`
+- `Professional_XAUUSD_EA.mq5`: `DE3CA1754AE82B45B7F19E42FC3E33D7B82E710D96F8E55B006914DABA7EF628`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `DE3CA1754AE82B45B7F19E42FC3E33D7B82E710D96F8E55B006914DABA7EF628`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `16153BB79C92E7524D976FBD0F532586F9E419D53A00A33FCD0254F53077B22E`
+- `outputs\xauusd_micro_validation_package.zip`: `57914742F13B737E2AB088544CFF4B024CB75215F2A7265D4412E6563D1063F2`
+- `work\build_price_action_strategy_batch.ps1`: `A2D27F9F2EFFE246B346EE011FFE29C177AE272E985EF2C143A3E353746245C4`
+- `work\test_price_action_strategy_modules.ps1`: `D0FA163BA38946429AA9B6D740E8DC0221D80014498AA637CD6AE5406968B5AA`
+- `work\test_price_action_strategy_batch.ps1`: `20B3E6FE23FF62A66EB861FB196EF10433A9F6D8E1B140F7BAA9F4AB7F3D672D`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `4D5460041887FFFB8024F237187228502F64D130072FFB72ED79645C1B85BDF5`
 
 ## Background-Safety Note
 
