@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-08 03:05:00 -05:00
+Updated: 2026-07-08 03:28:00 -05:00
 
 ## Current State
 
@@ -11,44 +11,30 @@ Updated: 2026-07-08 03:05:00 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **compact setup-lane tags for reliable performance scaling and reports**.
+Added **power-trend-only winner scale-ins**.
 
-The prior power-trend pass created a new high-upside continuation lane, but the EA still depended on long order comments like `Power trend continuation...`, `Breakout continuation...`, and `Range reversion...` to identify setup lanes later. Broker comment limits can truncate those long strings, which can make lane-specific spacing, setup-lane performance risk scaling, and report analysis unreliable.
+The previous pass made setup lanes reliable with compact order-comment tags. This pass uses that better lane identity to concentrate extra exposure on the strongest continuation setup instead of allowing generic add-ons.
 
-This pass front-loads compact lane tags into the actual trade comment:
+New configurable input:
 
-- `PTC;` for power trend continuation
-- `BCQ;` for breakout continuation quality
-- `RRO;` for range reversion opportunity
-- `PXEA;` for generic entries
+- `InpWinnerScaleInRequirePowerTrendContinuation`
 
-The full verbose reason is still kept in the EA logger, while the broker order comment now starts with a short durable lane tag through `CompactTradeComment(signal)`.
+When enabled, an existing winning position can only receive a scale-in if the fresh signal is a `Power Trend Continuation` signal. This keeps the protected-aggression profile from adding exposure on weaker or unrelated follow-up signals, while still allowing it to press a strong XAUUSD continuation move when the existing winner is already protected and all other scale-in checks pass.
+
+The protected-aggression generator now sets:
+
+- `InpWinnerScaleInRequirePowerTrendContinuation=true`
 
 ## Why This Matters
 
-This is not cosmetic. It makes the previous profit-focused logic measurable and controllable:
+The goal is higher monthly return without simply raising global risk. This change targets the return bottleneck more surgically:
 
-- power-trend trades can now be sampled separately by setup-lane performance scaling,
-- flat-month probe lane spacing is less likely to miss recent same-lane entries,
-- MT5 exports can identify which lane actually produced or lost money,
-- future optimization can promote profitable lanes and throttle weak lanes with stronger evidence.
+- extra exposure is reserved for the strongest trend-continuation lane,
+- scale-ins still require the existing winner/protected-stop/spacing/risk checks,
+- the EA avoids adding on ordinary signals during chop,
+- the new compact `PTC;` tag makes later reports able to verify whether these add-ons helped.
 
-## Protected-Aggression Settings
-
-`protected_aggression_breakout` still enables the prior power-trend continuation pass:
-
-- `InpUsePowerTrendContinuation=true`
-- `InpPowerTrendContinuationMinScore=10`
-- `InpPowerTrendContinuationMinADX=27.0`
-- `InpPowerTrendContinuationRequireLiquidSession=true`
-- `InpPowerTrendContinuationRequireHouseMoney=true`
-- `InpPowerTrendContinuationStandaloneEntry=true`
-- `InpPowerTrendContinuationStandaloneMinScore=12`
-- `InpPowerTrendContinuationEntryScoreDiscount=1`
-- `InpPowerTrendContinuationRiskMultiplier=1.35`
-- `InpPowerTrendContinuationTPMultiplier=1.40`
-
-This complements the existing work already in the EA:
+## Existing Profit-Focused Work Still Present
 
 - flat-month opportunity mode
 - flat-month probe mode
@@ -61,6 +47,8 @@ This complements the existing work already in the EA:
 - breakout-continuation standalone entry
 - breakout-continuation follow-through close gate
 - power trend continuation lane
+- compact setup-lane tags: `PTC;`, `BCQ;`, `RRO;`
+- PTC-only winner scale-in gate
 - adaptive-reverse whipsaw guard
 - adaptive-reverse loss cooldown
 - setup-lane performance risk scaling
@@ -88,16 +76,15 @@ This complements the existing work already in the EA:
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `88B94AB9FE46BAFAC382D9B1E5DD86D79F081695A87EF0DE7874E5D42F20C810`
-- `Professional_XAUUSD_EA.mq5`: `88B94AB9FE46BAFAC382D9B1E5DD86D79F081695A87EF0DE7874E5D42F20C810`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `88B94AB9FE46BAFAC382D9B1E5DD86D79F081695A87EF0DE7874E5D42F20C810`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `69717CE6F0C3D0C445D405CC878C943DF68AE1955855001AA433A07B4F3EEF6E`
-- `outputs\xauusd_micro_validation_package.zip`: `73EDAF2C705111264A4996D02776A35B21AC0159F3203D264397411758B3E850`
-- `work\build_price_action_strategy_batch.ps1`: `B163753C820E48798FA7843A158CA83652B549357C74668AA459EA9179958D52`
-- `work\test_price_action_strategy_modules.ps1`: `58C8D54E0AD66EC95BC789E88339F20BB54A358288DAED830C91B77D4817005E`
-- `work\test_price_action_strategy_batch.ps1`: `49A8C232D012B6A1E70608D9F7CE851D5683FAA33F3B5D07742A17909DAF5B23`
-- `work\test_open_risk_exposure_guard.ps1`: `747C4FE21567AB1E7630EC8B357088AFEA83D64AE9F934D9613802AFA8471E18`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `3D35B54058840241C6D5BD3A062F366C90D59152A722837EA08079B2333473E9`
+- `outputs\Professional_XAUUSD_EA.mq5`: `097649E092089562AFCE034D08993402FA16FA759BDDEB0F0CFD043EDB3FB893`
+- `Professional_XAUUSD_EA.mq5`: `097649E092089562AFCE034D08993402FA16FA759BDDEB0F0CFD043EDB3FB893`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `097649E092089562AFCE034D08993402FA16FA759BDDEB0F0CFD043EDB3FB893`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `24ABF5099F5164318AD8D87854B53D0DB2EDA1BF0C8E27BD6DB3AD9788C0996B`
+- `outputs\xauusd_micro_validation_package.zip`: `C224AFFB0F09830052752C0151A04242A6F4F2B582A1B0BE90260E432CEB2342`
+- `work\build_price_action_strategy_batch.ps1`: `029163978857EA4CC2E47AF7187F9158183BA278F94965436838216D310C53CD`
+- `work\test_price_action_strategy_modules.ps1`: `4C044AE605BA6B1C03CBA04EDC884C5E9D61D83182A09C19EF2C0BF29DFB0AC3`
+- `work\test_price_action_strategy_batch.ps1`: `8B86B11ABBC205C73C85B40E896966E0A08FDF5E0C45F73D8CEED4696420E455`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `BB971DAD28194484111AAA63F569A1CFD6351197D6BD8C134DA552333009841B`
 
 ## Background-Safety Note
 
