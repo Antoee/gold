@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-09 01:56:52 -05:00
+Updated: 2026-07-09 02:04:53 -05:00
 
 ## Current State
 
@@ -11,29 +11,35 @@ Updated: 2026-07-09 01:56:52 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **Flat-Month Catch-Up Standalone Relaxation**, with Runner MFE Profit-Lock Patience, Session Impulse Quality Risk Ramp, Flat-Month Catch-Up Take-Profit Expansion, Previous-Period Liquidity Stops, Adaptive-Reverse Phase Whipsaw Gate, Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
+Added **Adaptive-Reverse Liquidity-Trap Guard**, with Flat-Month Catch-Up Standalone Relaxation, Runner MFE Profit-Lock Patience, Session Impulse Quality Risk Ramp, Flat-Month Catch-Up Take-Profit Expansion, Previous-Period Liquidity Stops, Adaptive-Reverse Phase Whipsaw Gate, Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
 
-The previous pass loosened the MFE profit-lock stop for protected runners. This pass targets a flat-month activity bottleneck: catch-up mode could relax the final entry score and RR, but the standalone lane thresholds for breakout continuation, power-trend continuation, and `SIL;` session impulse stayed fixed before that relaxation could help.
+The previous pass relaxed standalone lane thresholds during flat-month catch-up. This pass targets the hidden whipsaw risk in adaptive reverse: the EA could flip direction even when the new reversed trade was immediately running into nearby target-side equal highs/lows or previous-period liquidity.
 
 New configurable inputs:
 
-- `InpUseFlatMonthCatchUpStandaloneRelaxation`
-- `InpFlatMonthCatchUpStandaloneScoreDiscount`
-- `InpFlatMonthCatchUpStandaloneMinProgress`
-- `InpFlatMonthCatchUpStandaloneRequireLiquidSession`
+- `InpUseAdaptiveReverseLiquidityTrapGuard`
+- `InpAdaptiveReverseTrapLookbackBars`
+- `InpAdaptiveReverseTrapMaxDistanceATR`
+- `InpAdaptiveReverseTrapBypassQualityScore`
+- `InpAdaptiveReverseTrapUseEqualLevels`
+- `InpAdaptiveReverseTrapUsePreviousDay`
+- `InpAdaptiveReverseTrapUsePreviousWeek`
 
-`ActiveFlatMonthCatchUpStandaloneMinScore()` now lowers standalone lane thresholds only when flat-month catch-up progress is active enough, with an optional liquid-session requirement. A new reason tag, `Flat month catch-up standalone relaxation;`, is added when the relaxation admits a standalone lane.
+`AdaptiveReverseLiquidityTrapGuardActive()` now checks for nearby forward liquidity in the reversed trade direction. Lower-quality adaptive reversals are blocked when equal highs/lows or previous day/week liquidity are within the configured ATR distance; elite-quality reversals can still bypass the trap guard.
 
 The protected-aggression generator now enables this with:
 
-- `InpUseFlatMonthCatchUpStandaloneRelaxation=true`
-- `InpFlatMonthCatchUpStandaloneScoreDiscount=1`
-- `InpFlatMonthCatchUpStandaloneMinProgress=0.35`
-- `InpFlatMonthCatchUpStandaloneRequireLiquidSession=true`
+- `InpUseAdaptiveReverseLiquidityTrapGuard=true`
+- `InpAdaptiveReverseTrapLookbackBars=24`
+- `InpAdaptiveReverseTrapMaxDistanceATR=0.80`
+- `InpAdaptiveReverseTrapBypassQualityScore=16`
+- `InpAdaptiveReverseTrapUseEqualLevels=true`
+- `InpAdaptiveReverseTrapUsePreviousDay=true`
+- `InpAdaptiveReverseTrapUsePreviousWeek=false`
 
 ## Why This Matters
 
-The `$866` / 2.5-year result suggests the EA is still paying too much opportunity cost. Increasing risk alone is dangerous, so this change focuses on admitting near-miss standalone lanes only during confirmed flat-month catch-up pressure, while keeping the same loss, spread, exposure, and session controls.
+Adaptive reverse is useful only when the flip has real room to move. Gold often snaps into nearby liquidity and mean-reverts; this guard avoids low-quality flips directly into that trap, while preserving high-quality reversals that have enough confluence to justify the risk.
 
 The change is default-off in the base optimization profile and enabled in the protected-aggression generator. It is not martingale, grid, averaging down, or recovery trading.
 
@@ -73,6 +79,7 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 - adaptive-reverse loss cooldown
 - adaptive-reverse recent-flip cooldown
 - adaptive-reverse post-stop lockout
+- adaptive-reverse liquidity-trap guard
 - adaptive-reverse range/transition phase gate
 - compact adaptive-reverse history tag: `AR;`
 - setup-lane performance risk scaling
@@ -102,15 +109,15 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `61B0E4402409A89721679188C2A58DD5C3584A54692E691158F5B15351B5808D`
-- `Professional_XAUUSD_EA.mq5`: `61B0E4402409A89721679188C2A58DD5C3584A54692E691158F5B15351B5808D`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `61B0E4402409A89721679188C2A58DD5C3584A54692E691158F5B15351B5808D`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `F6DD49BF9D614B9724D4E75AF4EF79DB9E430770570B4A965E537E0741CF7970`
-- `outputs\xauusd_micro_validation_package.zip`: `693AA2488BCD92B33609F9659C060B2F91ACD308CA5FF4156D9D55C1F018B67D`
-- `work\build_price_action_strategy_batch.ps1`: `10B79EFD83DE3F7FCDA0F371EFBFBD072E3C470DF6BB6C2E381AF2AB5D4A1CA6`
-- `work\test_price_action_strategy_modules.ps1`: `CDA3AE29C6C20C05D19D29E624C8666354D22BB59C5601BC1FB8AC4C5A79FDE5`
-- `work\test_price_action_strategy_batch.ps1`: `CC8695584166BD70B8F07FA7BC34BAC1D7BB5DEE0CC9AD97F0A46728663DFC1A`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `DE94D10C8B0968BD20290DEEB458211028E1B340F1F1A858F101388AE3CF87C8`
+- `outputs\Professional_XAUUSD_EA.mq5`: `7DAE7D48C45CFFC38E8DB39F95DBE4C7A6D91B4D8FE4E45682A9789F9958A3EC`
+- `Professional_XAUUSD_EA.mq5`: `7DAE7D48C45CFFC38E8DB39F95DBE4C7A6D91B4D8FE4E45682A9789F9958A3EC`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `7DAE7D48C45CFFC38E8DB39F95DBE4C7A6D91B4D8FE4E45682A9789F9958A3EC`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `0634C16E7FCA52C532B8C926A3C9F86FC6DDC143A1EA195852D7331B10286102`
+- `outputs\xauusd_micro_validation_package.zip`: `2E895BB3D109435D326B40A41874E31FD23B4A1704B4727F329EF15C25561EB5`
+- `work\build_price_action_strategy_batch.ps1`: `DD691B8C520A99A7D2B8EB5D6AD4AC740E27541863CF43DC671C51C18099B7B1`
+- `work\test_price_action_strategy_modules.ps1`: `22A4FF6D10956A6D5527091C53C62FEB3328C8BC9C2640D984EE598A571E4A16`
+- `work\test_price_action_strategy_batch.ps1`: `90FBA50FF945076146619DE9E4E6536B06E8D16B96625883E44E0C8E076D0983`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `E4A908CC7518F1A2CBE40B372D6D6496E8527214782653BD2FAE5AE243674166`
 
 ## Background-Safety Note
 
