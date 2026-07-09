@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-09 02:12:45 -05:00
+Updated: 2026-07-09 02:20:58 -05:00
 
 ## Current State
 
@@ -11,23 +11,29 @@ Updated: 2026-07-09 02:12:45 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **Range-Reversion Liquidity Stop Extension**, with Adaptive-Reverse Liquidity-Trap Guard, Flat-Month Catch-Up Standalone Relaxation, Runner MFE Profit-Lock Patience, Session Impulse Quality Risk Ramp, Flat-Month Catch-Up Take-Profit Expansion, Previous-Period Liquidity Stops, Adaptive-Reverse Phase Whipsaw Gate, Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
+Added **Flat-Month Probe Quality Risk Ramp**, with Range-Reversion Liquidity Stop Extension, Adaptive-Reverse Liquidity-Trap Guard, Flat-Month Catch-Up Standalone Relaxation, Runner MFE Profit-Lock Patience, Session Impulse Quality Risk Ramp, Flat-Month Catch-Up Take-Profit Expansion, Previous-Period Liquidity Stops, Adaptive-Reverse Phase Whipsaw Gate, Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
 
-The previous pass blocked lower-quality adaptive reversals that flip directly into nearby liquidity. This pass fixes a stop-placement gap in the range-reversion lane: range-reversion trades could override the general structure/liquidity-aware stop with their own structural stop, losing the newer liquidity-stop extension logic.
+The previous pass extended range-reversion structural stops behind liquidity. This pass targets the flat-month efficiency bottleneck: probe trades were deliberately small, but stayed small even when the probe setup quality was much stronger than the minimum.
 
 New configurable inputs:
 
-- `InpRangeReversionUseLiquidityStopExtension`
+- `InpUseFlatMonthProbeQualityRiskRamp`
+- `InpFlatMonthProbeQualityRiskFullScore`
+- `InpFlatMonthProbeMaxRiskMultiplier`
+- `InpFlatMonthProbeQualityRampRequireProtectedFloor`
 
-When enabled, range-reversion structural stops can be extended through `StructureStopDistance()` so last sweeps, equal highs/lows, previous-period liquidity, and liquidity-pocket stop shifts can push the stop behind the nearest relevant liquidity. Risk-based sizing still uses the final stop distance.
+`FlatMonthProbeQualityRiskMultiplier()` now scales probe risk from the base probe multiplier toward a capped maximum as setup quality rises. The ramp can require the protected equity floor to remain intact before increasing risk.
 
 The protected-aggression generator now enables this with:
 
-- `InpRangeReversionUseLiquidityStopExtension=true`
+- `InpUseFlatMonthProbeQualityRiskRamp=true`
+- `InpFlatMonthProbeQualityRiskFullScore=13`
+- `InpFlatMonthProbeMaxRiskMultiplier=0.85`
+- `InpFlatMonthProbeQualityRampRequireProtectedFloor=true`
 
 ## Why This Matters
 
-The objective explicitly calls out pure ATR stops sitting inside liquidity pools. Range reversion is one of the lanes most exposed to that problem because it deliberately trades around sweeps, wicks, and mean-reversion zones. This change keeps the range-reversion stop structural while allowing the broader liquidity map to move it out of danger.
+The `$866` / 2.5-year result implies the EA still leaves too much capital idle. This change keeps flat-month probe mode cautious, but lets higher-quality probes matter more so the bot is less stuck in low-activity months when the setup is strong and the account is still protected.
 
 The change is default-off in the base optimization profile and enabled in the protected-aggression generator. It is not martingale, grid, averaging down, or recovery trading.
 
@@ -45,6 +51,7 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 - flat-month stale SIL wake-up
 - flat-month opportunity mode
 - flat-month probe mode
+- flat-month probe quality risk ramp
 - flat-month probe lane spacing
 - flat-month stale-entry nudge
 - flat-month elite fallback
@@ -98,15 +105,15 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `1A54C0DB6C88210B89BA09774422CA02ACC71C44565DD3A940AD5F8C9BE942A3`
-- `Professional_XAUUSD_EA.mq5`: `1A54C0DB6C88210B89BA09774422CA02ACC71C44565DD3A940AD5F8C9BE942A3`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `1A54C0DB6C88210B89BA09774422CA02ACC71C44565DD3A940AD5F8C9BE942A3`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `C8CD591F002BDE21C31FAA79C48542E866727A18DA86DB42460E23DD5BC964E9`
-- `outputs\xauusd_micro_validation_package.zip`: `3594E8234B306E1DD15370A20B7E1BCF5FE680056F9CB985D1B346BE19D12C62`
-- `work\build_price_action_strategy_batch.ps1`: `9A9C5B7FB0D2175DCA2FEC2EEB1060D7A99152238ACC0EB6506793F09CCDF57E`
-- `work\test_price_action_strategy_modules.ps1`: `301A09F0F6CBD40B52A29D2282D3B2822AA5534F999CF9CB8E20E8ADA6010062`
-- `work\test_price_action_strategy_batch.ps1`: `A003B834FCF0E0B5DECA104476E5D2FA7D09862A5CFE5F79DC38751BFE69EB37`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `0A2E79557BB72BCDB0BB5838CA69E2DCB6629276AA19758815D021FEB98C5286`
+- `outputs\Professional_XAUUSD_EA.mq5`: `425FF6F19F7E35C26D8D6DD770F8A4F32C072750111F8BDBF46A2A3143B293EB`
+- `Professional_XAUUSD_EA.mq5`: `425FF6F19F7E35C26D8D6DD770F8A4F32C072750111F8BDBF46A2A3143B293EB`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `425FF6F19F7E35C26D8D6DD770F8A4F32C072750111F8BDBF46A2A3143B293EB`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `05C590D8238C2B12549C454394E0C3AC68E51E2235119F53DC87C43B7117C40A`
+- `outputs\xauusd_micro_validation_package.zip`: `47870B0740D0F609A1D3DC135572918176A61DF23066CE56CCE81B4DCABABDB3`
+- `work\build_price_action_strategy_batch.ps1`: `73A2EDE0A9AB2472889D8D63124C23CC6EE70A6324BCB8BF81003B52E1FEADC6`
+- `work\test_price_action_strategy_modules.ps1`: `37E915E42BAF20967978B6FDBBF65074D342AE28E1C53CAFED89F2CC97834E2E`
+- `work\test_price_action_strategy_batch.ps1`: `CAB067FA378C7ED74BA25D4FE0E10EB6E227CBD2BAA5AFB54FAFE27A414E2345`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `EF03F8FE82D1045F7EF451BA5A1D72C65F0824F35028F7C0ADA548C8D1100767`
 
 ## Background-Safety Note
 
