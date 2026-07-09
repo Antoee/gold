@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-09 00:34:46 -05:00
+Updated: 2026-07-09 00:43:14 -05:00
 
 ## Current State
 
@@ -11,40 +11,38 @@ Updated: 2026-07-09 00:34:46 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **Session Impulse Failure Exit**, with Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
+Added **Session Impulse Runner Patience**, with Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
 
-The previous pass added a new liquid-session impulse entry lane to increase opportunity capture. This pass adds a lane-specific failure exit so those extra trades do not sit around when the impulse thesis fails quickly.
+The previous pass protected the new `SIL` entry lane by cutting failed impulses faster. This pass adds the other side of that trade-off: successful `SIL` trades can now receive extra MFE giveback room when they are protected and continuation structure still supports the move.
 
 New configurable inputs:
 
-- `InpUseSessionImpulseFailureExit`
-- `InpSessionImpulseFailureBars`
-- `InpSessionImpulseFailureMinMFER`
-- `InpSessionImpulseFailureMaxCurrentR`
-- `InpSessionImpulseFailureRequireOppositeCandle`
-- `InpSessionImpulseFailureOppositeRangeATR`
-- `InpSessionImpulseFailureOppositeBodyPercent`
+- `InpUseSessionImpulseRunnerPatience`
+- `InpSessionImpulseRunnerPatienceMinR`
+- `InpSessionImpulseRunnerPatienceMinMFER`
+- `InpSessionImpulseRunnerMFEGivebackMultiplier`
+- `InpSessionImpulseRunnerRequireProtectedStop`
+- `InpSessionImpulseRunnerRequireContinuation`
 
-`SessionImpulseFailureExitHit()` only applies to positions whose entry comment contains `SIL;`. It exits when:
+`SessionImpulseRunnerPatienceAllows()` only applies to positions whose entry comment contains `SIL;`. It allows the MFE giveback exit to breathe when:
 
-- the trade has been open for at least the configured number of bars
-- maximum favorable excursion stayed below the configured MFE threshold
-- current R is at or below the configured failure threshold
-- optional opposite-candle confirmation passes when enabled
+- the trade is already at or above the configured current-R threshold
+- max favorable R has reached the configured MFE threshold
+- the stop is protected, when required
+- continuation structure still supports the trade, when required
 
-The protected-aggression generator now enables this guard with:
+The protected-aggression generator now enables this with:
 
-- `InpUseSessionImpulseFailureExit=true`
-- `InpSessionImpulseFailureBars=3`
-- `InpSessionImpulseFailureMinMFER=0.25`
-- `InpSessionImpulseFailureMaxCurrentR=-0.05`
-- `InpSessionImpulseFailureRequireOppositeCandle=false`
-- `InpSessionImpulseFailureOppositeRangeATR=0.45`
-- `InpSessionImpulseFailureOppositeBodyPercent=40.0`
+- `InpUseSessionImpulseRunnerPatience=true`
+- `InpSessionImpulseRunnerPatienceMinR=0.15`
+- `InpSessionImpulseRunnerPatienceMinMFER=0.50`
+- `InpSessionImpulseRunnerMFEGivebackMultiplier=1.45`
+- `InpSessionImpulseRunnerRequireProtectedStop=true`
+- `InpSessionImpulseRunnerRequireContinuation=true`
 
 ## Why This Matters
 
-This keeps the profit-seeking `SIL` lane from becoming blind overtrading. The bot can take more liquid-session gold impulse opportunities, but failed impulses get cut faster before they become larger losses. That directly supports the current balance we need: more opportunity capture without letting the new trade frequency degrade drawdown.
+The `SIL` lane now has a cleaner profit profile: failed impulses can be exited quickly, while confirmed winners are not forced out by the same generic giveback setting as weaker trades. That supports the goal of more opportunity capture without turning every added trade into shallow scalping.
 
 It is still not proof of higher profit. This needs MT5 compile/backtest evidence, then out-of-sample and walk-forward validation.
 
@@ -52,6 +50,7 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 
 - session impulse lane: `SIL;`
 - session impulse failure exit
+- session impulse runner patience
 - flat-month opportunity mode
 - flat-month probe mode
 - flat-month probe lane spacing
@@ -102,15 +101,15 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `5C8D31EEB76AA9EB3E70351336C99C3D9B49F8CBCF484E1CEA9A328633C58935`
-- `Professional_XAUUSD_EA.mq5`: `5C8D31EEB76AA9EB3E70351336C99C3D9B49F8CBCF484E1CEA9A328633C58935`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `5C8D31EEB76AA9EB3E70351336C99C3D9B49F8CBCF484E1CEA9A328633C58935`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `68E45E2244EE84DC5533D18300D828B563277D80960AB098CDA1DCEB2A8D26D7`
-- `outputs\xauusd_micro_validation_package.zip`: `BC3CCBCC8D8B048AD1892634CCE6066BDB08F4E857AA9CCB2825CD057D7619BB`
-- `work\build_price_action_strategy_batch.ps1`: `7DE1E2A0A556090F9DC545C659A5F7C040C2A628A96BBD6AABA196D18D3F659D`
-- `work\test_price_action_strategy_modules.ps1`: `A29015B78739400771AD8113C0F77E0DF867FBF4FE2AC9901F002053E30A54A1`
-- `work\test_price_action_strategy_batch.ps1`: `FDDB2333627BD2D53F7B6BAF021D7753AD9E31DB19ACB2852C4EBFFAD6F404D3`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `A816AEF89F55F672EF8C25E5253154BA14718C1B9AAF8ED92326431ACFDFA802`
+- `outputs\Professional_XAUUSD_EA.mq5`: `AD0AFFF2B91343BCBB949D26D51F62B9AA0DC907F915F00D60D8924A5DD645DE`
+- `Professional_XAUUSD_EA.mq5`: `AD0AFFF2B91343BCBB949D26D51F62B9AA0DC907F915F00D60D8924A5DD645DE`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `AD0AFFF2B91343BCBB949D26D51F62B9AA0DC907F915F00D60D8924A5DD645DE`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `975359F9B460AFB479E131CE9BDC16EC9C302B7F363457DB2602CC2EFA04F33D`
+- `outputs\xauusd_micro_validation_package.zip`: `CBCDEF028ECB017A0288B21D0CD35E6AEE2918E51C09F4D4B99FB12F1EB616CB`
+- `work\build_price_action_strategy_batch.ps1`: `93EAE61CCD7C6FB24E23E4585637BC664A96EBD51BC29054479C6671BFA4816A`
+- `work\test_price_action_strategy_modules.ps1`: `1AE859C4D9509DAFB90002D8119EC065B1D7E1A82256985A8741E848C8C81732`
+- `work\test_price_action_strategy_batch.ps1`: `6297F4B52A3EA7AF8DCB6DCA01139367FABB127ECA1BEDE2BD0A27A2FE9EFB82`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `1D95F11C9D08BF3FE4F7226468F3BBA0FC1F3E24B0AE7F76C9F630D599E9060B`
 
 ## Background-Safety Note
 
