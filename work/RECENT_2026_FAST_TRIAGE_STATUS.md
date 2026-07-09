@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-09 02:04:53 -05:00
+Updated: 2026-07-09 02:12:45 -05:00
 
 ## Current State
 
@@ -11,35 +11,23 @@ Updated: 2026-07-09 02:04:53 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **Adaptive-Reverse Liquidity-Trap Guard**, with Flat-Month Catch-Up Standalone Relaxation, Runner MFE Profit-Lock Patience, Session Impulse Quality Risk Ramp, Flat-Month Catch-Up Take-Profit Expansion, Previous-Period Liquidity Stops, Adaptive-Reverse Phase Whipsaw Gate, Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
+Added **Range-Reversion Liquidity Stop Extension**, with Adaptive-Reverse Liquidity-Trap Guard, Flat-Month Catch-Up Standalone Relaxation, Runner MFE Profit-Lock Patience, Session Impulse Quality Risk Ramp, Flat-Month Catch-Up Take-Profit Expansion, Previous-Period Liquidity Stops, Adaptive-Reverse Phase Whipsaw Gate, Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
 
-The previous pass relaxed standalone lane thresholds during flat-month catch-up. This pass targets the hidden whipsaw risk in adaptive reverse: the EA could flip direction even when the new reversed trade was immediately running into nearby target-side equal highs/lows or previous-period liquidity.
+The previous pass blocked lower-quality adaptive reversals that flip directly into nearby liquidity. This pass fixes a stop-placement gap in the range-reversion lane: range-reversion trades could override the general structure/liquidity-aware stop with their own structural stop, losing the newer liquidity-stop extension logic.
 
 New configurable inputs:
 
-- `InpUseAdaptiveReverseLiquidityTrapGuard`
-- `InpAdaptiveReverseTrapLookbackBars`
-- `InpAdaptiveReverseTrapMaxDistanceATR`
-- `InpAdaptiveReverseTrapBypassQualityScore`
-- `InpAdaptiveReverseTrapUseEqualLevels`
-- `InpAdaptiveReverseTrapUsePreviousDay`
-- `InpAdaptiveReverseTrapUsePreviousWeek`
+- `InpRangeReversionUseLiquidityStopExtension`
 
-`AdaptiveReverseLiquidityTrapGuardActive()` now checks for nearby forward liquidity in the reversed trade direction. Lower-quality adaptive reversals are blocked when equal highs/lows or previous day/week liquidity are within the configured ATR distance; elite-quality reversals can still bypass the trap guard.
+When enabled, range-reversion structural stops can be extended through `StructureStopDistance()` so last sweeps, equal highs/lows, previous-period liquidity, and liquidity-pocket stop shifts can push the stop behind the nearest relevant liquidity. Risk-based sizing still uses the final stop distance.
 
 The protected-aggression generator now enables this with:
 
-- `InpUseAdaptiveReverseLiquidityTrapGuard=true`
-- `InpAdaptiveReverseTrapLookbackBars=24`
-- `InpAdaptiveReverseTrapMaxDistanceATR=0.80`
-- `InpAdaptiveReverseTrapBypassQualityScore=16`
-- `InpAdaptiveReverseTrapUseEqualLevels=true`
-- `InpAdaptiveReverseTrapUsePreviousDay=true`
-- `InpAdaptiveReverseTrapUsePreviousWeek=false`
+- `InpRangeReversionUseLiquidityStopExtension=true`
 
 ## Why This Matters
 
-Adaptive reverse is useful only when the flip has real room to move. Gold often snaps into nearby liquidity and mean-reverts; this guard avoids low-quality flips directly into that trap, while preserving high-quality reversals that have enough confluence to justify the risk.
+The objective explicitly calls out pure ATR stops sitting inside liquidity pools. Range reversion is one of the lanes most exposed to that problem because it deliberately trades around sweeps, wicks, and mean-reversion zones. This change keeps the range-reversion stop structural while allowing the broader liquidity map to move it out of danger.
 
 The change is default-off in the base optimization profile and enabled in the protected-aggression generator. It is not martingale, grid, averaging down, or recovery trading.
 
@@ -90,6 +78,7 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 - protected runner exit patience
 - protected-aggression breakout/continuation lane
 - range-reversion lane with structural stop and mean target
+- range-reversion liquidity stop extension
 
 ## Quiet Validation Results
 
@@ -109,15 +98,15 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `7DAE7D48C45CFFC38E8DB39F95DBE4C7A6D91B4D8FE4E45682A9789F9958A3EC`
-- `Professional_XAUUSD_EA.mq5`: `7DAE7D48C45CFFC38E8DB39F95DBE4C7A6D91B4D8FE4E45682A9789F9958A3EC`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `7DAE7D48C45CFFC38E8DB39F95DBE4C7A6D91B4D8FE4E45682A9789F9958A3EC`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `0634C16E7FCA52C532B8C926A3C9F86FC6DDC143A1EA195852D7331B10286102`
-- `outputs\xauusd_micro_validation_package.zip`: `2E895BB3D109435D326B40A41874E31FD23B4A1704B4727F329EF15C25561EB5`
-- `work\build_price_action_strategy_batch.ps1`: `DD691B8C520A99A7D2B8EB5D6AD4AC740E27541863CF43DC671C51C18099B7B1`
-- `work\test_price_action_strategy_modules.ps1`: `22A4FF6D10956A6D5527091C53C62FEB3328C8BC9C2640D984EE598A571E4A16`
-- `work\test_price_action_strategy_batch.ps1`: `90FBA50FF945076146619DE9E4E6536B06E8D16B96625883E44E0C8E076D0983`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `E4A908CC7518F1A2CBE40B372D6D6496E8527214782653BD2FAE5AE243674166`
+- `outputs\Professional_XAUUSD_EA.mq5`: `1A54C0DB6C88210B89BA09774422CA02ACC71C44565DD3A940AD5F8C9BE942A3`
+- `Professional_XAUUSD_EA.mq5`: `1A54C0DB6C88210B89BA09774422CA02ACC71C44565DD3A940AD5F8C9BE942A3`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `1A54C0DB6C88210B89BA09774422CA02ACC71C44565DD3A940AD5F8C9BE942A3`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `C8CD591F002BDE21C31FAA79C48542E866727A18DA86DB42460E23DD5BC964E9`
+- `outputs\xauusd_micro_validation_package.zip`: `3594E8234B306E1DD15370A20B7E1BCF5FE680056F9CB985D1B346BE19D12C62`
+- `work\build_price_action_strategy_batch.ps1`: `9A9C5B7FB0D2175DCA2FEC2EEB1060D7A99152238ACC0EB6506793F09CCDF57E`
+- `work\test_price_action_strategy_modules.ps1`: `301A09F0F6CBD40B52A29D2282D3B2822AA5534F999CF9CB8E20E8ADA6010062`
+- `work\test_price_action_strategy_batch.ps1`: `A003B834FCF0E0B5DECA104476E5D2FA7D09862A5CFE5F79DC38751BFE69EB37`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `0A2E79557BB72BCDB0BB5838CA69E2DCB6629276AA19758815D021FEB98C5286`
 
 ## Background-Safety Note
 
