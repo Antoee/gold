@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-08 02:45:00 -05:00
+Updated: 2026-07-08 03:05:00 -05:00
 
 ## Current State
 
@@ -11,35 +11,31 @@ Updated: 2026-07-08 02:45:00 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **power trend continuation lane**.
+Added **compact setup-lane tags for reliable performance scaling and reports**.
 
-This pass attacks the low-return problem directly by adding a higher-upside continuation setup that is separate from the normal breakout lane. It only activates when breakout-continuation quality is already present, ADX is strong, fresh execution/momentum exists, price is aligned with fast trend, and optional liquid-session / house-money guards allow it.
+The prior power-trend pass created a new high-upside continuation lane, but the EA still depended on long order comments like `Power trend continuation...`, `Breakout continuation...`, and `Range reversion...` to identify setup lanes later. Broker comment limits can truncate those long strings, which can make lane-specific spacing, setup-lane performance risk scaling, and report analysis unreliable.
 
-New configurable inputs:
+This pass front-loads compact lane tags into the actual trade comment:
 
-- `InpUsePowerTrendContinuation`
-- `InpPowerTrendContinuationMinScore`
-- `InpPowerTrendContinuationMinADX`
-- `InpPowerTrendContinuationRequireLiquidSession`
-- `InpPowerTrendContinuationRequireHouseMoney`
-- `InpPowerTrendContinuationStandaloneEntry`
-- `InpPowerTrendContinuationStandaloneMinScore`
-- `InpPowerTrendContinuationEntryScoreDiscount`
-- `InpPowerTrendContinuationRiskMultiplier`
-- `InpPowerTrendContinuationTPMultiplier`
+- `PTC;` for power trend continuation
+- `BCQ;` for breakout continuation quality
+- `RRO;` for range reversion opportunity
+- `PXEA;` for generic entries
 
-When enabled, the lane can:
+The full verbose reason is still kept in the EA logger, while the broker order comment now starts with a short durable lane tag through `CompactTradeComment(signal)`.
 
-- add a distinct power-trend confirmation,
-- allow standalone high-conviction continuation entries,
-- relax entry score by a configurable amount,
-- expand take-profit distance,
-- increase risk only for this lane and only when guards allow it,
-- log `Power trend continuation` in the trade reason for later report analysis.
+## Why This Matters
+
+This is not cosmetic. It makes the previous profit-focused logic measurable and controllable:
+
+- power-trend trades can now be sampled separately by setup-lane performance scaling,
+- flat-month probe lane spacing is less likely to miss recent same-lane entries,
+- MT5 exports can identify which lane actually produced or lost money,
+- future optimization can promote profitable lanes and throttle weak lanes with stronger evidence.
 
 ## Protected-Aggression Settings
 
-`protected_aggression_breakout` now enables:
+`protected_aggression_breakout` still enables the prior power-trend continuation pass:
 
 - `InpUsePowerTrendContinuation=true`
 - `InpPowerTrendContinuationMinScore=10`
@@ -64,6 +60,7 @@ This complements the existing work already in the EA:
 - liquid-session catch-up risk guard
 - breakout-continuation standalone entry
 - breakout-continuation follow-through close gate
+- power trend continuation lane
 - adaptive-reverse whipsaw guard
 - adaptive-reverse loss cooldown
 - setup-lane performance risk scaling
@@ -91,15 +88,16 @@ This complements the existing work already in the EA:
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `C263BCBB6EC60478C35903FA5DF7B3956F118A378DDFCD484883569FE830E022`
-- `Professional_XAUUSD_EA.mq5`: `C263BCBB6EC60478C35903FA5DF7B3956F118A378DDFCD484883569FE830E022`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `C263BCBB6EC60478C35903FA5DF7B3956F118A378DDFCD484883569FE830E022`
+- `outputs\Professional_XAUUSD_EA.mq5`: `88B94AB9FE46BAFAC382D9B1E5DD86D79F081695A87EF0DE7874E5D42F20C810`
+- `Professional_XAUUSD_EA.mq5`: `88B94AB9FE46BAFAC382D9B1E5DD86D79F081695A87EF0DE7874E5D42F20C810`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `88B94AB9FE46BAFAC382D9B1E5DD86D79F081695A87EF0DE7874E5D42F20C810`
 - `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `69717CE6F0C3D0C445D405CC878C943DF68AE1955855001AA433A07B4F3EEF6E`
-- `outputs\xauusd_micro_validation_package.zip`: `A3427BC15FF74FCCFCC2D04E1C2E229D457F5E2CCC1D56C2F4C1C79291500857`
+- `outputs\xauusd_micro_validation_package.zip`: `73EDAF2C705111264A4996D02776A35B21AC0159F3203D264397411758B3E850`
 - `work\build_price_action_strategy_batch.ps1`: `B163753C820E48798FA7843A158CA83652B549357C74668AA459EA9179958D52`
-- `work\test_price_action_strategy_modules.ps1`: `579C747031482CF5CCE7923F877313FDD4B5DC2FA58F314F02D832A56EE29E36`
+- `work\test_price_action_strategy_modules.ps1`: `58C8D54E0AD66EC95BC789E88339F20BB54A358288DAED830C91B77D4817005E`
 - `work\test_price_action_strategy_batch.ps1`: `49A8C232D012B6A1E70608D9F7CE851D5683FAA33F3B5D07742A17909DAF5B23`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `96C5774773915212B7BB11D88F56CB05E4E303C9355989CDE591E7964D3ECE0C`
+- `work\test_open_risk_exposure_guard.ps1`: `747C4FE21567AB1E7630EC8B357088AFEA83D64AE9F934D9613802AFA8471E18`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `3D35B54058840241C6D5BD3A062F366C90D59152A722837EA08079B2333473E9`
 
 ## Background-Safety Note
 
