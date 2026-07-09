@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-09 00:25:16 -05:00
+Updated: 2026-07-09 00:34:46 -05:00
 
 ## Current State
 
@@ -11,79 +11,47 @@ Updated: 2026-07-09 00:25:16 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **Session Impulse Lane (`SIL`)**, with flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
+Added **Session Impulse Failure Exit**, with Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
 
-The EA still needs more opportunity capture. This pass adds a dedicated liquid-session impulse entry lane for gold so the protected-aggression profile can trade qualified London/New York impulse moves instead of waiting only for the heavier breakout-continuation or power-trend paths.
+The previous pass added a new liquid-session impulse entry lane to increase opportunity capture. This pass adds a lane-specific failure exit so those extra trades do not sit around when the impulse thesis fails quickly.
 
 New configurable inputs:
 
-- `InpUseSessionImpulseLane`
-- `InpSessionImpulseMinScore`
-- `InpSessionImpulseMinADX`
-- `InpSessionImpulseRequireLiquidSession`
-- `InpSessionImpulseRequireSessionBreak`
-- `InpSessionImpulseRequireExecution`
-- `InpSessionImpulseRequireOrderFlow`
-- `InpSessionImpulseStandaloneEntry`
-- `InpSessionImpulseStandaloneMinScore`
-- `InpSessionImpulseEntryScoreDiscount`
-- `InpSessionImpulseRiskMultiplier`
-- `InpSessionImpulseTPMultiplier`
-- `InpWeightSessionImpulseLane`
+- `InpUseSessionImpulseFailureExit`
+- `InpSessionImpulseFailureBars`
+- `InpSessionImpulseFailureMinMFER`
+- `InpSessionImpulseFailureMaxCurrentR`
+- `InpSessionImpulseFailureRequireOppositeCandle`
+- `InpSessionImpulseFailureOppositeRangeATR`
+- `InpSessionImpulseFailureOppositeBodyPercent`
 
-`SessionImpulseLaneQuality()` scores:
+`SessionImpulseFailureExitHit()` only applies to positions whose entry comment contains `SIL;`. It exits when:
 
-- opening-range breakout
-- session-level break/sweep
-- range expansion
-- Donchian breakout
-- OHLC impulse candle
-- displacement candle
-- momentum candle
-- tick pressure
-- tick-speed impulse
-- VWAP pullback
-- cumulative-delta proxy
-- tick microstructure
-- VWAP confluence
-- daily-open and previous-day-range context
-- regime and ADX strengthening
+- the trade has been open for at least the configured number of bars
+- maximum favorable excursion stayed below the configured MFE threshold
+- current R is at or below the configured failure threshold
+- optional opposite-candle confirmation passes when enabled
 
-When active, `SIL` can:
+The protected-aggression generator now enables this guard with:
 
-- add weighted confirmation through `InpWeightSessionImpulseLane`
-- force a standalone entry when the session-impulse score is strong enough
-- slightly reduce the active entry score requirement
-- receive its own risk multiplier
-- receive its own take-profit multiplier
-- use compact trade history tag `SIL;`
-- participate in setup-lane performance risk scaling, so weak `SIL` history can throttle risk and strong `SIL` history can earn more risk within caps
-
-The protected-aggression generator now enables this lane with:
-
-- `InpUseSessionImpulseLane=true`
-- `InpSessionImpulseMinScore=7`
-- `InpSessionImpulseMinADX=21.0`
-- `InpSessionImpulseRequireLiquidSession=true`
-- `InpSessionImpulseRequireSessionBreak=true`
-- `InpSessionImpulseRequireExecution=true`
-- `InpSessionImpulseRequireOrderFlow=false`
-- `InpSessionImpulseStandaloneEntry=true`
-- `InpSessionImpulseStandaloneMinScore=8`
-- `InpSessionImpulseEntryScoreDiscount=1`
-- `InpSessionImpulseRiskMultiplier=1.20`
-- `InpSessionImpulseTPMultiplier=1.25`
-- `InpWeightSessionImpulseLane=3`
+- `InpUseSessionImpulseFailureExit=true`
+- `InpSessionImpulseFailureBars=3`
+- `InpSessionImpulseFailureMinMFER=0.25`
+- `InpSessionImpulseFailureMaxCurrentR=-0.05`
+- `InpSessionImpulseFailureRequireOppositeCandle=false`
+- `InpSessionImpulseFailureOppositeRangeATR=0.45`
+- `InpSessionImpulseFailureOppositeBodyPercent=40.0`
 
 ## Why This Matters
 
-This is aimed directly at the inactivity/opportunity-cost problem behind the weak `$866` result. It adds a new profit-seeking lane for high-liquidity gold impulse conditions while keeping existing spread, ATR, session, exposure, drawdown, RR, structure-stop, and setup-performance risk controls in the path.
+This keeps the profit-seeking `SIL` lane from becoming blind overtrading. The bot can take more liquid-session gold impulse opportunities, but failed impulses get cut faster before they become larger losses. That directly supports the current balance we need: more opportunity capture without letting the new trade frequency degrade drawdown.
 
-It is not proof of higher profit yet. It is a strategy-code expansion that must still be compiled and backtested in MT5, then validated out-of-sample and walk-forward.
+It is still not proof of higher profit. This needs MT5 compile/backtest evidence, then out-of-sample and walk-forward validation.
 
 ## Existing Profit-Focused Work Still Present
 
 - session impulse lane: `SIL;`
+- session impulse failure exit
 - flat-month opportunity mode
 - flat-month probe mode
 - flat-month probe lane spacing
@@ -134,15 +102,15 @@ It is not proof of higher profit yet. It is a strategy-code expansion that must 
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `F943F17EA5260662C3CE93C25CBA0FCD22F208040D35724B05DE56B74C192240`
-- `Professional_XAUUSD_EA.mq5`: `F943F17EA5260662C3CE93C25CBA0FCD22F208040D35724B05DE56B74C192240`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `F943F17EA5260662C3CE93C25CBA0FCD22F208040D35724B05DE56B74C192240`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `872D27F28EB39E6EAE733DE8772ED51E1560522018C318741D58FC6DFE7C9D7C`
-- `outputs\xauusd_micro_validation_package.zip`: `6C5922332EACB6D89F96412E36999998BF641A45A8AF4B6DCE9AA6822317545B`
-- `work\build_price_action_strategy_batch.ps1`: `ED5727B895BF3E6AB425D9C2324DFE3CC26C64ED5A536C4FB0616E3EAEC556CF`
-- `work\test_price_action_strategy_modules.ps1`: `2942B4E4A2C52168E0D426FC8585932D564EEA6E9F472B819C136DF3C951A6D5`
-- `work\test_price_action_strategy_batch.ps1`: `ED743543242D6F38BBBD3031B59A499068809C3F9E0A10FA593D0CAFFF6CADDE`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `58F9AD4A913FE6CD6883EC930065166D6D203835087D66373EE44219205C7A9A`
+- `outputs\Professional_XAUUSD_EA.mq5`: `5C8D31EEB76AA9EB3E70351336C99C3D9B49F8CBCF484E1CEA9A328633C58935`
+- `Professional_XAUUSD_EA.mq5`: `5C8D31EEB76AA9EB3E70351336C99C3D9B49F8CBCF484E1CEA9A328633C58935`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `5C8D31EEB76AA9EB3E70351336C99C3D9B49F8CBCF484E1CEA9A328633C58935`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `68E45E2244EE84DC5533D18300D828B563277D80960AB098CDA1DCEB2A8D26D7`
+- `outputs\xauusd_micro_validation_package.zip`: `BC3CCBCC8D8B048AD1892634CCE6066BDB08F4E857AA9CCB2825CD057D7619BB`
+- `work\build_price_action_strategy_batch.ps1`: `7DE1E2A0A556090F9DC545C659A5F7C040C2A628A96BBD6AABA196D18D3F659D`
+- `work\test_price_action_strategy_modules.ps1`: `A29015B78739400771AD8113C0F77E0DF867FBF4FE2AC9901F002053E30A54A1`
+- `work\test_price_action_strategy_batch.ps1`: `FDDB2333627BD2D53F7B6BAF021D7753AD9E31DB19ACB2852C4EBFFAD6F404D3`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `A816AEF89F55F672EF8C25E5253154BA14718C1B9AAF8ED92326431ACFDFA802`
 
 ## Background-Safety Note
 
