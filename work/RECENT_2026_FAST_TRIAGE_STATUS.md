@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-09 01:49:28 -05:00
+Updated: 2026-07-09 01:56:52 -05:00
 
 ## Current State
 
@@ -11,35 +11,31 @@ Updated: 2026-07-09 01:49:28 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **Runner MFE Profit-Lock Patience**, with Session Impulse Quality Risk Ramp, Flat-Month Catch-Up Take-Profit Expansion, Previous-Period Liquidity Stops, Adaptive-Reverse Phase Whipsaw Gate, Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
+Added **Flat-Month Catch-Up Standalone Relaxation**, with Runner MFE Profit-Lock Patience, Session Impulse Quality Risk Ramp, Flat-Month Catch-Up Take-Profit Expansion, Previous-Period Liquidity Stops, Adaptive-Reverse Phase Whipsaw Gate, Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
 
-The previous pass scaled `SIL;` Session Impulse risk by setup quality. This pass targets a separate profit-capture bottleneck: strong protected runners could already get extra patience on the MFE giveback exit, but the MFE profit-lock stop still used a rigid giveback value and could tighten too quickly.
+The previous pass loosened the MFE profit-lock stop for protected runners. This pass targets a flat-month activity bottleneck: catch-up mode could relax the final entry score and RR, but the standalone lane thresholds for breakout continuation, power-trend continuation, and `SIL;` session impulse stayed fixed before that relaxation could help.
 
 New configurable inputs:
 
-- `InpUseRunnerMFEProfitLockPatience`
-- `InpRunnerMFEProfitLockGivebackMultiplier`
-- `InpUsePowerTrendMFEProfitLockPatience`
-- `InpPowerTrendMFEProfitLockGivebackMultiplier`
-- `InpUseSessionImpulseMFEProfitLockPatience`
-- `InpSessionImpulseMFEProfitLockGivebackMultiplier`
+- `InpUseFlatMonthCatchUpStandaloneRelaxation`
+- `InpFlatMonthCatchUpStandaloneScoreDiscount`
+- `InpFlatMonthCatchUpStandaloneMinProgress`
+- `InpFlatMonthCatchUpStandaloneRequireLiquidSession`
 
-`EffectiveMFEProfitLockGivebackR()` now accepts position context and can stretch the profit-lock giveback when the generic runner, `PTC;`, or `SIL;` patience gates are satisfied.
+`ActiveFlatMonthCatchUpStandaloneMinScore()` now lowers standalone lane thresholds only when flat-month catch-up progress is active enough, with an optional liquid-session requirement. A new reason tag, `Flat month catch-up standalone relaxation;`, is added when the relaxation admits a standalone lane.
 
 The protected-aggression generator now enables this with:
 
-- `InpUseRunnerMFEProfitLockPatience=true`
-- `InpRunnerMFEProfitLockGivebackMultiplier=1.25`
-- `InpUsePowerTrendMFEProfitLockPatience=true`
-- `InpPowerTrendMFEProfitLockGivebackMultiplier=1.35`
-- `InpUseSessionImpulseMFEProfitLockPatience=true`
-- `InpSessionImpulseMFEProfitLockGivebackMultiplier=1.30`
+- `InpUseFlatMonthCatchUpStandaloneRelaxation=true`
+- `InpFlatMonthCatchUpStandaloneScoreDiscount=1`
+- `InpFlatMonthCatchUpStandaloneMinProgress=0.35`
+- `InpFlatMonthCatchUpStandaloneRequireLiquidSession=true`
 
 ## Why This Matters
 
-The `$866` / 2.5-year result suggests the EA is still not extracting enough from the few trades that do work. Increasing entries or risk alone is dangerous if winners are clipped mechanically. This change lets protected, structurally supported runners keep more room while still moving the stop into profit.
+The `$866` / 2.5-year result suggests the EA is still paying too much opportunity cost. Increasing risk alone is dangerous, so this change focuses on admitting near-miss standalone lanes only during confirmed flat-month catch-up pressure, while keeping the same loss, spread, exposure, and session controls.
 
-The change is default-off in the base optimization profile and enabled in the protected-aggression generator. It keeps the same global exposure, daily/weekly/monthly loss, protected floor, spread, and margin controls. It is not martingale, grid, or averaging down.
+The change is default-off in the base optimization profile and enabled in the protected-aggression generator. It is not martingale, grid, averaging down, or recovery trading.
 
 It is still not proof of higher profit. This needs MT5 compile/backtest evidence, then out-of-sample and walk-forward validation.
 
@@ -50,6 +46,7 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 - session impulse failure exit
 - session impulse runner patience
 - runner MFE profit-lock patience
+- flat-month catch-up standalone relaxation
 - protected SIL winner scale-in gate
 - flat-month stale SIL wake-up
 - flat-month opportunity mode
@@ -105,15 +102,15 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `9B19657662C22A9CACA853B7CC961B57263539F58B13553F8EFFF3E34477DE79`
-- `Professional_XAUUSD_EA.mq5`: `9B19657662C22A9CACA853B7CC961B57263539F58B13553F8EFFF3E34477DE79`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `9B19657662C22A9CACA853B7CC961B57263539F58B13553F8EFFF3E34477DE79`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `0A2C4DE50838E48728D76A57C8F13A65A50DA033A7C98B5F32384E72C7589A4F`
-- `outputs\xauusd_micro_validation_package.zip`: `0FF5E473680E426EE5353E4ECD4946F7DC844A22D493E0285A18AA8C0B3DC99C`
-- `work\build_price_action_strategy_batch.ps1`: `3CEB4ADE2BD401A6FF399E278E32E29EDA84E3CEB2F4565B0E886DC9AC938AE2`
-- `work\test_price_action_strategy_modules.ps1`: `889F52693AF8D89E0961E112DAC627BF5C21AB83127AB28E1C0A8F2B70524158`
-- `work\test_price_action_strategy_batch.ps1`: `944DA31A0895D9B337F67FA8D32CE86A511493CB2FC15A5FBBD9403DACF40693`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `1C9DCAD0F3A9A40DDFB6C29D58582084992C5DFC7F163491A1F94D193C7EA4A3`
+- `outputs\Professional_XAUUSD_EA.mq5`: `61B0E4402409A89721679188C2A58DD5C3584A54692E691158F5B15351B5808D`
+- `Professional_XAUUSD_EA.mq5`: `61B0E4402409A89721679188C2A58DD5C3584A54692E691158F5B15351B5808D`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `61B0E4402409A89721679188C2A58DD5C3584A54692E691158F5B15351B5808D`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `F6DD49BF9D614B9724D4E75AF4EF79DB9E430770570B4A965E537E0741CF7970`
+- `outputs\xauusd_micro_validation_package.zip`: `693AA2488BCD92B33609F9659C060B2F91ACD308CA5FF4156D9D55C1F018B67D`
+- `work\build_price_action_strategy_batch.ps1`: `10B79EFD83DE3F7FCDA0F371EFBFBD072E3C470DF6BB6C2E381AF2AB5D4A1CA6`
+- `work\test_price_action_strategy_modules.ps1`: `CDA3AE29C6C20C05D19D29E624C8666354D22BB59C5601BC1FB8AC4C5A79FDE5`
+- `work\test_price_action_strategy_batch.ps1`: `CC8695584166BD70B8F07FA7BC34BAC1D7BB5DEE0CC9AD97F0A46728663DFC1A`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `DE94D10C8B0968BD20290DEEB458211028E1B340F1F1A858F101388AE3CF87C8`
 
 ## Background-Safety Note
 
