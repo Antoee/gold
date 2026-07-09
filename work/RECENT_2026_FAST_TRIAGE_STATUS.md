@@ -1,6 +1,6 @@
 # Recent 2026 Fast Triage Status
 
-Updated: 2026-07-09 02:56:03 -05:00
+Updated: 2026-07-09 03:04:45 -05:00
 
 ## Current State
 
@@ -11,33 +11,41 @@ Updated: 2026-07-09 02:56:03 -05:00
 
 ## Latest Strategy-Code Change
 
-Added **Liquidity Cluster Stop Extension**, with Adaptive-Reverse Follow-Through Close Filter, Flat-Month Probe Quality Cap Bypass, Flat-Month Probe Failure Exit, Flat-Month Probe Quality Risk Ramp, Range-Reversion Liquidity Stop Extension, Adaptive-Reverse Liquidity-Trap Guard, Flat-Month Catch-Up Standalone Relaxation, Runner MFE Profit-Lock Patience, Session Impulse Quality Risk Ramp, Flat-Month Catch-Up Take-Profit Expansion, Previous-Period Liquidity Stops, Adaptive-Reverse Phase Whipsaw Gate, Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
+Added **Flat-Month Missed-Move Wake-Up**, with Liquidity Cluster Stop Extension, Adaptive-Reverse Follow-Through Close Filter, Flat-Month Probe Quality Cap Bypass, Flat-Month Probe Failure Exit, Flat-Month Probe Quality Risk Ramp, Range-Reversion Liquidity Stop Extension, Adaptive-Reverse Liquidity-Trap Guard, Flat-Month Catch-Up Standalone Relaxation, Runner MFE Profit-Lock Patience, Session Impulse Quality Risk Ramp, Flat-Month Catch-Up Take-Profit Expansion, Previous-Period Liquidity Stops, Adaptive-Reverse Phase Whipsaw Gate, Flat-Month Stale SIL Wake-Up, Protected SIL Winner Scale-In Gate, Session Impulse Runner Patience, Session Impulse Failure Exit, Session Impulse Lane (`SIL`), flat-month late catch-up pressure, winner scale-in price-action gate, adaptive-reverse post-stop lockout, liquidity-pocket stop shift, flat-month elite fallback, and PTC quality-scaled risk ramp still present.
 
-The previous pass made adaptive reverse require a real follow-through close beyond recent structure. This pass targets the ATR-only stop problem: when several nearby highs/lows form a liquidity cluster, a stop placed just behind one level can still sit inside the broader resting-liquidity zone.
+The previous pass improved stop placement around clustered liquidity. This pass returns to the flat-month efficiency bottleneck: if XAUUSD moves materially while the EA has been inactive, the bot should be able to wake up a qualified momentum/continuation lane instead of waiting for the normal confirmation stack forever.
 
 New configurable inputs:
 
-- `InpUseLiquidityClusterStopExtension`
-- `InpLiquidityClusterMinTouches`
-- `InpLiquidityClusterProximityATR`
-- `InpLiquidityClusterProximityPoints`
-- `InpLiquidityClusterExtraBufferATR`
-- `InpLiquidityClusterExtraBufferPoints`
+- `InpUseFlatMonthMissedMoveWakeUp`
+- `InpFlatMonthMissedMoveMinHours`
+- `InpFlatMonthMissedMoveMaxMonthlyEntries`
+- `InpFlatMonthMissedMoveMinATR`
+- `InpFlatMonthMissedMoveScoreDiscount`
+- `InpFlatMonthMissedMoveRRDiscount`
+- `InpFlatMonthMissedMoveRequireLiquidSession`
+- `InpFlatMonthMissedMoveAllowBreakout`
+- `InpFlatMonthMissedMoveAllowSessionImpulse`
+- `InpFlatMonthMissedMoveAllowPowerTrend`
 
-`LiquidityClusterTouchesNear()` counts nearby highs/lows around a candidate stop/liquidity level. `LiquidityClusterAdjustedBuffer()` adds an extra ATR/points buffer only when the cluster has enough touches. The extension is applied to last-sweep, equal-level, and previous-period liquidity stops inside `StructureStopDistance()`.
+`FlatMonthMissedMoveWakeUpAllowed()` compares the current close to the last entry time, or the current month open when there is no recent entry, and requires a configurable ATR-sized move plus a minimum idle time. When active, it can reduce required confirmations, score, and RR only for allowed breakout/session-impulse/power-trend lanes.
 
 The protected-aggression generator now enables this with:
 
-- `InpUseLiquidityClusterStopExtension=true`
-- `InpLiquidityClusterMinTouches=3`
-- `InpLiquidityClusterProximityATR=0.22`
-- `InpLiquidityClusterProximityPoints=60.0`
-- `InpLiquidityClusterExtraBufferATR=0.12`
-- `InpLiquidityClusterExtraBufferPoints=35.0`
+- `InpUseFlatMonthMissedMoveWakeUp=true`
+- `InpFlatMonthMissedMoveMinHours=18`
+- `InpFlatMonthMissedMoveMaxMonthlyEntries=10`
+- `InpFlatMonthMissedMoveMinATR=1.10`
+- `InpFlatMonthMissedMoveScoreDiscount=1`
+- `InpFlatMonthMissedMoveRRDiscount=0.05`
+- `InpFlatMonthMissedMoveRequireLiquidSession=true`
+- `InpFlatMonthMissedMoveAllowBreakout=true`
+- `InpFlatMonthMissedMoveAllowSessionImpulse=true`
+- `InpFlatMonthMissedMoveAllowPowerTrend=true`
 
 ## Why This Matters
 
-The `$866` / 2.5-year result implies the EA still leaves too much capital idle, but better entries also need stops that survive realistic liquidity behavior. This pass moves stop placement further beyond clustered liquidity instead of relying only on a single ATR multiple or a single nearby swing.
+The `$866` / 2.5-year result implies the EA still leaves too much capital idle. This pass adds an activity trigger based on actual market movement during inactivity, so flat-month relaxation is tied to a missed XAUUSD move rather than just time passing.
 
 The change is default-off in the base optimization profile and enabled in the protected-aggression generator. It is not martingale, grid, averaging down, or recovery trading.
 
@@ -58,6 +66,7 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 - flat-month probe quality risk ramp
 - flat-month probe failure exit
 - flat-month probe quality cap bypass
+- flat-month missed-move wake-up
 - flat-month probe lane spacing
 - flat-month stale-entry nudge
 - flat-month elite fallback
@@ -113,15 +122,15 @@ It is still not proof of higher profit. This needs MT5 compile/backtest evidence
 
 ## Latest Evidence
 
-- `outputs\Professional_XAUUSD_EA.mq5`: `0CB05C1EB246091F14731D11AFDDE483157CA5AB9128561743A463B5BCEDEAC4`
-- `Professional_XAUUSD_EA.mq5`: `0CB05C1EB246091F14731D11AFDDE483157CA5AB9128561743A463B5BCEDEAC4`
-- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `0CB05C1EB246091F14731D11AFDDE483157CA5AB9128561743A463B5BCEDEAC4`
-- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `B2725246FAC50589019BADD7F0FD1C2F21FDCC50F11373179132489B2D26B107`
-- `outputs\xauusd_micro_validation_package.zip`: `1988C90A28043457EFF0FF60162A64DA2EFCAE027C869A1B34AEC7C4C5EA5D6A`
-- `work\build_price_action_strategy_batch.ps1`: `C4868E4CFCD6A9A2AF4CA57CA2BF54516265E2D5BAE4EFA063CB8EEBC61C1647`
-- `work\test_price_action_strategy_modules.ps1`: `64FF81FB3238AF10C69AE86C2CD658B4F0450AC56FCDFEC13142D46981F6CBA1`
-- `work\test_price_action_strategy_batch.ps1`: `8327236F48FFD23EEB4418A1732FCA9FB1F96EC3FBAC1F3C7A82F6A6D635AE4E`
-- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `D939FC0BDB9F18F1BE935E3B6ABD8C2925F07AD058BAB99D8ABAF17EC396894D`
+- `outputs\Professional_XAUUSD_EA.mq5`: `E99AED821B396348AD3E66B953AAC5D8B400DBACEC06D736105739715097B54A`
+- `Professional_XAUUSD_EA.mq5`: `E99AED821B396348AD3E66B953AAC5D8B400DBACEC06D736105739715097B54A`
+- `outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5`: `E99AED821B396348AD3E66B953AAC5D8B400DBACEC06D736105739715097B54A`
+- `outputs\ROBUST_BOS_SWEEP_PROFILE.set`: `B148ED335D7234CD120E76BD33B545037F0FDB8F64214BCBCCC77F164ED5CC7E`
+- `outputs\xauusd_micro_validation_package.zip`: `C911F67D931E4DAD9619D0D1BCEF7EE82CFFBB1F809C3623010ECB16DF95539D`
+- `work\build_price_action_strategy_batch.ps1`: `0149B22B31465587BFA11553E50DE2732BF6E9C5D42E9D9EE030601C7AB52444`
+- `work\test_price_action_strategy_modules.ps1`: `7FD405BB4CB59537AB9457411F9FDE291F0C15E6EE00D04A0222023111426929`
+- `work\test_price_action_strategy_batch.ps1`: `37CB6F9F8554A294F850B5BDE0A3FA147BD47033BDF76C72FFAC798097612834`
+- `outputs\OFFLINE_VALIDATION_REFRESH.csv`: `6658AA0C55464D5F6F3083206FFA482CDC4CFEACD18CD1D4CA5F87B37C3E1DD0`
 
 ## Background-Safety Note
 
