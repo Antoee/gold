@@ -1,0 +1,18 @@
+Candidate: CANDIDATE_LIQUIDITY_STOP_CONFLICT_MARCH_MAY280_MAYCAP17_PROFILE
+Created: 2026-07-10
+SourceHash: DF4C3FEB98BB629F5F9348EB71CCBC44A24C8C36F693CE1E1E78012FD92C133A
+ProfileHash: 041E7A3700FE4D690C62F46F5E904297F2FF8FB9F25EA9A92CAECD57DE09D76B
+Base: CANDIDATE_LIQUIDITY_STOP_CONFLICT_MARCH_MAY275_MAYCAP17_PROFILE
+Key changes:
+- InpMayRiskMultiplier=2.80
+- InpUseMonthSpreadCaps=true
+- InpMayMaxSpreadPoints=17.0
+- March-only liquidity stop conflict guard retained
+Validation:
+- May-only fine: TotalNet 3176.82, WorstWindow 214.91, LosingWindows 0
+- Broad: TotalNet 5029.72, Continuous 1277.57, YTD 887.18, Full2025 214.30, Full2024 1277.57, WorstWindow 0, LosingWindows 0
+- Monthly: TotalNet 5555.87, WorstWindow 0, LosingWindows 0
+Rejected nearby risks:
+- May 2.81 introduced a losing May window (-126.17)
+- May 2.85+ and 3.00+ also introduced losing May windows
+Decision: Promoted over May2.75 cap17 because it improves monthly and broad total while preserving zero losing validation windows.
