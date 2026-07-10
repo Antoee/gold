@@ -1,0 +1,33 @@
+Local tested EA source state for 2026-07-10 flat-month momentum validation
+
+Canonical local file:
+outputs/Professional_XAUUSD_EA.mq5
+
+Synchronized local copies:
+Professional_XAUUSD_EA.mq5
+outputs/external_mt5_validation_package/source/Professional_XAUUSD_EA.mq5
+
+SHA256:
+755CACB814A54711ECD81427B94815022469430008A0FD25FED9D42D2F61FC9C
+
+Compile status:
+0 errors, 0 warnings
+
+Compile logs:
+outputs/RESTORE_FULL_AFTER_SESSION_IMPULSE_REALTICK_COMPILE.log
+outputs/RESTORE_FULL_AFTER_SESSION_IMPULSE_BROAD_REALTICK_COMPILE.log
+
+Key source changes in this state:
+- Added default-off InpAllowFlatMonthMomentumOutsideMonthFilter.
+- Allowed power trend continuation, session impulse, and high-efficiency trend lanes to optionally bypass the month filter.
+- Reused FlatMonthProbeMonthFilterAllows() for flat-month momentum bypass gating.
+- Added configurable session impulse candle anatomy thresholds:
+  - InpSessionImpulseMinBodyPercent
+  - InpSessionImpulseMinRangeATR
+  - InpSessionImpulseMinCloseLocation
+- Fixed continuation-lane risk multiplier clamps so values below 1.0 are honored:
+  - PowerTrendContinuationRiskMultiplier()
+  - SessionImpulseRiskMultiplier()
+
+Validation decision:
+The code fix is valid, but the tested flat-month momentum profiles are not promoted because real-tick broad validation still produced losing windows.
