@@ -1,0 +1,20 @@
+# EA Candidate State - March Conflict May 2.35
+
+Date: 2026-07-10
+
+Canonical local full candidate profile:
+
+- outputs/CANDIDATE_LIQUIDITY_STOP_CONFLICT_MARCH_MAY235_PROFILE.set
+- SHA256: F9F4ACA0FAEC69C08F6125CC15840CD402D6863E96BE1703C14F114A29680FFA
+
+This profile is derived from outputs/CANDIDATE_LIQUIDITY_STOP_CONFLICT_MARCH_PROFILE.set with InpMayRiskMultiplier changed from 2.25 to 2.35.
+
+GitHub also contains:
+
+- outputs/CANDIDATE_LIQUIDITY_STOP_CONFLICT_MARCH_MAY235_PROFILE_OVERRIDES.set
+- outputs/LOCAL_MT5_LIQUIDITY_STOP_CONFLICT_MAY_RISK_LOG_SUMMARY.csv
+- outputs/LOCAL_MT5_LIQUIDITY_STOP_CONFLICT_MAY_RISK_MONTHLY_LOG_SUMMARY.csv
+- outputs/LOCAL_MT5_LIQUIDITY_CONFLICT_HOUSE_MONEY_LOG_SUMMARY.csv
+- research/2026-07-10-march-conflict-may235-profile.md
+
+Validation decision: promote May 2.35 over May 2.25 because monthly real-tick total improved from 3479.95 to 3598.02 with zero losing monthly windows; reject May 2.75 because it introduced one losing month (-264.40).
