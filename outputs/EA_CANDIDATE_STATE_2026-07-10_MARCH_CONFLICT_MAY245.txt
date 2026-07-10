@@ -1,0 +1,12 @@
+# EA Candidate State - March Conflict May 2.45
+
+Date: 2026-07-10
+
+Canonical local full candidate profile:
+
+- outputs/CANDIDATE_LIQUIDITY_STOP_CONFLICT_MARCH_MAY245_PROFILE.set
+- SHA256: 6EEF78FF13C9D5B937480ED603C17E6D23BC31B92088D356ABE45A55F6C1AE70
+
+This profile is derived from outputs/CANDIDATE_LIQUIDITY_STOP_CONFLICT_MARCH_PROFILE.set with InpMayRiskMultiplier changed from 2.25 to 2.45.
+
+Decision: promote May 2.45 after fine real-tick validation. It produced 3657.42 total on the 26-month sweep with zero losing months and 4967.32 total on broad validation with zero losing broad windows. May 2.40 had slightly better broad total (4973.46) but lower monthly total (3640.56).
