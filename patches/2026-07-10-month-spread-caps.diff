@@ -1,0 +1,70 @@
+diff --git a/outputs/Professional_XAUUSD_EA.mq5 b/outputs/Professional_XAUUSD_EA.mq5
+--- a/outputs/Professional_XAUUSD_EA.mq5
++++ b/outputs/Professional_XAUUSD_EA.mq5
+@@
+ input double          InpMaxSpreadPoints           = 350;
+ input double          InpMaxSpreadATRPercent       = 18.0;
++input bool            InpUseMonthSpreadCaps        = false;
++input double          InpJanuaryMaxSpreadPoints    = 0.0;
++input double          InpFebruaryMaxSpreadPoints   = 0.0;
++input double          InpMarchMaxSpreadPoints      = 0.0;
++input double          InpAprilMaxSpreadPoints      = 0.0;
++input double          InpMayMaxSpreadPoints        = 0.0;
++input double          InpJuneMaxSpreadPoints       = 0.0;
++input double          InpJulyMaxSpreadPoints       = 0.0;
++input double          InpAugustMaxSpreadPoints     = 0.0;
++input double          InpSeptemberMaxSpreadPoints  = 0.0;
++input double          InpOctoberMaxSpreadPoints    = 0.0;
++input double          InpNovemberMaxSpreadPoints   = 0.0;
++input double          InpDecemberMaxSpreadPoints   = 0.0;
+ input bool            InpUseSpreadRegimeGuard      = false;
+@@
+    double MonthRiskMultiplier()
+    {
+       if(!InpUseMonthRiskMultipliers)
+          return 1.0;
+@@
+       }
+       return MathMax(0.0, multiplier);
+    }
++
++   double EffectiveMaxSpreadPoints()
++   {
++      double maxSpread = MathMax(0.0, InpMaxSpreadPoints);
++      if(!InpUseMonthSpreadCaps)
++         return maxSpread;
++
++      MqlDateTime dt;
++      TimeToStruct(TimeCurrent(), dt);
++      double monthCap = 0.0;
++      switch(dt.mon)
++      {
++         case 1:  monthCap = InpJanuaryMaxSpreadPoints; break;
++         case 2:  monthCap = InpFebruaryMaxSpreadPoints; break;
++         case 3:  monthCap = InpMarchMaxSpreadPoints; break;
++         case 4:  monthCap = InpAprilMaxSpreadPoints; break;
++         case 5:  monthCap = InpMayMaxSpreadPoints; break;
++         case 6:  monthCap = InpJuneMaxSpreadPoints; break;
++         case 7:  monthCap = InpJulyMaxSpreadPoints; break;
++         case 8:  monthCap = InpAugustMaxSpreadPoints; break;
++         case 9:  monthCap = InpSeptemberMaxSpreadPoints; break;
++         case 10: monthCap = InpOctoberMaxSpreadPoints; break;
++         case 11: monthCap = InpNovemberMaxSpreadPoints; break;
++         case 12: monthCap = InpDecemberMaxSpreadPoints; break;
++      }
++
++      monthCap = MathMax(0.0, monthCap);
++      if(monthCap <= 0.0)
++         return maxSpread;
++      if(maxSpread <= 0.0)
++         return monthCap;
++      return MathMin(maxSpread, monthCap);
++   }
+ 
+ public:
+@@
+-      if(CLogger::SpreadPoints() > InpMaxSpreadPoints)
++      if(CLogger::SpreadPoints() > EffectiveMaxSpreadPoints())
+       {
+          reason = "spread";
+          return false;
