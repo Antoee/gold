@@ -1,0 +1,5 @@
+"Profile","Parsed","Expected","TotalNet","Continuous","YTD","Full2025","Full2024","WeakSum","WorstWindow","LosingWindows"
+"may235_baseline","7","7","4946.52","1277.57","887.18","214.3","1277.57","","0","0"
+"closed_profit_tp_soft","7","7","3616.98","1277.57","222.41","214.3","1277.57","","0","0"
+"profit_only_closed_soft","7","7","4281.29","607.72","261.84","220.66","607.72","","0","0"
+"closed_profit_risk_soft","7","7","2276.54","583.88","261.84","225.36","583.88","","0","0"
