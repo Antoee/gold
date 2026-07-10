@@ -1,0 +1,30 @@
+Local tested EA source state for 2026-07-10 liquidity stop conflict March guard
+
+Canonical local file:
+outputs/Professional_XAUUSD_EA.mq5
+
+Synchronized local copies:
+Professional_XAUUSD_EA.mq5
+outputs/external_mt5_validation_package/source/Professional_XAUUSD_EA.mq5
+
+SHA256:
+0BED06AC1A256122FB1FB127978C8BE0FB0CB45EE7D9CFBD15A0AD14A59B75FE
+
+Compile status:
+0 errors, 0 warnings
+
+Compile logs:
+outputs/LIQUIDITY_STOP_CONFLICT_MONTH_FILTER_COMPILE.log
+outputs/RESTORE_FULL_AFTER_LIQUIDITY_STOP_CONFLICT_MARCH_COMPILE.log
+
+Key source changes in this state:
+- Added default-off liquidity stop conflict guard inputs.
+- Added month filter inputs for the liquidity stop conflict guard.
+- Added LiquidityStopConflictGuardBlocks().
+- Wired the guard into OpenSignal after final stop distance calculation and before RR/lot sizing.
+
+Promoted profile:
+outputs/CANDIDATE_LIQUIDITY_STOP_CONFLICT_MARCH_PROFILE.set
+
+Validation decision:
+Promoted as current candidate after real-tick broad and monthly validation improved profit without introducing losing windows.
