@@ -1,0 +1,5 @@
+"Profile","Parsed","Expected","TotalNet","Continuous","YTD","Full2025","Full2024","WeakSum","WorstWindow","LosingWindows"
+"block_base","30","30","943.38","","","","","","-99.26","17"
+"primary_bal","30","30","879.31","","","","","","-98.64","21"
+"block_bal","30","30","630.09","","","","","","-98.64","18"
+"block115_base","30","30","-836.9","","","","","","-114.84","18"
