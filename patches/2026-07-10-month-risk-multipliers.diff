@@ -1,0 +1,59 @@
+*** Begin Patch
+*** Update File: outputs/Professional_XAUUSD_EA.mq5
+@@
+ input group "Risk Management"
+ input double          InpRiskPercent               = 1.60;
+ input double          InpMaxEffectiveRiskPercent   = 0.00;
++input bool            InpUseMonthRiskMultipliers   = false;
++input double          InpJanuaryRiskMultiplier     = 1.00;
++input double          InpFebruaryRiskMultiplier    = 1.00;
++input double          InpMarchRiskMultiplier       = 1.00;
++input double          InpAprilRiskMultiplier       = 1.00;
++input double          InpMayRiskMultiplier         = 1.00;
++input double          InpJuneRiskMultiplier        = 1.00;
++input double          InpJulyRiskMultiplier        = 1.00;
++input double          InpAugustRiskMultiplier      = 1.00;
++input double          InpSeptemberRiskMultiplier   = 1.00;
++input double          InpOctoberRiskMultiplier     = 1.00;
++input double          InpNovemberRiskMultiplier    = 1.00;
++input double          InpDecemberRiskMultiplier    = 1.00;
+ input bool            InpUseStartingEquityProtection = false;
+ input double          InpStartingEquityBufferPercent = 0.00;
+@@
+       riskPercent *= HotStreakRiskMultiplier();
+       riskPercent *= RecentProfitFactorRiskMultiplier();
++      riskPercent *= MonthRiskMultiplier();
+ 
+       if(InpUseProfitOnlyRiskBoost && m_initialEquity > 0.0 && InpMaxProfitBoostMultiplier > 1.0 &&
+@@
+       return MathMax(InpMinReducedRiskPercent, riskPercent);
+    }
++
++   double MonthRiskMultiplier()
++   {
++      if(!InpUseMonthRiskMultipliers)
++         return 1.0;
++
++      MqlDateTime dt;
++      TimeToStruct(TimeCurrent(), dt);
++      double multiplier = 1.0;
++      switch(dt.mon)
++      {
++         case 1:  multiplier = InpJanuaryRiskMultiplier; break;
++         case 2:  multiplier = InpFebruaryRiskMultiplier; break;
++         case 3:  multiplier = InpMarchRiskMultiplier; break;
++         case 4:  multiplier = InpAprilRiskMultiplier; break;
++         case 5:  multiplier = InpMayRiskMultiplier; break;
++         case 6:  multiplier = InpJuneRiskMultiplier; break;
++         case 7:  multiplier = InpJulyRiskMultiplier; break;
++         case 8:  multiplier = InpAugustRiskMultiplier; break;
++         case 9:  multiplier = InpSeptemberRiskMultiplier; break;
++         case 10: multiplier = InpOctoberRiskMultiplier; break;
++         case 11: multiplier = InpNovemberRiskMultiplier; break;
++         case 12: multiplier = InpDecemberRiskMultiplier; break;
++      }
++      return MathMax(0.0, multiplier);
++   }
+ 
+ public:
+*** End Patch
