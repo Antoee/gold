@@ -1,0 +1,5 @@
+"Profile","Parsed","Expected","TotalNet","Continuous","YTD","Full2025","Full2024","WeakSum","WorstWindow","LosingWindows"
+"may275_maycap17","3","3","3128.17","","","","","","260.81","0"
+"may275_maycap16","3","3","2064.06","","","","","","260.81","0"
+"may245_base","3","3","1278.37","","","","","","110.57","0"
+"may275_no_guard","3","3","455.39","","","","","","-264.4","1"
