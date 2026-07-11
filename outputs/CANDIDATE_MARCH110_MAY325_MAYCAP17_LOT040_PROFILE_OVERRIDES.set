@@ -1,0 +1,6 @@
+InpUseMonthRiskMultipliers=true||true||0||0||N
+InpMarchRiskMultiplier=1.10||1.10||0||0||N
+InpMayRiskMultiplier=3.25||3.25||0||0||N
+InpUseMonthSpreadCaps=true||true||0||0||N
+InpMayMaxSpreadPoints=17.0||17.0||0||0||N
+InpMaxPositionLots=0.40||0.40||0||0||N
