@@ -1,0 +1,19 @@
+Candidate: CANDIDATE_MARCH110_MAY325_MAYCAP17_LOT040_QTPMARCH_PROFILE
+Created: 2026-07-11
+SourceHash: 1CF8EE28E39BFE429BA5BA05C76997234E1399A217196562553B8DC5A7D21E9D
+ProfileHash: 3A35F2DA640705FF09C187CF260F8AA07D1713EFDE2C20BD939F8DAB1668BBD5
+Base: CANDIDATE_MARCH110_MAY325_MAYCAP17_LOT040_PROFILE
+Key changes:
+- Enables quality-based take-profit scaling only in March
+- InpQualityTPMinScore=8
+- InpQualityTPFullScore=13
+- InpMinQualityTPMultiplier=0.95
+- InpMaxQualityTPMultiplier=1.30
+- Non-March months retain baseline take-profit behavior
+Validation:
+- Broad: TotalNet 7331.11, Continuous 793.69, YTD 1560.04, Full2025 219.66, Full2024 793.69, WorstWindow 0, LosingWindows 0
+- Monthly: TotalNet 7571.04, Parsed 30/30, WorstWindow 0, LosingWindows 0
+- Current base comparison: Broad TotalNet 6346.38, Monthly TotalNet 7083.94
+Risk note:
+- This improves total net by exploiting a March-specific TP response. It passes the current gates, but it is more curve-fit-prone than broad structural improvements and should get additional walk-forward/OOS scrutiny before live use.
+Decision: Promoted as a higher-profit research candidate, not a final live recommendation.
