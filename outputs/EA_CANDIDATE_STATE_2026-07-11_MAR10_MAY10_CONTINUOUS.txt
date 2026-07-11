@@ -1,0 +1,18 @@
+Candidate: CANDIDATE_MAR10_MAY10_CONTINUOUS_PROFILE
+Created: 2026-07-11
+SourceHash: 1CF8EE28E39BFE429BA5BA05C76997234E1399A217196562553B8DC5A7D21E9D
+ProfileHash: A23EF779166EC996EB05EB3E7DAEC2497FE29853330C86D5663A896C7CA91CDE
+Base: CANDIDATE_LIQUIDITY_STOP_CONFLICT_MARCH_MAY280_MAYCAP17_PROFILE
+Key changes:
+- Enables month/day window filter
+- InpMarchMaxDay=10
+- InpMayMaxDay=10
+Validation:
+- Current-source broad rerun: Continuous 3746.45, YTD 1107.93, Full2025 214.30, Full2024 1409.57, WorstWindow 0, LosingWindows 0
+- Current-source broad rerun artifacts: outputs\MAR10_MAY10_CURRENT_LOG_SUMMARY.csv and outputs\MAR10_MAY10_CURRENT_LOG_RESULTS.csv
+- Monthly shortlist: TotalNet 3358.64 across 30 monthly windows, WorstWindow 0, LosingWindows 0
+- Previous current best comparison: Continuous 793.69, YTD 1560.04, Full2025 219.66, Full2024 793.69, WorstWindow 0, LosingWindows 0
+Risk note:
+- This is a much stronger continuous-equity candidate, but it relies on calendar/day filtering in March and May.
+- Treat it as a promoted research candidate, not a final live recommendation, until additional walk-forward and post-July-2026 OOS data are available.
+Decision: Promoted over the QTP March/May340 profile for continuous full-period profit while preserving zero losing validation windows.
