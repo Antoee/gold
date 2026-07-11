@@ -1,0 +1,115 @@
+*** Begin Patch
+*** Update File: Professional_XAUUSD_EA.mq5
+@@
+ input bool            InpUseMarginGuard            = false;
+ input double          InpMinMarginLevelPercent     = 300.0;
+ input double          InpMaxTradeMarginFreePercent = 20.0;
++input bool            InpUseMarginAwareLotCap      = false;
+ input bool            InpUseMarginPressureRiskScaling = false;
+ input double          InpMarginPressureStartLevelPercent = 600.0;
+ input double          InpMinMarginPressureRiskMultiplier = 0.50;
+@@
+ double TradeMarginRiskMultiplier(const ENUM_TRADE_BIAS bias,
+                                  const double lots,
+                                  const double entryPrice)
+@@
+    return 1.0 - progress * (1.0 - minMultiplier);
+ }
+ 
++double MarginAwareCappedLots(const ENUM_TRADE_BIAS bias,
++                             const double lots,
++                             const double entryPrice)
++{
++   if(!InpUseMarginAwareLotCap || InpMaxTradeMarginFreePercent <= 0.0 || lots <= 0.0 || entryPrice <= 0.0)
++      return lots;
++
++   double freeMargin = AccountInfoDouble(ACCOUNT_MARGIN_FREE);
++   if(freeMargin <= 0.0)
++      return lots;
++
++   double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
++   double maxLot = MathMin(SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX), InpMaxPositionLots);
++   double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
++   if(step <= 0.0)
++      step = 0.01;
++   if(minLot <= 0.0 || maxLot < minLot)
++      return 0.0;
++
++   double allowedMargin = freeMargin * InpMaxTradeMarginFreePercent / 100.0;
++   if(allowedMargin <= 0.0)
++      return 0.0;
++
++   ENUM_ORDER_TYPE orderType = (bias == BIAS_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
++   double cappedLots = MathMin(lots, maxLot);
++   cappedLots = MathFloor(cappedLots / step) * step;
++   if(cappedLots < minLot)
++      return InpAllowMinLotRiskOverflow ? minLot : 0.0;
++
++   double requiredMargin = 0.0;
++   if(OrderCalcMargin(orderType, _Symbol, cappedLots, entryPrice, requiredMargin) &&
++      requiredMargin > 0.0 &&
++      requiredMargin <= allowedMargin)
++      return NormalizeDouble(cappedLots, 2);
++
++   double low = 0.0;
++   double high = cappedLots;
++   double best = 0.0;
++   for(int i = 0; i < 24; i++)
++   {
++      double mid = (low + high) * 0.5;
++      double stepped = MathFloor(mid / step) * step;
++      if(stepped < minLot)
++      {
++         low = mid;
++         continue;
++      }
++
++      requiredMargin = 0.0;
++      if(OrderCalcMargin(orderType, _Symbol, stepped, entryPrice, requiredMargin) &&
++         requiredMargin > 0.0 &&
++         requiredMargin <= allowedMargin)
++      {
++         best = stepped;
++         low = mid;
++      }
++      else
++      {
++         high = mid;
++      }
++   }
++
++   if(best >= minLot)
++      return NormalizeDouble(best, 2);
++
++   if(!InpAllowMinLotRiskOverflow)
++      return 0.0;
++
++   requiredMargin = 0.0;
++   if(OrderCalcMargin(orderType, _Symbol, minLot, entryPrice, requiredMargin) &&
++      requiredMargin > 0.0 &&
++      requiredMargin <= freeMargin)
++      return NormalizeDouble(minLot, 2);
++
++   return 0.0;
++}
++
+ double MoneyForDistanceLots(const double distance, const double lots)
+ {
+    if(distance <= 0.0 || lots <= 0.0)
+@@
+          }
+       }
+    }
++   if(InpUseMarginAwareLotCap)
++   {
++      double marginCappedLots = MarginAwareCappedLots(signal.bias, lots, entry);
++      if(marginCappedLots <= 0.0)
++      {
++         g_lastBlockReason = "margin-aware lot cap";
++         return false;
++      }
++      lots = marginCappedLots;
++   }
+ 
+    string scaleInCoverageReason = "";
+*** End Patch
