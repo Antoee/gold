@@ -1,6 +1,6 @@
 param(
    [string]$HandoffDir = "outputs\risk_adjusted_micro_handoff",
-   [string]$EaSourcePath = "outputs\Professional_XAUUSD_EA.mq5",
+   [string]$EaSourcePath = "Professional_XAUUSD_EA.mq5",
    [string]$PackageDir = "outputs\external_mt5_validation_package",
    [string]$PackageName = "xauusd_micro_validation_package"
 )
@@ -48,8 +48,23 @@ $packageParent = Split-Path -Parent $PackageDir
 if([string]::IsNullOrWhiteSpace($packageParent)) { $packageParent = "." }
 $zipPath = Join-Path $packageParent ("{0}.zip" -f $PackageName)
 
+if(!(Test-Path -LiteralPath $manifestPath) -and $HandoffDir -eq "outputs\risk_adjusted_micro_handoff") {
+   $batchPath = "outputs\RISK_ADJUSTED_MICRO_BATCH.csv"
+   $handoffBuilder = "work\build_next_test_handoff.ps1"
+   if((Test-Path -LiteralPath $batchPath) -and (Test-Path -LiteralPath $handoffBuilder)) {
+      & $handoffBuilder `
+         -BatchCsv $batchPath `
+         -OutDir $HandoffDir `
+         -ZipPath "outputs\risk_adjusted_micro_handoff.zip" | Out-Null
+   }
+}
+
 if(!(Test-Path -LiteralPath $manifestPath)) { throw "Handoff manifest missing: $manifestPath" }
 if(!(Test-Path -LiteralPath $configDir)) { throw "Handoff config directory missing: $configDir" }
+if(!(Test-Path -LiteralPath $EaSourcePath) -and $EaSourcePath -eq "Professional_XAUUSD_EA.mq5" -and (Test-Path -LiteralPath "outputs\Professional_XAUUSD_EA.mq5")) {
+   $EaSourcePath = "outputs\Professional_XAUUSD_EA.mq5"
+}
+if(!(Test-Path -LiteralPath $EaSourcePath)) { throw "EA source missing: $EaSourcePath" }
 
 if(Test-Path -LiteralPath $PackageDir) { Remove-Item -LiteralPath $PackageDir -Recurse -Force }
 New-Item -ItemType Directory -Path $PackageDir -Force | Out-Null
@@ -218,13 +233,38 @@ $compileChecklist = @(
    [pscustomobject]@{
       Item = "Import command"
       Required = "YES"
-      ExpectedValue = "work\import_mt5_compile_log.ps1 -LogPath <returned log> -ExpectedSourcePath outputs\Professional_XAUUSD_EA.mq5 -CompiledSourcePath outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5"
+      ExpectedValue = "work\import_mt5_compile_log.ps1 -LogPath <returned log> -ExpectedSourcePath Professional_XAUUSD_EA.mq5 -CompiledSourcePath outputs\external_mt5_validation_package\source\Professional_XAUUSD_EA.mq5"
       ReturnAs = "outputs\MT5_COMPILE_STATUS.csv"
       Notes = "Run from the main workspace after the compile log is copied back."
    }
 )
 $compileChecklist | Export-Csv -LiteralPath $compileChecklistPath -NoTypeInformation
 $contents.Add([pscustomobject]@{ Type = "compile_checklist"; Source = $compileChecklistPath; PackagePath = "COMPILE_RETURN_CHECKLIST.csv" }) | Out-Null
+
+$runReturnChecklistPath = Join-Path $PackageDir "RUN_RETURN_CHECKLIST.csv"
+$runReturnChecklist = @(
+   [pscustomobject]@{ Item = "Expected Reports"; Required = "YES"; ExpectedValue = "$($expected.Count) report files listed in EXPECTED_REPORTS.csv"; ReturnAs = "reports_here\*.htm or reports_here\*.html"; Notes = "Each config should export one report with the exact expected basename." },
+   [pscustomobject]@{ Item = "Recent risk14 check"; Required = "YES"; ExpectedValue = "risk14_tp38_sl18 / 2026_ytd"; ReturnAs = "profit_search_phase1_risk14_tp38_sl18_recent_2026_ytd.htm"; Notes = "Confirms the lower-risk candidate against the recent window." },
+   [pscustomobject]@{ Item = "Date-block guard check"; Required = "YES"; ExpectedValue = "buyblock2_dd4"; ReturnAs = "matching buyblock2_dd4 reports"; Notes = "Guardrail currently rejects promotion, but the reports remain useful comparison data." },
+   [pscustomobject]@{ Item = "Baseline anchors"; Required = "YES"; ExpectedValue = "baseline_promoted same-window reports"; ReturnAs = "baseline reports"; Notes = "Every candidate comparison must have a matching baseline anchor." },
+   [pscustomobject]@{ Item = "Completeness audit"; Required = "YES"; ExpectedValue = "work\audit_external_report_return_completeness.ps1"; ReturnAs = "outputs\EXTERNAL_MT5_REPORT_RETURN_AUDIT.csv"; Notes = "Run after copying the reports back into reports_here." }
+)
+$runReturnChecklist | Export-Csv -LiteralPath $runReturnChecklistPath -NoTypeInformation
+$contents.Add([pscustomobject]@{ Type = "run_return_checklist"; Source = $runReturnChecklistPath; PackagePath = "RUN_RETURN_CHECKLIST.csv" }) | Out-Null
+
+$runReturnChecklistMdPath = Join-Path $PackageDir "RUN_RETURN_CHECKLIST.md"
+$runMd = New-Object System.Collections.Generic.List[string]
+$runMd.Add("# Run Return Checklist") | Out-Null
+$runMd.Add("") | Out-Null
+$runMd.Add("Return every expected report before importing results. Use `work\audit_external_report_return_completeness.ps1` from the main workspace after copying reports into `outputs\external_mt5_validation_package\reports_here`.") | Out-Null
+$runMd.Add("") | Out-Null
+$runMd.Add("| Item | Required | Expected Value | Return As | Notes |") | Out-Null
+$runMd.Add("|---|---|---|---|---|") | Out-Null
+foreach($check in $runReturnChecklist) {
+   $runMd.Add("| $(Escape-MarkdownCell $check.Item) | $($check.Required) | $(Escape-MarkdownCell $check.ExpectedValue) | $(Escape-MarkdownCell $check.ReturnAs) | $(Escape-MarkdownCell $check.Notes) |") | Out-Null
+}
+Set-Content -LiteralPath $runReturnChecklistMdPath -Value $runMd -Encoding UTF8
+$contents.Add([pscustomobject]@{ Type = "run_return_checklist_md"; Source = $runReturnChecklistMdPath; PackagePath = "RUN_RETURN_CHECKLIST.md" }) | Out-Null
 
 $readme = New-Object System.Collections.Generic.List[string]
 $readme.Add("# External MT5 Validation Package") | Out-Null
@@ -240,6 +280,7 @@ $readme.Add("- HANDOFF_MANIFEST.csv: source of truth for windows, profiles, and 
 $readme.Add("- EXPECTED_REPORTS.csv: checklist of report files to return.") | Out-Null
 $readme.Add("- PACKAGE_STATUS.csv: machine-readable compile trust and promotion-scope status.") | Out-Null
 $readme.Add("- COMPILE_RETURN_CHECKLIST.csv: exact compile evidence required before any report is trusted.") | Out-Null
+$readme.Add("- RUN_RETURN_CHECKLIST.csv / .md: exact report return checklist for the external run.") | Out-Null
 $readme.Add("- reports_here: put exported .htm/.html reports here before copying results back.") | Out-Null
 $readme.Add("") | Out-Null
 $readme.Add("## Required Status") | Out-Null
@@ -273,8 +314,9 @@ $readme.Add("") | Out-Null
 $readme.Add("After reports are copied back into outputs\external_mt5_validation_package\reports_here, run these from the main workspace:") | Out-Null
 $readme.Add("") | Out-Null
 $readme.Add("1. work\import_mt5_compile_log.ps1 against the returned compile log.") | Out-Null
-$readme.Add("2. work\import_external_mt5_validation_package_reports.ps1") | Out-Null
-$readme.Add("3. work\build_external_mt5_micro_decision.ps1") | Out-Null
+$readme.Add("2. work\audit_external_report_return_completeness.ps1") | Out-Null
+$readme.Add("3. work\import_external_mt5_validation_package_reports.ps1") | Out-Null
+$readme.Add("4. work\build_external_mt5_micro_decision.ps1") | Out-Null
 $readme.Add("") | Out-Null
 $readme.Add("## Batch") | Out-Null
 $readme.Add("") | Out-Null
