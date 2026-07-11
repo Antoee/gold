@@ -25,6 +25,18 @@ The current promoted `base_mar10_may10` profile remains the best continuous cand
 
 Reject the margin-cap variants. They reduce sizing failures and can lift some standalone windows, but none improve continuous 2024-2026 profit versus the promoted baseline.
 
+## Trade-Margin Scaling Probe
+
+The existing `InpUseTradeMarginRiskScaling` path was also tested with aggressive scaling:
+
+| Profile | Continuous | YTD 2026 | Full 2025 | Full 2024 | Worst Window | Losing Windows |
+|---|---:|---:|---:|---:|---:|---:|
+| d110_margin20_min005 | -1.66 | 4825.71 | 230.19 | -1.66 | -1.66 | 2 |
+| d110_margin35_min005 | -1.66 | 4825.71 | 230.19 | -1.66 | -1.66 | 2 |
+| d115_margin20_min005 | -182.69 | 3414.67 | 246.13 | -182.69 | -182.69 | 2 |
+
+Reject these as well. They preserve the misleading standalone 2026 upside but do not repair the continuous path.
+
 ## Follow-Up
 
 Add a margin-aware lot cap to the EA risk manager before testing more high-risk day multipliers. The current `LotsForRisk()` calculation sizes from stop-risk only, then MT5 can reject trades for insufficient margin. A pre-order free-margin cap should prevent impossible order attempts and make optimization results less misleading.
