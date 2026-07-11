@@ -1,0 +1,17 @@
+Candidate: CANDIDATE_MARCH110_MAY325_MAYCAP17_LOT040_PROFILE
+Created: 2026-07-11
+Base: CANDIDATE_LIQUIDITY_STOP_CONFLICT_MARCH_MAY325_MAYCAP17_LOT040_PROFILE
+ProfileHash: 4FB9557027011B97389984CB1CA77A9EDAF8BFBD4C937EF7198F641C59C1155D
+Key changes:
+- InpMarchRiskMultiplier=1.10
+- InpMayRiskMultiplier=3.25 retained
+- InpMaxPositionLots=0.40 retained
+- May spread cap retained at 17.0 points
+Validation:
+- Broad: TotalNet 6346.38, Continuous 853.90, YTD 1002.20, Full2025 230.19, Full2024 853.90, WorstWindow 0, LosingWindows 0
+- Monthly: TotalNet 7083.94, Parsed 30/30, WorstWindow 0, LosingWindows 0
+Rejected nearby/related profiles:
+- lot050: Broad TotalNet 6621.81 but monthly had 2024_05 losing window -216.06
+- mar120_may325_lot040: Broad TotalNet 5697.56, below current base
+- calendar unlocks: add_nojan_nojun20 broad improved but monthly had 9 losing months
+Decision: Promote over May3.25 lot0.40 because it increases March risk modestly, improves broad and monthly totals, and preserves zero losing validation windows.
