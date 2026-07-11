@@ -31,13 +31,26 @@ $arguments = @(
    "-OutMarkdown", $OutMarkdown
 )
 
-$process = Start-Process -FilePath "powershell.exe" `
-   -ArgumentList $arguments `
-   -WindowStyle Hidden `
-   -RedirectStandardOutput $stdoutPath `
-   -RedirectStandardError $stderrPath `
-   -Wait `
-   -PassThru
+$quotedArguments = @($arguments | ForEach-Object {
+   '"' + (([string]$_) -replace '"', '\"') + '"'
+})
+$startInfo = [System.Diagnostics.ProcessStartInfo]::new()
+$startInfo.FileName = "powershell.exe"
+$startInfo.Arguments = ($quotedArguments -join " ")
+$startInfo.UseShellExecute = $false
+$startInfo.CreateNoWindow = $true
+$startInfo.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
+$startInfo.RedirectStandardOutput = $true
+$startInfo.RedirectStandardError = $true
+
+$process = [System.Diagnostics.Process]::new()
+$process.StartInfo = $startInfo
+[void]$process.Start()
+$stdoutText = $process.StandardOutput.ReadToEnd()
+$stderrText = $process.StandardError.ReadToEnd()
+$process.WaitForExit()
+$stdoutText | Set-Content -LiteralPath $stdoutPath -Encoding ASCII
+$stderrText | Set-Content -LiteralPath $stderrPath -Encoding ASCII
 
 if($process.ExitCode -ne 0) {
    $errorText = ""
