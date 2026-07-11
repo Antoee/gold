@@ -1,0 +1,101 @@
+Summary patch for local source SHA256:
+15129310358FF563BDC3F3507524F7ADA14ED16A81E8836448DAAC1CC592CD33
+
+Files changed locally:
+
+- Professional_XAUUSD_EA.mq5
+- outputs/Professional_XAUUSD_EA.mq5
+- outputs/external_mt5_validation_package/source/Professional_XAUUSD_EA.mq5
+- work/build_adaptive_reverse_block_original_package.ps1
+- work/build_active_month_window_diagnostic_package.ps1
+- work/build_month_day_window_matrix_package.ps1
+- work/build_month_day_risk_ladder_package.ps1
+- research/2026-07-10-month-day-risk-research.md
+
+EA source additions:
+
+1. Adaptive reverse guarded-original control
+
+Added near adaptive reverse inputs:
+
+   input bool InpAdaptiveReverseBlockOriginalOnGuard = false;
+
+Changed adaptive reverse guard failure path:
+
+   if(InpUseAdaptiveReverse && !InpReverseSignals &&
+      !AdaptiveReverseWhipsawGuardAllows(reversedBias, signal.qualityScore))
+   {
+      signal.reasons += "Adaptive reverse whipsaw guard;";
+      if(InpAdaptiveReverseBlockOriginalOnGuard)
+         signal.bias = BIAS_NONE;
+      return;
+   }
+
+This is default-off because validation showed it reduced broad profit:
+
+   legacy_guard_passthrough: 5029.72 total net, 0 losing broad windows
+   block_guarded_original:  4298.53 total net, 0 losing broad windows
+
+2. Month-day entry window controls
+
+Added after month filter inputs:
+
+   input bool InpUseMonthDayWindowFilter = false;
+   input int InpJanuaryMinDay = 1;
+   input int InpJanuaryMaxDay = 31;
+   ...
+   input int InpDecemberMinDay = 1;
+   input int InpDecemberMaxDay = 31;
+
+Added helpers:
+
+   bool DayInsideMonthWindow(const int day, const int minDay, const int maxDay)
+   bool MonthDayWindowAllows()
+
+Added entry gate in OpenSignal:
+
+   if(!MonthDayWindowAllows() && !flatMonthBypass)
+   {
+      g_lastBlockReason = "month day window";
+      return false;
+   }
+
+This is default-off because the best broad result failed monthly validation:
+
+   mar10_may10 broad:   7909.84 total net, 0 losing broad windows
+   mar10_may10 monthly: 3358.64 total net, 0 losing monthly windows
+   baseline monthly:    5555.87 total net, 0 losing monthly windows
+
+3. Month-day risk multiplier controls
+
+Added after month-day window inputs:
+
+   input bool InpUseMonthDayRiskMultipliers = false;
+   input double InpJanuaryDayRiskMultiplier = 1.00;
+   ...
+   input double InpDecemberDayRiskMultiplier = 1.00;
+
+Added to CRiskManager::EffectiveRiskPercent():
+
+   riskPercent *= MonthRiskMultiplier();
+   riskPercent *= MonthDayRiskMultiplier();
+
+Added CRiskManager::MonthDayRiskMultiplier(), which reuses the month min/max day inputs and applies the selected month day-risk multiplier only inside that window.
+
+This is default-off because all higher-profit variants created at least one red monthly window:
+
+   may125 monthly:        5866.42 total net, worst -232.68
+   mar200 monthly:        4918.48 total net, worst -196.16
+   mar200_may110 monthly: 4366.41 total net, worst -196.16
+   baseline monthly:      5555.87 total net, worst 0
+
+Decision:
+
+Keep current promoted candidate unchanged:
+
+   outputs/CANDIDATE_LIQUIDITY_STOP_CONFLICT_MARCH_MAY280_MAYCAP17_PROFILE.set
+
+Validated result:
+
+   monthly total net: 5555.87, worst 0, losing months 0
+   broad total net:   5029.72, worst 0, losing broad windows 0
