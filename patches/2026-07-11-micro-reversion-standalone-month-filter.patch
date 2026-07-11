@@ -1,0 +1,129 @@
+*** Begin Patch
+*** Update File: Professional_XAUUSD_EA.mq5
+@@
+ input double          InpFlatMonthMicroReversionStopBufferATR = 0.10;
+ input double          InpFlatMonthMicroReversionStopBufferPoints = 22.0;
+ input double          InpFlatMonthMicroReversionFallbackTPATR = 0.95;
+ input double          InpFlatMonthMicroReversionMinRR = 0.75;
++input bool            InpFlatMonthMicroReversionStandaloneActive = false;
++input bool            InpUseFlatMonthMicroReversionMonthFilter = false;
++input bool            InpFlatMicroRevTradeJanuary = true;
++input bool            InpFlatMicroRevTradeFebruary = true;
++input bool            InpFlatMicroRevTradeMarch = true;
++input bool            InpFlatMicroRevTradeApril = true;
++input bool            InpFlatMicroRevTradeMay = true;
++input bool            InpFlatMicroRevTradeJune = true;
++input bool            InpFlatMicroRevTradeJuly = true;
++input bool            InpFlatMicroRevTradeAugust = true;
++input bool            InpFlatMicroRevTradeSeptember = true;
++input bool            InpFlatMicroRevTradeOctober = true;
++input bool            InpFlatMicroRevTradeNovember = true;
++input bool            InpFlatMicroRevTradeDecember = true;
+ input bool            InpUseCandleAnatomy          = false;
+@@
+       targetPrice = 0.0;
+       if(!InpUseFlatMonthMicroReversionLane || atr <= 0.0)
+          return false;
+-      if(!FlatMonthOpportunityActive())
++      if(!FlatMonthMicroReversionActive())
+          return false;
+@@
+ bool FlatMonthOpportunityActive()
+ {
+@@
+ 
+    return true;
+ }
++
++bool FlatMonthMicroReversionActive()
++{
++   if(!InpFlatMonthMicroReversionStandaloneActive)
++      return FlatMonthOpportunityActive();
++   if(!FlatMonthMicroReversionMonthFilterAllows())
++      return false;
++
++   MqlDateTime dt;
++   TimeToStruct(TimeCurrent(), dt);
++   if(dt.day < MathMax(1, InpFlatMonthMinDayOfMonth))
++      return false;
++
++   double balance = AccountInfoDouble(ACCOUNT_BALANCE);
++   if(balance <= 0.0)
++      return false;
++
++   double monthlyProfitPercent = 100.0 * CurrentPeriodProfit(PERIOD_MN1) / balance;
++   if(InpFlatMonthRequireNoMonthlyLoss && monthlyProfitPercent < 0.0)
++      return false;
++
++   double maxActiveProfit = MathMin(MathMax(0.0, InpFlatMonthTargetPercent),
++                                    MathMax(0.0, InpFlatMonthMaxProfitPercent));
++   if(monthlyProfitPercent > maxActiveProfit)
++      return false;
++
++   int monthlyEntries = CurrentPeriodEntryCount(PERIOD_MN1);
++   if(InpFlatMonthMaxEntryCount > 0 && monthlyEntries > InpFlatMonthMaxEntryCount)
++      return false;
++
++   return true;
++}
+@@
+ bool FlatMonthProbeMonthFilterAllows()
+ {
+@@
+ 
+    return false;
+ }
++
++bool FlatMonthMicroReversionMonthFilterAllows()
++{
++   if(!InpUseFlatMonthMicroReversionMonthFilter)
++      return true;
++
++   MqlDateTime parts;
++   TimeToStruct(TimeCurrent(), parts);
++
++   switch(parts.mon)
++   {
++      case 1:  return InpFlatMicroRevTradeJanuary;
++      case 2:  return InpFlatMicroRevTradeFebruary;
++      case 3:  return InpFlatMicroRevTradeMarch;
++      case 4:  return InpFlatMicroRevTradeApril;
++      case 5:  return InpFlatMicroRevTradeMay;
++      case 6:  return InpFlatMicroRevTradeJune;
++      case 7:  return InpFlatMicroRevTradeJuly;
++      case 8:  return InpFlatMicroRevTradeAugust;
++      case 9:  return InpFlatMicroRevTradeSeptember;
++      case 10: return InpFlatMicroRevTradeOctober;
++      case 11: return InpFlatMicroRevTradeNovember;
++      case 12: return InpFlatMicroRevTradeDecember;
++   }
++
++   return false;
++}
+*** Update File: work/build_mar10_may10_micro_clean_package.ps1
+@@
+    [string]$BaseSetPath = "outputs\CANDIDATE_MAR10_MAY10_CONTINUOUS_PROFILE.set",
+    [int]$Model = 0,
+-   [string[]]$ProfileNames = @()
++   [string[]]$ProfileNames = @(),
++   [switch]$Monthly
+ )
+@@
++$microDedicatedJulOct = Merge-Overrides @($microClean, @{
++   InpUseFlatMonthOpportunityMode = "false"
++   InpFlatMonthMicroReversionStandaloneActive = "true"
++   InpUseFlatMonthMicroReversionMonthFilter = "true"
++   InpFlatMicroRevTradeJanuary = "false"
++   InpFlatMicroRevTradeFebruary = "false"
++   InpFlatMicroRevTradeMarch = "false"
++   InpFlatMicroRevTradeApril = "false"
++   InpFlatMicroRevTradeMay = "false"
++   InpFlatMicroRevTradeJune = "false"
++   InpFlatMicroRevTradeJuly = "true"
++   InpFlatMicroRevTradeAugust = "false"
++   InpFlatMicroRevTradeSeptember = "false"
++   InpFlatMicroRevTradeOctober = "true"
++   InpFlatMicroRevTradeNovember = "false"
++   InpFlatMicroRevTradeDecember = "false"
++})
+*** End Patch
