@@ -55,7 +55,9 @@ $quietStopPath = Join-Path $WorkDir "STOP_MT5_FOCUS_WATCHDOG"
 $guardPath = Join-Path $WorkDir "assert_mt5_launch_allowed.ps1"
 $helperPath = Join-Path $WorkDir "mt5_background_helpers.ps1"
 $stopHelperPath = Join-Path $WorkDir "stop_mt5_stray_processes.ps1"
+$stopWatchdogPath = Join-Path $WorkDir "stop_mt5_focus_watchdog.ps1"
 $watchdogPath = Join-Path $WorkDir "mt5_focus_watchdog.ps1"
+$startWatchdogPath = Join-Path $WorkDir "start_mt5_focus_watchdog_hidden.ps1"
 $offlineRefreshPath = Join-Path $WorkDir "refresh_offline_validation_state.ps1"
 $handoffIntegrityPath = "outputs\HANDOFF_CONFIG_INTEGRITY.csv"
 
@@ -120,16 +122,19 @@ $stopHelperText = Read-TextSafe $stopHelperPath
 Add-Result $rows "Cleanup" "Stop-stray helper exists" (Test-Path -LiteralPath $stopHelperPath) $stopHelperPath "Restore work\stop_mt5_stray_processes.ps1."
 Add-Result $rows "Cleanup" "Stop-stray helper does not launch MT5" ((Contains-Text $stopHelperText 'Stop-Process') -and !(Contains-Text $stopHelperText 'Start-Process') -and !(Contains-Text $stopHelperText 'Start-MT5Hidden')) $stopHelperPath "Cleanup helper must only stop existing processes."
 
+$stopWatchdogText = Read-TextSafe $stopWatchdogPath
+Add-Result $rows "Cleanup" "Stop-watchdog helper preserves quiet marker and avoids self-match" ((Test-Path -LiteralPath $stopWatchdogPath) -and (Contains-Text $stopWatchdogText '$needle = "mt5_focus_" + "watchdog.ps1"') -and (Contains-Text $stopWatchdogText '$_.ProcessId -ne $currentPid') -and !(Contains-Text $stopWatchdogText 'Remove-Item -LiteralPath $stopFile')) $stopWatchdogPath "Keep the quiet stop marker in place and avoid matching the stop helper command itself."
+
 $offlineRefreshText = Read-TextSafe $offlineRefreshPath
 Add-Result $rows "Offline refresh" "Offline refresh script exists" (Test-Path -LiteralPath $offlineRefreshPath) $offlineRefreshPath "Restore work\refresh_offline_validation_state.ps1."
-Add-Result $rows "Offline refresh" "Offline refresh child steps run hidden" ((Contains-Text $offlineRefreshText 'function Invoke-QuietPowerShell') -and (Contains-Text $offlineRefreshText 'Start-Process') -and (Contains-Text $offlineRefreshText '-WindowStyle Hidden') -and (Contains-Text $offlineRefreshText '-RedirectStandardOutput') -and (Contains-Text $offlineRefreshText '-RedirectStandardError')) $offlineRefreshPath "Offline refresh child PowerShell steps must run hidden and write logs."
+Add-Result $rows "Offline refresh" "Offline refresh child steps run without windows" ((Contains-Text $offlineRefreshText 'function Invoke-QuietPowerShell') -and (Contains-Text $offlineRefreshText 'ProcessStartInfo') -and (Contains-Text $offlineRefreshText 'CreateNoWindow') -and (Contains-Text $offlineRefreshText 'ProcessWindowStyle]::Hidden') -and (Contains-Text $offlineRefreshText 'RedirectStandardOutput = $true') -and (Contains-Text $offlineRefreshText 'RedirectStandardError = $true') -and !(Contains-Text $offlineRefreshText 'Start-Process')) $offlineRefreshPath "Offline refresh child PowerShell steps must use ProcessStartInfo with CreateNoWindow and write logs."
 Add-Result $rows "Offline refresh" "Offline refresh avoids direct visible child shells" (!(Contains-Text $offlineRefreshText 'powershell -NoProfile') -and !(Contains-Text $offlineRefreshText 'powershell -ExecutionPolicy') -and !(Contains-Text $offlineRefreshText '& powershell')) $offlineRefreshPath "Replace direct powershell child calls with Invoke-QuietPowerShell."
 Add-Result $rows "Offline refresh" "Offline refresh does not launch MT5" (!(Contains-Text $offlineRefreshText 'Start-MT5Hidden') -and !(Contains-Text $offlineRefreshText 'terminal64.exe') -and !(Contains-Text $offlineRefreshText 'MetaEditor.exe')) $offlineRefreshPath "Offline refresh must rebuild state only; it must not launch MT5, MetaEditor, or Strategy Tester."
 
 $scriptFiles = @(Get-ChildItem -LiteralPath $WorkDir -Filter "*.ps1" -File)
 $runnerFiles = New-Object System.Collections.Generic.List[object]
 foreach($file in $scriptFiles) {
-   if($file.Name -in @("assert_mt5_launch_allowed.ps1", "mt5_background_helpers.ps1", "mt5_focus_watchdog.ps1", "stop_mt5_focus_watchdog.ps1", "audit_mt5_local_safety.ps1", "stop_mt5_stray_processes.ps1")) {
+   if($file.Name -in @("assert_mt5_launch_allowed.ps1", "mt5_background_helpers.ps1", "mt5_focus_watchdog.ps1", "stop_mt5_focus_watchdog.ps1", "audit_mt5_local_safety.ps1", "stop_mt5_stray_processes.ps1", "build_report_import_preflight.ps1", "test_mt5_hidden_launcher_lock.ps1")) {
       continue
    }
 
@@ -151,37 +156,53 @@ foreach($file in $scriptFiles) {
 }
 
 $unguarded = @($runnerFiles | Where-Object { -not $_.HasGuard })
-$rawStarts = @($runnerFiles | Where-Object { $_.UsesRawTerminalStart })
-$runnerEvidence = "Runner scripts checked: $($runnerFiles.Count); unguarded: $($unguarded.Count)"
-if($unguarded.Count -gt 0) { $runnerEvidence += "; " + (($unguarded | Select-Object -ExpandProperty File) -join ", ") }
-Add-Result $rows "Runner scripts" "All MT5 runner scripts source the launch guard" ($unguarded.Count -eq 0) $runnerEvidence "Add . (Join-Path `$PSScriptRoot \"assert_mt5_launch_allowed.ps1\") near the top of each runner."
-
-$rawEvidence = "Raw terminal launch matches: $($rawStarts.Count)"
-if($rawStarts.Count -gt 0) { $rawEvidence += "; " + (($rawStarts | Select-Object -ExpandProperty File) -join ", ") }
-Add-Result $rows "Runner scripts" "No runner bypasses Start-MT5Hidden with raw terminal launch" ($rawStarts.Count -eq 0) $rawEvidence "Route tester launches through Start-MT5Hidden and the guard."
+$rawStart = @($runnerFiles | Where-Object { $_.UsesRawTerminalStart })
+$unguardedEvidence = "Runner scripts checked: $($runnerFiles.Count); unguarded: $($unguarded.Count)"
+if($unguarded.Count -gt 0) {
+   $unguardedEvidence += "; " + (($unguarded | Select-Object -ExpandProperty File) -join ", ")
+}
+$rawStartEvidence = "Raw terminal launch matches: $($rawStart.Count)"
+if($rawStart.Count -gt 0) {
+   $rawStartEvidence += "; " + (($rawStart | Select-Object -ExpandProperty File) -join ", ")
+}
+Add-Result $rows "Runner scripts" "All MT5 runner scripts source the launch guard" ($unguarded.Count -eq 0) `
+   $unguardedEvidence `
+   "Add `. (Join-Path `$PSScriptRoot `"assert_mt5_launch_allowed.ps1`")` near the top of each runner."
+Add-Result $rows "Runner scripts" "No runner bypasses Start-MT5Hidden with raw terminal launch" ($rawStart.Count -eq 0) `
+   $rawStartEvidence `
+   "Route tester launches through Start-MT5Hidden and the guard."
 
 $watchdogExists = Test-Path -LiteralPath $watchdogPath
 $watchdogText = Read-TextSafe $watchdogPath
+$startWatchdogText = Read-TextSafe $startWatchdogPath
 Add-Result $rows "Watchdog" "Watchdog script exists" $watchdogExists $watchdogPath "Restore work\mt5_focus_watchdog.ps1."
 Add-Result $rows "Watchdog" "Watchdog targets MT5 and MetaEditor" ((Contains-Text $watchdogText 'terminal64') -and (Contains-Text $watchdogText 'metatester64') -and (Contains-Text $watchdogText 'MetaEditor')) $watchdogPath "Watchdog must stop terminal64, metatester64, and MetaEditor."
 Add-Result $rows "Watchdog" "Watchdog default is bounded for quiet PC use" ((Contains-Text $watchdogText '[int]$MonitorSeconds = 5') -and (Contains-Text $watchdogText '[int]$PollMilliseconds = 250')) $watchdogPath "Keep the default watchdog run short unless the user explicitly asks for a resident safety net."
+Add-Result $rows "Watchdog" "Hidden watchdog starter exists" (Test-Path -LiteralPath $startWatchdogPath) $startWatchdogPath "Restore work\start_mt5_focus_watchdog_hidden.ps1."
+Add-Result $rows "Watchdog" "Hidden watchdog starter uses detached no-window launch" ((Contains-Text $startWatchdogText 'Win32_ProcessStartup') -and (Contains-Text $startWatchdogText 'ShowWindow = 0') -and (Contains-Text $startWatchdogText 'Win32_Process') -and !(Contains-Text $startWatchdogText 'Start-Process')) $startWatchdogPath "Start the focus watchdog through detached hidden process creation, not a visible shell."
 
+$watchdogProcesses = @()
 try {
    $watchdogProcesses = @(Get-CimInstance Win32_Process -Filter "Name='powershell.exe' OR Name='pwsh.exe'" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like '*mt5_focus_watchdog.ps1*' })
-} catch {
+}
+catch {
    $watchdogProcesses = @()
 }
-$watchdogProcessEvidence = if($watchdogProcesses.Count -eq 0) { "No running watchdog process detected by CIM; script is present." } else { (($watchdogProcesses | ForEach-Object { "$($_.Name):$($_.ProcessId)" }) -join "; ") }
-Add-Result $rows "Watchdog" "No resident watchdog process during quiet PC use" ($watchdogProcesses.Count -eq 0) `
-   $watchdogProcessEvidence `
-   "Stop work\mt5_focus_watchdog.ps1 and leave work\STOP_MT5_FOCUS_WATCHDOG in place during normal PC use."
+$watchdogEvidence = if($watchdogProcesses.Count -gt 0) { "Running watchdog PIDs: " + (($watchdogProcesses | ForEach-Object { $_.ProcessId }) -join ", ") + "; stop marker present: $quietStopExists" } else { "No running watchdog process detected by CIM; stop marker present: $quietStopExists" }
+$watchdogStateOk = (($watchdogProcesses.Count -eq 0 -and $quietStopExists) -or ($watchdogProcesses.Count -gt 0 -and -not $quietStopExists))
+Add-Result $rows "Watchdog" "Watchdog process state matches quiet shield mode" $watchdogStateOk `
+   $watchdogEvidence `
+   "Use work\start_mt5_focus_watchdog_hidden.ps1 for an active hidden shield, or work\stop_mt5_focus_watchdog.ps1 for no resident helper."
 
 if(Test-Path -LiteralPath $handoffIntegrityPath) {
    $handoffRows = @(Import-Csv -LiteralPath $handoffIntegrityPath)
-   $handoffFailed = @($handoffRows | Where-Object { [string]$_.Passed -ne "True" -and [string]$_.Status -ne "PASS" })
-   Add-Result $rows "Handoff" "Latest handoff integrity has no failures" ($handoffFailed.Count -eq 0) "Rows: $($handoffRows.Count); failed: $($handoffFailed.Count); $handoffIntegrityPath" "Rebuild and audit handoff configs before running them externally."
-} else {
-   Add-Result $rows "Handoff" "Latest handoff integrity exists" $false $handoffIntegrityPath "Run work\audit_handoff_config_integrity.ps1 after building a handoff package."
+   $failedHandoff = @($handoffRows | Where-Object { $_.Passed -ne "True" })
+   Add-Result $rows "Handoff configs" "Current handoff integrity has no failures" ($failedHandoff.Count -eq 0 -and $handoffRows.Count -gt 0) `
+      "Rows: $($handoffRows.Count); failures: $($failedHandoff.Count)" `
+      "Rerun work\audit_handoff_config_integrity.ps1 and fix any failed handoff config."
+}
+else {
+   Add-Result $rows "Handoff configs" "Current handoff integrity report exists" $false $handoffIntegrityPath "Run work\audit_handoff_config_integrity.ps1."
 }
 
 $rows | Export-Csv -LiteralPath $OutCsv -NoTypeInformation
@@ -197,11 +218,14 @@ $md.Add("Offline audit only. This script does not launch MT5.") | Out-Null
 $md.Add("") | Out-Null
 $md.Add("- Overall: **$overall**") | Out-Null
 $md.Add("- Checks passed: $passCount / $($rows.Count)") | Out-Null
-$md.Add("- MT5 processes running: $($mt5Processes.Count)") | Out-Null
 $md.Add("- Runner scripts checked: $($runnerFiles.Count)") | Out-Null
-$md.Add("- Unguarded runner scripts: $($unguarded.Count)") | Out-Null
-$md.Add("- Raw terminal launch bypasses: $($rawStarts.Count)") | Out-Null
-$md.Add("- Resident watchdog processes: $($watchdogProcesses.Count)") | Out-Null
+$md.Add("- MT5 processes running: $($mt5Processes.Count)") | Out-Null
+$md.Add("- Unlock file present: $((Test-Path -LiteralPath $unlockPath))") | Out-Null
+$md.Add("- Hidden desktop ack file present: $((Test-Path -LiteralPath $hiddenDesktopAckPath))") | Out-Null
+$md.Add("- Hard local launch lock present: $((Test-Path -LiteralPath $hardLockPath))") | Out-Null
+$md.Add("- Quiet PC stop marker present: $((Test-Path -LiteralPath $quietStopPath))") | Out-Null
+$md.Add("- `ALLOW_MT5_FOCUS_RISK=1`: $($envFlag -eq '1')") | Out-Null
+$md.Add("- `ALLOW_MT5_HIDDEN_DESKTOP_ACK=1`: $($hiddenDesktopEnvFlag -eq '1')") | Out-Null
 $md.Add("") | Out-Null
 $md.Add("## Checks") | Out-Null
 $md.Add("") | Out-Null
@@ -211,6 +235,17 @@ foreach($row in $rows) {
    $evidence = ([string]$row.Evidence) -replace '\|', '/'
    $remediation = ([string]$row.Remediation) -replace '\|', '/'
    $md.Add("| $($row.Area) | $($row.Check) | $($row.Passed) | $evidence | $remediation |") | Out-Null
+}
+
+if($runnerFiles.Count -gt 0) {
+   $md.Add("") | Out-Null
+   $md.Add("## Runner Script Coverage") | Out-Null
+   $md.Add("") | Out-Null
+   $md.Add("| File | Guard | Hidden Helper | Raw Terminal Start |") | Out-Null
+   $md.Add("|---|---|---|---|") | Out-Null
+   foreach($runner in ($runnerFiles | Sort-Object File)) {
+      $md.Add("| ``$($runner.File)`` | $($runner.HasGuard) | $($runner.UsesHiddenHelper) | $($runner.UsesRawTerminalStart) |") | Out-Null
+   }
 }
 
 Set-Content -LiteralPath $OutMarkdown -Value $md -Encoding UTF8
@@ -225,4 +260,6 @@ Set-Content -LiteralPath $OutMarkdown -Value $md -Encoding UTF8
    OutMarkdown = $OutMarkdown
 }
 
-if($failed.Count -gt 0) { exit 1 }
+if($failed.Count -gt 0) {
+   exit 1
+}
