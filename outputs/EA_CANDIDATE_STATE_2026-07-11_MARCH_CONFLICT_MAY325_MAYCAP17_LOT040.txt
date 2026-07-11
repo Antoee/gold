@@ -1,0 +1,17 @@
+Candidate: CANDIDATE_LIQUIDITY_STOP_CONFLICT_MARCH_MAY325_MAYCAP17_LOT040_PROFILE
+Created: 2026-07-11
+Base: CANDIDATE_LIQUIDITY_STOP_CONFLICT_MARCH_MAY280_MAYCAP17_PROFILE
+ProfileHash: 2327CEE1B30A2C9FC61A9CBDECF19CEDF826CECE9882AA94CE7902B0351C9BD7
+Key changes:
+- InpMayRiskMultiplier=3.25
+- InpMaxPositionLots=0.40
+- March-only liquidity stop conflict guard retained
+- May spread cap retained at 17.0 points
+Validation:
+- Broad: TotalNet 6060.11, Continuous 833.73, YTD 887.18, Full2025 214.30, Full2024 833.73, WorstWindow 0, LosingWindows 0
+- Monthly: TotalNet 6932.86, Parsed 30/30, WorstWindow 0, LosingWindows 0
+Rejected nearby/related profiles:
+- may325 without lot cap: Broad TotalNet 6886.08 but previous monthly validation had a losing 2024_05 window (-216.06)
+- may325_maxeff250: Monthly TotalNet 7063.78 and no losing months, but broad TotalNet 4961.18 was lower than current promoted base
+- may325_guard35: Monthly introduced a losing month (-98.72) and broad TotalNet 2068.87
+Decision: Promote candidate over May2.80 cap17 because it improves broad total by 1030.39 and preserves zero losing monthly validation windows.
