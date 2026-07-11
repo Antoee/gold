@@ -39,6 +39,8 @@ $expectedPath = Join-Path $PackageDir "EXPECTED_REPORTS.csv"
 $contentsPath = Join-Path $PackageDir "PACKAGE_CONTENTS.csv"
 $statusPath = Join-Path $PackageDir "PACKAGE_STATUS.csv"
 $compileChecklistPath = Join-Path $PackageDir "COMPILE_RETURN_CHECKLIST.csv"
+$runReturnChecklistPath = Join-Path $PackageDir "RUN_RETURN_CHECKLIST.csv"
+$runReturnChecklistMdPath = Join-Path $PackageDir "RUN_RETURN_CHECKLIST.md"
 $readmePath = Join-Path $PackageDir "README_EXTERNAL_MT5.md"
 $sourcePath = Join-Path $PackageDir "source\Professional_XAUUSD_EA.mq5"
 $configsDir = Join-Path $PackageDir "configs"
@@ -50,6 +52,7 @@ $expected = @(Read-CsvSafe $expectedPath)
 $contents = @(Read-CsvSafe $contentsPath)
 $packageStatus = @(Read-CsvSafe $statusPath)
 $compileChecklist = @(Read-CsvSafe $compileChecklistPath)
+$runReturnChecklist = @(Read-CsvSafe $runReturnChecklistPath)
 $configs = @(if(Test-Path -LiteralPath $configsDir) { Get-ChildItem -LiteralPath $configsDir -Filter "*.ini" -File } else { @() })
 $profiles = @(if(Test-Path -LiteralPath $profilesDir) { Get-ChildItem -LiteralPath $profilesDir -Filter "*.set" -File } else { @() })
 
@@ -64,6 +67,7 @@ Add-Check $rows "README included" (Test-Path -LiteralPath $readmePath) $readmePa
 Add-Check $rows "Package contents inventory included" ($contents.Count -gt 0) "$contentsPath rows=$($contents.Count)" "Generate PACKAGE_CONTENTS.csv."
 Add-Check $rows "Package status included" ($packageStatus.Count -gt 0) "$statusPath rows=$($packageStatus.Count)" "Generate PACKAGE_STATUS.csv with compile trust and package scope."
 Add-Check $rows "Compile return checklist included" ($compileChecklist.Count -ge 5) "$compileChecklistPath rows=$($compileChecklist.Count)" "Generate COMPILE_RETURN_CHECKLIST.csv with source hash and import requirements."
+Add-Check $rows "Run return checklist included" ($runReturnChecklist.Count -ge 5 -and (Test-Path -LiteralPath $runReturnChecklistMdPath)) "$runReturnChecklistPath rows=$($runReturnChecklist.Count); markdown=$runReturnChecklistMdPath" "Generate RUN_RETURN_CHECKLIST.csv and RUN_RETURN_CHECKLIST.md."
 $compileTrust = $packageStatus | Where-Object { $_.Area -eq "Compile trust" } | Select-Object -First 1
 $sourceHashRow = $packageStatus | Where-Object { $_.Area -eq "Source hash" } | Select-Object -First 1
 Add-Check $rows "Compile trust status requires fresh external compile" ($null -ne $compileTrust -and [string]$compileTrust.Status -in @("STALE", "FRESH_PASS")) `
@@ -89,8 +93,8 @@ Add-Check $rows "Compile checklist requires compiled source path" ($null -ne $im
 $manifestProfiles = @($manifest | Select-Object -ExpandProperty Profile -Unique | Sort-Object)
 $manifestWindows = @($manifest | Select-Object -ExpandProperty Window -Unique | Sort-Object)
 $profileNames = @($profiles | Select-Object -ExpandProperty Name)
-$requiredProfiles = @("baseline_promoted", "risk12_tp38_sl18", "baseline_dd4")
-$requiredWindows = @("2024_Q1", "2024_Q3", "2025_Q2", "2026_Q2")
+$requiredProfiles = @("baseline_promoted", "risk12_tp38_sl18", "risk14_tp38_sl18", "baseline_dd4", "buyblock2_dd4")
+$requiredWindows = @("2024_Q1", "2025_Q2", "2026_Q2", "2026_ytd")
 $missingRequiredPairs = New-Object System.Collections.Generic.List[string]
 foreach($profile in $requiredProfiles) {
    foreach($window in $requiredWindows) {
@@ -100,8 +104,7 @@ foreach($profile in $requiredProfiles) {
    }
 }
 $hasRiskAdjustedShape = (
-   $manifest.Count -ge 12 -and
-   $manifest.Count -le 15 -and
+   $manifest.Count -eq 20 -and
    @($requiredProfiles | Where-Object { $manifestProfiles -contains $_ }).Count -eq $requiredProfiles.Count -and
    @($requiredWindows | Where-Object { $manifestWindows -contains $_ }).Count -eq $requiredWindows.Count -and
    $missingRequiredPairs.Count -eq 0
@@ -110,6 +113,9 @@ Add-Check $rows "Risk-adjusted package shape" $hasRiskAdjustedShape `
    "Rows=$($manifest.Count); profiles=$($manifestProfiles -join ','); windows=$($manifestWindows -join ','); missingRequiredPairs=$($missingRequiredPairs -join ',')" `
    "Rebuild with work\build_external_mt5_validation_package.ps1 using outputs\risk_adjusted_micro_handoff."
 Add-Check $rows "Lower-risk candidate profile snapshot included" ($profileNames -contains "risk12_tp38_sl18.set") `
+   "Profile snapshots: $($profileNames -join ',')" `
+   "Regenerate profit-search profiles and rebuild the external package."
+Add-Check $rows "Date-block research profile snapshot included" ($profileNames -contains "buyblock2_dd4.set") `
    "Profile snapshots: $($profileNames -join ',')" `
    "Regenerate profit-search profiles and rebuild the external package."
 
@@ -128,6 +134,42 @@ foreach($row in $manifest) {
    if(!(Test-Path -LiteralPath (Join-Path $configsDir $leaf))) { $missingConfigs.Add($leaf) | Out-Null }
 }
 Add-Check $rows "No manifest configs missing from package" ($missingConfigs.Count -eq 0) $(if($missingConfigs.Count -eq 0) { "All manifest configs are present." } else { $missingConfigs -join "; " }) "Rebuild package from the handoff manifest."
+
+$reportTargetMismatches = New-Object System.Collections.Generic.List[string]
+foreach($row in $expected) {
+   $configPath = Join-Path $PackageDir ([string]$row.Config)
+   if(!(Test-Path -LiteralPath $configPath)) {
+      $reportTargetMismatches.Add("$($row.Config):missing_config") | Out-Null
+      continue
+   }
+
+   $reportLine = Get-Content -LiteralPath $configPath | Where-Object { $_ -match '^Report=' } | Select-Object -First 1
+   if([string]::IsNullOrWhiteSpace($reportLine)) {
+      $reportTargetMismatches.Add("$($row.Config):missing_Report") | Out-Null
+      continue
+   }
+
+   $actualReportPath = ($reportLine -split '=', 2)[1].Trim()
+   $actualReportName = [IO.Path]::GetFileNameWithoutExtension($actualReportPath)
+   if($actualReportName -ne [string]$row.ExpectedReportName) {
+      $reportTargetMismatches.Add("$($row.Config):$actualReportName<>$($row.ExpectedReportName)") | Out-Null
+   }
+}
+Add-Check $rows "Config report targets match expected names" ($reportTargetMismatches.Count -eq 0) `
+   $(if($reportTargetMismatches.Count -eq 0) { "All packaged config Report= names match EXPECTED_REPORTS.csv." } else { $reportTargetMismatches -join "; " }) `
+   "Regenerate handoff configs and package so Report= basenames match EXPECTED_REPORTS.csv."
+
+$runReturnText = if(Test-Path -LiteralPath $runReturnChecklistMdPath) { Get-Content -LiteralPath $runReturnChecklistMdPath -Raw } else { "" }
+$runReturnHasShape = (
+   $runReturnText -match "Expected Reports" -and
+   $runReturnText -match "risk14_tp38_sl18" -and
+   $runReturnText -match "buyblock2_dd4" -and
+   $runReturnText -match "2026_ytd" -and
+   $runReturnText -match [regex]::Escape("audit_external_report_return_completeness.ps1")
+)
+Add-Check $rows "Run return checklist matches current micro shape" $runReturnHasShape `
+   "Contains Expected Reports=$($runReturnText -match 'Expected Reports'); risk14=$($runReturnText -match 'risk14_tp38_sl18'); buyblock2=$($runReturnText -match 'buyblock2_dd4'); 2026_ytd=$($runReturnText -match '2026_ytd')" `
+   "Regenerate the package so external run instructions match the current 20-report micro frontier."
 
 $rows | Export-Csv -LiteralPath $OutCsv -NoTypeInformation
 $failed = @($rows | Where-Object { -not $_.Passed })
