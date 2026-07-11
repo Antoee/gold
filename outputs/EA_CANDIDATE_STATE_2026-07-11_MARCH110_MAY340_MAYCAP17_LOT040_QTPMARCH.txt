@@ -1,0 +1,18 @@
+Candidate: CANDIDATE_MARCH110_MAY340_MAYCAP17_LOT040_QTPMARCH_PROFILE
+Created: 2026-07-11
+SourceHash: 1CF8EE28E39BFE429BA5BA05C76997234E1399A217196562553B8DC5A7D21E9D
+ProfileHash: FEA41AEF9B5FB6E33906B5C648A32A562D84EB27904A26149E366EA2CE4A5BE0
+Base: CANDIDATE_MARCH110_MAY325_MAYCAP17_LOT040_QTPMARCH_PROFILE
+Key changes:
+- InpMayRiskMultiplier increased from 3.25 to 3.40
+- InpMaxPositionLots remains 0.40
+- March risk remains 1.10
+- March-only quality take-profit scaling retained
+Validation:
+- Broad: TotalNet 7468.70, Continuous 793.69, YTD 1560.04, Full2025 219.66, Full2024 793.69, WorstWindow 0, LosingWindows 0
+- Monthly: TotalNet 7718.73, Parsed 30/30, WorstWindow 0, LosingWindows 0
+- Previous QTP base comparison: Broad TotalNet 7331.11, Monthly TotalNet 7571.04
+Rejected nearby settings:
+- Max lots 0.45 improved broad to 7680.78 but failed monthly with WorstWindow -216.06 and 1 losing month
+- Max lots 0.50 failed broad with WorstWindow -170.52 and 2 losing windows
+Decision: Promoted over QTP base because it improves broad and monthly totals while preserving zero losing validation windows.
