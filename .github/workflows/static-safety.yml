@@ -57,7 +57,7 @@ jobs:
 
       - name: Build risk-adjusted external MT5 package
         shell: powershell
-        run: powershell -NoProfile -ExecutionPolicy Bypass -File work\build_external_mt5_validation_package.ps1
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File work\build_external_mt5_validation_package.ps1 -EaSourcePath Professional_XAUUSD_EA.mq5
 
       - name: Run external MT5 package audit
         shell: powershell
