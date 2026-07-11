@@ -3,7 +3,8 @@ param(
    [string]$ReportRoot = "outputs",
    [string]$BaseSetPath = "outputs\CANDIDATE_MAR10_MAY10_CONTINUOUS_PROFILE.set",
    [int]$Model = 0,
-   [string[]]$ProfileNames = @()
+   [string[]]$ProfileNames = @(),
+   [switch]$Monthly
 )
 
 Set-StrictMode -Version Latest
@@ -11,15 +12,28 @@ $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "seasonal_gate_helpers.ps1")
 
-$windows = @(
-   [pscustomobject]@{ Window = "2024_to_2026"; Phase = "full"; Set = "full"; From = "2024.01.01"; To = "2026.07.02" },
-   [pscustomobject]@{ Window = "2026_ytd"; Phase = "recent"; Set = "recent"; From = "2026.01.01"; To = "2026.07.02" },
-   [pscustomobject]@{ Window = "2025_full"; Phase = "oos"; Set = "oos"; From = "2025.01.01"; To = "2025.12.31" },
-   [pscustomobject]@{ Window = "2024_full"; Phase = "train"; Set = "train"; From = "2024.01.01"; To = "2024.12.31" },
-   [pscustomobject]@{ Window = "2025_07_10"; Phase = "target"; Set = "target"; From = "2025.07.01"; To = "2025.10.31" },
-   [pscustomobject]@{ Window = "2024_07_10"; Phase = "target"; Set = "target"; From = "2024.07.01"; To = "2024.10.31" },
-   [pscustomobject]@{ Window = "2026_01"; Phase = "target"; Set = "target"; From = "2026.01.01"; To = "2026.01.31" }
-)
+if($Monthly) {
+   $windows = @()
+   foreach($year in 2024..2026) {
+      foreach($month in 1..12) {
+         if($year -eq 2026 -and $month -gt 6) { continue }
+         $from = "{0}.{1:00}.01" -f $year, $month
+         $to = "{0}.{1:00}.{2:00}" -f $year, $month, [DateTime]::DaysInMonth($year, $month)
+         $windows += [pscustomobject]@{ Window = "{0}_{1:00}" -f $year, $month; Phase = "monthly"; Set = "monthly"; From = $from; To = $to }
+      }
+   }
+}
+else {
+   $windows = @(
+      [pscustomobject]@{ Window = "2024_to_2026"; Phase = "full"; Set = "full"; From = "2024.01.01"; To = "2026.07.02" },
+      [pscustomobject]@{ Window = "2026_ytd"; Phase = "recent"; Set = "recent"; From = "2026.01.01"; To = "2026.07.02" },
+      [pscustomobject]@{ Window = "2025_full"; Phase = "oos"; Set = "oos"; From = "2025.01.01"; To = "2025.12.31" },
+      [pscustomobject]@{ Window = "2024_full"; Phase = "train"; Set = "train"; From = "2024.01.01"; To = "2024.12.31" },
+      [pscustomobject]@{ Window = "2025_07_10"; Phase = "target"; Set = "target"; From = "2025.07.01"; To = "2025.10.31" },
+      [pscustomobject]@{ Window = "2024_07_10"; Phase = "target"; Set = "target"; From = "2024.07.01"; To = "2024.10.31" },
+      [pscustomobject]@{ Window = "2026_01"; Phase = "target"; Set = "target"; From = "2026.01.01"; To = "2026.01.31" }
+   )
+}
 
 if(Test-Path -LiteralPath $PackageDir) { Remove-Item -LiteralPath $PackageDir -Recurse -Force }
 New-Item -ItemType Directory -Path (Join-Path $PackageDir "configs") -Force | Out-Null
@@ -68,11 +82,30 @@ $microCleanCoreJulOct = Merge-Overrides @($microCleanJulOct, @{
    InpFlatProbeTradeMay = "true"
 })
 
+$microDedicatedJulOct = Merge-Overrides @($microClean, @{
+   InpUseFlatMonthOpportunityMode = "false"
+   InpFlatMonthMicroReversionStandaloneActive = "true"
+   InpUseFlatMonthMicroReversionMonthFilter = "true"
+   InpFlatMicroRevTradeJanuary = "false"
+   InpFlatMicroRevTradeFebruary = "false"
+   InpFlatMicroRevTradeMarch = "false"
+   InpFlatMicroRevTradeApril = "false"
+   InpFlatMicroRevTradeMay = "false"
+   InpFlatMicroRevTradeJune = "false"
+   InpFlatMicroRevTradeJuly = "true"
+   InpFlatMicroRevTradeAugust = "false"
+   InpFlatMicroRevTradeSeptember = "false"
+   InpFlatMicroRevTradeOctober = "true"
+   InpFlatMicroRevTradeNovember = "false"
+   InpFlatMicroRevTradeDecember = "false"
+})
+
 $profiles = @(
    [pscustomobject]@{ Name = "base_mar10_may10"; Overrides = @{} },
    [pscustomobject]@{ Name = "micro_clean"; Overrides = $microClean },
    [pscustomobject]@{ Name = "micro_clean_jul_oct"; Overrides = $microCleanJulOct },
-   [pscustomobject]@{ Name = "micro_clean_core_jul_oct"; Overrides = $microCleanCoreJulOct }
+   [pscustomobject]@{ Name = "micro_clean_core_jul_oct"; Overrides = $microCleanCoreJulOct },
+   [pscustomobject]@{ Name = "micro_dedicated_jul_oct"; Overrides = $microDedicatedJulOct }
 )
 
 if($ProfileNames.Count -gt 0) {
@@ -108,5 +141,6 @@ foreach($profile in $profiles) {
 }
 
 $expected | Export-Csv -LiteralPath (Join-Path $PackageDir "EXPECTED_REPORTS.csv") -NoTypeInformation
-$expected | Export-Csv -LiteralPath "outputs\MAR10_MAY10_MICRO_CLEAN_MANIFEST.csv" -NoTypeInformation
+$manifest = if($Monthly) { "outputs\MAR10_MAY10_MICRO_CLEAN_MONTHLY_MANIFEST.csv" } else { "outputs\MAR10_MAY10_MICRO_CLEAN_MANIFEST.csv" }
+$expected | Export-Csv -LiteralPath $manifest -NoTypeInformation
 "Built $rank mar10/may10 clean micro add-on configs in $PackageDir"
