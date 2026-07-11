@@ -55,9 +55,17 @@ jobs:
         shell: powershell
         run: powershell -NoProfile -ExecutionPolicy Bypass -File work\test_offline_refresh_quiet_mode.ps1
 
+      - name: Bootstrap CI risk-adjusted handoff
+        shell: powershell
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File work\bootstrap_ci_risk_adjusted_handoff.ps1
+
       - name: Build risk-adjusted external MT5 package
         shell: powershell
         run: powershell -NoProfile -ExecutionPolicy Bypass -File work\build_external_mt5_validation_package.ps1 -EaSourcePath Professional_XAUUSD_EA.mq5
+
+      - name: Run risk-adjusted handoff integrity audit
+        shell: powershell
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File work\audit_handoff_config_integrity.ps1 -ManifestPath outputs\risk_adjusted_micro_handoff\HANDOFF_MANIFEST.csv -ZipPath outputs\risk_adjusted_micro_handoff.zip
 
       - name: Run external MT5 package audit
         shell: powershell
