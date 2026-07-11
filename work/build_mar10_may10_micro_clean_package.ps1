@@ -31,6 +31,8 @@ else {
       [pscustomobject]@{ Window = "2024_full"; Phase = "train"; Set = "train"; From = "2024.01.01"; To = "2024.12.31" },
       [pscustomobject]@{ Window = "2025_07_10"; Phase = "target"; Set = "target"; From = "2025.07.01"; To = "2025.10.31" },
       [pscustomobject]@{ Window = "2024_07_10"; Phase = "target"; Set = "target"; From = "2024.07.01"; To = "2024.10.31" },
+      [pscustomobject]@{ Window = "2025_08_09"; Phase = "target"; Set = "target"; From = "2025.08.01"; To = "2025.09.30" },
+      [pscustomobject]@{ Window = "2024_08_09"; Phase = "target"; Set = "target"; From = "2024.08.01"; To = "2024.09.30" },
       [pscustomobject]@{ Window = "2026_01"; Phase = "target"; Set = "target"; From = "2026.01.01"; To = "2026.01.31" }
    )
 }
@@ -100,12 +102,42 @@ $microDedicatedJulOct = Merge-Overrides @($microClean, @{
    InpFlatMicroRevTradeDecember = "false"
 })
 
+$microDedicatedAugSep = Merge-Overrides @($microClean, @{
+   InpUseFlatMonthOpportunityMode = "false"
+   InpFlatMonthMicroReversionStandaloneActive = "true"
+   InpUseFlatMonthMicroReversionMonthFilter = "true"
+   InpFlatMicroRevTradeJanuary = "false"
+   InpFlatMicroRevTradeFebruary = "false"
+   InpFlatMicroRevTradeMarch = "false"
+   InpFlatMicroRevTradeApril = "false"
+   InpFlatMicroRevTradeMay = "false"
+   InpFlatMicroRevTradeJune = "false"
+   InpFlatMicroRevTradeJuly = "false"
+   InpFlatMicroRevTradeAugust = "true"
+   InpFlatMicroRevTradeSeptember = "true"
+   InpFlatMicroRevTradeOctober = "false"
+   InpFlatMicroRevTradeNovember = "false"
+   InpFlatMicroRevTradeDecember = "false"
+})
+
+$microDedicatedAugSepJulOct = Merge-Overrides @($microDedicatedAugSep, @{
+   InpFlatMicroRevTradeJuly = "true"
+   InpFlatMicroRevTradeOctober = "true"
+})
+
+$microDedicatedSepJulOct = Merge-Overrides @($microDedicatedJulOct, @{
+   InpFlatMicroRevTradeSeptember = "true"
+})
+
 $profiles = @(
    [pscustomobject]@{ Name = "base_mar10_may10"; Overrides = @{} },
    [pscustomobject]@{ Name = "micro_clean"; Overrides = $microClean },
    [pscustomobject]@{ Name = "micro_clean_jul_oct"; Overrides = $microCleanJulOct },
    [pscustomobject]@{ Name = "micro_clean_core_jul_oct"; Overrides = $microCleanCoreJulOct },
-   [pscustomobject]@{ Name = "micro_dedicated_jul_oct"; Overrides = $microDedicatedJulOct }
+   [pscustomobject]@{ Name = "micro_dedicated_jul_oct"; Overrides = $microDedicatedJulOct },
+   [pscustomobject]@{ Name = "micro_dedicated_aug_sep"; Overrides = $microDedicatedAugSep },
+   [pscustomobject]@{ Name = "micro_dedicated_sep_jul_oct"; Overrides = $microDedicatedSepJulOct },
+   [pscustomobject]@{ Name = "micro_dedicated_aug_sep_jul_oct"; Overrides = $microDedicatedAugSepJulOct }
 )
 
 if($ProfileNames.Count -gt 0) {
