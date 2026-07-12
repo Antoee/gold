@@ -21,10 +21,10 @@ Short version: the current research-best is much better than the old `$866` resu
 
 Current research-best profile:
 
-- Profile: `outputs/CANDIDATE_PRIMARY_RANGE_ELITE_MFE_FAILURE_MARCH_ISLP_JUN_OCTDEC_SCORE7_REGIME_PROFILE.set`
-- Builder: `work/build_current_best_mfe_failure_march_islp_jun_octdec_score7_regime_profile.ps1`
-- SHA-256: `7BD4019104BCDF117A7D729289D6821D5F4BF6FB6FF9FE2D543BCF91717DC204`
-- Research note: `research/2026-07-12-score7-regime-guard-promotion-note.md`
+- Profile: `outputs/CANDIDATE_PRIMARY_RANGE_ELITE_MFE_FAILURE_MARCH_ISLP_JUN_OCTDEC_SCORE7_REGIME_NO_M1SHOCK_PROFILE.set`
+- Builder: `work/build_score7_regime_no_m1shock_profile.ps1`
+- SHA-256: `0961BBC9C17C122A5DD67498F8BAE2D12241CFCCC8AD3910F6C8BEE2B2FB960A`
+- Research note: `research/2026-07-12-score7-regime-no-m1shock-promotion-note.md`
 
 Important clarification: the current best has a near `$10k` Model=1 research result, but it is not fully cross-model confirmed yet.
 
@@ -35,7 +35,7 @@ Important clarification: the current best has a near `$10k` Model=1 research res
 - Previous Score7 best on the same `Model=1` gate: `+$7,970.70`
 - Previous robust pre-Score7 best on the same gate: `+$7,210.30`
 - Fast-model result from the previous gate: `+$9,512.09`, but `Model=1` is the number to trust more.
-- Latest `Model=2` check is incomplete: Score7 parsed all 6 windows, but Regime parsed only 3 of 6 windows because MT5 returned missing rate/report data for the other 3 windows. Do not treat Model=2 as confirmed yet.
+- Latest `Model=2` check is clean only after disabling the M1 spread-shock guard: no-M1-shock parsed `6 / 6` windows and beat Score7 on continuous and full 2024.
 
 ## Latest Validation
 
@@ -61,18 +61,18 @@ Cross-model confirmation:
 
 | Model | Status | Key Result |
 | --- | --- | --- |
-| `Model=1` | Best current evidence | Regime improved continuous 2024-2026 from `+$7,970.70` to `+$9,753.58` |
+| `Model=1` | Best current evidence | No-M1-shock Regime improved continuous 2024-2026 from `+$7,970.70` to `+$9,753.58` |
 | `Model=0` | Neutral confirmation | Regime and Score7 were exactly equal on all tested windows |
-| `Model=2` | Partial / not usable yet | Score7 parsed 6/6 windows; Regime parsed only 3/6 windows due missing MT5 rate/report data |
+| `Model=2` | Clean no-M1-shock confirmation | No-M1-shock parsed 6/6 windows and improved continuous from `+$9,862.76` to `+$12,054.55` |
 
-Latest `Model=2` parsed rows:
+Latest `Model=2` no-M1-shock rows:
 
-| Profile | Parsed Windows | Continuous 2024-2026 | Worst Parsed Window |
-| --- | ---: | ---: | ---: |
-| Score7 | `6 / 6` | `+$9,862.76` | `+$161.23` |
-| Regime | `3 / 6` | not parsed | `+$194.82` |
+| Profile | Parsed Windows | Continuous 2024-2026 | Full 2024 | Worst Parsed Window |
+| --- | ---: | ---: | ---: | ---: |
+| Score7 | `6 / 6` | `+$9,862.76` | `+$3,082.89` | `+$161.23` |
+| No-M1-Shock Regime | `6 / 6` | `+$12,054.55` | `+$3,890.81` | `+$161.23` |
 
-Because the Regime continuous, full 2024, and Q4 2024 windows did not parse, this does not confirm or reject the Regime profile. It only says the Model=2 gate needs a clean rerun.
+The previous strict Regime profile failed some Model=2 windows because MT5 Open Prices mode does not allow the M1 data request used by the M1 spread-shock guard. The promoted no-M1-shock profile removes that validation problem without reducing Model=1 profit.
 
 ## Evidence Files
 
@@ -82,8 +82,12 @@ Because the Regime continuous, full 2024, and Q4 2024 windows did not parse, thi
 - `outputs/MODEL0_SCORE7_REGIME_CONFIRM_LOG_RESULTS.csv`
 - `outputs/MODEL2_SCORE7_REGIME_CONFIRM_LOG_RESULTS.csv`
 - `outputs/MODEL2_SCORE7_REGIME_CONFIRM_LOG_SUMMARY.csv`
+- `outputs/MODEL2_SCORE7_REGIME_NO_M1SHOCK_LOG_RESULTS.csv`
+- `outputs/MODEL1_SCORE7_REGIME_NO_M1SHOCK_LOG_RESULTS.csv`
+- `outputs/MODEL1_SCORE7_REGIME_NO_M1SHOCK_QTR_LOG_RESULTS.csv`
 - `outputs/MODEL1_SCORE7_REGIME_TRADE_DIAG_SUMMARY.csv`
 - `research/2026-07-12-score7-regime-guard-promotion-note.md`
+- `research/2026-07-12-score7-regime-no-m1shock-promotion-note.md`
 - `research/2026-07-12-score7-regime-model0-confirmation-note.md`
 - `research/2026-07-12-score7-regime-trade-diagnosis-note.md`
 
@@ -109,6 +113,8 @@ The newest promoted change enables strict spread-regime and M1 spread-shock guar
 
 This improved continuous `Model=1` validation from `+$7,970.70` to `+$9,753.58` without changing the quarter gate.
 
+The current promoted profile then disables only the M1 spread-shock guard. This kept the same `Model=1` broad and quarter results, while allowing a clean `Model=2` validation that improved continuous profit from `+$9,862.76` to `+$12,054.55` versus Score7.
+
 A follow-up Model=0 confirmation was neutral: the Regime profile and prior Score7 profile were exactly equal on continuous, full-year, YTD, and Q4 windows. That means the Regime change has not shown extra cross-model damage, but the near-`$10k` edge should still be treated as Model=1-specific research evidence.
 
 A trade-log diagnostic confirmed the Model=1 delta is real inside that test model: both profiles took `63` entries, but the Regime profile changed timing around August 2024 and improved the continuous result by `+$1,782.88`. The edge is still model-sensitive because Model=0 stayed neutral.
@@ -123,7 +129,7 @@ Current architecture direction:
 - Range Elite Micro Reversion stays as a low-frequency range-opportunity lane.
 - MFE Failure Exit is active only in March after the all-month version was rejected.
 - In-Session Liquidity Pullback is active only in June, October, November, and December.
-- Spread-regime and M1 spread-shock guards are enabled in the current research-best.
+- Spread-regime guard is enabled in the current research-best; M1 spread-shock guard is disabled because it created Model=2 validation incompatibility without adding Model=1 profit.
 - Liquidity-aware structural stops are preferred over pure ATR-only stop placement where possible.
 
 ## Risk Rules
@@ -163,7 +169,7 @@ What is strong:
 What is not strong enough yet:
 
 - Model=0 did not confirm the extra near-`$10k` edge.
-- Model=2 has not completed cleanly for the Regime profile.
+- Strict Regime did not complete cleanly in Model=2, but the promoted no-M1-shock Regime profile did.
 - The local EA source is ahead of the GitHub EA source; GitHub currently has the research status, not necessarily every local code change.
 
 Bottom line: keep testing before raising risk or treating this as production-ready.
@@ -192,9 +198,8 @@ The latest local safety audit passed:
 
 Next useful work:
 
-1. Rerun the Model=2 Regime windows cleanly, especially continuous 2024-2026, full 2024, and Q4 2024.
+1. Run a real-tick or another independent higher-fidelity validation before raising risk.
 2. Inspect trade-level logs to understand why the spread-regime guard improves the Model=1 continuous path but is neutral in Model=0.
-3. Run another independent source/model validation before raising risk.
-4. Continue looking for profit lanes that add trades without creating losing windows.
-5. Keep rejected high-profit variants documented so they are not accidentally re-promoted.
-6. Eventually sync the full local EA source to GitHub once normal git authentication is available; the local EA source is ahead of the GitHub source.
+3. Continue looking for profit lanes that add trades without creating losing windows.
+4. Keep rejected high-profit variants documented so they are not accidentally re-promoted.
+5. Eventually sync the full local EA source to GitHub once normal git authentication is available; the local EA source is ahead of the GitHub source.
