@@ -1,0 +1,7 @@
+"Rank","Priority","Profile","Phase","Set","Window","From","To","Status","NetProfit","Balance","LogTimestamp","RunnerStatus","Evidence"
+"1","","score7","train","model4","full2024","2024.01.01","2024.12.31","PARSED_FROM_LOG","1425.73","2425.73","2026-07-12T12:58:39","NO_REPORT","Tester finished but no report file was found for m4_score7_vs_no_m1shock_score7_full2024."
+"2","","score7","oos","model4","full2025","2025.01.01","2025.12.31","PARSED_FROM_LOG","214.3","1214.3","2026-07-12T12:59:05","NO_REPORT","Tester finished but no report file was found for m4_score7_vs_no_m1shock_score7_full2025."
+"3","","score7","recent","model4","ytd2026","2026.01.01","2026.07.12","PARSED_FROM_LOG","955.21","1955.21","2026-07-12T12:59:54","NO_REPORT","Tester finished but no report file was found for m4_score7_vs_no_m1shock_score7_ytd2026."
+"4","","no_m1shock","train","model4","full2024","2024.01.01","2024.12.31","PARSED_FROM_LOG","1425.73","2425.73","2026-07-12T13:00:23","NO_REPORT","Tester finished but no report file was found for m4_score7_vs_no_m1shock_no_m1shock_full2024."
+"5","","no_m1shock","oos","model4","full2025","2025.01.01","2025.12.31","PARSED_FROM_LOG","214.3","1214.3","2026-07-12T13:00:48","NO_REPORT","Tester finished but no report file was found for m4_score7_vs_no_m1shock_no_m1shock_full2025."
+"6","","no_m1shock","recent","model4","ytd2026","2026.01.01","2026.07.12","PARSED_FROM_LOG","955.21","1955.21","2026-07-12T13:01:36","NO_REPORT","Tester finished but no report file was found for m4_score7_vs_no_m1shock_no_m1shock_ytd2026."
