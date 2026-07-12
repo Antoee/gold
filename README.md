@@ -1,159 +1,126 @@
 # Professional XAUUSD EA
 
-This repository contains a professional-grade MetaTrader 5 XAUUSD Expert Advisor research project.
+Research project for a professional-grade MetaTrader 5 Expert Advisor focused on XAUUSD / Gold.
 
-The EA is modular and risk-first. It is designed for repeated Strategy Tester optimization, training/out-of-sample checks, walk-forward testing, and research notes rather than one-off curve fitting.
+This is not a martingale, grid, averaging-down, or recovery-system bot. The goal is to keep risk control first while iteratively improving profit through local MT5 Strategy Tester validation, out-of-sample checks, and walk-forward style gates.
 
-## Current Status
+## Latest Status
 
-The promoted default is the robust no-date BOS + liquidity-sweep profile at `1.60%` risk with a `1.80` ATR stop multiplier and `3.50` ATR take-profit multiplier. It sacrifices raw historical profit to improve start-date robustness and remove hard-coded calendar blocks.
+Last updated: 2026-07-12.
 
-Latest promoted real-tick validation, XAUUSD M15, deposit `$1,000`, period `2024.01.01` to `2026.07.02`:
+Current research-best profile:
 
-- Full period net profit: `+$866.59`
-- Final balance: `$1,866.59`
-- Yearly windows: `2024 +$483.59`, `2025 +$260.44`, `2026 YTD $0.00`
-- Half-year windows: no losing windows; `2024 H2 +$483.59`, `2025 H2 +$260.44`, other tested half-years flat
-- Quarterly windows: `+$744.03`, 2 profitable, 8 flat, 0 losing
-- Monthly windows: `+$744.03`, 2 profitable, 28 flat, 0 losing
-- Worst month/quarter/split window: `$0.00`
+- Profile: `outputs/CANDIDATE_PRIMARY_RANGE_ELITE_MFE_FAILURE_MARCH_ISLP_JUN_OCTDEC_SCORE7_PROFILE.set`
+- Builder: `work/build_current_best_mfe_failure_march_islp_jun_octdec_score7_profile.ps1`
+- SHA-256: `E36378232B722A2A09C1EFD2494F04385B7020CAE1F1679DDE903E05D8BC12D0`
+- Research note: `research/2026-07-12-islp-score7-promotion-note.md`
 
-This replaces the previous `1.50%` risk / `1.80` stop ATR profile, which made `+$521.12` full-period and still had one losing monthly/quarter/split window.
+Important clarification: the current best is about `$8k`, but not exactly over two years.
 
-The previous date-block profile remains an aggressive research benchmark: full period `+$4,153.12`, but 17 losing months out of 30 and hard-coded calendar filters.
+- Higher-fidelity `Model=1` continuous result: `+$7,970.70`
+- Test window: `2024.01.01` to `2026.07.12`
+- That is about 2.5 years, not exactly 2 years.
+- Previous robust best on the same `Model=1` gate: `+$7,210.30`
+- Fast-model result from the previous gate: `+$9,512.09`, but `Model=1` is the number to trust more.
 
-## Included Files
+## Latest Validation
 
-- `AGENTS.md` - no-local-execution policy for Codex work in this repo while active desktop focus must be protected.
-- `Professional_XAUUSD_EA.mq5` - GitHub EA source for the modular XAUUSD MT5 Expert Advisor; compile/test status still needs controlled verification.
-- `SOURCE_MANIFEST.md` - EA source fingerprint and static verification state.
-- `BACKTEST_RESULTS.md` - detailed validation notes and rejected candidate results.
-- `NEXT_VALIDATION_QUEUE.md` - candidates waiting for full validation before promotion.
-- `NEXT_VALIDATION_RUNBOOK.md` - safe validation order and promotion gate.
-- `PROMOTION_GATE_REPORT.md` - offline promotion-readiness check for queued profiles.
-- `PROFILE_INPUT_AUDIT.md` - offline check that active `.set` files pin all critical inputs.
-- `ROBUST_CANDIDATE_RANKING.md` - offline robust-candidate ranking from existing CSV results.
-- `LOSS_CONTROL_REPORT.md` - offline loss-control ranking from existing CSV windows.
-- `outputs/CONTROLLED_PROFIT_TEST_RUNBOOK.md` - no-popup testing policy and current validation workflow.
-- `outputs/micro_test_handoff/` - 8-config paired stress micro handoff for fast candidate-vs-baseline validation.
-- `outputs/recent_oos_handoff/` - 8-config paired recent out-of-sample handoff for 2025_Q4 and 2026 freshness checks.
-- `work/MT5_LOCAL_LAUNCH_DISABLED.lock` - active hard lock that prevents guarded local MT5 launches.
-- `work/stop_mt5_stray_processes.ps1` - cleanup-only helper for stopping already-running MT5/MetaTester/MetaEditor processes.
-- `work/stop_mt5_stray_processes_hidden.vbs` - no-window wrapper for the cleanup helper; starts no MT5 process.
-- `ROBUST_BOS_SWEEP_PROFILE.set` - promoted robust BOS/sweep MT5 settings profile.
-- `CANDIDATE_RISK16_SL18_TP38_PROFILE.set` - queued candidate: risk `1.60`, stop ATR `1.80`, TP ATR `3.80`, equity drawdown guard `4.00%`.
-- `CANDIDATE_RISK16_SL16_TP38_PROFILE.set` - queued candidate: risk `1.60`, stop ATR `1.60`, TP ATR `3.80`, equity drawdown guard `4.00%`.
-- `CANDIDATE_RISK16_SL18_TP35_GIVEBACK_PROFILE.set` - queued loss-control candidate with the profit giveback guard enabled.
-- `RISK16_NEIGHBORHOOD_SUMMARY.csv` - latest stress-window sweep summary around the promoted profile.
-- `BOS_SWEEP_WINDOWS_risk1p6_sl18_tp35.csv` - promoted robust profile quarterly/monthly windows.
-- `BOS_SWEEP_WINDOW_SUMMARY_risk1p6_sl18_tp35.csv` - promoted robust profile quarterly/monthly summary.
-- `BOS_SWEEP_SPLITS_risk1p6_sl18_tp35.csv` - promoted robust profile yearly/half/full windows.
-- `BOS_SWEEP_SPLIT_SUMMARY_risk1p6_sl18_tp35.csv` - promoted robust profile split summary.
-- `BOS_SWEEP_PROFIT_EXTENSION_SUMMARY.csv` - focused profit-extension sweep around the prior robust profile.
-- `GENERAL_REGIME_STRESS_SUMMARY.csv` - no-date general regime stress sweep summary.
-- `BOS_SWEEP_VARIANT_SUMMARY.csv` - BOS/sweep variant stress summary.
-- `MONTHLY_REAL_TICK_SUMMARY.csv` - previous aggressive date-block monthly validation summary.
-- `QUARTERLY_REAL_TICK_SUMMARY.csv` - previous aggressive date-block quarterly summary metrics.
+Broad `Model=1` validation:
 
-## Strategy Rules
+| Window | Previous Robust Best | Current Score7 Best |
+| --- | ---: | ---: |
+| Full 2024 | `+$2,507.85` | `+$2,507.85` |
+| Full 2025 | `+$214.18` | `+$214.18` |
+| 2026 YTD | `+$1,375.04` | `+$1,375.04` |
+| Continuous 2024-2026 | `+$7,210.30` | `+$7,970.70` |
 
-No martingale. No grid. No averaging down. No recovery systems.
+Quarter `Model=1` gate:
 
-Current promoted defaults include:
+| Metric | Previous Robust Best | Current Score7 Best |
+| --- | ---: | ---: |
+| Quarter total | `+$3,585.86` | `+$3,638.18` |
+| Worst quarter | `-$0.50` | `-$0.50` |
+| Losing quarters | `1` | `1` |
+| Main improvement | 2025 Q4 `+$142.50` | 2025 Q4 `+$194.82` |
 
-- Risk per trade: `1.60%`.
-- Adaptive reverse enabled.
-- Adaptive slope threshold: `500` points.
-- Minimum risk/reward: `1.50`.
-- Stop-loss ATR multiplier: `1.80`.
-- Take-profit ATR multiplier: `3.50`.
-- Break-even disabled.
-- Daily loss limit: `1.00%`.
-- Weekly loss limit: `2.50%`.
-- Monthly loss limit: `4.00%`.
-- Date buy/sell blocks disabled.
-- Session filter disabled by default; root profiles pin 0-24 hours, weekdays allowed, Sunday off only if the filter is enabled, and Friday evening cutoff disabled.
-- EMA cross, momentum candle, and engulfing confirmations disabled.
-- BOS and liquidity sweep enabled with `InpMinimumConfirmations=2`.
-- Profit giveback guard disabled by default.
+Evidence files:
 
-## Session Filter
+- `outputs/CURRENT_RESEARCH_BEST_PROFILE.md`
+- `outputs/MODEL1_ISLP_VARIANT_SWEEP_LOG_RESULTS.csv`
+- `outputs/MODEL1_SCORE7_QTR_LOG_RESULTS.csv`
+- `research/2026-07-12-islp-score7-promotion-note.md`
 
-The EA source includes an optional session/day filter for controlled research passes.
+## What Changed Recently
 
-- `InpUseSessionFilter` enables hour/day filtering.
-- `InpSessionStartHour` and `InpSessionEndHour` define the allowed server-time window and support overnight sessions.
-- `InpAllowMonday` through `InpAllowFriday` plus `InpAllowSunday` control allowed trading days.
-- `InpDisableFridayEvening` and `InpFridayCutoffHour` can block late-Friday entries.
-- The promoted profile keeps this disabled until a candidate passes proper out-of-sample validation.
+The promoted change raises the In-Session Liquidity Pullback lane minimum score:
 
-## Profit Giveback Guard
+- Old: `InpInSessionLiquidityPullbackMinScore=6`
+- New: `InpInSessionLiquidityPullbackMinScore=7`
 
-The EA source includes an optional profit giveback guard for loss-control research.
+This made the ISLP lane more selective. It improved the continuous `Model=1` result without hurting full 2024, full 2025, 2026 YTD, or any quarter in the quarter gate.
 
-- `InpUseProfitGivebackGuard` enables or disables the module.
-- The guard tracks daily, weekly, and monthly peak closed profit.
-- It blocks new entries if current period profit gives back too much of that peak.
-- It does not close existing positions by itself.
-- The promoted profile keeps it disabled; `CANDIDATE_RISK16_SL18_TP35_GIVEBACK_PROFILE.set` enables it for validation.
+The higher-profit `risk045_tp150` variant reached `+$8,112.91` on continuous `Model=1`, but it reduced full 2024 from `+$2,507.85` to `+$2,209.66`, so it was rejected instead of promoted.
 
-## Optimization Scoring
+## Strategy Direction
 
-The EA source includes an `OnTester()` custom optimization score for MT5 Strategy Tester.
+Current architecture direction:
 
-- Default mode is `FITNESS_ROBUST_PROFIT`, which rewards net profit and profit factor while penalizing low trade count and excessive equity drawdown.
-- `FITNESS_NET_PROFIT` is available when raw-profit sorting is needed for comparison.
-- `FITNESS_RECOVERY_SHARPE` is available for research passes that should emphasize recovery factor and Sharpe ratio.
-- The promoted and queued `.set` profiles pin these optimizer inputs.
-- This does not change live trade behavior; it only changes the custom criterion returned to MT5 Strategy Tester optimization.
+- Adaptive Reverse remains disabled to avoid stop-and-reverse whipsaw risk.
+- Flat Month Structural Displacement stays enabled as a tightly gated, low-risk opportunity lane.
+- Flat Month Micro Reversion is active only in July and October at reduced risk.
+- Range Elite Micro Reversion stays as a low-frequency range-opportunity lane.
+- MFE Failure Exit is active only in March after the all-month version was rejected.
+- In-Session Liquidity Pullback is active only in June, October, November, and December.
+- Liquidity-aware structural stops are preferred over pure ATR-only stop placement where possible.
 
-## Latest Research
+## Risk Rules
 
-Queued candidates from the latest risk/stop/target neighborhood stress sweep:
+Hard rules for this project:
 
-- `risk160_sl18_tp38`: stress-window total `+$798.00`, worst `$0.00`, 2 profitable, 5 flat, 0 losing. Needs stress micro, recent out-of-sample, then full monthly/quarter/split validation before promotion.
-- `risk160_sl16_tp38`: stress-window total `+$798.00`, worst `$0.00`, 2 profitable, 5 flat, 0 losing. Needs stress micro, recent out-of-sample, then full monthly/quarter/split validation before promotion.
-- `risk160_sl18_tp35_giveback`: same core as the promoted profile, with the profit giveback guard enabled. Needs full loss-control validation before promotion.
+- No martingale.
+- No grid.
+- No averaging down.
+- No unrealistic recovery systems.
+- Do not promote a change just because one backtest makes more money.
+- Prefer changes that improve profit without increasing drawdown, weak windows, or hidden fragility.
+- Keep every major feature configurable and independently testable.
 
-Best no-date profiles found so far:
+## How To Read Updates
 
-- Robust BOS+sweep at `1.60%` risk, `1.80` stop ATR, `3.50` TP ATR: full period `+$866.59`, monthly `+$744.03`, 0 losing months, promoted default.
-- Robust BOS+sweep at `1.50%` risk, `1.80` stop ATR: full period `+$521.12`, monthly `+$540.51`, 1 losing month, previous default.
-- Robust BOS+sweep at `1.50%` risk, `2.20` stop ATR: full period `+$452.75`, monthly `+$487.46`, 1 losing month, older default.
-- Robust BOS+sweep at `2.00%` risk: full period `+$321.72`, 0 losing monthly/quarterly/split windows, safer but lower profit.
-- Momentum+sweep no-date: full period `+$664.59`, but still 17 losing months, not promoted.
+To see the current state without asking Codex:
 
-Rejected or non-promoted paths:
+1. Open `outputs/CURRENT_RESEARCH_BEST_PROFILE.md` for the latest promoted research-best.
+2. Open the latest `research/YYYY-MM-DD-*.md` note for why it was promoted or rejected.
+3. Check `outputs/*LOG_RESULTS.csv` for the actual parsed MT5 tester results.
+4. Treat fast-model numbers as rough scouting only.
+5. Treat `Model=1` results as more trustworthy, but still not a production guarantee.
 
-- Risk `1.75%` made more in one stress sweep, but worsened the worst loss in that earlier profile, so it was not promoted.
-- Monthly ADX filters reduced profit without improving losing-month count.
-- No-trail improved worst quarter but reduced quarterly net too much.
-- Directional confirmation `buy2_sell3_ny` made 2025 losing.
-- Equity drawdown guard `dd4` cut full-period net to only `+$85.45`.
-- H4 no-date signal timeframe avoided trades but did not make profit.
+## GitHub Actions
+
+GitHub Actions should not be used for heavy optimization right now because the monthly Actions quota is limited.
+
+The workflow should remain manual-only. Heavy MT5 testing is intended to run locally or on a separate machine/VPS, not through GitHub Actions.
 
 ## Background Testing Safety
 
-Local MT5 launch is intentionally hard-locked because terminal/metatester windows can still flash and steal focus on this PC.
+Local MT5 testing should use the hidden/background launch path only. Do not run tester sessions that pop windows, steal focus, or interfere with normal PC use.
 
-- Do not run local shell commands, MT5 tests, MetaEditor, MetaTester, or helper launchers from this active desktop while normal PC use must remain uninterrupted.
-- `AGENTS.md` records this no-local-execution rule for future Codex work in the repo.
-- `work/MT5_LOCAL_LAUNCH_DISABLED.lock` must stay in place. Guarded scripts refuse to launch MT5 while it exists.
-- The launch guard and background helper stop `terminal`, `terminal64`, `metatester`, `metatester64`, `MetaEditor`, and `metaeditor64` before failing closed.
-- `work/stop_mt5_stray_processes.ps1` is cleanup-only. It starts no tester process.
-- `work/stop_mt5_stray_processes_hidden.vbs` runs that cleanup hidden, without a visible PowerShell window.
-- Future backtests should run on a Windows VM, spare machine, VPS, or a deliberate controlled local session where focus stealing is acceptable.
-- Until exported reports are available from a non-interrupting tester environment, repository/documentation/offline analysis work can continue through GitHub/API only.
+After any local MT5 run, the safety lock should be restored:
 
-## Research Direction
+- `work/MT5_LOCAL_LAUNCH_DISABLED.lock`
 
-Next work should focus on increasing profit from the robust no-date profile without bringing back losing monthly windows.
+The latest local safety audit passed:
 
-1. Run the paired stress micro handoff, then the recent out-of-sample handoff through 2026, before spending time on the full validation queue.
-2. Test session-filter variants such as London, New York, and London/New York overlap only as paired out-of-sample candidates, not as promotion shortcuts.
-3. Fully validate surviving `3.80` TP candidates and the giveback candidate across monthly, quarterly, yearly, half-year, and full-period windows on a non-interrupting tester environment.
-4. Rerun `work/audit_profile_inputs.ps1` after changing `.set` files so MT5 cannot reuse stale cached inputs unnoticed.
-5. Rerun `work/analyze_promotion_gate.ps1` and promote only candidates that pass full, split, quarterly, and monthly gates.
-6. Test on additional broker/history sources.
-7. Use the custom optimization criterion to rank candidates by robustness, not only raw net profit.
-8. Keep the date-block profile as a benchmark, not the default.
+- Checks: `39`
+- Passed: `39`
+- Failed: `0`
+
+## Next Research Gates
+
+Next useful work:
+
+1. Stress the Score7 profile with spread and slippage assumptions.
+2. Run a more complete tick-model validation before raising risk.
+3. Continue looking for profit lanes that add trades without creating losing windows.
+4. Keep rejected high-profit variants documented so they are not accidentally re-promoted.
+5. Eventually sync the full local EA source to GitHub once normal git authentication is available; the local EA source is ahead of the GitHub source.
