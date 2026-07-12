@@ -10,45 +10,46 @@ Last updated: 2026-07-12.
 
 Current research-best profile:
 
-- Profile: `outputs/CANDIDATE_PRIMARY_RANGE_ELITE_MFE_FAILURE_MARCH_ISLP_JUN_OCTDEC_SCORE7_PROFILE.set`
-- Builder: `work/build_current_best_mfe_failure_march_islp_jun_octdec_score7_profile.ps1`
-- SHA-256: `E36378232B722A2A09C1EFD2494F04385B7020CAE1F1679DDE903E05D8BC12D0`
-- Research note: `research/2026-07-12-islp-score7-promotion-note.md`
+- Profile: `outputs/CANDIDATE_PRIMARY_RANGE_ELITE_MFE_FAILURE_MARCH_ISLP_JUN_OCTDEC_SCORE7_REGIME_PROFILE.set`
+- Builder: `work/build_current_best_mfe_failure_march_islp_jun_octdec_score7_regime_profile.ps1`
+- SHA-256: `7BD4019104BCDF117A7D729289D6821D5F4BF6FB6FF9FE2D543BCF91717DC204`
+- Research note: `research/2026-07-12-score7-regime-guard-promotion-note.md`
 
-Important clarification: the current best is about `$8k`, but not exactly over two years.
+Important clarification: the current best is now near `$10k`, but not exactly over two years.
 
-- Higher-fidelity `Model=1` continuous result: `+$7,970.70`
+- Higher-fidelity `Model=1` continuous result: `+$9,753.58`
 - Test window: `2024.01.01` to `2026.07.12`
 - That is about 2.5 years, not exactly 2 years.
-- Previous robust best on the same `Model=1` gate: `+$7,210.30`
+- Previous Score7 best on the same `Model=1` gate: `+$7,970.70`
+- Previous robust pre-Score7 best on the same gate: `+$7,210.30`
 - Fast-model result from the previous gate: `+$9,512.09`, but `Model=1` is the number to trust more.
 
 ## Latest Validation
 
 Broad `Model=1` validation:
 
-| Window | Previous Robust Best | Current Score7 Best |
+| Window | Previous Score7 Best | Current Regime Best |
 | --- | ---: | ---: |
-| Full 2024 | `+$2,507.85` | `+$2,507.85` |
+| Full 2024 | `+$2,507.85` | `+$3,201.96` |
 | Full 2025 | `+$214.18` | `+$214.18` |
 | 2026 YTD | `+$1,375.04` | `+$1,375.04` |
-| Continuous 2024-2026 | `+$7,210.30` | `+$7,970.70` |
+| Continuous 2024-2026 | `+$7,970.70` | `+$9,753.58` |
 
 Quarter `Model=1` gate:
 
-| Metric | Previous Robust Best | Current Score7 Best |
+| Metric | Previous Score7 Best | Current Regime Best |
 | --- | ---: | ---: |
-| Quarter total | `+$3,585.86` | `+$3,638.18` |
+| Quarter total | `+$3,638.18` | `+$3,638.18` |
 | Worst quarter | `-$0.50` | `-$0.50` |
 | Losing quarters | `1` | `1` |
-| Main improvement | 2025 Q4 `+$142.50` | 2025 Q4 `+$194.82` |
+| Main improvement | none in reset quarters | continuous equity path improved |
 
 Evidence files:
 
 - `outputs/CURRENT_RESEARCH_BEST_PROFILE.md`
-- `outputs/MODEL1_ISLP_VARIANT_SWEEP_LOG_RESULTS.csv`
-- `outputs/MODEL1_SCORE7_QTR_LOG_RESULTS.csv`
-- `research/2026-07-12-islp-score7-promotion-note.md`
+- `outputs/MODEL1_SCORE7_COST_STRESS_LOG_RESULTS.csv`
+- `outputs/MODEL1_SCORE7_REGIME_QTR_LOG_RESULTS.csv`
+- `research/2026-07-12-score7-regime-guard-promotion-note.md`
 
 ## What Changed Recently
 
@@ -61,6 +62,17 @@ This made the ISLP lane more selective. It improved the continuous `Model=1` res
 
 The higher-profit `risk045_tp150` variant reached `+$8,112.91` on continuous `Model=1`, but it reduced full 2024 from `+$2,507.85` to `+$2,209.66`, so it was rejected instead of promoted.
 
+The newest promoted change enables strict spread-regime and M1 spread-shock guards:
+
+- `InpUseSpreadRegimeGuard=true`
+- `InpMaxSpreadRegimeRatio=1.35`
+- `InpMinSpreadRegimePoints=30.0`
+- `InpUseM1SpreadShockGuard=true`
+- `InpM1SpreadShockMaxRatio=1.60`
+- `InpM1SpreadShockMinPoints=35.0`
+
+This improved continuous `Model=1` validation from `+$7,970.70` to `+$9,753.58` without changing the quarter gate.
+
 ## Strategy Direction
 
 Current architecture direction:
@@ -71,6 +83,7 @@ Current architecture direction:
 - Range Elite Micro Reversion stays as a low-frequency range-opportunity lane.
 - MFE Failure Exit is active only in March after the all-month version was rejected.
 - In-Session Liquidity Pullback is active only in June, October, November, and December.
+- Spread-regime and M1 spread-shock guards are enabled in the current research-best.
 - Liquidity-aware structural stops are preferred over pure ATR-only stop placement where possible.
 
 ## Risk Rules
@@ -119,8 +132,8 @@ The latest local safety audit passed:
 
 Next useful work:
 
-1. Stress the Score7 profile with spread and slippage assumptions.
-2. Run a more complete tick-model validation before raising risk.
+1. Retest the Regime profile under another model/source to confirm the continuous edge is not a tester artifact.
+2. Inspect trade-level logs to understand why the spread-regime guard improves the continuous path.
 3. Continue looking for profit lanes that add trades without creating losing windows.
 4. Keep rejected high-profit variants documented so they are not accidentally re-promoted.
 5. Eventually sync the full local EA source to GitHub once normal git authentication is available; the local EA source is ahead of the GitHub source.
