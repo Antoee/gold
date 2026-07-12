@@ -10,6 +10,23 @@ Last updated: 2026-07-12.
 
 Use this README as the status board. If you want to know what changed without asking Codex, start here.
 
+## Read This First
+
+Quick answer:
+
+- Current best research profile: `Score7 Regime No-M1-Shock Dec-ISLP-Off`
+- Old `$866 in 2.5 years` result: outdated baseline, not the current best
+- Best current continuous research result: `+$10,127.76` on `Model=1`, `2024.01.01` to `2026.07.12`
+- Best current real-tick continuous result: `+$4,507.51` on `Model=4`, `2024.01.01` to `2026.07.12`
+- Best sampled real-tick validation total: `+$7,469.00` across six Model4 windows
+- Latest promoted change: December ISLP disabled with `InpISLPTradeDecember=false`
+- Latest rejected probe: FMR location-extreme strict mode tied the current profile and was not promoted
+- Live trading status: research only, not live-ready
+- GitHub Actions status: keep manual-only to protect monthly Actions usage
+- Source status: local EA source is still ahead of GitHub
+
+Current decision: keep `Score7 Regime No-M1-Shock Dec-ISLP-Off` as the research-best profile while continuing local hidden MT5 validation.
+
 | Item | Current State |
 | --- | --- |
 | Current research-best | `Score7 Regime No-M1-Shock Dec-ISLP-Off` |
@@ -26,6 +43,35 @@ Use this README as the status board. If you want to know what changed without as
 | Local MT5 safety | Latest audit passed `39 / 39` checks |
 
 Plain English: the bot is no longer at the old `$866 in 2.5 years` baseline. The newest promoted profile is much better in research tests, and the monthly plus quarterly real-tick parsed-log gates support it. It is still not a live-profit promise. The next job is getting richer report/trade-stat evidence and continuing walk-forward validation.
+
+## How To Check Progress Without Asking Codex
+
+Open these files on GitHub in this order:
+
+1. `README.md` - highest-level status, current best, latest decision, and next task.
+2. `outputs/CURRENT_RESEARCH_BEST_PROFILE.md` - current promoted profile and exact `.set` identity.
+3. `research/` - human-readable notes explaining why a change was promoted or rejected.
+4. `outputs/*DECISION_SUMMARY.csv` - compact result tables for each validation package.
+5. `outputs/*PROFILE_SUMMARY.csv` - profile totals, losing-window counts, and worst windows.
+
+What to look for:
+
+- `Promoted` means the change became the new research-best.
+- `Rejected` means it was tested and did not beat the current best.
+- `Probe only` means the result was useful, but not enough to trust yet.
+- `NO_REPORT` means MT5 did not export full reports, so only parsed log results should be trusted.
+- `Model=4` means real ticks, which matters most for serious validation.
+
+## Current Work Queue
+
+Next local work:
+
+1. Diagnose the current `2024_10` Model4 losing window because it does not match older Q4 diagnostics.
+2. Compare that losing October against the winning `2025_10` window.
+3. Only add a new guard if the diagnostics show a clear repeatable weakness.
+4. Keep all heavy tests local and hidden, not on GitHub Actions.
+
+Known caution: the full local EA source is too input-heavy for MT5 Strategy Tester, so current validation packages use compact tester-source generation until the input surface is reduced.
 
 ## Current Best Profile
 
