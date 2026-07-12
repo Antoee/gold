@@ -1,0 +1,4 @@
+"Profile","Parsed","Expected","TotalNet","Continuous","YTD","Full2025","Full2024","WeakSum","WorstWindow","LosingWindows"
+"base_mfe_aug","9","9","11277.24","6633.61","1107.93","214.3","2406.27","","0","0"
+"may_window_r280_max2","9","9","5324.09","1085.77","493.59","39.1","1085.77","","0","0"
+"may_window_r280_protected_addon","9","9","3503.67","950.91","205.09","39.1","950.91","","0","0"
