@@ -20,10 +20,10 @@ Quick answer:
 - Best current real-tick continuous result: `+$4,507.51` on `Model=4`, `2024.01.01` to `2026.07.12`
 - Best sampled real-tick validation total: `+$7,469.00` across six Model4 windows
 - Latest promoted change: Low-ATR ISLP trades now require order-flow confirmation
-- Latest validation decision: Flat-month FSD efficiency relaxation was tested and rejected; LowATR OrderFlow remains best
+- Latest validation decision: Flat-month breakout structural and activation probes were tested and rejected; LowATR OrderFlow remains best
 - Live trading status: research only, not live-ready
 - GitHub Actions status: keep manual-only to protect monthly Actions usage
-- Source status: local EA source is still ahead of GitHub
+- Source status: local folder is not a valid Git checkout right now; `.git` exists but is empty
 
 Current decision: keep `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow` as the stability-best research profile while continuing local hidden MT5 validation.
 
@@ -38,14 +38,14 @@ Current decision: keep `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR Ord
 | Quarterly real-tick gate | LowATR OrderFlow beat Dec-ISLP-Off `+$3,435.65` vs `+$3,421.49`, with worst quarter improved from `-$44.64` to `-$30.48` |
 | Monthly tester stats | LowATR OrderFlow parsed `31 / 31`, total trades `38`, worst equity DD `30.9408%` |
 | Quarterly tester stats | LowATR OrderFlow parsed `11 / 11`, total trades `34`, worst equity DD `30.9408%` |
-| Latest code probe | Flat-month FSD efficiency relaxation tied the current profile and was rejected |
+| Latest code probe | Flat-month breakout structural/activation probes failed to improve current and were rejected |
 | Old `$866` result | Outdated baseline, no longer the current research-best |
 | Live-ready? | No. Still a research candidate |
 | GitHub Actions | Manual-only; do not use for heavy tester runs |
 | Local MT5 safety | Latest audit passed `39 / 39` checks |
 | Repository cleanup | Generated logs/temp artifacts archived; active cleanup candidates now `0` |
 
-Plain English: the bot is no longer at the old `$866 in 2.5 years` baseline. The newest stability-best profile improves the prior Dec-ISLP-Off profile in sampled, monthly, and quarterly real-tick parsed-log gates. The latest flat-month relaxation probe did not add trades or profit, so it was rejected. The bot is still not a live-profit promise. Tester-stat extraction now works, and the biggest warning is the `30.9408%` worst equity drawdown reading in the monthly/quarterly summaries.
+Plain English: the bot is no longer at the old `$866 in 2.5 years` baseline. The newest stability-best profile improves the prior Dec-ISLP-Off profile in sampled, monthly, and quarterly real-tick parsed-log gates. The latest flat-month breakout work did not produce a better profile: conservative/balanced FMB tied current, and loose FMB added losing trades. The bot is still not a live-profit promise. Tester-stat extraction now works, and the biggest warning is the `30.9408%` worst equity drawdown reading in the monthly/quarterly summaries.
 
 ## How To Check Progress Without Asking Codex
 
@@ -72,7 +72,7 @@ Next local work:
 1. Rerun Model1 and Model2 validation on the LowATR OrderFlow candidate.
 2. Add hold-time, average winner/loser, largest loss, consecutive loss, exposure, spread, swap, commission, and slippage evidence.
 3. Run older-data, walk-forward, Monte Carlo, and broker-variation validation before considering live use.
-4. Attack zero-trade months with a different opportunity lane or earlier candidate discovery logic; simple FSD threshold relaxation tied the current profile.
+4. Attack zero-trade months with a different opportunity lane or earlier candidate discovery logic; FSD relaxation tied current, and FMB activation added losing trades.
 5. Keep all heavy tests local and hidden, not on GitHub Actions.
 
 Repository cleanup completed on 2026-07-12:
@@ -80,12 +80,17 @@ Repository cleanup completed on 2026-07-12:
 - Archived generated runtime/log/temp artifacts and old MT5 package folders into `archive/generated_artifacts_*`.
 - Compressed old archive folders into ignored zip files.
 - Removed active `outputs/offline_refresh_logs/`.
-- Active generated cleanup candidates: `0`.
-- Local file count reduced from about `46k` files to about `4.1k` files.
+- Archived the generated FMB package folders/logs and 125 generated compact/tester `.mq5` sources.
+- Active generated cleanup candidates after latest pass: `0` for the newest FMB package folders/logs.
+- Local file count reduced from about `46k` files to about `4.0k` files.
+- Local workspace size after latest zip cleanup: about `91 MB`.
 - `work/` reduced from about `143 MB` to about `4 MB`.
-- `outputs/` now keeps only current evidence package folders plus root evidence CSV/source artifacts.
+- `outputs/` now keeps current evidence package folders, root evidence CSV/source artifacts, and only one canonical `.mq5` source copy.
 
-Known caution: the full local EA source is too input-heavy for MT5 Strategy Tester, so current validation packages use compact tester-source generation until the input surface is reduced.
+Known cautions:
+
+- The full local EA source is too input-heavy for MT5 Strategy Tester, so current validation packages use compact tester-source generation until the input surface is reduced.
+- This workspace is not currently a valid Git checkout. The `.git` directory exists but is empty, so GitHub publishing needs a fresh clone/sync path or connector credentials.
 
 ## Current Best Profile
 
@@ -167,6 +172,20 @@ Quarterly real-tick validation was run on 2026-07-12:
 
 ## Latest Code Probe
 
+Flat-month breakout structural and activation probes were tested on 2026-07-12 and rejected:
+
+- Intent: create more useful flat-month trades without Adaptive Reverse, martingale, grid, averaging down, or pure ATR-only stops.
+- Code change: made the existing FMB lane optimizer-visible and added optional direct structural stop/target controls.
+- Compile result: `0 errors, 0 warnings`.
+- First full-source tester run failed with `too many input parameters (1484)`, so the probe was rerun through compact tester-source generation.
+- Structural Model4 result across 12 weak/flat windows: current `+$508.07`, conservative FMB `+$508.07`, balanced FMB `+$508.07`.
+- Activation Model4 result: current `+$508.07`, tape FMB `+$508.07`, loose FMB `+$490.65`.
+- Loose activation did reduce zero-trade windows from `9` to `7`, but it added two losing windows (`2024_10` and `2025_04`) and reduced total net.
+- Decision: not promoted. The current stability-best profile remains LowATR OrderFlow.
+- Research notes:
+  - `research/2026-07-12-flat-month-breakout-structural-probe-note.md`
+  - `research/2026-07-12-flat-month-breakout-activation-probe-note.md`
+
 Flat-month FSD efficiency relaxation was tested on 2026-07-12 and rejected:
 
 - Intent: increase active months without enabling Adaptive Reverse, martingale, grid, or pure ATR-only stops.
@@ -232,6 +251,15 @@ Flat-month FSD efficiency relaxation rejection:
 - `outputs/FLAT_MONTH_EFFICIENCY_RELAXATION_PROBE_SUMMARY.csv`
 - `outputs/FLAT_MONTH_EFFICIENCY_RELAXATION_PROBE_RUN.csv`
 - `outputs/FLAT_MONTH_EFFICIENCY_RELAXATION_PROBE_MANIFEST.csv`
+
+Flat-month breakout rejection:
+
+- `outputs/FLAT_MONTH_BREAKOUT_STRUCTURAL_PROBE_RESULTS.csv`
+- `outputs/FLAT_MONTH_BREAKOUT_STRUCTURAL_PROBE_SUMMARY.csv`
+- `outputs/FLAT_MONTH_BREAKOUT_ACTIVATION_PROBE_RESULTS.csv`
+- `outputs/FLAT_MONTH_BREAKOUT_ACTIVATION_PROBE_SUMMARY.csv`
+- `research/2026-07-12-flat-month-breakout-structural-probe-note.md`
+- `research/2026-07-12-flat-month-breakout-activation-probe-note.md`
 
 December ISLP guard validation:
 
