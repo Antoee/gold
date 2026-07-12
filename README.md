@@ -8,6 +8,17 @@ This is not a martingale, grid, averaging-down, or recovery-system bot. The goal
 
 Last updated: 2026-07-12.
 
+## Start Here
+
+This README is the project status dashboard. If you want updates without asking Codex, read these sections in order:
+
+1. `Latest Status` tells you the current best profile and the headline numbers.
+2. `Latest Validation` shows what is proven, what is only partial, and what still needs another test.
+3. `Evidence Files` points to the exact CSV and research-note files behind the numbers.
+4. `Next Research Gates` shows what should happen next before any new profile is trusted.
+
+Short version: the current research-best is much better than the old `$866` result, but the near-`$10k` result is still a research result, not a live-trading promise.
+
 Current research-best profile:
 
 - Profile: `outputs/CANDIDATE_PRIMARY_RANGE_ELITE_MFE_FAILURE_MARCH_ISLP_JUN_OCTDEC_SCORE7_REGIME_PROFILE.set`
@@ -23,7 +34,8 @@ Important clarification: the current best has a near `$10k` Model=1 research res
 - That is about 2.5 years, not exactly 2 years.
 - Previous Score7 best on the same `Model=1` gate: `+$7,970.70`
 - Previous robust pre-Score7 best on the same gate: `+$7,210.30`
-- Fast-model result from the previous gate: `+$9,512.09`, but `Model=1` is only one validation view, not a production guarantee.
+- Fast-model result from the previous gate: `+$9,512.09`, but `Model=1` is the number to trust more.
+- Latest `Model=2` check is incomplete: Score7 parsed all 6 windows, but Regime parsed only 3 of 6 windows because MT5 returned missing rate/report data for the other 3 windows. Do not treat Model=2 as confirmed yet.
 
 ## Latest Validation
 
@@ -45,33 +57,31 @@ Quarter `Model=1` gate:
 | Losing quarters | `1` | `1` |
 | Main improvement | none in reset quarters | continuous equity path improved |
 
-Model=0 confirmation:
+Cross-model confirmation:
 
-| Window | Previous Score7 Best | Current Regime Best |
-| --- | ---: | ---: |
-| Continuous 2024-2026 | `+$1,288.93` | `+$1,288.93` |
-| Full 2024 | `+$1,425.73` | `+$1,425.73` |
-| Full 2025 | `+$214.30` | `+$214.30` |
-| 2026 YTD | `+$1,375.36` | `+$1,375.36` |
-| 2025 Q4 | `+$196.16` | `+$196.16` |
-| 2024 Q4 | `-$4.55` | `-$4.55` |
+| Model | Status | Key Result |
+| --- | --- | --- |
+| `Model=1` | Best current evidence | Regime improved continuous 2024-2026 from `+$7,970.70` to `+$9,753.58` |
+| `Model=0` | Neutral confirmation | Regime and Score7 were exactly equal on all tested windows |
+| `Model=2` | Partial / not usable yet | Score7 parsed 6/6 windows; Regime parsed only 3/6 windows due missing MT5 rate/report data |
 
-Trade-log diagnosis:
+Latest `Model=2` parsed rows:
 
-- Score7 entries: `63`
-- Regime entries: `63`
-- Score7 closed profit: `7970.70`
-- Regime closed profit: `9753.58`
-- Delta: `1782.88`
-- First material divergence: August 2024
-- Interpretation: the Regime guard changed trade timing/path, not trade count. The edge is real inside Model=1 but still model-sensitive because Model=0 stayed neutral.
+| Profile | Parsed Windows | Continuous 2024-2026 | Worst Parsed Window |
+| --- | ---: | ---: | ---: |
+| Score7 | `6 / 6` | `+$9,862.76` | `+$161.23` |
+| Regime | `3 / 6` | not parsed | `+$194.82` |
 
-Evidence files:
+Because the Regime continuous, full 2024, and Q4 2024 windows did not parse, this does not confirm or reject the Regime profile. It only says the Model=2 gate needs a clean rerun.
+
+## Evidence Files
 
 - `outputs/CURRENT_RESEARCH_BEST_PROFILE.md`
 - `outputs/MODEL1_SCORE7_COST_STRESS_LOG_RESULTS.csv`
 - `outputs/MODEL1_SCORE7_REGIME_QTR_LOG_RESULTS.csv`
 - `outputs/MODEL0_SCORE7_REGIME_CONFIRM_LOG_RESULTS.csv`
+- `outputs/MODEL2_SCORE7_REGIME_CONFIRM_LOG_RESULTS.csv`
+- `outputs/MODEL2_SCORE7_REGIME_CONFIRM_LOG_SUMMARY.csv`
 - `outputs/MODEL1_SCORE7_REGIME_TRADE_DIAG_SUMMARY.csv`
 - `research/2026-07-12-score7-regime-guard-promotion-note.md`
 - `research/2026-07-12-score7-regime-model0-confirmation-note.md`
@@ -136,7 +146,27 @@ To see the current state without asking Codex:
 2. Open the latest `research/YYYY-MM-DD-*.md` note for why it was promoted or rejected.
 3. Check `outputs/*LOG_RESULTS.csv` for the actual parsed MT5 tester results.
 4. Treat fast-model numbers as rough scouting only.
-5. Treat `Model=1` results as useful research evidence, but not a production guarantee.
+5. Treat `Model=1` results as more trustworthy, but still not a production guarantee.
+6. If a result says partial, missing, or `NO_REPORT`, do not treat it as a real confirmation.
+
+## Current Confidence
+
+Current profile confidence: research-best candidate.
+
+What is strong:
+
+- The `Model=1` improvement is real inside that test model.
+- The trade-log diagnostic reproduced the `+$1,782.88` delta with the same `63` entries.
+- Quarter validation did not get worse.
+- Model=0 did not show damage.
+
+What is not strong enough yet:
+
+- Model=0 did not confirm the extra near-`$10k` edge.
+- Model=2 has not completed cleanly for the Regime profile.
+- The local EA source is ahead of the GitHub EA source; GitHub currently has the research status, not necessarily every local code change.
+
+Bottom line: keep testing before raising risk or treating this as production-ready.
 
 ## GitHub Actions
 
@@ -162,8 +192,9 @@ The latest local safety audit passed:
 
 Next useful work:
 
-1. Run another independent source/model validation before raising risk.
-2. Try a controlled spread-timing variant only if independent validation confirms the August-style timing advantage.
-3. Continue looking for profit lanes that add trades without creating losing windows.
-4. Keep rejected high-profit variants documented so they are not accidentally re-promoted.
-5. Eventually sync the full local EA source to GitHub once normal git authentication is available; the local EA source is ahead of the GitHub source.
+1. Rerun the Model=2 Regime windows cleanly, especially continuous 2024-2026, full 2024, and Q4 2024.
+2. Inspect trade-level logs to understand why the spread-regime guard improves the Model=1 continuous path but is neutral in Model=0.
+3. Run another independent source/model validation before raising risk.
+4. Continue looking for profit lanes that add trades without creating losing windows.
+5. Keep rejected high-profit variants documented so they are not accidentally re-promoted.
+6. Eventually sync the full local EA source to GitHub once normal git authentication is available; the local EA source is ahead of the GitHub source.
