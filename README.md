@@ -36,6 +36,7 @@ Important clarification: the current best has a near `$10k` Model=1 research res
 - Previous robust pre-Score7 best on the same gate: `+$7,210.30`
 - Fast-model result from the previous gate: `+$9,512.09`, but `Model=1` is the number to trust more.
 - Latest `Model=2` check is clean only after disabling the M1 spread-shock guard: no-M1-shock parsed `6 / 6` windows and beat Score7 on continuous and full 2024.
+- Initial `Model=4` real-tick probe was neutral: no-m1-shock matched Score7 exactly on full 2024, full 2025, and 2026 YTD, with no losing sampled windows.
 
 ## Latest Validation
 
@@ -64,6 +65,7 @@ Cross-model confirmation:
 | `Model=1` | Best current evidence | No-M1-shock Regime improved continuous 2024-2026 from `+$7,970.70` to `+$9,753.58` |
 | `Model=0` | Neutral confirmation | Regime and Score7 were exactly equal on all tested windows |
 | `Model=2` | Clean no-M1-shock confirmation | No-M1-shock parsed 6/6 windows and improved continuous from `+$9,862.76` to `+$12,054.55` |
+| `Model=4` | Initial real-tick probe | No-M1-shock and Score7 were equal on full 2024, full 2025, and 2026 YTD |
 
 Latest `Model=2` no-M1-shock rows:
 
@@ -73,6 +75,16 @@ Latest `Model=2` no-M1-shock rows:
 | No-M1-Shock Regime | `6 / 6` | `+$12,054.55` | `+$3,890.81` | `+$161.23` |
 
 The previous strict Regime profile failed some Model=2 windows because MT5 Open Prices mode does not allow the M1 data request used by the M1 spread-shock guard. The promoted no-M1-shock profile removes that validation problem without reducing Model=1 profit.
+
+Initial `Model=4` real-tick probe:
+
+| Window | Score7 | No-M1-Shock Regime | Delta |
+| --- | ---: | ---: | ---: |
+| Full 2024 | `+$1,425.73` | `+$1,425.73` | `0.00` |
+| Full 2025 | `+$214.30` | `+$214.30` | `0.00` |
+| 2026 YTD | `+$955.21` | `+$955.21` | `0.00` |
+
+This is not proof of the extra edge, but it is a no-damage higher-fidelity check.
 
 ## Evidence Files
 
@@ -85,9 +97,11 @@ The previous strict Regime profile failed some Model=2 windows because MT5 Open 
 - `outputs/MODEL2_SCORE7_REGIME_NO_M1SHOCK_LOG_RESULTS.csv`
 - `outputs/MODEL1_SCORE7_REGIME_NO_M1SHOCK_LOG_RESULTS.csv`
 - `outputs/MODEL1_SCORE7_REGIME_NO_M1SHOCK_QTR_LOG_RESULTS.csv`
+- `outputs/MODEL4_SCORE7_VS_NO_M1SHOCK_PROBE_LOG_RESULTS.csv`
 - `outputs/MODEL1_SCORE7_REGIME_TRADE_DIAG_SUMMARY.csv`
 - `research/2026-07-12-score7-regime-guard-promotion-note.md`
 - `research/2026-07-12-score7-regime-no-m1shock-promotion-note.md`
+- `research/2026-07-12-score7-regime-no-m1shock-realtick-probe-note.md`
 - `research/2026-07-12-score7-regime-model0-confirmation-note.md`
 - `research/2026-07-12-score7-regime-trade-diagnosis-note.md`
 
@@ -170,6 +184,7 @@ What is not strong enough yet:
 
 - Model=0 did not confirm the extra near-`$10k` edge.
 - Strict Regime did not complete cleanly in Model=2, but the promoted no-M1-shock Regime profile did.
+- Initial real-tick probe did not confirm extra edge; it only showed no damage on the sampled windows.
 - The local EA source is ahead of the GitHub EA source; GitHub currently has the research status, not necessarily every local code change.
 
 Bottom line: keep testing before raising risk or treating this as production-ready.
@@ -198,8 +213,8 @@ The latest local safety audit passed:
 
 Next useful work:
 
-1. Run a real-tick or another independent higher-fidelity validation before raising risk.
-2. Inspect trade-level logs to understand why the spread-regime guard improves the Model=1 continuous path but is neutral in Model=0.
+1. Expand real-tick validation beyond the first three-window probe before raising risk.
+2. Inspect trade-level logs to understand why the spread-regime guard improves the Model=1 continuous path but is neutral in Model=0 and Model=4.
 3. Continue looking for profit lanes that add trades without creating losing windows.
 4. Keep rejected high-profit variants documented so they are not accidentally re-promoted.
 5. Eventually sync the full local EA source to GitHub once normal git authentication is available; the local EA source is ahead of the GitHub source.
