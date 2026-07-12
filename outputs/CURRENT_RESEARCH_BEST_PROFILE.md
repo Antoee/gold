@@ -8,6 +8,10 @@ Current stability-best research profile:
 
 `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
 
+Classification:
+
+`Provisional stability-best research profile, not live-ready`
+
 Local generated profile file:
 
 `outputs/CANDIDATE_DEC_ISLP_OFF_ISLP_LOWATR_ORDERFLOW_PROFILE.set`
@@ -41,6 +45,12 @@ The LowATR OrderFlow guard fixed that tradeoff:
 - It kept the June 2024 low-ATR ISLP winner because order flow confirmed.
 - It blocked the October 2024 low-ATR ISLP loser because order flow did not confirm.
 
+## Provisional Caution
+
+The Dec-ISLP-Off component remains an overfit risk because the original December improvement came from a very small number of December observations. Keep it as a risk-control candidate, not a proven permanent market rule.
+
+The LowATR OrderFlow addition is stronger than the blunt MinATR filter because it preserved a known winner while removing a known loser, but it still needs full risk statistics and wider out-of-sample validation.
+
 ## Model4 Evidence
 
 Sampled probe:
@@ -66,7 +76,7 @@ Quarterly validation:
 
 Decision:
 
-Promoted as the current stability-best research profile.
+Promoted as the current stability-best research profile, but only provisionally.
 
 ## Evidence Files
 
@@ -90,6 +100,7 @@ Remaining gaps:
 - MT5 report export still returns `NO_REPORT`; results are parsed from tester logs.
 - Drawdown, profit factor, trade count, and hold-time stats still need richer extraction.
 - Model1 and Model2 have not yet been rerun on this LowATR OrderFlow candidate.
+- Older-data, walk-forward, Monte Carlo, and broker-variation testing are still missing.
 - Local `Professional_XAUUSD_EA.mq5` is ahead of the GitHub source and contains the new optional guard.
 
 Adaptive Reverse remains disabled.
