@@ -1,0 +1,3 @@
+"Profile","Parsed","Expected","StatsParsed","ActiveWindows","ZeroTradeWindows","TotalNet","Continuous","YTD","Full2025","Full2024","WeakSum","WorstWindow","LosingWindows","TotalTrades","WorstEquityDrawdownPct","MinProfitFactor","AvgProfitFactor","ProfitFactorNonZeroSamples","MinNonZeroProfitFactor","AvgNonZeroProfitFactor","MinRecoveryFactor","AvgSharpeRatio"
+"islp_lowatr_of","31","31","31","12","19","3682.17","","","","","","0","0","38","30.9408","0","1.1435","7","1.4914","5.0639","0","1.289"
+"dec_islp_off","31","31","31","13","18","3637.53","","","","","","-44.64","1","39","30.9408","0","1.1435","7","1.4914","5.0639","-0.9789","1.289"
