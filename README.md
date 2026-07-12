@@ -8,6 +8,23 @@ This is not a martingale, grid, averaging-down, or recovery-system bot. The goal
 
 Last updated: 2026-07-12.
 
+This README is the no-chat status board for the bot. When Codex makes meaningful progress, this file should be updated so you can check GitHub and see the current state without needing to ask for an update.
+
+## Status At A Glance
+
+| Item | Current State |
+| --- | --- |
+| Current research-best | `Score7 Regime No-M1-Shock` |
+| Best headline test | `+$9,753.58` from `2024.01.01` to `2026.07.12` in `Model=1` |
+| Best clean cross-model check | `+$12,054.55` from `2024.01.01` to `2026.07.12` in `Model=2` |
+| Real-tick status | Initial `Model=4` probe was neutral, not stronger |
+| Old `$866` result | Outdated baseline and no longer the current research-best |
+| Live-ready? | No. Still a research candidate that needs more real-tick and walk-forward validation |
+| Testing location | Heavy MT5 tests should run locally, hidden in the background, not in GitHub Actions |
+| GitHub Actions | Manual-only to avoid wasting monthly Actions minutes |
+
+Plain-English read: the bot has moved past the old `$866` result in research tests, but the big numbers are not a live-profit promise. The next job is proving that the edge survives higher-fidelity real-tick testing and does not depend on one tester model.
+
 ## Start Here
 
 This README is the project status dashboard. If you want updates without asking Codex, read these sections in order:
@@ -18,6 +35,24 @@ This README is the project status dashboard. If you want updates without asking 
 4. `Next Research Gates` shows what should happen next before any new profile is trusted.
 
 Short version: the current research-best is much better than the old `$866` result, but the near-`$10k` result is still a research result, not a live-trading promise.
+
+## Latest Human Update
+
+Current answer to "how is it going?":
+
+The newest promoted profile is `Score7 Regime No-M1-Shock`. It fixed the Model=2 validation problem caused by the earlier M1 spread-shock guard and kept the same Model=1 performance as the stricter Regime profile. The best research number is still the Model=1 continuous result of `+$9,753.58` across about 2.5 years. A cleaner Model=2 check improved to `+$12,054.55`, but the first real-tick probe only matched the previous Score7 profile instead of proving extra edge.
+
+Current research focus:
+
+1. Retest older real-tick-strong profiles against the current EA source.
+2. Compare them to the current no-M1-shock research-best using `Model=4` real ticks.
+3. Only promote a profile if it improves profit without introducing losing windows or tester-model fragility.
+
+What not to assume:
+
+- Do not assume `$12k` is what live trading would make.
+- Do not assume the current GitHub EA source contains every local source change unless the README says the full EA source was synced.
+- Do not use GitHub Actions for optimization runs right now.
 
 Current research-best profile:
 
@@ -188,6 +223,19 @@ What is not strong enough yet:
 - The local EA source is ahead of the GitHub EA source; GitHub currently has the research status, not necessarily every local code change.
 
 Bottom line: keep testing before raising risk or treating this as production-ready.
+
+## Update Rules For Codex
+
+When Codex changes the bot or runs meaningful tests, update this README with:
+
+1. The new current best profile, or say that the old best still stands.
+2. The exact test model used: `Model=0`, `Model=1`, `Model=2`, or `Model=4`.
+3. The exact date window tested.
+4. Net profit, worst window, losing-window count, and any failures or missing reports.
+5. The output CSV and research note that prove the claim.
+6. Whether the change is promoted, rejected, or still only a probe.
+
+If a run was only a fast scout, label it as a scout. If a run used real ticks, label it clearly as `Model=4`.
 
 ## GitHub Actions
 
