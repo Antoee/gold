@@ -1,0 +1,69 @@
+diff --git a/Professional_XAUUSD_EA.mq5 b/Professional_XAUUSD_EA.mq5
+--- a/Professional_XAUUSD_EA.mq5
++++ b/Professional_XAUUSD_EA.mq5
+@@
+ input bool            InpUseMFEFailureExit         = false;
+ input int             InpMFEFailureBars            = 18;
+ input double          InpMFEFailureMinMFER         = 0.35;
+ input double          InpMFEFailureMaxCurrentR     = 0.05;
++input bool            InpUseMFEFailureMonthFilter  = false;
++input bool            InpMFEFailureTradeJanuary    = true;
++input bool            InpMFEFailureTradeFebruary   = true;
++input bool            InpMFEFailureTradeMarch      = true;
++input bool            InpMFEFailureTradeApril      = true;
++input bool            InpMFEFailureTradeMay        = true;
++input bool            InpMFEFailureTradeJune       = true;
++input bool            InpMFEFailureTradeJuly       = true;
++input bool            InpMFEFailureTradeAugust     = true;
++input bool            InpMFEFailureTradeSeptember  = true;
++input bool            InpMFEFailureTradeOctober    = true;
++input bool            InpMFEFailureTradeNovember   = true;
++input bool            InpMFEFailureTradeDecember   = true;
+ input bool            InpUseNoFollowThroughExit    = false;
+@@
+-         if(InpUseMFEFailureExit && InpMFEFailureBars > 0 && maxFavorableR < InpMFEFailureMinMFER && r <= InpMFEFailureMaxCurrentR)
++         if(InpUseMFEFailureExit && MFEFailureMonthAllows() &&
++            InpMFEFailureBars > 0 && maxFavorableR < InpMFEFailureMinMFER && r <= InpMFEFailureMaxCurrentR)
+          {
+             datetime barOpen = BarOpenFromPositionTime(positionTime);
+             int heldBars = iBarShift(_Symbol, InpSignalTimeframe, barOpen, false);
+@@
+ bool MFEProfitLockMonthAllows()
+ {
+    if(!InpUseMFEProfitLockMonthFilter)
+       return true;
+@@
+ 
+    return true;
+ }
+ 
++bool MFEFailureMonthAllows()
++{
++   if(!InpUseMFEFailureMonthFilter)
++      return true;
++
++   MqlDateTime dt;
++   TimeToStruct(TimeCurrent(), dt);
++   switch(dt.mon)
++   {
++      case 1:  return InpMFEFailureTradeJanuary;
++      case 2:  return InpMFEFailureTradeFebruary;
++      case 3:  return InpMFEFailureTradeMarch;
++      case 4:  return InpMFEFailureTradeApril;
++      case 5:  return InpMFEFailureTradeMay;
++      case 6:  return InpMFEFailureTradeJune;
++      case 7:  return InpMFEFailureTradeJuly;
++      case 8:  return InpMFEFailureTradeAugust;
++      case 9:  return InpMFEFailureTradeSeptember;
++      case 10: return InpMFEFailureTradeOctober;
++      case 11: return InpMFEFailureTradeNovember;
++      case 12: return InpMFEFailureTradeDecember;
++   }
++
++   return true;
++}
++
+ bool PowerTrendContinuationMonthAllows()
+ {
+    if(!InpUsePowerTrendContinuationMonthFilter)
+       return true;
