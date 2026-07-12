@@ -118,14 +118,17 @@ Earlier Score7 and regime validation:
 - `outputs/MODEL2_SCORE7_REGIME_NO_M1SHOCK_LOG_RESULTS.csv`
 - `outputs/MODEL4_SCORE7_VS_NO_M1SHOCK_PROBE_LOG_RESULTS.csv`
 
-Failed/no-report monthly attempt:
+Synced monthly parsed-log evidence:
 
-- `outputs/REALTICK_DEC_ISLP_MONTHLY_VALIDATION_RUN.csv`
-- `outputs/REALTICK_DEC_ISLP_MONTHLY_VALIDATION_LOG_RESULTS.csv`
 - `outputs/REALTICK_DEC_ISLP_MONTHLY_VALIDATION_DIFF.csv`
 - `outputs/REALTICK_DEC_ISLP_MONTHLY_VALIDATION_PROFILE_SUMMARY.csv`
 - `outputs/REALTICK_DEC_ISLP_MONTHLY_VALIDATION_DECISION_SUMMARY.csv`
 - `research/2026-07-12-december-islp-monthly-validation-note.md`
+
+Local-only monthly raw files:
+
+- `outputs/REALTICK_DEC_ISLP_MONTHLY_VALIDATION_RUN.csv`
+- `outputs/REALTICK_DEC_ISLP_MONTHLY_VALIDATION_LOG_RESULTS.csv`
 
 ## What Changed Recently
 
