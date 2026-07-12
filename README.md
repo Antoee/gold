@@ -19,6 +19,7 @@ Use this README as the status board. If you want to know what changed without as
 | Full sampled real-tick total | `+$7,469.00` across the six Model4 validation windows |
 | Monthly real-tick gate | Dec-ISLP-Off beat prior profile `+$3,779.52` vs `+$3,687.00`, with `0` losing months vs `2` |
 | Quarterly real-tick gate | Dec-ISLP-Off beat prior profile `+$3,455.89` vs `+$3,404.59`, with `0` losing quarters vs `1` |
+| Latest code probe | FMR location-extreme strict mode tied `+$204.86` vs `+$204.86`; not promoted |
 | Old `$866` result | Outdated baseline, no longer the current research-best |
 | Live-ready? | No. Still a research candidate |
 | GitHub Actions | Manual-only; do not use for heavy tester runs |
@@ -104,6 +105,22 @@ Quarterly real-tick validation was run on 2026-07-12:
 - Losing quarters: Dec-ISLP-Off `0`, prior no-m1-shock `1`
 - Decision: supports keeping Dec-ISLP-Off promoted for net-profit/quarter comparison
 
+## Latest Code Probe
+
+FMR location-extreme strict mode was tested on 2026-07-12:
+
+- Change: when `InpFlatMonthMicroReversionRequireVWAP=true`, flat-month micro-reversion also requires a nearby liquidity/structure extreme.
+- Intent: improve flat-window quality without Adaptive Reverse or pure ATR-only logic.
+- Result: tied current Dec-ISLP-Off on the compact Model4 probe, `+$204.86` vs `+$204.86`.
+- Decision: not promoted.
+- Research note: `research/2026-07-12-fmr-location-extreme-probe-note.md`
+
+Important tester note:
+
+- Full local EA source is too input-heavy for MT5 Strategy Tester right now.
+- Validation packages should use compact tester source generation.
+- Latest compact probe kept `334` tester inputs and converted `1105` inactive inputs to globals.
+
 ## Evidence Files
 
 Primary status:
@@ -146,12 +163,21 @@ Synced quarterly parsed-log evidence:
 - `outputs/REALTICK_DEC_ISLP_QUARTERLY_VALIDATION_DECISION_SUMMARY.csv`
 - `research/2026-07-12-december-islp-quarterly-validation-note.md`
 
-Local-only raw files:
+Local FMR strict-mode probe evidence:
+
+- `outputs/REALTICK_FMR_LOCATION_EXTREME_PROBE_DIFF.csv`
+- `outputs/REALTICK_FMR_LOCATION_EXTREME_PROBE_PROFILE_SUMMARY.csv`
+- `outputs/REALTICK_FMR_LOCATION_EXTREME_PROBE_DECISION_SUMMARY.csv`
+- `research/2026-07-12-fmr-location-extreme-probe-note.md`
+
+Local-only monthly raw files:
 
 - `outputs/REALTICK_DEC_ISLP_MONTHLY_VALIDATION_RUN.csv`
 - `outputs/REALTICK_DEC_ISLP_MONTHLY_VALIDATION_LOG_RESULTS.csv`
 - `outputs/REALTICK_DEC_ISLP_QUARTERLY_VALIDATION_RUN.csv`
 - `outputs/REALTICK_DEC_ISLP_QUARTERLY_VALIDATION_LOG_RESULTS.csv`
+- `outputs/REALTICK_FMR_LOCATION_EXTREME_PROBE_RUN.csv`
+- `outputs/REALTICK_FMR_LOCATION_EXTREME_PROBE_LOG_RESULTS.csv`
 
 ## What Changed Recently
 
@@ -171,6 +197,8 @@ Current strategy direction:
 - In-Session Liquidity Pullback remains enabled only for selected months, with December now disabled.
 - Spread-regime guard is enabled.
 - M1 spread-shock guard is disabled because it created Model2 compatibility problems without adding Model1 profit.
+- Adaptive Reverse is internally locked off in local source to reduce whipsaw risk and tester input count.
+- Dormant generic flat-month probe/stale/missed-move/breakout-probe controls were frozen as globals; active current-best lanes remain configurable.
 
 ## What The Numbers Mean
 
@@ -193,7 +221,7 @@ Next useful work:
 
 1. Fix report generation or add richer trade/stat extraction so Model4 runs include drawdown, trades, and profit factor.
 2. Investigate why Model2 prefers the previous profile.
-3. Run a compact trade-diagnostic pass for the remaining low-activity/flat windows to find new profit lanes without reintroducing December losses.
+3. Use compact tester-source generation for future validation until the full EA input surface is reduced.
 4. Continue looking for profit lanes that add trades without creating losing windows.
 5. Only raise risk after the profile survives wider real-tick validation.
 
@@ -208,7 +236,7 @@ When Codex changes the bot or runs meaningful tests, update this README with:
 5. Evidence CSV or research note.
 6. Promotion decision: promoted, rejected, or probe only.
 
-If a run returns `NO_REPORT`, it does not count as full report proof. If final balances are recovered from logs, label it as parsed-log evidence.
+If a run returns `NO_REPORT`, it does not count as proof.
 
 ## GitHub Actions
 
