@@ -41,14 +41,20 @@ Important caution: the Dec-ISLP-Off component is still provisional. It was helpe
 | Model4 quarterly gate | `+$3,421.49` | `+$3,435.65` | LowATR OrderFlow wins |
 | Worst quarter | `-$44.64` | `-$30.48` | Better stability |
 
-Latest tester-stat smoke run:
+Latest tester-stat reruns:
 
 | Test | Previous Dec-ISLP-Off | LowATR OrderFlow | Decision |
 | --- | ---: | ---: | --- |
 | Probe stats parsed | `7 / 7` | `7 / 7` | Parser works |
 | Probe total trades | `12` | `11` | LowATR skipped one loser |
 | Probe worst equity DD % | `7.3344` | `7.3344` | Tie |
-| Probe losing windows | `1` | `0` | LowATR better |
+| Monthly stats parsed | `31 / 31` | `31 / 31` | Complete |
+| Monthly total trades | `39` | `38` | LowATR skipped one loser |
+| Monthly worst equity DD % | `30.9408` | `30.9408` | Serious caution |
+| Quarterly stats parsed | `11 / 11` | `11 / 11` | Complete |
+| Quarterly total trades | `34` | `34` | Tie |
+| Quarterly worst equity DD % | `30.9408` | `30.9408` | Serious caution |
+| Quarterly min recovery factor | `-0.9789` | `-0.5184` | LowATR better |
 
 Older context:
 
@@ -58,7 +64,7 @@ Older context:
 - Prior sampled Model4 aggregate validation-window net score: `+$7,469.00`. This is a comparison score, not a sequential account return.
 - LowATR OrderFlow has not yet been rerun through full Model1/Model2 continuous validation.
 
-Plain English: the current best is no longer the old `$866` bot. The most stable candidate is the LowATR OrderFlow version, and tester-stat extraction now works on the probe package. It still needs monthly/quarterly stats reruns and full source reproducibility before any live-trading decision.
+Plain English: the current best is no longer the old `$866` bot. The most stable candidate is the LowATR OrderFlow version, and tester-stat extraction now works on probe, monthly, and quarterly packages. The major warning is the `30.9408%` worst equity drawdown reading, so this is still research-only.
 
 ## Current Best Profile
 
@@ -79,6 +85,18 @@ Settings that define the latest guard:
 - `InpInSessionLiquidityPullbackMinATR=0.00`
 - `InpInSessionLiquidityPullbackLowATRRequireOrderFlow=true`
 - `InpInSessionLiquidityPullbackLowATRThreshold=5.00`
+
+## Repository Cleanup
+
+Cleanup completed on 2026-07-12:
+
+- Archived `26,949` generated runtime/log/temp artifacts locally into `archive/generated_artifacts_*`.
+- Removed active `outputs/offline_refresh_logs/`.
+- Active generated cleanup candidates: `0`.
+- Local MT5 safety audit after cleanup: `PASS`, `39 / 39`.
+- Remaining `outputs/` and `work/` bulk is mostly generated MT5 packages/configs kept for reproducibility.
+
+GitHub Actions should stay manual-only. Heavy MT5 tests belong on the local PC, a spare machine, or a VPS.
 
 ## How To Check Progress Without Asking Codex
 
@@ -109,6 +127,9 @@ Progress made:
 - Added `work/collect_local_mt5_log_results.ps1` to parse final balance plus tester stats from logs.
 - Hidden compile passed with `0 errors, 0 warnings`.
 - Probe package stats parsed successfully for `14 / 14` configs.
+- Monthly stats parsed successfully for `62 / 62` configs.
+- Quarterly stats parsed successfully for `22 / 22` configs.
+- Repository generated-log cleanup completed locally.
 
 Still needed for every serious result:
 
@@ -126,8 +147,6 @@ Still needed for every serious result:
 - Lot sizes and actual risk percentage used.
 - Spread, commission, swap, and slippage assumptions.
 
-The latest monthly and quarterly gates still need reruns with tester-stat export enabled. Older monthly/quarterly results prove parsed final-balance comparisons only.
-
 ## Latest Promotion
 
 ISLP LowATR OrderFlow was promoted as the stability-best research profile on 2026-07-12.
@@ -144,7 +163,7 @@ Decision:
 
 Still not live-ready because:
 
-- Monthly and quarterly stats need reruns with tester-stat export enabled.
+- Monthly and quarterly stats show a `30.9408%` worst equity drawdown reading.
 - Model1 and Model2 have not yet been rerun on this LowATR OrderFlow candidate.
 - Local `Professional_XAUUSD_EA.mq5` is ahead of the GitHub source and contains the new optional guard.
 - Older-data, walk-forward, Monte Carlo, and broker-variation testing are still missing.
@@ -156,20 +175,25 @@ Primary status:
 - `outputs/CURRENT_RESEARCH_BEST_PROFILE.md`
 - `research/2026-07-12-islp-lowatr-orderflow-promotion-note.md`
 - `research/2026-07-12-lowatr-tester-stats-export-note.md`
+- `research/2026-07-12-repository-cleanup-plan.md`
 
 LowATR OrderFlow evidence:
 
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_PROBE_DIFF.csv`
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_PROBE_PROFILE_SUMMARY.csv`
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_PROBE_DECISION_SUMMARY.csv`
+- `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_PROBE_STATS_RESULTS.csv`
+- `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_PROBE_STATS_SUMMARY.csv`
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_MONTHLY_VALIDATION_DIFF.csv`
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_MONTHLY_VALIDATION_PROFILE_SUMMARY.csv`
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_MONTHLY_VALIDATION_DECISION_SUMMARY.csv`
+- `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_MONTHLY_STATS_RESULTS.csv`
+- `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_MONTHLY_STATS_SUMMARY.csv`
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_QUARTERLY_VALIDATION_DIFF.csv`
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_QUARTERLY_VALIDATION_PROFILE_SUMMARY.csv`
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_QUARTERLY_VALIDATION_DECISION_SUMMARY.csv`
-- `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_PROBE_STATS_RESULTS.csv`
-- `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_PROBE_STATS_SUMMARY.csv`
+- `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_QUARTERLY_STATS_RESULTS.csv`
+- `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_QUARTERLY_STATS_SUMMARY.csv`
 
 Important prior evidence:
 
@@ -181,14 +205,13 @@ Important prior evidence:
 
 Next local work, in priority order:
 
-1. Rerun monthly and quarterly LowATR OrderFlow validation with tester-stat export enabled.
+1. Rerun Model1 and Model2 validation on the LowATR OrderFlow candidate.
 2. Sync the exact tested `.mq5` source, `.set` profile, MT5 build, broker/symbol specs, and test configuration so results are reproducible later.
-3. Clean up the repository so current status, evidence, source, scripts, and archived/generated outputs are easier to understand.
-4. Rerun Model1 and Model2 validation on the LowATR OrderFlow candidate.
-5. Run older-data or walk-forward validation because 2024-2026 has already influenced strategy selection.
-6. Add Monte Carlo stress tests for trade order, slippage, spread, execution delay, missed trades, and worse exits.
-7. Test broker variation for XAUUSD contract size, spread, commission, swap, stop level, tick size, and session timing.
-8. Continue seeking extra profit lanes only after the measurement and reproducibility blockers are improved.
+3. Add hold-time, average winner/loser, largest loss, consecutive loss, exposure, spread, swap, commission, and slippage evidence.
+4. Run older-data or walk-forward validation because 2024-2026 has already influenced strategy selection.
+5. Add Monte Carlo stress tests for trade order, slippage, spread, execution delay, missed trades, and worse exits.
+6. Test broker variation for XAUUSD contract size, spread, commission, swap, stop level, tick size, and session timing.
+7. Continue seeking extra profit lanes only after the measurement and reproducibility blockers are improved.
 
 Known caution: the full local EA source is too input-heavy for MT5 Strategy Tester, so current validation packages use compact tester-source generation until the input surface is reduced.
 
