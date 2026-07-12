@@ -1,0 +1,7 @@
+"Metric","Value"
+"ISLPLowATROrderFlowWins","1"
+"DecISLPOffWins","0"
+"Ties","10"
+"DeltaTotal","14.16"
+"WorstWindowImprovement","-44.64 to -30.48"
+"Decision","Quarterly gate passed; promote as stability-best research profile, still not live-ready without full stats"
