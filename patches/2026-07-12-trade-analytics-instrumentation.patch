@@ -1,0 +1,108 @@
+diff --git a/Professional_XAUUSD_EA.mq5 b/Professional_XAUUSD_EA.mq5
+--- a/Professional_XAUUSD_EA.mq5
++++ b/Professional_XAUUSD_EA.mq5
+@@
+ string InitialRiskKey(const ulong ticket)
+ {
+    return "PXEA_INITIAL_RISK_" + (string)ticket;
+ }
+ 
++string TradeMFEKey(const ulong ticket)
++{
++   return "PXEA_MFE_R_" + (string)ticket;
++}
++
++string TradeMAEKey(const ulong ticket)
++{
++   return "PXEA_MAE_R_" + (string)ticket;
++}
++
+ void StoreInitialRisk(const ulong ticket, const double riskDistance)
+ {
+    if(ticket == 0 || riskDistance <= 0.0)
+       return;
+@@
+       if(FileSize(m_handle) == 0)
+       {
+          FileWrite(m_handle, "time", "event", "symbol", "ticket", "bias", "volume", "price",
+-                   "sl", "tp", "risk_r", "profit", "reason", "atr", "spread_points");
++                   "sl", "tp", "risk_r", "profit", "reason", "atr", "spread_points",
++                   "max_favorable_r", "max_adverse_r", "held_bars", "entry_context");
+       }
+       FileSeek(m_handle, 0, SEEK_END);
+    }
+@@
+               const double riskR,
+               const double profit,
+               const string reason,
+-              const double atr)
++              const double atr,
++              const double maxFavorableR = EMPTY_VALUE,
++              const double maxAdverseR = EMPTY_VALUE,
++              const int heldBars = -1,
++              const string entryContext = "")
+    {
+       if(InpLogLevel == LOG_OFF || m_handle == INVALID_HANDLE)
+          return;
+ 
++      double effectiveMFE = maxFavorableR;
++      if(effectiveMFE == EMPTY_VALUE && ticket > 0 && GlobalVariableCheck(TradeMFEKey(ticket)))
++         effectiveMFE = GlobalVariableGet(TradeMFEKey(ticket));
++
++      double effectiveMAE = maxAdverseR;
++      if(effectiveMAE == EMPTY_VALUE && ticket > 0 && GlobalVariableCheck(TradeMAEKey(ticket)))
++         effectiveMAE = GlobalVariableGet(TradeMAEKey(ticket));
++
+       FileWrite(m_handle,
+                 TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS),
+                 eventName,
+@@
+                 DoubleToString(profit, 2),
+                 reason,
+                 DoubleToString(atr, _Digits),
+-                DoubleToString(SpreadPoints(), 1));
++                DoubleToString(SpreadPoints(), 1),
++                effectiveMFE == EMPTY_VALUE ? "" : DoubleToString(effectiveMFE, 2),
++                effectiveMAE == EMPTY_VALUE ? "" : DoubleToString(effectiveMAE, 2),
++                heldBars < 0 ? "" : IntegerToString(heldBars),
++                entryContext);
+       FileFlush(m_handle);
+    }
+@@
+    string MFEKey(const ulong ticket)
+    {
+-      return "PXEA_MFE_R_" + (string)ticket;
++      return TradeMFEKey(ticket);
++   }
++
++   string MAEKey(const ulong ticket)
++   {
++      return TradeMAEKey(ticket);
+    }
+ 
+    double UpdateMaxFavorableR(const ulong ticket, const double r)
+@@
+       GlobalVariableSet(key, maxR);
+       return maxR;
+    }
+ 
++   double UpdateMaxAdverseR(const ulong ticket, const double r)
++   {
++      string key = MAEKey(ticket);
++      double minR = r;
++      if(GlobalVariableCheck(key))
++         minR = MathMin(GlobalVariableGet(key), r);
++      GlobalVariableSet(key, minR);
++      return minR;
++   }
++
+    double ProfitR(const ulong ticket, const ENUM_POSITION_TYPE type, const double openPrice, const double sl)
+    {
+       double current = (type == POSITION_TYPE_BUY) ? SymbolInfoDouble(_Symbol, SYMBOL_BID)
+@@
+ 
+          double r = ProfitR(ticket, type, openPrice, sl);
+          double maxFavorableR = UpdateMaxFavorableR(ticket, r);
++         UpdateMaxAdverseR(ticket, r);
+          datetime barOpenForExit = BarOpenFromPositionTime(positionTime);
+          int heldBarsForExit = 0;
