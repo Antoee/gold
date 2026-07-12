@@ -26,6 +26,8 @@ New exported analytics columns:
 
 The EA already tracked maximum favorable R internally. This patch exposes it to the CSV logger and adds matching maximum adverse R tracking through the same global-variable pattern.
 
+Closed-deal logging now uses `DEAL_POSITION_ID` as the analytics key so realized exit rows inherit the MFE/MAE values captured while the position was open.
+
 ## Validation
 
 Local Windows workflow-equivalent smoke checks passed:
@@ -50,6 +52,19 @@ Local MT5 safety audit:
 
 - `outputs/MT5_LOCAL_SAFETY_AUDIT.csv`
 - Result: `PASS`, 39/39 checks
+
+Fast hidden 2026 YTD analytics slice:
+
+- Package: `outputs/analytics_smoke_package`
+- Window: `2026.01.01` through `2026.07.12`
+- Model: compact tester source, M15, `Model=2`
+- Parsed log summary: `outputs/ANALYTICS_SMOKE_LOG_SUMMARY.csv`
+- Net: `1107.90` on `1000` deposit
+- Closed trades: 11
+- Wins: 8
+- Losses: 3
+- MFE/MAE tagged closed rows: 11/11
+- Report file export status: `NO_REPORT`, but tester log completed and was parsed successfully.
 
 ## Next Use
 
