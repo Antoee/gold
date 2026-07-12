@@ -16,7 +16,7 @@ Current stability-best research profile:
 
 `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
 
-Short answer: this is the best and most stable bot we have so far. It replaced the older `Score7 Regime No-M1-Shock Dec-ISLP-Off` profile because it improved the weak low-volatility ISLP behavior without deleting the June 2024 winner.
+Short answer: this is the best and most stable bot we have so far, but it is still a provisional research candidate. It is not proven enough for real money.
 
 Live trading status: **research only, not live-ready**.
 
@@ -27,6 +27,8 @@ Why it is the current stability leader:
 - It blocked the October 2024 low-ATR ISLP loser.
 - It kept the June 2024 low-ATR ISLP winner because order flow confirmed.
 - It passed sampled, monthly, and quarterly Model4 parsed-log validation against the previous Dec-ISLP-Off profile.
+
+Important caution: the Dec-ISLP-Off component is still provisional. It was helped by a very small number of December observations, so it should be treated as a risk-control candidate pending older-data, forward, and walk-forward evidence.
 
 ## Current Numbers
 
@@ -44,6 +46,7 @@ Older context:
 - Old `$866 in 2.5 years` result: outdated baseline, not the current best.
 - Best prior continuous research result: `+$10,127.76` on `Model=1`, `2024.01.01` to `2026.07.12`.
 - Best prior continuous real-tick result: `+$4,507.51` on `Model=4`, `2024.01.01` to `2026.07.12`.
+- Prior sampled Model4 aggregate validation-window net score: `+$7,469.00`. This is a comparison score, not a sequential account return.
 - LowATR OrderFlow has not yet been rerun through full Model1/Model2 continuous validation.
 
 Plain English: the current best is no longer the old `$866` bot. The most stable candidate is the LowATR OrderFlow version, but it still needs richer report stats before any live-trading decision.
@@ -85,6 +88,28 @@ What to look for:
 - `Probe only` means the result was useful, but not enough to trust yet.
 - `NO_REPORT` means MT5 did not export full reports, so only parsed log results should be trusted.
 - `Model=4` means real ticks, which matters most for serious validation.
+
+## Evidence Gaps
+
+The biggest blocker is not another entry filter. The biggest blocker is missing complete risk and trade-quality evidence.
+
+Every serious result still needs:
+
+- Starting balance and ending balance.
+- Maximum equity drawdown and relative drawdown percentage.
+- Number of trades.
+- Profit factor.
+- Expected payoff.
+- Average winner and average loser.
+- Largest loss.
+- Consecutive losses.
+- Exposure time.
+- Recovery factor.
+- Monthly return percentages.
+- Lot sizes and actual risk percentage used.
+- Spread, commission, swap, and slippage assumptions.
+
+The latest monthly and quarterly gates returned `NO_REPORT`, so they currently prove only parsed final-balance comparisons. They do not prove drawdown, trade count, or profit factor.
 
 ## Latest Promotion
 
@@ -134,12 +159,15 @@ Important prior evidence:
 
 ## Current Work Queue
 
-Next local work:
+Next local work, in priority order:
 
-1. Extract richer trade stats for LowATR OrderFlow: drawdown, profit factor, trade count, hold time.
-2. Rerun Model1 and Model2 validation on the LowATR OrderFlow candidate.
-3. Continue seeking extra profit lanes that do not reintroduce losing months or Adaptive Reverse whipsaw.
-4. Keep all heavy tests local and hidden, not on GitHub Actions.
+1. Fix report generation or build a reliable parser that extracts drawdown, profit factor, trade count, hold time, and trade-level stats from logs/history.
+2. Sync the exact tested `.mq5` source, `.set` profile, MT5 build, broker/symbol specs, and test configuration so results are reproducible later.
+3. Rerun Model1 and Model2 validation on the LowATR OrderFlow candidate.
+4. Run older-data or walk-forward validation because 2024-2026 has already influenced strategy selection.
+5. Add Monte Carlo stress tests for trade order, slippage, spread, execution delay, missed trades, and worse exits.
+6. Test broker variation for XAUUSD contract size, spread, commission, swap, stop level, tick size, and session timing.
+7. Continue seeking extra profit lanes only after the measurement and reproducibility blockers are improved.
 
 Known caution: the full local EA source is too input-heavy for MT5 Strategy Tester, so current validation packages use compact tester-source generation until the input surface is reduced.
 
