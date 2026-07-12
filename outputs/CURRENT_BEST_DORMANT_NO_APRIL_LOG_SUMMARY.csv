@@ -1,0 +1,4 @@
+"Profile","Parsed","Expected","TotalNet","Continuous","YTD","Full2025","Full2024","WeakSum","WorstWindow","LosingWindows"
+"dormant_fmr_probe","11","11","13941.51","9027.02","1583.86","214.18","3127.85","","-11.4","1"
+"base","11","11","9828.74","6125.57","1107.9","214.18","2381.09","","0","0"
+"dormant_fmr_probe_no_april","11","11","9351.16","5746.1","1107.9","214.18","2282.98","","0","0"
