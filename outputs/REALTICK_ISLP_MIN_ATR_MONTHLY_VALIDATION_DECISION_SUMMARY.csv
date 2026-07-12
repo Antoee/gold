@@ -1,0 +1,7 @@
+"Metric","Value"
+"ISLPMinATR5Wins","1"
+"DecISLPOffWins","1"
+"Ties","29"
+"DeltaTotal","-21.92"
+"LosingWindowDelta","islp_min_atr5 removes 1 losing month but lowers total net profit"
+"Decision","Do not promote as primary; keep as conservative risk-smoothing candidate only"
