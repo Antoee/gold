@@ -14,6 +14,7 @@ outputs/offline_refresh_logs/
 work/*.unlock
 work/*.lock
 outputs/LOWATR_STATS_BACKGROUND.*
+archive/generated_artifacts_*/
 
 # MT5 report export staging folders.
 **/reports_here/
