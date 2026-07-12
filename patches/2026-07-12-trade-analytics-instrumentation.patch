@@ -106,3 +106,15 @@ diff --git a/Professional_XAUUSD_EA.mq5 b/Professional_XAUUSD_EA.mq5
 +         UpdateMaxAdverseR(ticket, r);
           datetime barOpenForExit = BarOpenFromPositionTime(positionTime);
           int heldBarsForExit = 0;
+@@
+    double profit = HistoryDealGetDouble(trans.deal, DEAL_PROFIT) +
+                    HistoryDealGetDouble(trans.deal, DEAL_SWAP) +
+                    HistoryDealGetDouble(trans.deal, DEAL_COMMISSION);
++   long positionId = HistoryDealGetInteger(trans.deal, DEAL_POSITION_ID);
++   ulong analyticsTicket = (positionId > 0) ? (ulong)positionId : trans.deal;
+    logger.Write("closed_deal",
+-                trans.deal,
++                analyticsTicket,
+                 "close",
+                 HistoryDealGetDouble(trans.deal, DEAL_VOLUME),
+                 HistoryDealGetDouble(trans.deal, DEAL_PRICE),
