@@ -40,6 +40,7 @@ function Add-Candidate {
 
    $resolved = Resolve-ExistingPath $Source
    if($null -eq $resolved) { return }
+   if(!$seenSources.Add($resolved)) { return }
    Assert-UnderPath -Path $resolved -Root $repo -Label "Source"
    $targetDir = Join-Path $ArchiveRoot $ArchiveSubdir
    Assert-UnderPath -Path $targetDir -Root $ArchiveRoot -Label "Target"
@@ -53,15 +54,16 @@ function Add-Candidate {
 }
 
 $rows = New-Object System.Collections.Generic.List[object]
+$seenSources = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
 
 Add-Candidate $rows (Join-Path $repo "outputs\offline_refresh_logs") "outputs" "Large generated offline refresh log folder."
 
-foreach($path in Get-ChildItem -LiteralPath (Join-Path $repo "outputs") -File -Filter "*.log" -ErrorAction SilentlyContinue) {
+foreach($path in Get-ChildItem -LiteralPath (Join-Path $repo "outputs") -Recurse -File -Filter "*.log" -ErrorAction SilentlyContinue) {
    if($path.Name -eq "MT5_HIDDEN_COMPILE_ISLP_LOWATR_TESTER_STATS.log") { continue }
    Add-Candidate $rows $path.FullName "outputs\logs" "Generated output log."
 }
 
-foreach($path in Get-ChildItem -LiteralPath (Join-Path $repo "work") -File -Filter "*.log" -ErrorAction SilentlyContinue) {
+foreach($path in Get-ChildItem -LiteralPath (Join-Path $repo "work") -Recurse -File -Filter "*.log" -ErrorAction SilentlyContinue) {
    Add-Candidate $rows $path.FullName "work\logs" "Generated work log."
 }
 
@@ -80,6 +82,9 @@ foreach($pattern in @("*.unlock", "*.pid")) {
 $manifestPath = Join-Path $repo "outputs\REPO_CLEANUP_GENERATED_ARTIFACTS_MANIFEST.csv"
 if($Apply) {
    foreach($row in $rows) {
+      if(!(Test-Path -LiteralPath $row.Source)) {
+         continue
+      }
       $targetDir = Split-Path -Parent $row.Target
       New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
       if(Test-Path -LiteralPath $row.Target) {
