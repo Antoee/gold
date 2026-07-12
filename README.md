@@ -56,14 +56,26 @@ Model=0 confirmation:
 | 2025 Q4 | `+$196.16` | `+$196.16` |
 | 2024 Q4 | `-$4.55` | `-$4.55` |
 
+Trade-log diagnosis:
+
+- Score7 entries: `63`
+- Regime entries: `63`
+- Score7 closed profit: `7970.70`
+- Regime closed profit: `9753.58`
+- Delta: `1782.88`
+- First material divergence: August 2024
+- Interpretation: the Regime guard changed trade timing/path, not trade count. The edge is real inside Model=1 but still model-sensitive because Model=0 stayed neutral.
+
 Evidence files:
 
 - `outputs/CURRENT_RESEARCH_BEST_PROFILE.md`
 - `outputs/MODEL1_SCORE7_COST_STRESS_LOG_RESULTS.csv`
 - `outputs/MODEL1_SCORE7_REGIME_QTR_LOG_RESULTS.csv`
 - `outputs/MODEL0_SCORE7_REGIME_CONFIRM_LOG_RESULTS.csv`
+- `outputs/MODEL1_SCORE7_REGIME_TRADE_DIAG_SUMMARY.csv`
 - `research/2026-07-12-score7-regime-guard-promotion-note.md`
 - `research/2026-07-12-score7-regime-model0-confirmation-note.md`
+- `research/2026-07-12-score7-regime-trade-diagnosis-note.md`
 
 ## What Changed Recently
 
@@ -88,6 +100,8 @@ The newest promoted change enables strict spread-regime and M1 spread-shock guar
 This improved continuous `Model=1` validation from `+$7,970.70` to `+$9,753.58` without changing the quarter gate.
 
 A follow-up Model=0 confirmation was neutral: the Regime profile and prior Score7 profile were exactly equal on continuous, full-year, YTD, and Q4 windows. That means the Regime change has not shown extra cross-model damage, but the near-`$10k` edge should still be treated as Model=1-specific research evidence.
+
+A trade-log diagnostic confirmed the Model=1 delta is real inside that test model: both profiles took `63` entries, but the Regime profile changed timing around August 2024 and improved the continuous result by `+$1,782.88`. The edge is still model-sensitive because Model=0 stayed neutral.
 
 ## Strategy Direction
 
@@ -148,8 +162,8 @@ The latest local safety audit passed:
 
 Next useful work:
 
-1. Inspect trade-level logs to understand why the spread-regime guard improves the Model=1 continuous path but is neutral in Model=0.
-2. Run another independent source/model validation before raising risk.
+1. Run another independent source/model validation before raising risk.
+2. Try a controlled spread-timing variant only if independent validation confirms the August-style timing advantage.
 3. Continue looking for profit lanes that add trades without creating losing windows.
 4. Keep rejected high-profit variants documented so they are not accidentally re-promoted.
 5. Eventually sync the full local EA source to GitHub once normal git authentication is available; the local EA source is ahead of the GitHub source.
