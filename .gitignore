@@ -1,0 +1,23 @@
+# Local MT5 runtime noise
+*.ex5
+*.zip
+*.pid
+*.tmp
+*.bak
+
+# Tester/report logs can become very large and are regenerated locally.
+outputs/**/*.log
+work/**/*.log
+outputs/offline_refresh_logs/
+
+# Local background-run coordination files.
+work/*.unlock
+work/*.lock
+outputs/LOWATR_STATS_BACKGROUND.*
+
+# MT5 report export staging folders.
+**/reports_here/
+
+# Windows metadata
+Thumbs.db
+desktop.ini
