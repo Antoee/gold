@@ -1,0 +1,22 @@
+diff --git a/Professional_XAUUSD_EA.mq5 b/Professional_XAUUSD_EA.mq5
+--- a/Professional_XAUUSD_EA.mq5
++++ b/Professional_XAUUSD_EA.mq5
+@@
+-bool                  InpUseConfirmedSwingPivotStop = false;
+-int                   InpSwingPivotStopLookbackBars = 24;
+-int                   InpSwingPivotStopLeftBars    = 2;
+-int                   InpSwingPivotStopRightBars   = 2;
+-double                InpSwingPivotStopBufferATR   = 0.10;
+-double                InpSwingPivotStopBufferPoints = 25.0;
+-double                InpSwingPivotStopMinATR      = 0.65;
+-double                InpSwingPivotStopMaxATR      = 2.40;
+-bool                  InpSwingPivotStopTightenOnly = true;
++input bool            InpUseConfirmedSwingPivotStop = false;
++input int             InpSwingPivotStopLookbackBars = 24;
++input int             InpSwingPivotStopLeftBars    = 2;
++input int             InpSwingPivotStopRightBars   = 2;
++input double          InpSwingPivotStopBufferATR   = 0.10;
++input double          InpSwingPivotStopBufferPoints = 25.0;
++input double          InpSwingPivotStopMinATR      = 0.65;
++input double          InpSwingPivotStopMaxATR      = 2.40;
++input bool            InpSwingPivotStopTightenOnly = true;
