@@ -20,7 +20,7 @@ Quick answer:
 - Best current real-tick continuous result: `+$4,507.51` on `Model=4`, `2024.01.01` to `2026.07.12`
 - Best sampled real-tick validation total: `+$7,469.00` across six Model4 windows
 - Latest promoted change: December ISLP disabled with `InpISLPTradeDecember=false`
-- Latest rejected probe: FMR location-extreme strict mode tied the current profile and was not promoted
+- Latest promising probe: ISLP MinATR5 improved sampled Model4 windows `+$249.50` vs `+$204.86`, but is not promoted yet
 - Live trading status: research only, not live-ready
 - GitHub Actions status: keep manual-only to protect monthly Actions usage
 - Source status: local EA source is still ahead of GitHub
@@ -36,7 +36,7 @@ Current decision: keep `Score7 Regime No-M1-Shock Dec-ISLP-Off` as the research-
 | Full sampled real-tick total | `+$7,469.00` across the six Model4 validation windows |
 | Monthly real-tick gate | Dec-ISLP-Off beat prior profile `+$3,779.52` vs `+$3,687.00`, with `0` losing months vs `2` |
 | Quarterly real-tick gate | Dec-ISLP-Off beat prior profile `+$3,455.89` vs `+$3,404.59`, with `0` losing quarters vs `1` |
-| Latest code probe | FMR location-extreme strict mode tied `+$204.86` vs `+$204.86`; not promoted |
+| Latest code probe | ISLP MinATR5 improved sampled Model4 windows `+$249.50` vs `+$204.86`; promising, not promoted |
 | Old `$866` result | Outdated baseline, no longer the current research-best |
 | Live-ready? | No. Still a research candidate |
 | GitHub Actions | Manual-only; do not use for heavy tester runs |
@@ -66,9 +66,9 @@ What to look for:
 
 Next local work:
 
-1. Diagnose the current `2024_10` Model4 losing window because it does not match older Q4 diagnostics.
-2. Compare that losing October against the winning `2025_10` window.
-3. Only add a new guard if the diagnostics show a clear repeatable weakness.
+1. Run wider monthly Model4 validation for the ISLP MinATR5 candidate.
+2. Run quarterly Model4 validation if the monthly gate still improves profit and losing-window count.
+3. Promote ISLP MinATR5 only if wider validation confirms the seven-window probe.
 4. Keep all heavy tests local and hidden, not on GitHub Actions.
 
 Known caution: the full local EA source is too input-heavy for MT5 Strategy Tester, so current validation packages use compact tester-source generation until the input surface is reduced.
@@ -118,7 +118,7 @@ Why it was promoted:
 - Diagnostics showed the Q4 2024 real-tick red window came from one December ISLP loss.
 - Disabling December ISLP removed that weak window.
 - Model0, Model1, and Model4 improved.
-- Model2 is the caveat: it still prefers the previous no-m1-shock profile.
+- Model2 is the caveat: it still prefers the previous no-m1shock profile.
 
 ## Latest Monthly Real-Tick Gate
 
@@ -129,8 +129,8 @@ Wider monthly real-tick validation was run on 2026-07-12:
 - Configs: `62`
 - Report files: `62 / 62` returned `NO_REPORT`
 - Log parsing: recovered `62 / 62` final-balance results
-- Result: Dec-ISLP-Off beat prior no-m1-shock `+$3,779.52` vs `+$3,687.00`
-- Losing months: Dec-ISLP-Off `0`, prior no-m1-shock `2`
+- Result: Dec-ISLP-Off beat prior no-m1shock `+$3,779.52` vs `+$3,687.00`
+- Losing months: Dec-ISLP-Off `0`, prior no-m1shock `2`
 - Decision: validation credit for monthly net-profit comparison only; no full drawdown/trade-stat credit
 
 Current local safety after that attempt:
@@ -147,13 +147,23 @@ Quarterly real-tick validation was run on 2026-07-12:
 - Configs: `22`
 - Report files: `22 / 22` returned `NO_REPORT`
 - Log parsing: recovered `22 / 22` final-balance results
-- Result: Dec-ISLP-Off beat prior no-m1-shock `+$3,455.89` vs `+$3,404.59`
-- Losing quarters: Dec-ISLP-Off `0`, prior no-m1-shock `1`
+- Result: Dec-ISLP-Off beat prior no-m1shock `+$3,455.89` vs `+$3,404.59`
+- Losing quarters: Dec-ISLP-Off `0`, prior no-m1shock `1`
 - Decision: supports keeping Dec-ISLP-Off promoted for net-profit/quarter comparison
 
 ## Latest Code Probe
 
-FMR location-extreme strict mode was tested on 2026-07-12:
+ISLP MinATR5 was tested on 2026-07-12:
+
+- Diagnosis: the current `2024_10` Model4 loss was an ISLP sell with entry ATR around `3.74`; the `2025_10` winner was the same ISLP setup type with entry ATR around `13.19`.
+- Change: added optional `InpInSessionLiquidityPullbackMinATR`, default `0.0`.
+- Candidate: `InpInSessionLiquidityPullbackMinATR=5.0`.
+- Result: sampled Model4 total improved from `+$204.86` to `+$249.50`.
+- Losing windows improved from `1` to `0`.
+- Decision: promising probe, not promoted until wider monthly and quarterly Model4 validation passes.
+- Research note: `research/2026-07-12-islp-min-atr-probe-note.md`
+
+Prior FMR location-extreme strict mode was tested on 2026-07-12:
 
 - Change: when `InpFlatMonthMicroReversionRequireVWAP=true`, flat-month micro-reversion also requires a nearby liquidity/structure extreme.
 - Intent: improve flat-window quality without Adaptive Reverse or pure ATR-only logic.
@@ -216,6 +226,13 @@ Local FMR strict-mode probe evidence:
 - `outputs/REALTICK_FMR_LOCATION_EXTREME_PROBE_DECISION_SUMMARY.csv`
 - `research/2026-07-12-fmr-location-extreme-probe-note.md`
 
+Local ISLP MinATR probe evidence:
+
+- `outputs/REALTICK_ISLP_MIN_ATR_PROBE_DIFF.csv`
+- `outputs/REALTICK_ISLP_MIN_ATR_PROBE_PROFILE_SUMMARY.csv`
+- `outputs/REALTICK_ISLP_MIN_ATR_PROBE_DECISION_SUMMARY.csv`
+- `research/2026-07-12-islp-min-atr-probe-note.md`
+
 Local-only monthly raw files:
 
 - `outputs/REALTICK_DEC_ISLP_MONTHLY_VALIDATION_RUN.csv`
@@ -224,6 +241,8 @@ Local-only monthly raw files:
 - `outputs/REALTICK_DEC_ISLP_QUARTERLY_VALIDATION_LOG_RESULTS.csv`
 - `outputs/REALTICK_FMR_LOCATION_EXTREME_PROBE_RUN.csv`
 - `outputs/REALTICK_FMR_LOCATION_EXTREME_PROBE_LOG_RESULTS.csv`
+- `outputs/REALTICK_ISLP_MIN_ATR_PROBE_RUN.csv`
+- `outputs/REALTICK_ISLP_MIN_ATR_PROBE_LOG_RESULTS.csv`
 
 ## What Changed Recently
 
@@ -241,6 +260,7 @@ Current strategy direction:
 - Range Elite Micro Reversion remains low-frequency and strict.
 - MFE Failure Exit is enabled only in March.
 - In-Session Liquidity Pullback remains enabled only for selected months, with December now disabled.
+- ISLP MinATR5 is an experimental guard that blocks very low-ATR ISLP entries; it is not promoted yet.
 - Spread-regime guard is enabled.
 - M1 spread-shock guard is disabled because it created Model2 compatibility problems without adding Model1 profit.
 - Adaptive Reverse is internally locked off in local source to reduce whipsaw risk and tester input count.
@@ -257,7 +277,7 @@ Useful interpretation:
 - `+$7,469.00` is the Model4 total across sampled validation windows.
 - Monthly Model4 parsed-log validation also supports the guard: `+$3,779.52` vs `+$3,687.00`, and `0` losing months vs `2`.
 - Quarterly Model4 parsed-log validation supports the same guard: `+$3,455.89` vs `+$3,404.59`, and `0` losing quarters vs `1`.
-- Model2 still argues for caution because it prefers the previous no-m1-shock profile.
+- Model2 still argues for caution because it prefers the previous no-m1shock profile.
 
 Bottom line: the profile is worth more testing, not live deployment yet.
 
