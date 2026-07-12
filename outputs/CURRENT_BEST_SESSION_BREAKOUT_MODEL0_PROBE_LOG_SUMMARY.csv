@@ -1,0 +1,6 @@
+"Profile","Parsed","Expected","TotalNet","Continuous","YTD","Full2025","Full2024","WeakSum","WorstWindow","LosingWindows"
+"ptc_house_strict","8","8","11168.03","7809.39","","","","","0","0"
+"base","8","8","9580.99","6222.35","","","","","0","0"
+"sil_flat_strict","8","8","4598.65","1266.65","","","","","-9.32","1"
+"sil_engine_only","8","8","4423.7","1086.89","","","","","0","0"
+"bcq_follow_strict","8","8","3142.2","693.78","","","","","-23.26","1"
