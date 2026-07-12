@@ -1,0 +1,5 @@
+"Profile","Parsed","Expected","TotalNet","Continuous","YTD","Full2025","Full2024","WeakSum","WorstWindow","LosingWindows"
+"base","8","8","9580.99","6222.35","","","","","0","0"
+"het_engine_strict","8","8","8816.44","5457.8","","","","","0","0"
+"het_engine_mid","8","8","8816.44","5457.8","","","","","0","0"
+"het_flat_strict","8","8","8804","5445.36","","","","","0","0"
