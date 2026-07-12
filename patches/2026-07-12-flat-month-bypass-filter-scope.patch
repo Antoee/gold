@@ -1,0 +1,9 @@
+diff --git a/Professional_XAUUSD_EA.mq5 b/Professional_XAUUSD_EA.mq5
+--- a/Professional_XAUUSD_EA.mq5
++++ b/Professional_XAUUSD_EA.mq5
+@@
+-   if(flatMonthBypass && !FlatMonthProbeMonthFilterAllows())
++   if((flatMonthProbeBypass || flatMonthMomentumBypass) && !FlatMonthProbeMonthFilterAllows())
+    {
+       g_lastBlockReason = "flat probe month filter";
+       return false;
