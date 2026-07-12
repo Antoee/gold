@@ -7,6 +7,7 @@ Profile: `Score7 Regime No-M1-Shock Dec-ISLP-Off`
 - SHA-256: `D1B665E193A5126B879E0DCA08A85CB5C8E1D1C9D2007075D6C2EA6ABBF82672`
 - Primary promotion note: `research/2026-07-12-december-islp-guard-promotion-note.md`
 - Monthly validation note: `research/2026-07-12-december-islp-monthly-validation-note.md`
+- Quarterly validation note: `research/2026-07-12-december-islp-quarterly-validation-note.md`
 
 ## Latest Decision
 
@@ -25,6 +26,7 @@ The promoted change disables only December trades for the In-Session Liquidity P
 | Model2 total | `17890.63` | `15361.76` | previous wins |
 | Model4 sampled total | `4075.62` | `7469.00` | guard wins |
 | Model4 monthly total | `3687.00` | `3779.52` | guard wins |
+| Model4 quarterly total | `3404.59` | `3455.89` | guard wins |
 
 Continuous-window rows:
 
@@ -53,6 +55,23 @@ The only changed months were December:
 | `2024_12` | `-49.40` | `0.00` | `+49.40` |
 | `2025_12` | `-43.12` | `0.00` | `+43.12` |
 
+## Quarterly Model4 Gate
+
+The quarterly real-tick package ran 22 configs, covering 11 quarterly windows for each profile from `2024_Q1` through `2026_Q3TD`.
+
+The runner did not emit report files, but tester-log final balances were recovered for all 22 configs. This gives valid quarterly net-profit comparison, but not full drawdown/trade-stat proof.
+
+| Profile | Parsed Quarters | Total Net | Nonzero Quarters | Losing Quarters | Worst Quarter | Best Quarter |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `no_m1shock` | `11 / 11` | `3404.59` | `9` | `1` | `-4.55` | `1497.84` |
+| `dec_islp_off` | `11 / 11` | `3455.89` | `9` | `0` | `0.00` | `1497.84` |
+
+The only changed quarter was Q4 2024:
+
+| Quarter | No-M1-Shock | Dec-ISLP-Off | Delta |
+| --- | ---: | ---: | ---: |
+| `2024_Q4` | `-4.55` | `46.75` | `+51.30` |
+
 ## Evidence Files
 
 - `outputs/DEC_ISLP_GUARD_DECISION_SUMMARY.csv`
@@ -63,14 +82,18 @@ The only changed months were December:
 - `outputs/REALTICK_DEC_ISLP_MONTHLY_VALIDATION_DIFF.csv`
 - `outputs/REALTICK_DEC_ISLP_MONTHLY_VALIDATION_PROFILE_SUMMARY.csv`
 - `outputs/REALTICK_DEC_ISLP_MONTHLY_VALIDATION_DECISION_SUMMARY.csv`
+- `outputs/REALTICK_DEC_ISLP_QUARTERLY_VALIDATION_DIFF.csv`
+- `outputs/REALTICK_DEC_ISLP_QUARTERLY_VALIDATION_PROFILE_SUMMARY.csv`
+- `outputs/REALTICK_DEC_ISLP_QUARTERLY_VALIDATION_DECISION_SUMMARY.csv`
 - `research/2026-07-12-december-islp-guard-promotion-note.md`
 - `research/2026-07-12-december-islp-monthly-validation-note.md`
+- `research/2026-07-12-december-islp-quarterly-validation-note.md`
 
 ## Caveats
 
 - This is a research-best candidate, not a production deployment profile.
 - Model2 still prefers the previous no-m1-shock profile.
-- Monthly validation currently proves net-profit comparison only because report files were missing.
+- Monthly and quarterly validation currently prove net-profit comparison only because report files were missing.
 - Local EA source is ahead of the GitHub source until the source-sync section in the README says otherwise.
 
 ## Standing Rules
