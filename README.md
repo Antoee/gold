@@ -18,12 +18,13 @@ Use this README as the status board. If you want to know what changed without as
 | Best real-tick result | `+$4,507.51` continuous on `Model=4`, `2024.01.01` to `2026.07.12` |
 | Full sampled real-tick total | `+$7,469.00` across the six Model4 validation windows |
 | Monthly real-tick gate | Dec-ISLP-Off beat prior profile `+$3,779.52` vs `+$3,687.00`, with `0` losing months vs `2` |
+| Quarterly real-tick gate | Dec-ISLP-Off beat prior profile `+$3,455.89` vs `+$3,404.59`, with `0` losing quarters vs `1` |
 | Old `$866` result | Outdated baseline, no longer the current research-best |
 | Live-ready? | No. Still a research candidate |
 | GitHub Actions | Manual-only; do not use for heavy tester runs |
 | Local MT5 safety | Latest audit passed `39 / 39` checks |
 
-Plain English: the bot is no longer at the old `$866 in 2.5 years` baseline. The newest promoted profile is much better in research tests, and the first monthly real-tick parsed-log gate supports it. It is still not a live-profit promise. The next job is getting richer report/trade-stat evidence and continuing walk-forward validation.
+Plain English: the bot is no longer at the old `$866 in 2.5 years` baseline. The newest promoted profile is much better in research tests, and the monthly plus quarterly real-tick parsed-log gates support it. It is still not a live-profit promise. The next job is getting richer report/trade-stat evidence and continuing walk-forward validation.
 
 ## Current Best Profile
 
@@ -90,6 +91,19 @@ Current local safety after that attempt:
 - `work/MT5_LOCAL_LAUNCH_DISABLED.lock` restored
 - MT5 safety audit: `PASS`, `39 / 39`
 
+## Latest Quarterly Real-Tick Gate
+
+Quarterly real-tick validation was run on 2026-07-12:
+
+- Package: `outputs/realtick_dec_islp_quarterly_validation_package`
+- Runner CSV: `outputs/REALTICK_DEC_ISLP_QUARTERLY_VALIDATION_RUN.csv`
+- Configs: `22`
+- Report files: `22 / 22` returned `NO_REPORT`
+- Log parsing: recovered `22 / 22` final-balance results
+- Result: Dec-ISLP-Off beat prior no-m1-shock `+$3,455.89` vs `+$3,404.59`
+- Losing quarters: Dec-ISLP-Off `0`, prior no-m1-shock `1`
+- Decision: supports keeping Dec-ISLP-Off promoted for net-profit/quarter comparison
+
 ## Evidence Files
 
 Primary status:
@@ -125,10 +139,19 @@ Synced monthly parsed-log evidence:
 - `outputs/REALTICK_DEC_ISLP_MONTHLY_VALIDATION_DECISION_SUMMARY.csv`
 - `research/2026-07-12-december-islp-monthly-validation-note.md`
 
-Local-only monthly raw files:
+Synced quarterly parsed-log evidence:
+
+- `outputs/REALTICK_DEC_ISLP_QUARTERLY_VALIDATION_DIFF.csv`
+- `outputs/REALTICK_DEC_ISLP_QUARTERLY_VALIDATION_PROFILE_SUMMARY.csv`
+- `outputs/REALTICK_DEC_ISLP_QUARTERLY_VALIDATION_DECISION_SUMMARY.csv`
+- `research/2026-07-12-december-islp-quarterly-validation-note.md`
+
+Local-only raw files:
 
 - `outputs/REALTICK_DEC_ISLP_MONTHLY_VALIDATION_RUN.csv`
 - `outputs/REALTICK_DEC_ISLP_MONTHLY_VALIDATION_LOG_RESULTS.csv`
+- `outputs/REALTICK_DEC_ISLP_QUARTERLY_VALIDATION_RUN.csv`
+- `outputs/REALTICK_DEC_ISLP_QUARTERLY_VALIDATION_LOG_RESULTS.csv`
 
 ## What Changed Recently
 
@@ -159,6 +182,7 @@ Useful interpretation:
 - `+$4,507.51` is the current Model4 real-tick continuous result.
 - `+$7,469.00` is the Model4 total across sampled validation windows.
 - Monthly Model4 parsed-log validation also supports the guard: `+$3,779.52` vs `+$3,687.00`, and `0` losing months vs `2`.
+- Quarterly Model4 parsed-log validation supports the same guard: `+$3,455.89` vs `+$3,404.59`, and `0` losing quarters vs `1`.
 - Model2 still argues for caution because it prefers the previous no-m1-shock profile.
 
 Bottom line: the profile is worth more testing, not live deployment yet.
@@ -167,9 +191,9 @@ Bottom line: the profile is worth more testing, not live deployment yet.
 
 Next useful work:
 
-1. Fix monthly report generation or add richer trade/stat extraction so monthly Model4 runs include drawdown, trades, and profit factor.
+1. Fix report generation or add richer trade/stat extraction so Model4 runs include drawdown, trades, and profit factor.
 2. Investigate why Model2 prefers the previous profile.
-3. Run a quarterly Model4 parsed-log/report validation after the monthly result.
+3. Run a compact trade-diagnostic pass for the remaining low-activity/flat windows to find new profit lanes without reintroducing December losses.
 4. Continue looking for profit lanes that add trades without creating losing windows.
 5. Only raise risk after the profile survives wider real-tick validation.
 
@@ -184,7 +208,7 @@ When Codex changes the bot or runs meaningful tests, update this README with:
 5. Evidence CSV or research note.
 6. Promotion decision: promoted, rejected, or probe only.
 
-If a run returns `NO_REPORT`, it does not count as proof.
+If a run returns `NO_REPORT`, it does not count as full report proof. If final balances are recovered from logs, label it as parsed-log evidence.
 
 ## GitHub Actions
 
