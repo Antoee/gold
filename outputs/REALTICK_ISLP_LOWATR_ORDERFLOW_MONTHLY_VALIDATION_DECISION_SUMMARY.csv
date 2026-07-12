@@ -1,0 +1,7 @@
+"Metric","Value"
+"ISLPLowATROrderFlowWins","1"
+"DecISLPOffWins","0"
+"Ties","30"
+"DeltaTotal","44.64"
+"LosingWindowDelta","islp_lowatr_of removes 1 losing month and increases total net profit"
+"Decision","Monthly gate passed; run quarterly validation before promotion"
