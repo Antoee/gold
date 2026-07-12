@@ -8,11 +8,7 @@ Current stability-best research profile:
 
 `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
 
-Classification:
-
-`Provisional stability-best research profile, not live-ready`
-
-Local generated profile file:
+Profile file:
 
 `outputs/CANDIDATE_DEC_ISLP_OFF_ISLP_LOWATR_ORDERFLOW_PROFILE.set`
 
@@ -55,14 +51,6 @@ The LowATR OrderFlow guard fixed that tradeoff:
 - It kept the June 2024 low-ATR ISLP winner because order flow confirmed.
 - It blocked the October 2024 low-ATR ISLP loser because order flow did not confirm.
 
-## Provisional Caution
-
-The Dec-ISLP-Off component remains an overfit risk because the original December improvement came from a very small number of December observations. Keep it as a risk-control candidate, not a proven permanent market rule.
-
-The LowATR OrderFlow addition is stronger than the blunt MinATR filter because it preserved a known winner while removing a known loser, but it still needs wider out-of-sample validation.
-
-The new tester-stat reruns add important risk context: both monthly and quarterly summaries show a `30.9408%` worst equity drawdown reading. That is too high to treat this as live-ready.
-
 ## Model4 Evidence
 
 Sampled probe:
@@ -71,13 +59,6 @@ Sampled probe:
 | --- | ---: | ---: | ---: | ---: |
 | `dec_islp_off` | `7` | `+271.42` | `1` | `-44.64` |
 | `islp_lowatr_of` | `7` | `+316.06` | `0` | `0.00` |
-
-Tester-stat probe smoke:
-
-| Profile | Stats Parsed | Total Net | Trades | Worst Equity DD % | Losing Windows |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| `dec_islp_off` | `7 / 7` | `+271.42` | `12` | `7.3344` | `1` |
-| `islp_lowatr_of` | `7 / 7` | `+316.06` | `11` | `7.3344` | `0` |
 
 Monthly validation:
 
@@ -109,7 +90,7 @@ Quarterly tester-stat rerun:
 
 Decision:
 
-Promoted as the current stability-best research profile, but only provisionally.
+Promoted as the current stability-best research profile.
 
 ## Evidence Files
 
@@ -137,10 +118,30 @@ This is not a live-ready production profile.
 
 Remaining gaps:
 
+- MT5 report export still returns `NO_REPORT`; results are parsed from tester logs.
 - Monthly and quarterly tester-stat reruns are complete, but they show a high worst equity drawdown reading of `30.9408%`.
+- Hold-time stats still need richer extraction.
 - Model1 and Model2 have not yet been rerun on this LowATR OrderFlow candidate.
-- Older-data, walk-forward, Monte Carlo, and broker-variation testing are still missing.
-- Hold-time, average winner/loser, largest loss, consecutive loss, exposure, spread, swap, commission, and slippage evidence are still incomplete.
 - Local `Professional_XAUUSD_EA.mq5` is ahead of the GitHub source and contains the new optional guard.
 
 Adaptive Reverse remains disabled.
+
+## Latest Rejected Probe
+
+Flat-month FSD efficiency relaxation was tested on 2026-07-12 and rejected.
+
+Summary:
+
+| Profile | Parsed | Active Windows | Zero-Trade Windows | Total Net | Total Trades | Worst Equity DD % |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `lowatr_current` | `12 / 12` | `3` | `9` | `+508.07` | `6` | `30.9408` |
+| `fsd_relaxed_48h` | `12 / 12` | `3` | `9` | `+508.07` | `6` | `30.9408` |
+| `fsd_relaxed_24h` | `12 / 12` | `3` | `9` | `+508.07` | `6` | `30.9408` |
+
+Decision:
+
+Do not promote. The relaxation did not add active windows, reduce zero-trade windows, or improve net profit.
+
+Research note:
+
+`research/2026-07-12-fsd-efficiency-relaxation-probe-note.md`
