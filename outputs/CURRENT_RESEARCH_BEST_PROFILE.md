@@ -1,17 +1,20 @@
 # Current Research Best Profile
 
-- Profile: `outputs/CANDIDATE_PRIMARY_RANGE_ELITE_MFE_FAILURE_MARCH_ISLP_JUN_OCTDEC_SCORE7_REGIME_NO_M1SHOCK_DEC_ISLP_OFF_PROFILE.set`
+Profile: `Score7 Regime No-M1-Shock Dec-ISLP-Off`
+
 - Builder: `work/build_score7_regime_no_m1shock_dec_islp_off_profile.ps1`
+- Local generated set: `outputs/CANDIDATE_PRIMARY_RANGE_ELITE_MFE_FAILURE_MARCH_ISLP_JUN_OCTDEC_SCORE7_REGIME_NO_M1SHOCK_DEC_ISLP_OFF_PROFILE.set`
 - SHA-256: `D1B665E193A5126B879E0DCA08A85CB5C8E1D1C9D2007075D6C2EA6ABBF82672`
-- Research note: `research/2026-07-12-december-islp-guard-promotion-note.md`
+- Primary promotion note: `research/2026-07-12-december-islp-guard-promotion-note.md`
+- Monthly validation note: `research/2026-07-12-december-islp-monthly-validation-note.md`
 
-## Evidence
+## Latest Decision
 
-- Previous no-m1-shock profile fixed the Model=2 M1 spread-shock incompatibility and remained clean in validation.
-- Expanded real-tick showdown showed previous no-m1-shock had one small Q4 2024 loss: `-4.55`.
-- Trade diagnostics found the Q4 2024 red window came from a single December ISLP loss: `-51.30` after an October micro-reversion win of `+46.75`.
-- December ISLP guard promotion: disabling only December ISLP (`InpISLPTradeDecember=false`) improved Model=4 total from `4075.62` to `7469.00`, Model=1 continuous from `9753.58` to `10127.76`, and Model=0 continuous from `1288.93` to `5386.54`, while removing the Q4 2024 losing window.
-- Caveat: Model=2 preferred the previous no-m1-shock profile, with continuous `12054.55` versus Dec-ISLP-Off `10127.76`.
+Keep Dec-ISLP-Off as the current research-best.
+
+The promoted change disables only December trades for the In-Session Liquidity Pullback lane:
+
+- `InpISLPTradeDecember=false`
 
 ## Validation Summary
 
@@ -20,7 +23,35 @@
 | Model0 total | `4495.93` | `8768.34` | guard wins |
 | Model1 total | `14739.08` | `15361.76` | guard wins |
 | Model2 total | `17890.63` | `15361.76` | previous wins |
-| Model4 total | `4075.62` | `7469.00` | guard wins |
+| Model4 sampled total | `4075.62` | `7469.00` | guard wins |
+| Model4 monthly total | `3687.00` | `3779.52` | guard wins |
+
+Continuous-window rows:
+
+| Model | Previous No-M1-Shock | Dec-ISLP-Off |
+| --- | ---: | ---: |
+| Model0 continuous | `1288.93` | `5386.54` |
+| Model1 continuous | `9753.58` | `10127.76` |
+| Model2 continuous | `12054.55` | `10127.76` |
+| Model4 continuous | `1288.93` | `4507.51` |
+
+## Monthly Model4 Gate
+
+The monthly real-tick package ran 62 configs, covering 31 monthly windows for each profile from `2024.01.01` through `2026.07.12`.
+
+The runner did not emit report files, but tester-log final balances were recovered for all 62 configs. This gives valid monthly net-profit comparison, but not full drawdown/trade-stat proof.
+
+| Profile | Parsed Months | Total Net | Nonzero Months | Losing Months | Worst Month | Best Month |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `no_m1shock` | `31 / 31` | `3687.00` | `16` | `2` | `-49.40` | `1497.84` |
+| `dec_islp_off` | `31 / 31` | `3779.52` | `14` | `0` | `0.00` | `1497.84` |
+
+The only changed months were December:
+
+| Month | No-M1-Shock | Dec-ISLP-Off | Delta |
+| --- | ---: | ---: | ---: |
+| `2024_12` | `-49.40` | `0.00` | `+49.40` |
+| `2025_12` | `-43.12` | `0.00` | `+43.12` |
 
 ## Evidence Files
 
@@ -29,11 +60,23 @@
 - `outputs/MODEL1_DEC_ISLP_GUARD_LOG_RESULTS.csv`
 - `outputs/MODEL2_DEC_ISLP_GUARD_LOG_RESULTS.csv`
 - `outputs/MODEL0_DEC_ISLP_GUARD_LOG_RESULTS.csv`
+- `outputs/REALTICK_DEC_ISLP_MONTHLY_VALIDATION_DIFF.csv`
+- `outputs/REALTICK_DEC_ISLP_MONTHLY_VALIDATION_PROFILE_SUMMARY.csv`
+- `outputs/REALTICK_DEC_ISLP_MONTHLY_VALIDATION_DECISION_SUMMARY.csv`
 - `research/2026-07-12-december-islp-guard-promotion-note.md`
+- `research/2026-07-12-december-islp-monthly-validation-note.md`
 
-## Standing Notes
+## Caveats
 
-- Adaptive Reverse remains disabled to avoid stop-and-reverse whipsaw risk.
+- This is a research-best candidate, not a production deployment profile.
+- Model2 still prefers the previous no-m1-shock profile.
+- Monthly validation currently proves net-profit comparison only because report files were missing.
+- Local EA source is ahead of the GitHub source until the source-sync section in the README says otherwise.
+
+## Standing Rules
+
+- No martingale.
+- No grid.
+- No averaging down.
+- Adaptive Reverse remains disabled to avoid whipsaw risk.
 - Liquidity-aware structural stops remain preferred over pure ATR-only stop placement where available.
-- This is the current research-best candidate, not a final production deployment profile.
-- The next validation gate is wider real-tick monthly/quarterly validation because Model=2 still prefers the previous no-m1-shock profile.
