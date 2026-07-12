@@ -28,6 +28,12 @@ Stats export note:
 
 `research/2026-07-12-lowatr-tester-stats-export-note.md`
 
+Latest stats summaries:
+
+- `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_PROBE_STATS_SUMMARY.csv`
+- `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_MONTHLY_STATS_SUMMARY.csv`
+- `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_QUARTERLY_STATS_SUMMARY.csv`
+
 ## Change
 
 The current best keeps the Dec-ISLP-Off profile and adds a smarter low-volatility ISLP guard:
@@ -53,7 +59,9 @@ The LowATR OrderFlow guard fixed that tradeoff:
 
 The Dec-ISLP-Off component remains an overfit risk because the original December improvement came from a very small number of December observations. Keep it as a risk-control candidate, not a proven permanent market rule.
 
-The LowATR OrderFlow addition is stronger than the blunt MinATR filter because it preserved a known winner while removing a known loser, but it still needs full risk statistics and wider out-of-sample validation.
+The LowATR OrderFlow addition is stronger than the blunt MinATR filter because it preserved a known winner while removing a known loser, but it still needs wider out-of-sample validation.
+
+The new tester-stat reruns add important risk context: both monthly and quarterly summaries show a `30.9408%` worst equity drawdown reading. That is too high to treat this as live-ready.
 
 ## Model4 Evidence
 
@@ -78,12 +86,26 @@ Monthly validation:
 | `dec_islp_off` | `31` | `+3,637.53` | `1` | `-44.64` |
 | `islp_lowatr_of` | `31` | `+3,682.17` | `0` | `0.00` |
 
+Monthly tester-stat rerun:
+
+| Profile | Stats Parsed | Total Net | Trades | Worst Equity DD % | Nonzero PF Samples | Min Nonzero PF |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `dec_islp_off` | `31 / 31` | `+3,637.53` | `39` | `30.9408` | `7` | `1.4914` |
+| `islp_lowatr_of` | `31 / 31` | `+3,682.17` | `38` | `30.9408` | `7` | `1.4914` |
+
 Quarterly validation:
 
 | Profile | Parsed | Total | Losing Windows | Worst |
 | --- | ---: | ---: | ---: | ---: |
 | `dec_islp_off` | `11` | `+3,421.49` | `1` | `-44.64` |
 | `islp_lowatr_of` | `11` | `+3,435.65` | `1` | `-30.48` |
+
+Quarterly tester-stat rerun:
+
+| Profile | Stats Parsed | Total Net | Trades | Worst Equity DD % | Min Recovery Factor | Avg Sharpe |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `dec_islp_off` | `11 / 11` | `+3,421.49` | `34` | `30.9408` | `-0.9789` | `3.2935` |
+| `islp_lowatr_of` | `11 / 11` | `+3,435.65` | `34` | `30.9408` | `-0.5184` | `3.2828` |
 
 Decision:
 
@@ -99,9 +121,13 @@ Promoted as the current stability-best research profile, but only provisionally.
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_MONTHLY_VALIDATION_DIFF.csv`
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_MONTHLY_VALIDATION_PROFILE_SUMMARY.csv`
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_MONTHLY_VALIDATION_DECISION_SUMMARY.csv`
+- `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_MONTHLY_STATS_RESULTS.csv`
+- `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_MONTHLY_STATS_SUMMARY.csv`
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_QUARTERLY_VALIDATION_DIFF.csv`
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_QUARTERLY_VALIDATION_PROFILE_SUMMARY.csv`
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_QUARTERLY_VALIDATION_DECISION_SUMMARY.csv`
+- `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_QUARTERLY_STATS_RESULTS.csv`
+- `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_QUARTERLY_STATS_SUMMARY.csv`
 - `research/2026-07-12-islp-lowatr-orderflow-promotion-note.md`
 - `research/2026-07-12-lowatr-tester-stats-export-note.md`
 
@@ -111,9 +137,10 @@ This is not a live-ready production profile.
 
 Remaining gaps:
 
-- Monthly and quarterly validation need reruns with tester-stat export enabled.
+- Monthly and quarterly tester-stat reruns are complete, but they show a high worst equity drawdown reading of `30.9408%`.
 - Model1 and Model2 have not yet been rerun on this LowATR OrderFlow candidate.
 - Older-data, walk-forward, Monte Carlo, and broker-variation testing are still missing.
+- Hold-time, average winner/loser, largest loss, consecutive loss, exposure, spread, swap, commission, and slippage evidence are still incomplete.
 - Local `Professional_XAUUSD_EA.mq5` is ahead of the GitHub source and contains the new optional guard.
 
 Adaptive Reverse remains disabled.
