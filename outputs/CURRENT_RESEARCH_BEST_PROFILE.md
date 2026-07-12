@@ -24,6 +24,10 @@ Research note:
 
 `research/2026-07-12-islp-lowatr-orderflow-promotion-note.md`
 
+Stats export note:
+
+`research/2026-07-12-lowatr-tester-stats-export-note.md`
+
 ## Change
 
 The current best keeps the Dec-ISLP-Off profile and adds a smarter low-volatility ISLP guard:
@@ -60,6 +64,13 @@ Sampled probe:
 | `dec_islp_off` | `7` | `+271.42` | `1` | `-44.64` |
 | `islp_lowatr_of` | `7` | `+316.06` | `0` | `0.00` |
 
+Tester-stat probe smoke:
+
+| Profile | Stats Parsed | Total Net | Trades | Worst Equity DD % | Losing Windows |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `dec_islp_off` | `7 / 7` | `+271.42` | `12` | `7.3344` | `1` |
+| `islp_lowatr_of` | `7 / 7` | `+316.06` | `11` | `7.3344` | `0` |
+
 Monthly validation:
 
 | Profile | Parsed | Total | Losing Windows | Worst |
@@ -83,6 +94,8 @@ Promoted as the current stability-best research profile, but only provisionally.
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_PROBE_DIFF.csv`
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_PROBE_PROFILE_SUMMARY.csv`
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_PROBE_DECISION_SUMMARY.csv`
+- `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_PROBE_STATS_RESULTS.csv`
+- `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_PROBE_STATS_SUMMARY.csv`
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_MONTHLY_VALIDATION_DIFF.csv`
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_MONTHLY_VALIDATION_PROFILE_SUMMARY.csv`
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_MONTHLY_VALIDATION_DECISION_SUMMARY.csv`
@@ -90,6 +103,7 @@ Promoted as the current stability-best research profile, but only provisionally.
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_QUARTERLY_VALIDATION_PROFILE_SUMMARY.csv`
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_QUARTERLY_VALIDATION_DECISION_SUMMARY.csv`
 - `research/2026-07-12-islp-lowatr-orderflow-promotion-note.md`
+- `research/2026-07-12-lowatr-tester-stats-export-note.md`
 
 ## Caveats
 
@@ -97,8 +111,7 @@ This is not a live-ready production profile.
 
 Remaining gaps:
 
-- MT5 report export still returns `NO_REPORT`; results are parsed from tester logs.
-- Drawdown, profit factor, trade count, and hold-time stats still need richer extraction.
+- Monthly and quarterly validation need reruns with tester-stat export enabled.
 - Model1 and Model2 have not yet been rerun on this LowATR OrderFlow candidate.
 - Older-data, walk-forward, Monte Carlo, and broker-variation testing are still missing.
 - Local `Professional_XAUUSD_EA.mq5` is ahead of the GitHub source and contains the new optional guard.
