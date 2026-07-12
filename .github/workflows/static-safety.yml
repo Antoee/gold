@@ -2,8 +2,30 @@ name: Static Safety Audit
 
 on:
   push:
+    paths-ignore:
+      - 'outputs/**'
+      - 'research/**'
+      - 'patches/**'
+      - '**/*.md'
+      - '**/*.csv'
+      - '**/*.log'
+      - '**/*.set'
+      - '**/*.zip'
   pull_request:
+    paths-ignore:
+      - 'outputs/**'
+      - 'research/**'
+      - 'patches/**'
+      - '**/*.md'
+      - '**/*.csv'
+      - '**/*.log'
+      - '**/*.set'
+      - '**/*.zip'
   workflow_dispatch:
+
+concurrency:
+  group: static-safety-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   static-safety:
