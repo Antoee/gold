@@ -15,14 +15,15 @@ Current research-best profile:
 - SHA-256: `7BD4019104BCDF117A7D729289D6821D5F4BF6FB6FF9FE2D543BCF91717DC204`
 - Research note: `research/2026-07-12-score7-regime-guard-promotion-note.md`
 
-Important clarification: the current best is now near `$10k`, but not exactly over two years.
+Important clarification: the current best has a near `$10k` Model=1 research result, but it is not fully cross-model confirmed yet.
 
 - Higher-fidelity `Model=1` continuous result: `+$9,753.58`
+- Model=0 confirmation result: `+$1,288.93`, exactly equal to the prior Score7 profile on the tested windows
 - Test window: `2024.01.01` to `2026.07.12`
 - That is about 2.5 years, not exactly 2 years.
 - Previous Score7 best on the same `Model=1` gate: `+$7,970.70`
 - Previous robust pre-Score7 best on the same gate: `+$7,210.30`
-- Fast-model result from the previous gate: `+$9,512.09`, but `Model=1` is the number to trust more.
+- Fast-model result from the previous gate: `+$9,512.09`, but `Model=1` is only one validation view, not a production guarantee.
 
 ## Latest Validation
 
@@ -44,12 +45,25 @@ Quarter `Model=1` gate:
 | Losing quarters | `1` | `1` |
 | Main improvement | none in reset quarters | continuous equity path improved |
 
+Model=0 confirmation:
+
+| Window | Previous Score7 Best | Current Regime Best |
+| --- | ---: | ---: |
+| Continuous 2024-2026 | `+$1,288.93` | `+$1,288.93` |
+| Full 2024 | `+$1,425.73` | `+$1,425.73` |
+| Full 2025 | `+$214.30` | `+$214.30` |
+| 2026 YTD | `+$1,375.36` | `+$1,375.36` |
+| 2025 Q4 | `+$196.16` | `+$196.16` |
+| 2024 Q4 | `-$4.55` | `-$4.55` |
+
 Evidence files:
 
 - `outputs/CURRENT_RESEARCH_BEST_PROFILE.md`
 - `outputs/MODEL1_SCORE7_COST_STRESS_LOG_RESULTS.csv`
 - `outputs/MODEL1_SCORE7_REGIME_QTR_LOG_RESULTS.csv`
+- `outputs/MODEL0_SCORE7_REGIME_CONFIRM_LOG_RESULTS.csv`
 - `research/2026-07-12-score7-regime-guard-promotion-note.md`
+- `research/2026-07-12-score7-regime-model0-confirmation-note.md`
 
 ## What Changed Recently
 
@@ -72,6 +86,8 @@ The newest promoted change enables strict spread-regime and M1 spread-shock guar
 - `InpM1SpreadShockMinPoints=35.0`
 
 This improved continuous `Model=1` validation from `+$7,970.70` to `+$9,753.58` without changing the quarter gate.
+
+A follow-up Model=0 confirmation was neutral: the Regime profile and prior Score7 profile were exactly equal on continuous, full-year, YTD, and Q4 windows. That means the Regime change has not shown extra cross-model damage, but the near-`$10k` edge should still be treated as Model=1-specific research evidence.
 
 ## Strategy Direction
 
@@ -106,7 +122,7 @@ To see the current state without asking Codex:
 2. Open the latest `research/YYYY-MM-DD-*.md` note for why it was promoted or rejected.
 3. Check `outputs/*LOG_RESULTS.csv` for the actual parsed MT5 tester results.
 4. Treat fast-model numbers as rough scouting only.
-5. Treat `Model=1` results as more trustworthy, but still not a production guarantee.
+5. Treat `Model=1` results as useful research evidence, but not a production guarantee.
 
 ## GitHub Actions
 
@@ -132,8 +148,8 @@ The latest local safety audit passed:
 
 Next useful work:
 
-1. Retest the Regime profile under another model/source to confirm the continuous edge is not a tester artifact.
-2. Inspect trade-level logs to understand why the spread-regime guard improves the continuous path.
+1. Inspect trade-level logs to understand why the spread-regime guard improves the Model=1 continuous path but is neutral in Model=0.
+2. Run another independent source/model validation before raising risk.
 3. Continue looking for profit lanes that add trades without creating losing windows.
 4. Keep rejected high-profit variants documented so they are not accidentally re-promoted.
 5. Eventually sync the full local EA source to GitHub once normal git authentication is available; the local EA source is ahead of the GitHub source.
