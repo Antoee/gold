@@ -122,11 +122,33 @@ Remaining gaps:
 - Monthly and quarterly tester-stat reruns are complete, but they show a high worst equity drawdown reading of `30.9408%`.
 - Hold-time stats still need richer extraction.
 - Model1 and Model2 have not yet been rerun on this LowATR OrderFlow candidate.
-- Local `Professional_XAUUSD_EA.mq5` is ahead of the GitHub source and contains the new optional guard.
+- Local `Professional_XAUUSD_EA.mq5` is ahead of the GitHub source and contains newer default-off flat-month breakout probe infrastructure.
+- The local workspace is not currently a valid Git checkout because `.git` exists but is empty.
 
 Adaptive Reverse remains disabled.
 
-## Latest Rejected Probe
+## Latest Rejected Probes
+
+Flat-month breakout structural and activation probes were tested on 2026-07-12 and rejected.
+
+Summary:
+
+| Profile | Parsed | Active Windows | Zero-Trade Windows | Total Net | Losing Windows | Total Trades | Worst Equity DD % |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `lowatr_current` | `12 / 12` | `3` | `9` | `+508.07` | `0` | `6` | `30.9408` |
+| `fmb_struct_conservative` | `12 / 12` | `3` | `9` | `+508.07` | `0` | `6` | `30.9408` |
+| `fmb_struct_balanced` | `12 / 12` | `3` | `9` | `+508.07` | `0` | `6` | `30.9408` |
+| `fmb_activation_tape` | `12 / 12` | `3` | `9` | `+508.07` | `0` | `6` | `30.9408` |
+| `fmb_activation_loose` | `12 / 12` | `5` | `7` | `+490.65` | `2` | `8` | `30.9408` |
+ 
+Decision:
+
+Do not promote. Conservative and balanced FMB tied current; loose activation created extra trades but lowered total net and added losing windows.
+
+Research notes:
+
+- `research/2026-07-12-flat-month-breakout-structural-probe-note.md`
+- `research/2026-07-12-flat-month-breakout-activation-probe-note.md`
 
 Flat-month FSD efficiency relaxation was tested on 2026-07-12 and rejected.
 
