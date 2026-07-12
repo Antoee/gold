@@ -17,7 +17,7 @@ This README is the no-chat status board for the bot. When Codex makes meaningful
 | Current research-best | `Score7 Regime No-M1-Shock` |
 | Best headline test | `+$9,753.58` from `2024.01.01` to `2026.07.12` in `Model=1` |
 | Best clean cross-model check | `+$12,054.55` from `2024.01.01` to `2026.07.12` in `Model=2` |
-| Real-tick status | Initial `Model=4` probe was neutral, not stronger |
+| Real-tick status | Expanded `Model=4` showdown keeps current best by total profit, but Q4 2024 still has a tiny `-$4.55` weak-window loss |
 | Old `$866` result | Outdated baseline and no longer the current research-best |
 | Live-ready? | No. Still a research candidate that needs more real-tick and walk-forward validation |
 | Testing location | Heavy MT5 tests should run locally, hidden in the background, not in GitHub Actions |
@@ -40,12 +40,12 @@ Short version: the current research-best is much better than the old `$866` resu
 
 Current answer to "how is it going?":
 
-The newest promoted profile is `Score7 Regime No-M1-Shock`. It fixed the Model=2 validation problem caused by the earlier M1 spread-shock guard and kept the same Model=1 performance as the stricter Regime profile. The best research number is still the Model=1 continuous result of `+$9,753.58` across about 2.5 years. A cleaner Model=2 check improved to `+$12,054.55`, but the first real-tick probe only matched the previous Score7 profile instead of proving extra edge.
+The newest promoted profile is still `Score7 Regime No-M1-Shock`. It fixed the Model=2 validation problem caused by the earlier M1 spread-shock guard and kept the same Model=1 performance as the stricter Regime profile. The best research number is still the Model=1 continuous result of `+$9,753.58` across about 2.5 years. A cleaner Model=2 check improved to `+$12,054.55`. An expanded real-tick showdown also kept no-m1-shock ahead by total profit, but it still has one small Q4 2024 weak-window loss of `-$4.55`.
 
 Current research focus:
 
-1. Retest older real-tick-strong profiles against the current EA source.
-2. Compare them to the current no-M1-shock research-best using `Model=4` real ticks.
+1. Remove or neutralize the Q4 2024 `-$4.55` real-tick loss.
+2. Preserve the Q4 2025 `+$196.00`, full 2024, and 2026 YTD gains.
 3. Only promote a profile if it improves profit without introducing losing windows or tester-model fragility.
 
 What not to assume:
@@ -72,6 +72,7 @@ Important clarification: the current best has a near `$10k` Model=1 research res
 - Fast-model result from the previous gate: `+$9,512.09`, but `Model=1` is the number to trust more.
 - Latest `Model=2` check is clean only after disabling the M1 spread-shock guard: no-M1-shock parsed `6 / 6` windows and beat Score7 on continuous and full 2024.
 - Initial `Model=4` real-tick probe was neutral: no-m1-shock matched Score7 exactly on full 2024, full 2025, and 2026 YTD, with no losing sampled windows.
+- Expanded `Model=4` real-tick showdown kept no-m1-shock ahead of older real-tick-clean profiles by total profit, but showed one small Q4 2024 weak-window loss.
 
 ## Latest Validation
 
@@ -121,6 +122,17 @@ Initial `Model=4` real-tick probe:
 
 This is not proof of the extra edge, but it is a no-damage higher-fidelity check.
 
+Expanded `Model=4` real-tick showdown:
+
+| Profile | Total Net | Continuous 2024-2026 | Full 2024 | Full 2025 | 2026 YTD | Q4 2024 | Q4 2025 | Losing Windows |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| No-M1-Shock Regime | `+$4,075.62` | `+$1,288.93` | `+$1,425.73` | `+$214.30` | `+$955.21` | `-$4.55` | `+$196.00` | `1` |
+| May235 | `+$3,663.13` | `+$1,277.57` | `+$1,277.57` | `+$214.30` | `+$893.69` | `0.00` | `0.00` | `0` |
+| Conflict March | `+$3,663.13` | `+$1,277.57` | `+$1,277.57` | `+$214.30` | `+$893.69` | `0.00` | `0.00` | `0` |
+| Stable Mar1 May225 | `+$2,928.35` | `+$1,277.57` | `+$1,277.57` | `+$214.30` | `+$158.91` | `0.00` | `0.00` | `0` |
+
+Decision: keep no-m1-shock as current research-best, but target the Q4 2024 loss next instead of reverting to the lower-profit older profiles.
+
 ## Evidence Files
 
 - `outputs/CURRENT_RESEARCH_BEST_PROFILE.md`
@@ -133,10 +145,13 @@ This is not proof of the extra edge, but it is a no-damage higher-fidelity check
 - `outputs/MODEL1_SCORE7_REGIME_NO_M1SHOCK_LOG_RESULTS.csv`
 - `outputs/MODEL1_SCORE7_REGIME_NO_M1SHOCK_QTR_LOG_RESULTS.csv`
 - `outputs/MODEL4_SCORE7_VS_NO_M1SHOCK_PROBE_LOG_RESULTS.csv`
+- `outputs/REALTICK_PROFILE_SHOWDOWN_LOG_RESULTS.csv`
+- `outputs/REALTICK_PROFILE_SHOWDOWN_DECISION_SUMMARY.csv`
 - `outputs/MODEL1_SCORE7_REGIME_TRADE_DIAG_SUMMARY.csv`
 - `research/2026-07-12-score7-regime-guard-promotion-note.md`
 - `research/2026-07-12-score7-regime-no-m1shock-promotion-note.md`
 - `research/2026-07-12-score7-regime-no-m1shock-realtick-probe-note.md`
+- `research/2026-07-12-realtick-profile-showdown-note.md`
 - `research/2026-07-12-score7-regime-model0-confirmation-note.md`
 - `research/2026-07-12-score7-regime-trade-diagnosis-note.md`
 
@@ -261,8 +276,9 @@ The latest local safety audit passed:
 
 Next useful work:
 
-1. Expand real-tick validation beyond the first three-window probe before raising risk.
-2. Inspect trade-level logs to understand why the spread-regime guard improves the Model=1 continuous path but is neutral in Model=0 and Model=4.
-3. Continue looking for profit lanes that add trades without creating losing windows.
-4. Keep rejected high-profit variants documented so they are not accidentally re-promoted.
-5. Eventually sync the full local EA source to GitHub once normal git authentication is available; the local EA source is ahead of the GitHub source.
+1. Build a targeted Q4 2024 real-tick guard that removes the `-$4.55` weak-window loss without killing Q4 2025.
+2. Preserve no-m1-shock's full 2024, 2026 YTD, and continuous real-tick advantage over the older clean profiles.
+3. Inspect trade-level logs to understand why Q4 2024 is the only red real-tick showdown window.
+4. Continue looking for profit lanes that add trades without creating losing windows.
+5. Keep rejected high-profit variants documented so they are not accidentally re-promoted.
+6. Eventually sync the full local EA source to GitHub once normal git authentication is available; the local EA source is ahead of the GitHub source.
