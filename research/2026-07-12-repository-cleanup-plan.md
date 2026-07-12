@@ -2,7 +2,7 @@
 
 Date: 2026-07-12
 
-Status: completed for generated logs and temporary runtime artifacts.
+Status: completed for generated logs, temporary runtime artifacts, and old generated MT5 package folders.
 
 ## Goal
 
@@ -44,7 +44,7 @@ Make the repository easier to read without losing evidence needed to understand 
 5. Keep top-level `outputs/` focused on current best, current evidence, and summary CSVs - partial; generated packages remain for reproducibility.
 6. Update README evidence links after cleanup - done.
 
-## Starting Inventory Snapshot
+## Current Inventory Snapshot
 
 - `outputs/`: about `139.72 MB`, mostly generated packages and compact EA snapshots.
 - `work/`: about `146.98 MB`, mostly generated local MT5 configs/packages.
@@ -59,10 +59,27 @@ Completed on 2026-07-12:
 - Archived `26,949` files totaling about `28.85 MB`.
 - Removed active `outputs/offline_refresh_logs/`.
 - Reduced active generated cleanup candidates to `0`.
-- Left only `outputs/MT5_HIDDEN_COMPILE_ISLP_LOWATR_TESTER_STATS.log` as the intentional active compile evidence log.
+- Left intentional active compile evidence logs in `outputs/`.
 - MT5 local safety audit after cleanup: `PASS`, `39 / 39`.
 
-Remaining size is mostly generated MT5 package/config folders kept for reproducibility, not runtime log noise.
+Second cleanup pass on 2026-07-12:
+
+- Archived old generated MT5 package/config folders from `work/`, old package folders from `outputs/`, and root generated validation folders.
+- Kept current evidence package folders in `outputs/`:
+  - `flat_month_efficiency_relaxation_probe_package`
+  - `realtick_islp_lowatr_orderflow_probe_package`
+  - `realtick_islp_lowatr_orderflow_monthly_validation_package`
+  - `realtick_islp_lowatr_orderflow_quarterly_validation_package`
+  - `realtick_dec_islp_monthly_validation_package`
+  - `realtick_dec_islp_quarterly_validation_package`
+- Compressed archive folders into ignored zip files in `archive/`.
+- Reduced local workspace from about `46k` files to about `4.1k` files.
+- Reduced `work/` from about `143 MB` to about `4 MB`.
+- Cleanup dry run now reports `0` active candidates.
+- MT5 local safety audit after cleanup: `PASS`, `39 / 39`.
+- Price-action strategy-module smoke test: `PASS`.
+
+Remaining size is mostly current evidence CSVs, compact/source artifacts, and ignored zip archives.
 
 ## Recommended Cleanup Style
 
