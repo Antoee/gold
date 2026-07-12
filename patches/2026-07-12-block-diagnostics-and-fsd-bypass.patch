@@ -1,0 +1,193 @@
+diff --git a/Professional_XAUUSD_EA.mq5 b/Professional_XAUUSD_EA.mq5
+--- a/Professional_XAUUSD_EA.mq5
++++ b/Professional_XAUUSD_EA.mq5
+@@
+ input bool            InpAllowFlatMonthOpportunityOutsideMonthFilter = false;
+ input int             InpFlatMonthOpportunityBypassMinQualityScore = 12;
+ input int             InpFlatMonthOpportunityBypassMinPriceActionScore = 8;
+ input bool            InpFlatMonthOpportunityBypassRequireLiquidSession = true;
++input bool            InpAllowFlatMonthStructuralDisplacementOutsideMonthFilter = false;
++input int             InpFlatMonthStructuralDisplacementBypassMinQualityScore = 8;
++input int             InpFlatMonthStructuralDisplacementBypassMinPriceActionScore = 0;
++input bool            InpFlatMonthStructuralDisplacementBypassRequireLiquidSession = true;
+ input double          InpFlatMonthTargetPercent    = 2.00;
+@@
+ input bool            InpShowDashboard             = true;
+ input bool            InpDashboardInTester         = false;
+ input ENUM_LOG_LEVEL  InpLogLevel                  = LOG_TRADES;
+ input string          InpLogFileName               = "Professional_XAUUSD_EA_Trades.csv";
++input bool            InpUseBlockReasonDiagnostics = false;
++input string          InpBlockReasonDiagnosticsFile = "Professional_XAUUSD_EA_BlockReasons.csv";
+@@
+ CLogger logger;
++
++class CBlockDiagnostics
++{
++private:
++   int m_handle;
++
++   string BiasText(const ENUM_TRADE_BIAS bias) const
++   {
++      if(bias == BIAS_BUY)
++         return "buy";
++      if(bias == BIAS_SELL)
++         return "sell";
++      return "none";
++   }
++
++   string LaneText(const SSignal &signal) const
++   {
++      string lanes = "";
++      if(signal.isRangeReversion)
++         lanes += "range_reversion|";
++      if(signal.isBreakoutContinuation)
++         lanes += "breakout_continuation|";
++      if(signal.isPowerTrendContinuation)
++         lanes += "power_trend|";
++      if(signal.isSessionImpulse)
++         lanes += "session_impulse|";
++      if(signal.isM5TightLiquidity)
++         lanes += "m5_tight_liquidity|";
++      if(signal.isFlatMonthBreakoutProbe)
++         lanes += "flat_breakout_probe|";
++      if(signal.isFlatMonthMicroReversion)
++         lanes += "flat_micro_reversion|";
++      if(signal.isFlatMonthStructuralDisplacement)
++         lanes += "flat_structural_displacement|";
++      if(signal.isHighEfficiencyTrend)
++         lanes += "high_efficiency_trend|";
++
++      int length = StringLen(lanes);
++      if(length > 0)
++         return StringSubstr(lanes, 0, length - 1);
++      return "primary";
++   }
++
++public:
++   CBlockDiagnostics() : m_handle(INVALID_HANDLE) {}
++
++   void Init()
++   {
++      if(!InpUseBlockReasonDiagnostics)
++         return;
++
++      m_handle = FileOpen(InpBlockReasonDiagnosticsFile,
++                          FILE_READ | FILE_WRITE | FILE_CSV | FILE_COMMON | FILE_SHARE_READ | FILE_SHARE_WRITE);
++      if(m_handle == INVALID_HANDLE)
++         return;
++
++      bool writeHeader = (FileSize(m_handle) == 0);
++      if(writeHeader)
++      {
++         FileSeek(m_handle, 0, SEEK_SET);
++         FileWrite(m_handle, "time", "symbol", "month", "day", "hour", "reason",
++                   "trend_bias", "signal_bias", "confirmations", "quality_score",
++                   "price_action_score", "lanes", "spread_points", "atr", "signal_reasons");
++         FileFlush(m_handle);
++      }
++      FileSeek(m_handle, 0, SEEK_END);
++   }
++
++   void Close()
++   {
++      if(m_handle != INVALID_HANDLE)
++         FileClose(m_handle);
++      m_handle = INVALID_HANDLE;
++   }
++
++   void Write(const string reason, const ENUM_TRADE_BIAS trendBias, const SSignal &signal)
++   {
++      if(!InpUseBlockReasonDiagnostics || m_handle == INVALID_HANDLE)
++         return;
++
++      MqlDateTime dt;
++      TimeToStruct(TimeCurrent(), dt);
++      FileWrite(m_handle,
++                TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS),
++                _Symbol,
++                IntegerToString(dt.mon),
++                IntegerToString(dt.day),
++                IntegerToString(dt.hour),
++                reason,
++                BiasText(trendBias),
++                BiasText(signal.bias),
++                IntegerToString(signal.confirmations),
++                IntegerToString(signal.qualityScore),
++                IntegerToString(signal.priceActionScore),
++                LaneText(signal),
++                DoubleToString(CLogger::SpreadPoints(), 1),
++                DoubleToString(signal.atr, _Digits),
++                signal.reasons);
++      FileFlush(m_handle);
++   }
++};
++
++CBlockDiagnostics blockDiagnostics;
+@@
+    bool flatMonthOpportunityBypass = InpAllowFlatMonthOpportunityOutsideMonthFilter &&
+                                      FlatMonthOpportunityActive() &&
+                                      signal.qualityScore >= MathMax(1, InpFlatMonthOpportunityBypassMinQualityScore) &&
+                                      signal.priceActionScore >= MathMax(0, InpFlatMonthOpportunityBypassMinPriceActionScore) &&
+                                      (!InpFlatMonthOpportunityBypassRequireLiquidSession ||
+                                       sessionFilter.LiquidSessionActive());
++   bool flatMonthStructuralDisplacementBypass = InpAllowFlatMonthStructuralDisplacementOutsideMonthFilter &&
++                                                signal.isFlatMonthStructuralDisplacement &&
++                                                signal.qualityScore >= MathMax(1, InpFlatMonthStructuralDisplacementBypassMinQualityScore) &&
++                                                signal.priceActionScore >= MathMax(0, InpFlatMonthStructuralDisplacementBypassMinPriceActionScore) &&
++                                                (!InpFlatMonthStructuralDisplacementBypassRequireLiquidSession ||
++                                                 sessionFilter.LiquidSessionActive());
+    bool m5TightLiquidityBypass = InpAllowM5TightLiquidityOutsideMonthFilter &&
+                                  signal.isM5TightLiquidity &&
+                                  FlatMonthOpportunityActive() &&
+                                  (!InpFlatMonthOpportunityBypassRequireLiquidSession ||
+                                   sessionFilter.LiquidSessionActive());
+    bool flatMonthBypass = flatMonthProbeBypass || flatMonthMomentumBypass ||
+-                          flatMonthOpportunityBypass || m5TightLiquidityBypass;
++                          flatMonthOpportunityBypass || flatMonthStructuralDisplacementBypass ||
++                          m5TightLiquidityBypass;
+@@
+    riskManager.Init();
+    logger.Init();
++   blockDiagnostics.Init();
+    g_lastBarTime = iTime(_Symbol, InpSignalTimeframe, 0);
+@@
+    indicators.Release();
+    logger.Close();
++   blockDiagnostics.Close();
+@@
+          positionManager.CloseAll(riskExitReason);
+          g_lastBlockReason = riskExitReason;
++         blockDiagnostics.Write(g_lastBlockReason, trendBias, signal);
+@@
+       positionManager.CloseAll("weekend close");
+       g_lastBlockReason = "weekend close";
++      blockDiagnostics.Write(g_lastBlockReason, trendBias, signal);
+@@
+       positionManager.CloseAll("session end close");
+       g_lastBlockReason = "session end close";
++      blockDiagnostics.Write(g_lastBlockReason, trendBias, signal);
+@@
+       g_lastBlockReason = "session closed";
++      blockDiagnostics.Write(g_lastBlockReason, trendBias, signal);
+@@
+       if(InpClosePositionsOnManualNews)
+          positionManager.CloseAll("manual news filter");
+       g_lastBlockReason = "manual news filter";
++      blockDiagnostics.Write(g_lastBlockReason, trendBias, signal);
+@@
+    if(signal.bias != BIAS_NONE)
+-      OpenSignal(signal);
++   {
++      OpenSignal(signal);
++      blockDiagnostics.Write(g_lastBlockReason, trendBias, signal);
++   }
+    else if(signal.confirmations > 0)
++   {
+       g_lastBlockReason = "confirmations " + (string)signal.confirmations + "/" + (string)ActiveConfirmationThreshold(trendBias);
++      blockDiagnostics.Write(g_lastBlockReason, trendBias, signal);
++   }
+    else
++   {
+       g_lastBlockReason = "no setup";
++      blockDiagnostics.Write(g_lastBlockReason, trendBias, signal);
++   }
