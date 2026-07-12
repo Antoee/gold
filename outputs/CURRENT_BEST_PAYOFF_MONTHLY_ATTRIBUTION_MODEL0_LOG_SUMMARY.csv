@@ -1,0 +1,4 @@
+"Profile","Parsed","Expected","TotalNet","Continuous","YTD","Full2025","Full2024","WeakSum","WorstWindow","LosingWindows"
+"base","31","31","3626.94","","","","","","0","0"
+"mfe_lock_balanced","31","31","3284.88","","","","","","0","0"
+"partial_runner_lock","31","31","3205.32","","","","","","0","0"
