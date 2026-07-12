@@ -17,11 +17,14 @@
 - `Model=2` strict-Regime confirmation was invalid because the M1 spread-shock guard triggered `wrong timeframe request in Open Prices testing mode`; the promoted no-M1-shock profile parsed `6 / 6` Model=2 windows cleanly.
 - `Model=2` no-M1-shock continuous: `12054.55` versus Score7 `9862.76`; full 2024 `3890.81` versus Score7 `3082.89`; full 2025, 2026 YTD, Q4 2025, and Q4 2024 unchanged.
 - Initial `Model=4` real-tick probe was neutral: no-M1-shock and Score7 both returned full 2024 `1425.73`, full 2025 `214.30`, and 2026 YTD `955.21`.
+- Expanded `Model=4` real-tick showdown kept no-M1-shock as the best total-profit candidate among four profiles: total `4075.62`, continuous `1288.93`, full 2024 `1425.73`, full 2025 `214.30`, 2026 YTD `955.21`, Q4 2025 `196.00`, with one small weak-window loss in Q4 2024 of `-4.55`.
+- Older `may235` and `conflict_march` profiles were cleaner with zero losing showdown windows, but lower total net at `3663.13` and lower 2026 YTD at `893.69`, so they were not promoted over no-m1-shock.
 - Validation files: `outputs/MODEL1_SCORE7_COST_STRESS_LOG_RESULTS.csv` and `outputs/MODEL1_SCORE7_REGIME_QTR_LOG_RESULTS.csv`
 - Confirmation files: `outputs/MODEL0_SCORE7_REGIME_CONFIRM_LOG_RESULTS.csv` and `research/2026-07-12-score7-regime-model0-confirmation-note.md`
 - Model=2 no-M1-shock files: `outputs/MODEL2_SCORE7_REGIME_NO_M1SHOCK_LOG_RESULTS.csv` and `outputs/MODEL2_SCORE7_REGIME_NO_M1SHOCK_LOG_SUMMARY.csv`
 - Model=1 no-M1-shock files: `outputs/MODEL1_SCORE7_REGIME_NO_M1SHOCK_LOG_RESULTS.csv` and `outputs/MODEL1_SCORE7_REGIME_NO_M1SHOCK_QTR_LOG_RESULTS.csv`
 - Real-tick probe files: `outputs/MODEL4_SCORE7_VS_NO_M1SHOCK_PROBE_LOG_RESULTS.csv` and `research/2026-07-12-score7-regime-no-m1shock-realtick-probe-note.md`
+- Expanded real-tick showdown files: `outputs/REALTICK_PROFILE_SHOWDOWN_LOG_RESULTS.csv`, `outputs/REALTICK_PROFILE_SHOWDOWN_DECISION_SUMMARY.csv`, and `research/2026-07-12-realtick-profile-showdown-note.md`
 - Trade diagnosis files: `outputs/MODEL1_SCORE7_REGIME_TRADE_DIAG_SUMMARY.csv` and `research/2026-07-12-score7-regime-trade-diagnosis-note.md`
 - Spread-regime guard is enabled and M1 spread-shock guard is disabled after preserving the `Model=1` edge while fixing Model=2 validation compatibility.
 - The `9753.58` result should be treated as a Model=1 research edge, not a fully cross-model-confirmed production number.
@@ -37,4 +40,4 @@
 - In-Session Liquidity Pullback minimum score is raised from `6` to `7` after `Model=1` validation improved continuous profit without worsening any broad or quarter validation window.
 - TP150/Risk050 was rejected after a higher-fidelity `Model=1` check reduced continuous validation from `7210.30` on the previous profile to `1974.32`.
 
-This is the current research-best candidate, not a final production deployment profile. The next validation gate is broader real-tick and walk-forward confirmation before increasing risk.
+This is the current research-best candidate, not a final production deployment profile. The next validation gate is a targeted Q4 2024 real-tick guard that removes the `-4.55` weak-window loss without killing the Q4 2025 gain.
