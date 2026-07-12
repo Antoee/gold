@@ -1,19 +1,20 @@
 # Current Research Best Profile
 
-- Profile: `outputs/CANDIDATE_PRIMARY_RANGE_ELITE_MFE_FAILURE_MARCH_ISLP_JUN_OCTDEC_SCORE7_PROFILE.set`
-- Builder: `work/build_current_best_mfe_failure_march_islp_jun_octdec_score7_profile.ps1`
-- SHA-256: `E36378232B722A2A09C1EFD2494F04385B7020CAE1F1679DDE903E05D8BC12D0`
-- Research note: `research/2026-07-12-islp-score7-promotion-note.md`
+- Profile: `outputs/CANDIDATE_PRIMARY_RANGE_ELITE_MFE_FAILURE_MARCH_ISLP_JUN_OCTDEC_SCORE7_REGIME_PROFILE.set`
+- Builder: `work/build_current_best_mfe_failure_march_islp_jun_octdec_score7_regime_profile.ps1`
+- SHA-256: `7BD4019104BCDF117A7D729289D6821D5F4BF6FB6FF9FE2D543BCF91717DC204`
+- Research note: `research/2026-07-12-score7-regime-guard-promotion-note.md`
 
 ## Evidence
 
 - Fast-model continuous from the previous gate: `9512.09` over `2024.01.01` to `2026.07.12`
-- Higher-fidelity `Model=1` continuous: `7970.70` versus previous robust best `7210.30` over `2024.01.01` to `2026.07.12`
-- `Model=1` full 2024: unchanged at `2507.85`
+- Higher-fidelity `Model=1` continuous: `9753.58` versus previous Score7 best `7970.70` over `2024.01.01` to `2026.07.12`
+- `Model=1` full 2024: `3201.96` versus previous Score7 best `2507.85`
 - `Model=1` full 2025: unchanged at `214.18`
 - `Model=1` 2026 YTD: unchanged at `1375.04`
-- `Model=1` quarter gate: `3638.18` versus previous robust best `3585.86`; same worst quarter `-0.50`; same losing quarter count `1`
-- Validation files: `outputs/MODEL1_ISLP_VARIANT_SWEEP_LOG_RESULTS.csv` and `outputs/MODEL1_SCORE7_QTR_LOG_RESULTS.csv`
+- `Model=1` quarter gate: `3638.18` versus previous Score7 best `3638.18`; same worst quarter `-0.50`; same losing quarter count `1`
+- Validation files: `outputs/MODEL1_SCORE7_COST_STRESS_LOG_RESULTS.csv` and `outputs/MODEL1_SCORE7_REGIME_QTR_LOG_RESULTS.csv`
+- Spread-regime guard and M1 spread-shock guard are enabled after improving continuous `Model=1` validation without worsening broad or quarter validation windows.
 - The higher-profit `risk045_tp150` variant reached `8112.91` on continuous `Model=1`, but reduced full 2024 from `2507.85` to `2209.66`, so it was rejected.
 - Adaptive Reverse remains explicitly disabled to avoid stop-and-reverse whipsaw risk.
 - Flat Month Structural Displacement remains enabled as a tightly gated, low-risk opportunity lane.
