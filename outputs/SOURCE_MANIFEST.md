@@ -6,9 +6,9 @@ Generated from the local EA source without launching MT5.
 
 - File: `Professional_XAUUSD_EA.mq5`
 - Mirrored file: `outputs/Professional_XAUUSD_EA.mq5`
-- Lines: `19213`
-- Size: `904009` bytes
-- SHA-256: `B6AA1915D2CA7483B1066C227F2506D7A85756D918820FF1100BAF66B0FBDBBE`
+- Lines: `21527`
+- Size: `904915` bytes
+- SHA-256: `778E168D96A8185FBA8781210794A6B4547341D4D95F0470134EAC4E5F72C38F`
 - Last verified locally: `2026-07-13`
 
 Both local source copies currently match this hash.
@@ -33,6 +33,7 @@ Both local source copies currently match this hash.
   - SHA-256 `149481621EC3194A08CF2B291033FEA38AE7D40B1EDA677820780A51F9A9DBDB`
   - `outputs/CANDIDATE_FMLR_ACTIVITY_BLEND_TIGHT_PROFILE.set`
   - SHA-256 `50F2000B153458B5DB494DD6AA873BDD6256F2C8B3AE11BABE5E4C615E2BC67A`
+- Shared structure-stop pocket logic now also treats enabled previous-day/week/month liquidity stop levels as pocket evidence when the existing liquidity-pocket shift is active.
 - Conservative demo/forward-test profile is present:
   - `outputs/CANDIDATE_TRADE_READINESS_PROFILE.set`
   - SHA-256 `B683100CA5BE912A9A848C3F715A67E4705473B00DEEF4B9070AE02BFDB708C5`
@@ -65,4 +66,4 @@ MT5 was not launched during this manifest refresh.
 
 ## GitHub Note
 
-The full `.mq5` file is verified locally by the SHA-256 above. The current Codex workspace is not a valid Git checkout, and the connector file API is being used only for lightweight dashboard/evidence files. If an authenticated Git push path is restored, upload both `Professional_XAUUSD_EA.mq5` and `outputs/Professional_XAUUSD_EA.mq5`, then confirm the GitHub download hash matches `B6AA1915D2CA7483B1066C227F2506D7A85756D918820FF1100BAF66B0FBDBBE`.
+The full `.mq5` file is verified locally by the SHA-256 above. The current Codex workspace is not a valid Git checkout, and the connector file API is being used only for lightweight dashboard/evidence files. If an authenticated Git push path is restored, upload both `Professional_XAUUSD_EA.mq5` and `outputs/Professional_XAUUSD_EA.mq5`, then confirm the GitHub download hash matches `778E168D96A8185FBA8781210794A6B4547341D4D95F0470134EAC4E5F72C38F`.
