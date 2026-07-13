@@ -88,6 +88,15 @@ Quarterly tester-stat rerun:
 | `dec_islp_off` | `11 / 11` | `+3,421.49` | `34` | `30.9408` | `-0.9789` | `3.2935` |
 | `islp_lowatr_of` | `11 / 11` | `+3,435.65` | `34` | `30.9408` | `-0.5184` | `3.2828` |
 
+Fresh current-source continuous check:
+
+| Profile | Continuous | 2024 Full | 2025 Full | 2026 YTD | Worst Equity DD % |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `dec_islp_off` | `+1,195.04` | `+1,340.55` | `+214.30` | `+955.21` | `28.2997` |
+| `islp_lowatr_of` | `+1,195.69` | `+1,353.53` | `+214.30` | `+955.21` | `28.2785` |
+
+The older `+4,507.51` Dec-ISLP-Off Model4 continuous result is now treated as historical/stale until it is reproduced on the current local source and compact tester path.
+
 Decision:
 
 Promoted as the current stability-best research profile.
@@ -109,8 +118,11 @@ Promoted as the current stability-best research profile.
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_QUARTERLY_VALIDATION_DECISION_SUMMARY.csv`
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_QUARTERLY_STATS_RESULTS.csv`
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_QUARTERLY_STATS_SUMMARY.csv`
+- `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_CONTINUOUS_CHECK_RESULTS.csv`
+- `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_CONTINUOUS_CHECK_SUMMARY.csv`
 - `research/2026-07-12-islp-lowatr-orderflow-promotion-note.md`
 - `research/2026-07-12-lowatr-tester-stats-export-note.md`
+- `research/2026-07-12-block-diagnostics-and-risk-shape-note.md`
 
 ## Caveats
 
@@ -120,6 +132,7 @@ Remaining gaps:
 
 - MT5 report export still returns `NO_REPORT`; results are parsed from tester logs.
 - Monthly and quarterly tester-stat reruns are complete, but they show a high worst equity drawdown reading of `30.9408%`.
+- Fresh current-source continuous Model4 is only `+1,195.69`; the historical `+4,507.51` continuous headline needs reproduction before it should be used as the current headline.
 - Hold-time stats still need richer extraction.
 - Model1 and Model2 have not yet been rerun on this LowATR OrderFlow candidate.
 - Local `Professional_XAUUSD_EA.mq5` is ahead of the GitHub source and contains newer default-off flat-month probe/wake-up infrastructure.
@@ -128,6 +141,36 @@ Remaining gaps:
 Adaptive Reverse remains disabled.
 
 ## Latest Rejected Probes
+
+Block diagnostics, month-filter bypass, and March/May risk-shape probes were tested on 2026-07-12 and rejected.
+
+Summary:
+
+| Profile | Continuous | 2026 YTD | Full 2025 | Worst Window | Losing Windows | Worst Equity DD % |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `current` | `+1,195.69` | `+955.21` | `+214.30` | `+214.30` | `0` | `30.9408` |
+| `mar200_may220` | `+993.28` | `+1,238.40` | `+105.51` | `-196.16` | `1` | `28.6598` |
+| `mar175_may280` | `+464.46` | `+1,032.92` | `-8.60` | `-8.60` | `2` | `30.9408` |
+| `mar150_may280` | `+395.91` | `+901.82` | `-8.35` | `-8.35` | `2` | `30.9408` |
+| `mar150_may240` | `+395.91` | `+931.99` | `-8.35` | `-8.35` | `2` | `35.9388` |
+| `mar125_may280` | `+73.92` | `+691.74` | `+262.02` | `-122.22` | `1` | `30.9408` |
+
+Month-filter bypass summary:
+
+| Profile | Total Net | Active Windows | Losing Windows | Trades | Worst Equity DD % |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `current` | `+508.07` | `3` | `0` | `6` | `30.9408` |
+| `highpa_q5_pa24` | `+508.07` | `3` | `0` | `6` | `30.9408` |
+| `fsd_q6_pa18` | `+434.29` | `6` | `3` | `9` | `30.9408` |
+| `combo` | `+434.29` | `6` | `3` | `9` | `30.9408` |
+
+Decision:
+
+Do not promote. FSD bypass added losing trades; high-price-action bypass changed nothing; March/May risk scaling either reduced continuous profit or introduced losing windows.
+
+Research note:
+
+`research/2026-07-12-block-diagnostics-and-risk-shape-note.md`
 
 Liquidity-stop extension variants were tested on 2026-07-12 and rejected.
 
