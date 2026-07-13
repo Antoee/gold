@@ -1,6 +1,6 @@
 # Current Research Best Profile
 
-Last updated: 2026-07-13 after the FMLR sweep-unlimited runner package refresh.
+Last updated: 2026-07-13 after the FMLR sweep-unlimited runner package and source-manifest refresh.
 
 ## Profile
 
@@ -26,34 +26,75 @@ SHA-256:
 
 Keep LowATR OrderFlow as the most stable promoted research profile. Do not promote the latest FMLR work yet because it has not been MT5 backtested.
 
+## Source Manifest
+
+Latest local source manifest:
+
+`outputs/SOURCE_MANIFEST.md`
+
+Latest local EA source hash:
+
+`0289641ABE4F1B93FB69D81FF098FFBAA28FFA14478282ACD0BCA4B3A1CBAFC3`
+
+Local source size/lines:
+
+- `902802` bytes
+- `19193` lines
+
 ## Latest Default-Off Research Code
 
 The local EA source includes a default-off Flat Month Liquidity Reclaim lane tagged `FMLR;`.
-
-Latest source hash:
-
-`0289641ABE4F1B93FB69D81FF098FFBAA28FFA14478282ACD0BCA4B3A1CBAFC3`
 
 Latest source change:
 
 - FMLR no-fixed-TP runner permission now recognizes proven non-structural sweep-runner setups when forward clearance, runner-stretch evidence, and FMLR structure trailing are present.
 - The planned stretched target still has to pass minimum RR and spread-adjusted RR before entry.
-- The entry log can add `FMLR sweep unlimited runner`.
+- The entry log can add `FMLR sweep unlimited runner;` for that path.
 
-Latest package/profile change:
+Latest isolated package profile:
 
-- Added isolated `fmlr_sweep_unlimited_runner` validation profile.
-- Full FMLR package: `444` Model4 configs, `37` profiles.
-- Fast FMLR screen: `144` Model4 configs, `24` profiles.
+`fmlr_sweep_unlimited_runner`
 
-Status:
+Package counts:
 
-- Not part of the current research-best profile.
-- Not promoted.
-- Not backtested yet.
-- MT5 compile/backtest pending while `work/MT5_LOCAL_LAUNCH_DISABLED.lock` remains active.
+- Full FMLR validation package: `444` Model4 configs, `37` profiles
+- Fast FMLR screen: `144` Model4 configs, `24` profiles
 
-## Local Checks Passed
+## Model4 Evidence For Current Best
+
+Sampled probe:
+
+| Profile | Parsed | Total | Losing Windows | Worst |
+| --- | ---: | ---: | ---: | ---: |
+| `dec_islp_off` | `7` | `+271.42` | `1` | `-44.64` |
+| `islp_lowatr_of` | `7` | `+316.06` | `0` | `0.00` |
+
+Monthly validation:
+
+| Profile | Parsed | Total | Losing Windows | Worst |
+| --- | ---: | ---: | ---: | ---: |
+| `dec_islp_off` | `31` | `+3,637.53` | `1` | `-44.64` |
+| `islp_lowatr_of` | `31` | `+3,682.17` | `0` | `0.00` |
+
+Quarterly validation:
+
+| Profile | Parsed | Total | Losing Windows | Worst |
+| --- | ---: | ---: | ---: | ---: |
+| `dec_islp_off` | `11` | `+3,421.49` | `1` | `-44.64` |
+| `islp_lowatr_of` | `11` | `+3,435.65` | `1` | `-30.48` |
+
+Fresh continuous same-source check:
+
+| Profile | Model | Window | Net |
+| --- | ---: | --- | ---: |
+| `lowatr_current` | `4` | `2024.01.01` to `2026.07.12` | `+1,195.69` |
+| `dec_islp_off` | `4` | `2024.01.01` to `2026.07.12` | `+1,195.04` |
+
+## Risk Warning
+
+The bot is still research-only. The best available tester-stat exports reported worst equity drawdown around `30.9408%`, and the newest FMLR package has not been MT5 backtested. No live funding decision should be made from these dashboard numbers alone.
+
+## Latest Local Checks Passed
 
 - `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`
 - `EA_SOURCE_ARTIFACT_SYNC_SMOKE_PASS`
@@ -64,14 +105,8 @@ Status:
 - `MT5_HIDDEN_LAUNCHER_LOCK_SMOKE_PASS`
 - MT5 local safety audit: `PASS 39 / 39`
 
-## Latest Research Notes
+## Decision
 
-- `research/2026-07-13-fmlr-sweep-unlimited-runner-note.md`
-- `research/2026-07-13-fmlr-sweep-runner-profile-note.md`
-- `research/2026-07-13-fmlr-sweep-runner-target-note.md`
-- `research/2026-07-13-repository-cleanup-refresh-note.md`
-- `research/2026-07-13-flat-month-liquidity-reclaim-lane-note.md`
+No promotion from the latest FMLR source/package refresh yet.
 
-## Source Sync Warning
-
-This GitHub file was refreshed through the GitHub connector. The local folder is not currently a valid Git checkout because `.git` is empty, and shell Git has no GitHub credentials. The local EA source may still be ahead of GitHub until a proper authenticated Git push is available.
+Next testing target: run the 144-config fast FMLR screen locally while keeping MT5 hidden/non-focus-stealing. Promote nothing unless it beats `lowatr_current` without adding red control windows.
