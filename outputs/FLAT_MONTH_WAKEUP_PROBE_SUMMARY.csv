@@ -1,0 +1,5 @@
+"Profile","Parsed","Expected","StatsParsed","ActiveWindows","ZeroTradeWindows","TotalNet","Continuous","YTD","Full2025","Full2024","WeakSum","WorstWindow","LosingWindows","TotalTrades","WorstEquityDrawdownPct","MinProfitFactor","AvgProfitFactor","ProfitFactorNonZeroSamples","MinNonZeroProfitFactor","AvgNonZeroProfitFactor","MinRecoveryFactor","AvgSharpeRatio"
+"fmw_wake_balanced","12","12","12","3","9","508.07","","","","","","0","0","6","30.9408","0","0.2894","2","1.4914","1.7364","0","0.3021"
+"fmw_stale_elite","12","12","12","3","9","508.07","","","","","","0","0","6","30.9408","0","0.2894","2","1.4914","1.7364","0","0.3021"
+"lowatr_current","12","12","12","3","9","508.07","","","","","","0","0","6","30.9408","0","0.2894","2","1.4914","1.7364","0","0.3021"
+"fmw_wake_strict","12","12","12","3","9","508.07","","","","","","0","0","6","30.9408","0","0.2894","2","1.4914","1.7364","0","0.3021"
