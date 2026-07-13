@@ -2,18 +2,20 @@
 
 Date: 2026-07-12
 
+Updated: 2026-07-13
+
 ## Result
 
-The latest cleanup pass archived generated MT5 runtime/package artifacts while keeping the current best profile, evidence summaries, research notes, and canonical EA source visible.
+The latest cleanup pass archived generated MT5 runtime/package artifacts while keeping the current best profile, evidence summaries, research notes, active FMLR probe package, and canonical EA source visible.
 
 Final cleanup dry run:
 
 - Active generated cleanup candidates: `0`
-- Workspace items: about `4,286`
-- Workspace size: about `91.66 MB`
-- `work/`: about `4.16 MB`
-- `outputs/`: about `17.21 MB`
-- `archive/`: about `69.38 MB`
+- Workspace files: about `4,182`
+- Workspace size: about `91.53 MB`
+- `work/`: about `4.2 MB`
+- `outputs/`: about `19.56 MB`
+- `archive/`: about `66.83 MB`
 
 ## Archived
 
@@ -30,6 +32,11 @@ The latest expanded archive folder was compressed to:
 
 `archive/generated_artifacts_20260712_212028.zip`
 
+The remaining expanded archive folders were compressed and removed on the 2026-07-13 refresh:
+
+- `archive/generated_artifacts_20260712_195604.zip`
+- `archive/generated_artifacts_20260712_195805.zip`
+
 ## Kept Visible
 
 - Current promoted profile:
@@ -37,6 +44,8 @@ The latest expanded archive folder was compressed to:
 - Current best profile status:
   - `outputs/CURRENT_RESEARCH_BEST_PROFILE.md`
 - Latest summarized evidence CSVs
+- Active untested FMLR probe package:
+  - `outputs/flat_month_liquidity_reclaim_probe_package`
 - Human research notes
 - Canonical EA source:
   - `Professional_XAUUSD_EA.mq5`
