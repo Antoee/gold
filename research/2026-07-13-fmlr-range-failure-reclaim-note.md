@@ -69,13 +69,13 @@ Important settings:
 - `InpFlatMonthLiquidityReclaimUseStopClusterBuffer=true`
 - `InpFlatMonthLiquidityReclaimUseStopPocketShift=true`
 
-The offline package now prepares 15 profiles across 12 weak/flat/control windows, or `180` total configs.
+After the HTF liquidity reclaim follow-up, the offline package now prepares 16 profiles across 12 weak/flat/control windows, or `192` total configs.
 
 ## Verification
 
 Completed local checks:
 
-- `work/build_flat_month_liquidity_reclaim_probe_package.ps1`: built `180` configs
+- `work/build_flat_month_liquidity_reclaim_probe_package.ps1`: built `192` configs
 - `work/test_price_action_strategy_modules.ps1`: `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`
 - `work/test_flat_month_liquidity_reclaim_probe_package.ps1`: `FLAT_MONTH_LIQUIDITY_RECLAIM_PROBE_PACKAGE_SMOKE_PASS`
 - `work/test_flat_month_liquidity_reclaim_compact_source.ps1`: `FLAT_MONTH_LIQUIDITY_RECLAIM_COMPACT_SOURCE_SMOKE_PASS`
@@ -96,3 +96,7 @@ The current stability-best profile remains:
 `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
 
 MT5 compile/backtest remains pending because `work/MT5_LOCAL_LAUNCH_DISABLED.lock` is active to prevent window focus theft.
+
+Latest follow-up note:
+
+`research/2026-07-13-fmlr-htf-liquidity-reclaim-note.md`
