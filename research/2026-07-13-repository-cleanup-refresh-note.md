@@ -6,7 +6,7 @@ Status: cleanup dry run complete, no active cleanup candidates.
 
 ## What Was Checked
 
-After adding the default-off FMLR range-failure reclaim probe and rebuilding the FMLR package, the repository cleanup script was run in dry-run mode:
+After adding the default-off FMLR range-failure reclaim probe, adding the default-off FMLR HTF liquidity reclaim probe, and rebuilding the FMLR package to `192` configs, the repository cleanup script was run in dry-run mode:
 
 - `work/cleanup_repository_generated_artifacts.ps1`
 - `work/cleanup_repository_generated_artifacts.ps1 -IncludeGeneratedPackages`
