@@ -47,13 +47,13 @@ The profile combines the stricter FMLR research path with:
 - `InpFlatMonthLiquidityReclaimMinRR=1.00`
 - `InpFlatMonthLiquidityReclaimMaxTargetATR=2.70`
 
-The offline package now prepares 11 profiles across 12 windows, or `132` total configs.
+The structural-stop profile remains one of the active FMLR probe profiles. After the continuation-retest follow-up, the offline package now prepares 12 profiles across 12 windows, or `144` total configs.
 
 ## Verification
 
 Completed local checks:
 
-- `work/build_flat_month_liquidity_reclaim_probe_package.ps1`: built `132` configs
+- `work/build_flat_month_liquidity_reclaim_probe_package.ps1`: latest package build prepared `144` configs
 - `work/test_price_action_strategy_modules.ps1`: `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`
 - `work/test_flat_month_liquidity_reclaim_probe_package.ps1`: `FLAT_MONTH_LIQUIDITY_RECLAIM_PROBE_PACKAGE_SMOKE_PASS`
 - `work/test_flat_month_liquidity_reclaim_compact_source.ps1`: `FLAT_MONTH_LIQUIDITY_RECLAIM_COMPACT_SOURCE_SMOKE_PASS`
@@ -73,3 +73,7 @@ The current stability-best profile remains:
 `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
 
 MT5 compile/backtest remains pending because `work/MT5_LOCAL_LAUNCH_DISABLED.lock` is active to prevent window focus theft.
+
+Follow-up note:
+
+`research/2026-07-13-fmlr-continuation-retest-note.md`
