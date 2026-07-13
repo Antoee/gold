@@ -1,6 +1,6 @@
 # Current Research Best Profile
 
-Last updated: 2026-07-12.
+Last updated: 2026-07-13.
 
 ## Profile
 
@@ -139,6 +139,24 @@ Remaining gaps:
 - The local workspace is not currently a valid Git checkout because `.git` exists but is empty.
 
 Adaptive Reverse remains disabled.
+
+## Latest Default-Off Research Code
+
+On 2026-07-13, the EA source gained a new default-off Flat Month Liquidity Reclaim lane tagged `FMLR;`.
+
+Status:
+
+- Not part of the current research-best profile.
+- Not promoted.
+- Not backtested yet.
+- Added to both `Professional_XAUUSD_EA.mq5` and `outputs/Professional_XAUUSD_EA.mq5`.
+- Source smoke: `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`.
+- MT5 local safety audit: `PASS 39 / 39`.
+- Compile/backtest: pending while `work/MT5_LOCAL_LAUNCH_DISABLED.lock` remains active.
+
+Research note:
+
+`research/2026-07-13-flat-month-liquidity-reclaim-lane-note.md`
 
 ## Latest Rejected Probes
 
