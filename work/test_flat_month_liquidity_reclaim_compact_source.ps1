@@ -38,10 +38,12 @@ try {
    $sourceText = Get-Content -LiteralPath $compactSource -Raw
    Assert-True ($sourceText.Contains("input bool            InpUseFlatMonthLiquidityReclaimLane")) "FMLR lane input was not retained."
    Assert-True ($sourceText.Contains("input bool            InpAllowFlatMonthLiquidityReclaimOutsideMonthFilter")) "FMLR bypass input was not retained."
+   Assert-True ($sourceText.Contains("input bool            InpFlatMonthLiquidityReclaimUseLiquidityTarget")) "FMLR liquidity target input was not retained."
+   Assert-True ($sourceText.Contains("input double          InpFlatMonthLiquidityReclaimMaxTargetATR")) "FMLR liquidity target max ATR input was not retained."
    Assert-True (!$sourceText.Contains("input bool            InpUseWinnerScaleIn")) "Unrelated winner scale-in input was retained."
 
    $expected = @(Import-Csv -LiteralPath (Join-Path $packageDir "EXPECTED_REPORTS.csv"))
-   Assert-True ($expected.Count -eq 48) "Expected 48 package configs, got $($expected.Count)"
+   Assert-True ($expected.Count -eq 60) "Expected 60 package configs, got $($expected.Count)"
 
    "FLAT_MONTH_LIQUIDITY_RECLAIM_COMPACT_SOURCE_SMOKE_PASS"
 }
