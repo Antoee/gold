@@ -20,7 +20,7 @@ Quick answer:
 - Best current real-tick continuous result: `+$4,507.51` on `Model=4`, `2024.01.01` to `2026.07.12`
 - Best sampled real-tick validation total: `+$7,469.00` across six Model4 windows
 - Latest promoted change: Low-ATR ISLP trades now require order-flow confirmation
-- Latest validation decision: Flat-month breakout structural and activation probes were tested and rejected; LowATR OrderFlow remains best
+- Latest validation decision: Flat-month probes and liquidity-stop extension probes were tested and rejected; LowATR OrderFlow remains best
 - Live trading status: research only, not live-ready
 - GitHub Actions status: keep manual-only to protect monthly Actions usage
 - Source status: local folder is not a valid Git checkout right now; `.git` exists but is empty
@@ -38,14 +38,14 @@ Current decision: keep `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR Ord
 | Quarterly real-tick gate | LowATR OrderFlow beat Dec-ISLP-Off `+$3,435.65` vs `+$3,421.49`, with worst quarter improved from `-$44.64` to `-$30.48` |
 | Monthly tester stats | LowATR OrderFlow parsed `31 / 31`, total trades `38`, worst equity DD `30.9408%` |
 | Quarterly tester stats | LowATR OrderFlow parsed `11 / 11`, total trades `34`, worst equity DD `30.9408%` |
-| Latest code probe | Flat-month breakout structural/activation probes failed to improve current and were rejected |
+| Latest code probe | Flat-month probes and liquidity-stop extension probes failed to improve current and were rejected |
 | Old `$866` result | Outdated baseline, no longer the current research-best |
 | Live-ready? | No. Still a research candidate |
 | GitHub Actions | Manual-only; do not use for heavy tester runs |
 | Local MT5 safety | Latest audit passed `39 / 39` checks |
 | Repository cleanup | Generated logs/temp artifacts archived; active cleanup candidates now `0` |
 
-Plain English: the bot is no longer at the old `$866 in 2.5 years` baseline. The newest stability-best profile improves the prior Dec-ISLP-Off profile in sampled, monthly, and quarterly real-tick parsed-log gates. The latest flat-month breakout work did not produce a better profile: conservative/balanced FMB tied current, and loose FMB added losing trades. The bot is still not a live-profit promise. Tester-stat extraction now works, and the biggest warning is the `30.9408%` worst equity drawdown reading in the monthly/quarterly summaries.
+Plain English: the bot is no longer at the old `$866 in 2.5 years` baseline. The newest stability-best profile improves the prior Dec-ISLP-Off profile in sampled, monthly, and quarterly real-tick parsed-log gates. The latest flat-month work did not produce a better profile: conservative/balanced FMB tied current, loose FMB added losing trades, expanded micro-reversion added losing trades, wake-up tied current, and probe-mode reduced existing winners. Extra liquidity-stop extensions also failed; the current base liquidity-aware structure stop remains better. The bot is still not a live-profit promise. Tester-stat extraction now works, and the biggest warning is the `30.9408%` worst equity drawdown reading in the monthly/quarterly summaries.
 
 ## How To Check Progress Without Asking Codex
 
@@ -72,7 +72,7 @@ Next local work:
 1. Rerun Model1 and Model2 validation on the LowATR OrderFlow candidate.
 2. Add hold-time, average winner/loser, largest loss, consecutive loss, exposure, spread, swap, commission, and slippage evidence.
 3. Run older-data, walk-forward, Monte Carlo, and broker-variation validation before considering live use.
-4. Attack zero-trade months with a different opportunity lane or earlier candidate discovery logic; FSD relaxation tied current, and FMB activation added losing trades.
+4. Attack zero-trade months with a different entry mechanism; FSD relaxation and FMW tied current, FMP reduced winners, and FMB/FMR added losing trades.
 5. Keep all heavy tests local and hidden, not on GitHub Actions.
 
 Repository cleanup completed on 2026-07-12:
@@ -80,12 +80,12 @@ Repository cleanup completed on 2026-07-12:
 - Archived generated runtime/log/temp artifacts and old MT5 package folders into `archive/generated_artifacts_*`.
 - Compressed old archive folders into ignored zip files.
 - Removed active `outputs/offline_refresh_logs/`.
-- Archived the generated FMB package folders/logs and 125 generated compact/tester `.mq5` sources.
-- Active generated cleanup candidates after latest pass: `0` for the newest FMB package folders/logs.
-- Local file count reduced from about `46k` files to about `4.0k` files.
-- Local workspace size after latest zip cleanup: about `91 MB`.
+- Archived the generated FMB/FMR/FMW/FMP/liquidity-stop package folders/logs and generated compact/tester `.mq5` sources.
+- Active generated cleanup candidates after latest pass: `0`.
+- Local file count reduced from about `46k` files to about `4.2k` filesystem items.
+- Local workspace size after latest zip cleanup: about `90.4 MB`.
 - `work/` reduced from about `143 MB` to about `4 MB`.
-- `outputs/` now keeps current evidence package folders, root evidence CSV/source artifacts, and only one canonical `.mq5` source copy.
+- `outputs/` now keeps current promoted validation package folders, root evidence CSV/source artifacts, and only one canonical `.mq5` source copy.
 
 Known cautions:
 
@@ -171,6 +171,46 @@ Quarterly real-tick validation was run on 2026-07-12:
 - Decision: supports keeping Dec-ISLP-Off promoted for net-profit/quarter comparison
 
 ## Latest Code Probe
+
+Liquidity-stop extension variants were tested on 2026-07-12 and rejected:
+
+- Intent: improve the already-active base liquidity-aware structure stop with cluster, previous-day, and pocket extensions.
+- Compile result: `0 errors, 0 warnings` through compact tester-source generation.
+- Model4 result across 12 weak/flat windows: current `+$508.07`, cluster `+$387.68`, cluster+pocket `+$122.50`, previous-day `-$90.55`.
+- Previous-day liquidity produced a losing window in `2026_05`; cluster variants mostly reduced existing winners.
+- Decision: not promoted. Keep the current base liquidity-aware structure stop, but reject the extra extensions.
+- Research note: `research/2026-07-12-liquidity-stop-extension-probe-note.md`
+
+Flat-month probe-mode reality was tested on 2026-07-12 and rejected:
+
+- Intent: verify whether the old flat-month probe-mode settings could really be tested once exposed as inputs.
+- Code change: made dormant flat-month probe-mode controls optimizer-visible, all default-off.
+- Compile result: `0 errors, 0 warnings` through compact tester-source generation.
+- Model4 result across 12 weak/flat windows: current `+$508.07`, strict low-risk `+$453.17`, quality-ramp `+$453.17`, tiny discovery `+$444.02`.
+- Probe-mode did not add useful flat-month trades; it mostly reduced size on existing winners.
+- Decision: not promoted. The current stability-best profile remains LowATR OrderFlow.
+- Research note: `research/2026-07-12-flat-month-probe-mode-reality-note.md`
+
+Flat-month wake-up / stale-entry was tested on 2026-07-12 and rejected:
+
+- Intent: verify whether missed-move wake-up, stale-entry nudge, or elite fallback could add safe flat-month trades once exposed as inputs.
+- Code change: made dormant flat-month wake-up/stale/elite controls optimizer-visible, all default-off.
+- Compile result: `0 errors, 0 warnings` through compact tester-source generation.
+- Model4 result across 12 weak/flat windows: current `+$508.07`, wake strict `+$508.07`, wake balanced `+$508.07`, stale elite `+$508.07`.
+- Active windows stayed `3 / 12`; zero-trade windows stayed `9 / 12`.
+- Decision: not promoted. The current stability-best profile remains LowATR OrderFlow.
+- Research note: `research/2026-07-12-flat-month-wakeup-probe-note.md`
+
+Flat-month micro-reversion expansion was tested on 2026-07-12 and rejected:
+
+- Intent: increase flat-month participation without Adaptive Reverse, martingale, grid, averaging down, or pure ATR-only stop logic.
+- Change: tested stricter and softer all-month FMR variants at lower risk.
+- Compile result: `0 errors, 0 warnings` through compact tester-source generation.
+- Model4 result across 12 weak/flat windows: current `+$508.07`, strict expansion `+$484.43`, soft expansion `+$477.12`.
+- Strict expansion reduced zero-trade windows from `9` to `8`, but added a `2025_04` loser.
+- Soft expansion reduced zero-trade windows from `9` to `7`, but added `2025_04` and `2026_01` losers.
+- Decision: not promoted. The current stability-best profile remains LowATR OrderFlow.
+- Research note: `research/2026-07-12-flat-month-micro-reversion-expansion-probe-note.md`
 
 Flat-month breakout structural and activation probes were tested on 2026-07-12 and rejected:
 
@@ -260,6 +300,31 @@ Flat-month breakout rejection:
 - `outputs/FLAT_MONTH_BREAKOUT_ACTIVATION_PROBE_SUMMARY.csv`
 - `research/2026-07-12-flat-month-breakout-structural-probe-note.md`
 - `research/2026-07-12-flat-month-breakout-activation-probe-note.md`
+
+Flat-month micro-reversion expansion rejection:
+
+- `outputs/FLAT_MONTH_MICRO_REVERSION_EXPANSION_PROBE_RESULTS.csv`
+- `outputs/FLAT_MONTH_MICRO_REVERSION_EXPANSION_PROBE_SUMMARY.csv`
+- `outputs/FLAT_MONTH_MICRO_REVERSION_EXPANSION_PROBE_RUN.csv`
+- `outputs/FLAT_MONTH_MICRO_REVERSION_EXPANSION_PROBE_MANIFEST.csv`
+- `research/2026-07-12-flat-month-micro-reversion-expansion-probe-note.md`
+
+Flat-month wake-up and probe-mode rejections:
+
+- `outputs/FLAT_MONTH_WAKEUP_PROBE_RESULTS.csv`
+- `outputs/FLAT_MONTH_WAKEUP_PROBE_SUMMARY.csv`
+- `outputs/FLAT_MONTH_PROBE_MODE_REALITY_RESULTS.csv`
+- `outputs/FLAT_MONTH_PROBE_MODE_REALITY_SUMMARY.csv`
+- `research/2026-07-12-flat-month-wakeup-probe-note.md`
+- `research/2026-07-12-flat-month-probe-mode-reality-note.md`
+
+Liquidity-stop extension rejection:
+
+- `outputs/LIQUIDITY_STOP_EXTENSION_PROBE_RESULTS.csv`
+- `outputs/LIQUIDITY_STOP_EXTENSION_PROBE_SUMMARY.csv`
+- `outputs/LIQUIDITY_STOP_EXTENSION_PROBE_RUN.csv`
+- `outputs/LIQUIDITY_STOP_EXTENSION_PROBE_MANIFEST.csv`
+- `research/2026-07-12-liquidity-stop-extension-probe-note.md`
 
 December ISLP guard validation:
 
@@ -369,7 +434,7 @@ Current strategy direction:
 - Spread-regime guard is enabled.
 - M1 spread-shock guard is disabled because it created Model2 compatibility problems without adding Model1 profit.
 - Adaptive Reverse is internally locked off in local source to reduce whipsaw risk and tester input count.
-- Dormant generic flat-month probe/stale/missed-move/breakout-probe controls were frozen as globals; active current-best lanes remain configurable.
+- Dormant flat-month probe/stale/missed-move controls were made optimizer-visible as default-off inputs; tests rejected those settings, so active current-best lanes remain unchanged.
 
 ## What The Numbers Mean
 
