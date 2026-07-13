@@ -15,6 +15,7 @@ This change adds a different entry mechanism instead of only relaxing old filter
 - Optionally require VWAP reclaim.
 - Optionally require order-flow confirmation.
 - Use a direct structural stop beyond the swept liquidity level.
+- Optionally target the nearest opposing forward liquidity instead of a fixed ATR take-profit.
 
 ## New Lane
 
@@ -45,6 +46,12 @@ Key controls:
 - `InpFlatMonthLiquidityReclaimUseEqualLevels=true`
 - `InpFlatMonthLiquidityReclaimUsePreviousDay=true`
 - `InpFlatMonthLiquidityReclaimUsePreviousWeek=false`
+- `InpFlatMonthLiquidityReclaimUseLiquidityTarget=false`
+- `InpFlatMonthLiquidityReclaimTargetUseEqualLevels=true`
+- `InpFlatMonthLiquidityReclaimTargetUsePreviousDay=true`
+- `InpFlatMonthLiquidityReclaimTargetUsePreviousWeek=false`
+- `InpFlatMonthLiquidityReclaimMinTargetATR=0.80`
+- `InpFlatMonthLiquidityReclaimMaxTargetATR=2.40`
 
 Month-filter bypass controls were also added but default off:
 
@@ -76,11 +83,13 @@ Offline validation package builder:
   - `fmlr_conservative`
   - `fmlr_balanced`
   - `fmlr_vwap_discovery`
-- Windows prepared: 12 weak/flat/control windows from 2024-2026.
+  - `fmlr_liquidity_target`
+- Windows prepared: 12 weak/flat/control windows from 2024-2026, now `60` configs total.
 
 Compact-source safeguard:
 
 - Required FMLR inputs are preserved as optimizer-visible `input` values.
+- The forward-liquidity target controls are preserved for the `fmlr_liquidity_target` profile.
 - Unrelated inactive knobs, including winner scale-in inputs, are converted to globals.
 - The smoke test enforces a maximum kept-input count of `450` before any MT5 compile/backtest attempt.
 
