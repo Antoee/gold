@@ -21,7 +21,7 @@ Quick answer:
 - Historical Dec-ISLP-Off real-tick continuous result: `+$4,507.51`; treat this as stale until reproduced on the current local source/compact path
 - Best sampled real-tick validation total: `+$7,469.00` across six Model4 windows
 - Latest promoted change: Low-ATR ISLP trades now require order-flow confirmation
-- Latest code addition: default-off `FMLR` Flat Month Liquidity Reclaim lane added for the next research probe; not promoted or backtested yet
+- Latest code addition: default-off `FMLR` Flat Month Liquidity Reclaim lane plus forward-liquidity target, recent-retest, continuation-retest, compression-breakout, session-range breakout, range-failure reclaim, session/Asian target, imbalance-retest, swing-target, phase-aligned regime gate, forward-clearance, and structural stop cluster/pocket candidates; Adaptive Reverse quarantine guardrails added; not promoted or backtested yet
 - Latest validation decision: block diagnostics, month-filter bypass, and March/May risk-shape probes were tested and rejected; LowATR OrderFlow remains best
 - Live trading status: research only, not live-ready
 - GitHub Actions status: keep manual-only to protect monthly Actions usage
@@ -41,14 +41,14 @@ Current decision: keep `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR Ord
 | Quarterly real-tick gate | LowATR OrderFlow beat Dec-ISLP-Off `+$3,435.65` vs `+$3,421.49`, with worst quarter improved from `-$44.64` to `-$30.48` |
 | Monthly tester stats | LowATR OrderFlow parsed `31 / 31`, total trades `38`, worst equity DD `30.9408%` |
 | Quarterly tester stats | LowATR OrderFlow parsed `11 / 11`, total trades `34`, worst equity DD `30.9408%` |
-| Latest code probe | Default-off `FMLR` liquidity-reclaim lane added; source smoke passed, MT5 compile/backtest pending because local MT5 launch lock remains on |
+| Latest code probe | Default-off `FMLR` liquidity-reclaim lane, forward-liquidity target, recent-sweep retest, continuation-retest, compression-breakout, session-range breakout, range-failure reclaim, session/Asian target, imbalance-retest, swing-target, phase-aligned regime gate, forward-clearance, and structural stop cluster/pocket candidates added; offline probe package builder now prepares 180 configs; compact-source prep and Adaptive Reverse quarantine guardrails remain in place; MT5 compile/backtest pending because local MT5 launch lock remains on |
 | Old `$866` result | Outdated baseline, no longer the current research-best |
 | Live-ready? | No. Still a research candidate |
 | GitHub Actions | Manual-only; do not use for heavy tester runs |
 | Local MT5 safety | Latest audit passed `39 / 39` checks |
-| Repository cleanup | Generated logs/temp artifacts archived; active cleanup candidates now `0` |
+| Repository cleanup | Generated logs/temp artifacts archived; active FMLR package kept visible; active cleanup candidates now `0` |
 
-Plain English: the bot is no longer at the old `$866 in 2.5 years` baseline, but the current-source continuous result is also not the older `+$4,507.51` headline. A fresh same-source Model4 check puts LowATR OrderFlow at `+$1,195.69` continuous, only slightly ahead of Dec-ISLP-Off at `+$1,195.04`. The newest stability-best profile still improves the prior Dec-ISLP-Off profile in sampled, monthly, and quarterly real-tick parsed-log gates. The latest completed flat-month and risk-shape probes did not produce a better profile. The newest source change adds a default-off `FMLR` liquidity-reclaim lane for the next probe, but it has not earned promotion. The bot is still not a live-profit promise. Tester-stat extraction now works, and the biggest warning is the `30.9408%` worst equity drawdown reading in the monthly/quarterly summaries.
+Plain English: the bot is no longer at the old `$866 in 2.5 years` baseline, but the current-source continuous result is also not the older `+$4,507.51` headline. A fresh same-source Model4 check puts LowATR OrderFlow at `+$1,195.69` continuous, only slightly ahead of Dec-ISLP-Off at `+$1,195.04`. The newest stability-best profile still improves the prior Dec-ISLP-Off profile in sampled, monthly, and quarterly real-tick parsed-log gates. The latest completed flat-month and risk-shape probes did not produce a better profile. The newest source change adds a default-off `FMLR` liquidity-reclaim lane with structural stop cluster/pocket, continuation-retest, compression-breakout, session-range breakout, and range-failure reclaim options for the next probe, but it has not earned promotion. The bot is still not a live-profit promise. Tester-stat extraction now works, and the biggest warning is the `30.9408%` worst equity drawdown reading in the monthly/quarterly summaries.
 
 ## How To Check Progress Without Asking Codex
 
@@ -72,7 +72,7 @@ What to look for:
 
 Next local work:
 
-1. Compile and backtest the new default-off `FMLR` Flat Month Liquidity Reclaim lane only through hidden or external MT5. Do not override the local MT5 hard lock while focus risk remains unresolved.
+1. Run `work/prepare_flat_month_liquidity_reclaim_compact_source.ps1`, then compile and backtest the 180-config default-off `FMLR` Flat Month Liquidity Reclaim package only through hidden or external MT5. Include the new `fmlr_structural_stop`, `fmlr_continuation_retest`, `fmlr_compression_breakout`, `fmlr_session_range_breakout`, and `fmlr_range_failure_reclaim` candidates, keep Adaptive Reverse off, and do not override the local MT5 hard lock while focus risk remains unresolved.
 2. Investigate why the historical `+$4,507.51` Dec-ISLP-Off continuous result is not reproduced by the current local source/compact path.
 3. Rerun Model1 and Model2 validation on the LowATR OrderFlow candidate.
 4. Add hold-time, average winner/loser, largest loss, consecutive loss, exposure, spread, swap, commission, and slippage evidence.
@@ -80,7 +80,7 @@ Next local work:
 6. Attack zero-trade months with a different entry mechanism; FSD relaxation and FMW tied current, FMP reduced winners, FMB/FMR added losing trades, and month-filter bypass added losses.
 7. Keep all heavy tests local and hidden, not on GitHub Actions.
 
-Repository cleanup completed on 2026-07-12:
+Repository cleanup completed on 2026-07-12 and refreshed on 2026-07-13:
 
 - Archived generated runtime/log/temp artifacts and old MT5 package folders into `archive/generated_artifacts_*`.
 - Compressed old archive folders into ignored zip files.
@@ -88,12 +88,14 @@ Repository cleanup completed on 2026-07-12:
 - Archived the generated FMB/FMR/FMW/FMP/liquidity-stop package folders/logs and generated compact/tester `.mq5` sources.
 - Archived the latest block-diagnostics, month-filter bypass, March/May risk-shape, and continuous-check package folders/logs plus generated compact `.mq5` sources.
 - Archived the bulky raw block-diagnostics dump after keeping the summarized diagnostic CSVs.
+- Kept the active untested FMLR probe package visible at `outputs/flat_month_liquidity_reclaim_probe_package`.
+- Compressed the remaining expanded archive folders into ignored zip files.
 - Active generated cleanup candidates after latest pass: `0`.
-- Local file count reduced from about `46k` files to about `4.3k` filesystem items.
-- Local workspace size after latest zip cleanup: about `91.7 MB`.
-- `work/` reduced from about `143 MB` to about `4 MB`.
-- `outputs/` now keeps current promoted validation package folders, root evidence CSV/source artifacts, and only one canonical `.mq5` source copy.
-- Latest cleanup note: `research/2026-07-12-repository-cleanup-note.md`
+- Local file count reduced from about `46k` files to about `4.2k` files.
+- Local workspace size after latest zip cleanup: about `91.5 MB`.
+- `work/` reduced from about `143 MB` to about `4.2 MB`.
+- `outputs/` now keeps current promoted validation package folders, the active FMLR package, root evidence CSV/source artifacts, and only one canonical `.mq5` source copy.
+- Latest cleanup notes: `research/2026-07-12-repository-cleanup-note.md`; `research/2026-07-13-repository-cleanup-refresh-note.md`
 
 Known cautions:
 
@@ -184,12 +186,28 @@ Default-off Flat Month Liquidity Reclaim (`FMLR`) lane was added on 2026-07-13:
 
 - Intent: attack zero-trade/flat months with a different entry mechanism instead of loosening the rejected FSD/FMB/FMR lanes.
 - Entry idea: require a recent liquidity sweep and reclaim, wick rejection, close-location strength, optional VWAP reclaim, and optional order-flow confirmation.
-- Stop idea: use a direct structure stop beyond the swept liquidity level, with optional equal-level and previous-day/week extensions, instead of relying on a plain ATR stop.
+- Stop/target idea: use a direct structure stop beyond the swept liquidity level, opposite side of a compression box, opposite side of an Asian/rolling session range, or beyond a failed range edge, with optional equal-level and previous-day/week extensions, optional liquidity-cluster buffer, optional pocket shift, and test forward-liquidity, session/Asian target, swing-target, imbalance-retest, forward-clearance, phase-alignment, recent-sweep retest, continuation-retest, compression-breakout, session-range breakout, and range-failure reclaim variants instead of relying only on ATR take-profit distance.
+- Regime idea: the new phase-aligned candidate allows trend-pullback and range-reclaim phases, blocks the unclear transition phase, requires trend EMA slope in trend mode, and requires bounded net move plus candle alternation in range mode.
 - Risk: defaults to low risk through `InpFlatMonthLiquidityReclaimRiskMultiplier=0.20`.
 - Status: code-only/default-off. Not promoted, not backtested, not live-ready.
-- Local checks: `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`; MT5 local safety audit `PASS 39 / 39`.
+- Offline package builder: `work/build_flat_month_liquidity_reclaim_probe_package.ps1`, with current, conservative, balanced, tiny-risk VWAP discovery, liquidity-target, recent-sweep retest, continuation-retest, compression-breakout, session-range breakout, range-failure reclaim, session-target, imbalance-retest, swing-target, phase-aligned, and structural-stop variants across 12 weak/flat/control windows, now 180 configs total.
+- Compact-source prep: `work/prepare_flat_month_liquidity_reclaim_compact_source.ps1`, guarded by `work/test_flat_month_liquidity_reclaim_compact_source.ps1`.
+- Local checks: `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`; `FLAT_MONTH_LIQUIDITY_RECLAIM_PROBE_PACKAGE_SMOKE_PASS`; `FLAT_MONTH_LIQUIDITY_RECLAIM_COMPACT_SOURCE_SMOKE_PASS`; `ADAPTIVE_REVERSE_QUARANTINE_SMOKE_PASS`; MT5 local safety audit `PASS 39 / 39`.
 - Compile/backtest status: pending because `work/MT5_LOCAL_LAUNCH_DISABLED.lock` remains active to protect against MT5/MetaEditor focus stealing.
 - Research note: `research/2026-07-13-flat-month-liquidity-reclaim-lane-note.md`
+- Phase-gate note: `research/2026-07-13-fmlr-phase-aligned-gate-note.md`
+- Structural-stop note: `research/2026-07-13-fmlr-structural-stop-pocket-note.md`
+- Continuation-retest note: `research/2026-07-13-fmlr-continuation-retest-note.md`
+- Compression-breakout note: `research/2026-07-13-fmlr-compression-breakout-note.md`
+- Session-range breakout note: `research/2026-07-13-fmlr-session-range-breakout-note.md`
+- Range-failure reclaim note: `research/2026-07-13-fmlr-range-failure-reclaim-note.md`
+
+Adaptive Reverse quarantine was tightened on 2026-07-13:
+
+- Adaptive Reverse remains internally disabled and is not optimizer-visible.
+- If manually re-enabled later, its default guard layer now requires stronger anti-whipsaw behavior: recent-flip cooldown, post-stop lockout, range-phase block, trend-phase requirement, liquidity-trap guard, liquidity-clearance requirement, and follow-through close.
+- Local check: `ADAPTIVE_REVERSE_QUARANTINE_SMOKE_PASS`.
+- Research note: `research/2026-07-13-adaptive-reverse-quarantine-note.md`
 
 Block diagnostics, month-filter bypass, and March/May risk-shape probes were tested on 2026-07-12 and rejected:
 
