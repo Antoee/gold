@@ -41,7 +41,9 @@ foreach($needle in @(
    "input double          InpFlatMonthLiquidityReclaimRiskMultiplier",
    "input bool            InpFlatMonthLiquidityReclaimRequireOrderFlow",
    "input bool            InpFlatMonthLiquidityReclaimRequireVWAPReclaim",
-   "input double          InpFlatMonthLiquidityReclaimMinRR"
+   "input double          InpFlatMonthLiquidityReclaimMinRR",
+   "input bool            InpFlatMonthLiquidityReclaimUseLiquidityTarget",
+   "input double          InpFlatMonthLiquidityReclaimMaxTargetATR"
 )) {
    if($sourceText.IndexOf($needle, [StringComparison]::Ordinal) -lt 0) {
       throw "Compact source missing required FMLR input: $needle"
