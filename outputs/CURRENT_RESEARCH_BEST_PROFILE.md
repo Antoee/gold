@@ -151,7 +151,7 @@ Status:
 - Not backtested yet.
 - Added to both `Professional_XAUUSD_EA.mq5` and `outputs/Professional_XAUUSD_EA.mq5`.
 - Offline package builder: `work/build_flat_month_liquidity_reclaim_probe_package.ps1`.
-- Latest default-off addition: optional FMLR forward-liquidity target, recent-sweep retest, session/Asian target, and forward-clearance controls with `fmlr_liquidity_target`, `fmlr_recent_retest`, and `fmlr_session_target` probe profiles.
+- Latest default-off addition: optional FMLR forward-liquidity target, recent-sweep retest, session/Asian target, imbalance-retest, and forward-clearance controls with `fmlr_liquidity_target`, `fmlr_recent_retest`, `fmlr_session_target`, and `fmlr_imbalance_retest` probe profiles.
 - Compact-source prep: `work/prepare_flat_month_liquidity_reclaim_compact_source.ps1`.
 - Source smoke: `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`.
 - Package-builder smoke: `FLAT_MONTH_LIQUIDITY_RECLAIM_PROBE_PACKAGE_SMOKE_PASS`.
