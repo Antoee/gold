@@ -135,6 +135,15 @@ function Get-WindowProfit {
    return $row.NetProfit
 }
 
+function Get-FirstWindowProfit {
+   param($Rows, [string[]]$Windows)
+   foreach($window in $Windows) {
+      $value = Get-WindowProfit $Rows $window
+      if("$value" -ne "") { return $value }
+   }
+   return ""
+}
+
 $summary = foreach($group in ($results | Group-Object Profile)) {
    $parsed = @($group.Group | Where-Object { "$($_.NetProfit)" -ne "" })
    $profits = @($parsed | ForEach-Object { [double]$_.NetProfit })
@@ -154,10 +163,10 @@ $summary = foreach($group in ($results | Group-Object Profile)) {
       ActiveWindows = @($statsParsed | Where-Object { "$($_.Trades)" -ne "" -and [double]$_.Trades -gt 0 }).Count
       ZeroTradeWindows = @($statsParsed | Where-Object { "$($_.Trades)" -ne "" -and [double]$_.Trades -eq 0 }).Count
       TotalNet = if($profits.Count -eq 0) { "" } else { [Math]::Round(($profits | Measure-Object -Sum).Sum, 2) }
-      Continuous = Get-WindowProfit $parsed "2024_to_2026"
-      YTD = Get-WindowProfit $parsed "2026_ytd"
-      Full2025 = Get-WindowProfit $parsed "2025_full"
-      Full2024 = Get-WindowProfit $parsed "2024_full"
+      Continuous = Get-FirstWindowProfit $parsed @("2024_to_2026", "continuous_2024_2026")
+      YTD = Get-FirstWindowProfit $parsed @("2026_ytd", "ytd2026")
+      Full2025 = Get-FirstWindowProfit $parsed @("2025_full", "full2025")
+      Full2024 = Get-FirstWindowProfit $parsed @("2024_full", "full2024")
       WeakSum = if($weak.Count -eq 0) { "" } else { [Math]::Round(($weak | Measure-Object -Sum).Sum, 2) }
       WorstWindow = if($profits.Count -eq 0) { "" } else { [Math]::Round(($profits | Measure-Object -Minimum).Minimum, 2) }
       LosingWindows = @($profits | Where-Object { $_ -lt 0 }).Count
