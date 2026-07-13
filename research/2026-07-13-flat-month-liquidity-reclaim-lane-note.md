@@ -1,0 +1,81 @@
+# Flat Month Liquidity Reclaim Lane Note
+
+Date: 2026-07-13
+
+Status: code-only, default-off, not promoted.
+
+## Intent
+
+The current research-best profile still leaves too many weak/flat windows with no trades. Prior attempts to loosen flat-month behavior either tied the current profile or added losing windows.
+
+This change adds a different entry mechanism instead of only relaxing old filters:
+
+- Require a liquidity sweep and reclaim on the prior signal candle.
+- Require rejection wick and close-location strength.
+- Optionally require VWAP reclaim.
+- Optionally require order-flow confirmation.
+- Use a direct structural stop beyond the swept liquidity level.
+
+## New Lane
+
+Tag:
+
+`FMLR;`
+
+Primary switch:
+
+`InpUseFlatMonthLiquidityReclaimLane=false`
+
+Key controls:
+
+- `InpFlatMonthLiquidityReclaimRiskMultiplier=0.20`
+- `InpFlatMonthLiquidityReclaimMaxMonthlyEntries=4`
+- `InpFlatMonthLiquidityReclaimSpacingMinutes=360`
+- `InpFlatMonthLiquidityReclaimMinScore=6`
+- `InpFlatMonthLiquidityReclaimRequireLiquidSession=true`
+- `InpFlatMonthLiquidityReclaimRequireOrderFlow=true`
+- `InpFlatMonthLiquidityReclaimRequireVWAPReclaim=false`
+- `InpFlatMonthLiquidityReclaimLookbackBars=18`
+- `InpFlatMonthLiquidityReclaimMinWickPercent=32.0`
+- `InpFlatMonthLiquidityReclaimMinCloseLocation=0.58`
+- `InpFlatMonthLiquidityReclaimStopBufferATR=0.14`
+- `InpFlatMonthLiquidityReclaimStopBufferPoints=30.0`
+- `InpFlatMonthLiquidityReclaimTakeProfitATR=1.20`
+- `InpFlatMonthLiquidityReclaimMinRR=0.90`
+- `InpFlatMonthLiquidityReclaimUseEqualLevels=true`
+- `InpFlatMonthLiquidityReclaimUsePreviousDay=true`
+- `InpFlatMonthLiquidityReclaimUsePreviousWeek=false`
+
+Month-filter bypass controls were also added but default off:
+
+- `InpAllowFlatMonthLiquidityReclaimOutsideMonthFilter=false`
+- `InpFlatMonthLiquidityReclaimBypassMinQualityScore=7`
+- `InpFlatMonthLiquidityReclaimBypassMinPriceActionScore=0`
+- `InpFlatMonthLiquidityReclaimBypassRequireLiquidSession=true`
+
+## Validation
+
+Completed local checks:
+
+- `work/test_price_action_strategy_modules.ps1`: `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`
+- `work/audit_mt5_local_safety.ps1`: `PASS`, `39 / 39`
+- Root and canonical EA copies match: `Professional_XAUUSD_EA.mq5` equals `outputs/Professional_XAUUSD_EA.mq5`
+
+Not yet completed:
+
+- MT5 compile.
+- MT5 backtest.
+- Model4 weak-window probe.
+- Monthly/quarterly validation.
+
+Reason:
+
+`work/MT5_LOCAL_LAUNCH_DISABLED.lock` remains active to prevent MT5 or MetaEditor from stealing focus. Do not override that lock unless hidden/external MT5 execution is explicitly being used and focus risk is accepted.
+
+## Decision
+
+Do not promote. This is infrastructure for the next research probe only.
+
+The current stability-best profile remains:
+
+`Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
