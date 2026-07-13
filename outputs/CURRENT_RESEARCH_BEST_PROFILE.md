@@ -1,6 +1,6 @@
 # Current Research Best Profile
 
-Last updated: 2026-07-13 after the FMLR sweep-runner package refresh.
+Last updated: 2026-07-13 after the FMLR sweep-unlimited runner package refresh.
 
 ## Profile
 
@@ -32,19 +32,19 @@ The local EA source includes a default-off Flat Month Liquidity Reclaim lane tag
 
 Latest source hash:
 
-`10D1007CFD4CB124C8DE6EC247E1DE1611F1A7955E4E8EC2F9816B2A238DFA04`
+`0289641ABE4F1B93FB69D81FF098FFBAA28FFA14478282ACD0BCA4B3A1CBAFC3`
 
 Latest source change:
 
-- Non-structural liquidity-sweep reclaims can use the existing runner-target stretch path when forward liquidity, sweep evidence, and quality confirmation exist.
-- The EA logs `FMLR sweep runner` only when the target actually stretches.
+- FMLR no-fixed-TP runner permission now recognizes proven non-structural sweep-runner setups when forward clearance, runner-stretch evidence, and FMLR structure trailing are present.
+- The planned stretched target still has to pass minimum RR and spread-adjusted RR before entry.
+- The entry log can add `FMLR sweep unlimited runner`.
 
 Latest package/profile change:
 
-- Added isolated `fmlr_sweep_runner` validation profile.
-- It tests the non-structural sweep-runner payoff path without requiring sweep-displacement BOS.
-- Full FMLR package: `432` Model4 configs, `36` profiles.
-- Fast FMLR screen: `138` Model4 configs, `23` profiles.
+- Added isolated `fmlr_sweep_unlimited_runner` validation profile.
+- Full FMLR package: `444` Model4 configs, `37` profiles.
+- Fast FMLR screen: `144` Model4 configs, `24` profiles.
 
 Status:
 
@@ -66,6 +66,7 @@ Status:
 
 ## Latest Research Notes
 
+- `research/2026-07-13-fmlr-sweep-unlimited-runner-note.md`
 - `research/2026-07-13-fmlr-sweep-runner-profile-note.md`
 - `research/2026-07-13-fmlr-sweep-runner-target-note.md`
 - `research/2026-07-13-repository-cleanup-refresh-note.md`
