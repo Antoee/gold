@@ -66,7 +66,6 @@ Second cleanup pass on 2026-07-12:
 
 - Archived old generated MT5 package/config folders from `work/`, old package folders from `outputs/`, and root generated validation folders.
 - Kept current evidence package folders in `outputs/`:
-  - `flat_month_efficiency_relaxation_probe_package`
   - `realtick_islp_lowatr_orderflow_probe_package`
   - `realtick_islp_lowatr_orderflow_monthly_validation_package`
   - `realtick_islp_lowatr_orderflow_quarterly_validation_package`
@@ -80,6 +79,13 @@ Second cleanup pass on 2026-07-12:
 - Price-action strategy-module smoke test: `PASS`.
 
 Remaining size is mostly current evidence CSVs, compact/source artifacts, and ignored zip archives.
+
+2026-07-13 refresh:
+
+- Kept the active, untested FMLR probe package visible in `outputs/flat_month_liquidity_reclaim_probe_package`.
+- Updated the cleanup script keep-list so generated-package cleanup does not archive the active FMLR package.
+- Compressed the remaining expanded archive folders into ignored zip files.
+- Cleanup dry run and generated-package dry run both report `0` active candidates.
 
 ## Recommended Cleanup Style
 
