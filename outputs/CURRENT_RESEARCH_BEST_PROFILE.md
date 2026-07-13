@@ -122,7 +122,7 @@ Remaining gaps:
 - Monthly and quarterly tester-stat reruns are complete, but they show a high worst equity drawdown reading of `30.9408%`.
 - Hold-time stats still need richer extraction.
 - Model1 and Model2 have not yet been rerun on this LowATR OrderFlow candidate.
-- Local `Professional_XAUUSD_EA.mq5` is ahead of the GitHub source and contains newer default-off flat-month breakout probe infrastructure.
+- Local `Professional_XAUUSD_EA.mq5` is ahead of the GitHub source and contains newer default-off flat-month probe/wake-up infrastructure.
 - The local workspace is not currently a valid Git checkout because `.git` exists but is empty.
 
 Adaptive Reverse remains disabled.
