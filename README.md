@@ -6,7 +6,7 @@ This is not a martingale, grid, averaging-down, or recovery-system bot. Risk con
 
 ## Latest Status
 
-Last updated: 2026-07-12.
+Last updated: 2026-07-13.
 
 Use this README as the status board. If you want to know what changed without asking Codex, start here.
 
@@ -21,6 +21,7 @@ Quick answer:
 - Historical Dec-ISLP-Off real-tick continuous result: `+$4,507.51`; treat this as stale until reproduced on the current local source/compact path
 - Best sampled real-tick validation total: `+$7,469.00` across six Model4 windows
 - Latest promoted change: Low-ATR ISLP trades now require order-flow confirmation
+- Latest code addition: default-off `FMLR` Flat Month Liquidity Reclaim lane added for the next research probe; not promoted or backtested yet
 - Latest validation decision: block diagnostics, month-filter bypass, and March/May risk-shape probes were tested and rejected; LowATR OrderFlow remains best
 - Live trading status: research only, not live-ready
 - GitHub Actions status: keep manual-only to protect monthly Actions usage
@@ -40,14 +41,14 @@ Current decision: keep `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR Ord
 | Quarterly real-tick gate | LowATR OrderFlow beat Dec-ISLP-Off `+$3,435.65` vs `+$3,421.49`, with worst quarter improved from `-$44.64` to `-$30.48` |
 | Monthly tester stats | LowATR OrderFlow parsed `31 / 31`, total trades `38`, worst equity DD `30.9408%` |
 | Quarterly tester stats | LowATR OrderFlow parsed `11 / 11`, total trades `34`, worst equity DD `30.9408%` |
-| Latest code probe | Block diagnostics, month-filter bypass, and March/May risk-shape probes failed to improve current and were rejected |
+| Latest code probe | Default-off `FMLR` liquidity-reclaim lane added; source smoke passed, MT5 compile/backtest pending because local MT5 launch lock remains on |
 | Old `$866` result | Outdated baseline, no longer the current research-best |
 | Live-ready? | No. Still a research candidate |
 | GitHub Actions | Manual-only; do not use for heavy tester runs |
 | Local MT5 safety | Latest audit passed `39 / 39` checks |
 | Repository cleanup | Generated logs/temp artifacts archived; active cleanup candidates now `0` |
 
-Plain English: the bot is no longer at the old `$866 in 2.5 years` baseline, but the current-source continuous result is also not the older `+$4,507.51` headline. A fresh same-source Model4 check puts LowATR OrderFlow at `+$1,195.69` continuous, only slightly ahead of Dec-ISLP-Off at `+$1,195.04`. The newest stability-best profile still improves the prior Dec-ISLP-Off profile in sampled, monthly, and quarterly real-tick parsed-log gates. The latest flat-month and risk-shape work did not produce a better profile: FSD month-filter bypass added losing trades, high-price-action bypass changed nothing, and March/May risk scaling lowered continuous performance or introduced losing windows. The bot is still not a live-profit promise. Tester-stat extraction now works, and the biggest warning is the `30.9408%` worst equity drawdown reading in the monthly/quarterly summaries.
+Plain English: the bot is no longer at the old `$866 in 2.5 years` baseline, but the current-source continuous result is also not the older `+$4,507.51` headline. A fresh same-source Model4 check puts LowATR OrderFlow at `+$1,195.69` continuous, only slightly ahead of Dec-ISLP-Off at `+$1,195.04`. The newest stability-best profile still improves the prior Dec-ISLP-Off profile in sampled, monthly, and quarterly real-tick parsed-log gates. The latest completed flat-month and risk-shape probes did not produce a better profile. The newest source change adds a default-off `FMLR` liquidity-reclaim lane for the next probe, but it has not earned promotion. The bot is still not a live-profit promise. Tester-stat extraction now works, and the biggest warning is the `30.9408%` worst equity drawdown reading in the monthly/quarterly summaries.
 
 ## How To Check Progress Without Asking Codex
 
@@ -71,12 +72,13 @@ What to look for:
 
 Next local work:
 
-1. Investigate why the historical `+$4,507.51` Dec-ISLP-Off continuous result is not reproduced by the current local source/compact path.
-2. Rerun Model1 and Model2 validation on the LowATR OrderFlow candidate.
-3. Add hold-time, average winner/loser, largest loss, consecutive loss, exposure, spread, swap, commission, and slippage evidence.
-4. Run older-data, walk-forward, Monte Carlo, and broker-variation validation before considering live use.
-5. Attack zero-trade months with a different entry mechanism; FSD relaxation and FMW tied current, FMP reduced winners, FMB/FMR added losing trades, and month-filter bypass added losses.
-6. Keep all heavy tests local and hidden, not on GitHub Actions.
+1. Compile and backtest the new default-off `FMLR` Flat Month Liquidity Reclaim lane only through hidden or external MT5. Do not override the local MT5 hard lock while focus risk remains unresolved.
+2. Investigate why the historical `+$4,507.51` Dec-ISLP-Off continuous result is not reproduced by the current local source/compact path.
+3. Rerun Model1 and Model2 validation on the LowATR OrderFlow candidate.
+4. Add hold-time, average winner/loser, largest loss, consecutive loss, exposure, spread, swap, commission, and slippage evidence.
+5. Run older-data, walk-forward, Monte Carlo, and broker-variation validation before considering live use.
+6. Attack zero-trade months with a different entry mechanism; FSD relaxation and FMW tied current, FMP reduced winners, FMB/FMR added losing trades, and month-filter bypass added losses.
+7. Keep all heavy tests local and hidden, not on GitHub Actions.
 
 Repository cleanup completed on 2026-07-12:
 
@@ -177,6 +179,17 @@ Quarterly real-tick validation was run on 2026-07-12:
 - Decision: supports keeping Dec-ISLP-Off promoted for net-profit/quarter comparison
 
 ## Latest Code Probe
+
+Default-off Flat Month Liquidity Reclaim (`FMLR`) lane was added on 2026-07-13:
+
+- Intent: attack zero-trade/flat months with a different entry mechanism instead of loosening the rejected FSD/FMB/FMR lanes.
+- Entry idea: require a recent liquidity sweep and reclaim, wick rejection, close-location strength, optional VWAP reclaim, and optional order-flow confirmation.
+- Stop idea: use a direct structure stop beyond the swept liquidity level, with optional equal-level and previous-day/week extensions, instead of relying on a plain ATR stop.
+- Risk: defaults to low risk through `InpFlatMonthLiquidityReclaimRiskMultiplier=0.20`.
+- Status: code-only/default-off. Not promoted, not backtested, not live-ready.
+- Local checks: `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`; MT5 local safety audit `PASS 39 / 39`.
+- Compile/backtest status: pending because `work/MT5_LOCAL_LAUNCH_DISABLED.lock` remains active to protect against MT5/MetaEditor focus stealing.
+- Research note: `research/2026-07-13-flat-month-liquidity-reclaim-lane-note.md`
 
 Block diagnostics, month-filter bypass, and March/May risk-shape probes were tested on 2026-07-12 and rejected:
 
