@@ -6,9 +6,9 @@ No martingale. No grid. No averaging down. No recovery sizing. Risk control stay
 
 ## Latest Status
 
-Last updated: 2026-07-13 after the local FMLR sweep-unlimited runner package refresh.
+Last updated: 2026-07-13 after the local FMLR sweep-unlimited runner package and source-manifest refresh.
 
-Use this README as the GitHub status board. The detailed local workspace is currently ahead of GitHub source, so treat this page as the current research dashboard, not a live-trading approval.
+Use this README as the GitHub status board. The local workspace is still the research source of truth because this Codex folder is not a valid Git checkout, but this page tracks the current local research state.
 
 ## Current Answer
 
@@ -16,6 +16,7 @@ Use this README as the GitHub status board. The detailed local workspace is curr
 - Live trading status: not live-ready.
 - Latest promoted idea: Low-ATR ISLP trades require order-flow confirmation.
 - Latest local source hash: `0289641ABE4F1B93FB69D81FF098FFBAA28FFA14478282ACD0BCA4B3A1CBAFC3`.
+- Latest source manifest: `outputs/SOURCE_MANIFEST.md`.
 - Latest source change: default-off FMLR no-fixed-TP runner permission now recognizes proven non-structural sweep-runner setups when forward clearance, runner-stretch evidence, and FMLR structure trailing are present.
 - Latest package/profile refinement: added isolated `fmlr_sweep_unlimited_runner` validation profile.
 - Active full FMLR validation package: `444` Model4 configs, `37` profiles.
@@ -45,6 +46,8 @@ The local workspace now has a larger default-off FMLR research surface. The newe
 
 The latest isolated package profile is `fmlr_sweep_unlimited_runner`. It tests the new no-fixed-TP sweep-runner payoff path without requiring sweep-displacement BOS.
 
+The source manifest records the current local `.mq5` hash, size, line count, active FMLR package counts, and smoke-test status so GitHub can still track the real local research state while full Git push access is unavailable.
+
 ## Validation Passed Locally
 
 These checks passed locally after the `fmlr_sweep_unlimited_runner` package refresh:
@@ -73,11 +76,12 @@ Cleanup dry-run after the package refresh found `0` active generated cleanup can
 
 Important: this GitHub status update was made through the GitHub connector because the local folder is not a valid Git checkout. The local `.git` directory exists but is empty. Local shell also has no GitHub CLI, no SSH key for GitHub, and HTTPS Git needs credentials.
 
-That means this GitHub update refreshes the dashboard/status files, but the full local EA source and all generated local scripts may still be ahead of GitHub until a proper authenticated Git push path is available.
+That means this GitHub update refreshes lightweight dashboard/evidence files. The full local EA source and generated scripts may still be ahead of GitHub until a proper authenticated Git push path is available.
 
 ## Latest Evidence Notes
 
 - `outputs/CURRENT_RESEARCH_BEST_PROFILE.md`
+- `outputs/SOURCE_MANIFEST.md`
 - `research/2026-07-13-fmlr-sweep-unlimited-runner-note.md`
 - `research/2026-07-13-fmlr-sweep-runner-profile-note.md`
 - `research/2026-07-13-repository-cleanup-refresh-note.md`
