@@ -25,6 +25,7 @@ This change adds a different entry mechanism instead of only relaxing old filter
 - Optionally require a continuation retest after the sweep/reclaim, with EMA/VWAP hold controls and a max pullback distance.
 - Optionally allow a tight compression-box breakout as a substitute setup, with the stop anchored beyond the opposite side of the box.
 - Optionally allow an Asian/rolling session-range breakout as a substitute setup, with the stop anchored beyond the opposite side of the selected range.
+- Optionally allow an Asian/rolling range-failure reclaim as a substitute setup, with the stop beyond the failed edge and optional target at the opposite edge of the range.
 
 ## New Lane
 
@@ -104,6 +105,19 @@ Key controls:
 - `InpFlatMonthLiquidityReclaimSessionBreakoutMinBodyPercent=38.0`
 - `InpFlatMonthLiquidityReclaimSessionBreakoutMinCloseLocation=0.62`
 - `InpFlatMonthLiquidityReclaimSessionBreakoutMinBreakRangeATR=0.45`
+- `InpFlatMonthLiquidityReclaimUseRangeFailureReclaim=false`
+- `InpFlatMonthLiquidityReclaimRequireRangeFailureReclaim=false`
+- `InpFlatMonthLiquidityReclaimRangeFailureUseAsianRange=true`
+- `InpFlatMonthLiquidityReclaimRangeFailureUseRollingRange=true`
+- `InpFlatMonthLiquidityReclaimRangeFailureLookbackHours=6`
+- `InpFlatMonthLiquidityReclaimRangeFailureMaxRangeATR=1.60`
+- `InpFlatMonthLiquidityReclaimRangeFailureBreakBufferPoints=18.0`
+- `InpFlatMonthLiquidityReclaimRangeFailureMinBodyPercent=28.0`
+- `InpFlatMonthLiquidityReclaimRangeFailureMinCloseLocation=0.58`
+- `InpFlatMonthLiquidityReclaimRangeFailureMinReclaimPercent=0.18`
+- `InpFlatMonthLiquidityReclaimRangeFailureUseRangeTarget=true`
+- `InpFlatMonthLiquidityReclaimRangeFailureMinTargetATR=0.70`
+- `InpFlatMonthLiquidityReclaimRangeFailureMaxTargetATR=2.20`
 - `InpFlatMonthLiquidityReclaimUsePhaseGate=false`
 - `InpFlatMonthLiquidityReclaimAllowTrendPhase=true`
 - `InpFlatMonthLiquidityReclaimAllowRangePhase=true`
@@ -169,7 +183,8 @@ Offline validation package builder:
   - `fmlr_continuation_retest`
   - `fmlr_compression_breakout`
   - `fmlr_session_range_breakout`
-- Windows prepared: 12 weak/flat/control windows from 2024-2026, now `168` configs total.
+  - `fmlr_range_failure_reclaim`
+- Windows prepared: 12 weak/flat/control windows from 2024-2026, now `180` configs total.
 
 Compact-source safeguard:
 
@@ -184,6 +199,7 @@ Compact-source safeguard:
 - The continuation-retest controls are preserved for the `fmlr_continuation_retest` profile.
 - The compression-breakout controls are preserved for the `fmlr_compression_breakout` profile.
 - The session-range breakout controls are preserved for the `fmlr_session_range_breakout` profile.
+- The range-failure reclaim controls are preserved for the `fmlr_range_failure_reclaim` profile.
 - Unrelated inactive knobs, including winner scale-in inputs, are converted to globals.
 - The smoke test enforces a maximum kept-input count of `450` before any MT5 compile/backtest attempt.
 
@@ -217,6 +233,10 @@ Compression-breakout follow-up note:
 Session-range breakout follow-up note:
 
 `research/2026-07-13-fmlr-session-range-breakout-note.md`
+
+Range-failure reclaim follow-up note:
+
+`research/2026-07-13-fmlr-range-failure-reclaim-note.md`
 
 ## Decision
 
