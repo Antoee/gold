@@ -1,6 +1,6 @@
 # Current Research Best Profile
 
-Last updated: 2026-07-13 after the FMLR sweep-unlimited runner package and source-manifest refresh.
+Last updated: 2026-07-13 after adding annualized return context.
 
 ## Profile
 
@@ -62,6 +62,8 @@ Package counts:
 
 ## Model4 Evidence For Current Best
 
+Sampled, monthly, and quarterly totals below are validation-window comparisons, not annualized account curves.
+
 Sampled probe:
 
 | Profile | Parsed | Total | Losing Windows | Worst |
@@ -83,12 +85,16 @@ Quarterly validation:
 | `dec_islp_off` | `11` | `+3,421.49` | `1` | `-44.64` |
 | `islp_lowatr_of` | `11` | `+3,435.65` | `1` | `-30.48` |
 
-Fresh continuous same-source check:
+## Fresh Continuous Same-Source Check
 
-| Profile | Model | Window | Net |
-| --- | ---: | --- | ---: |
-| `lowatr_current` | `4` | `2024.01.01` to `2026.07.12` | `+1,195.69` |
-| `dec_islp_off` | `4` | `2024.01.01` to `2026.07.12` | `+1,195.04` |
+Return math uses a `$1,000` starting balance and CAGR over `2024.01.01` to `2026.07.12`, about `2.53` years.
+
+| Profile | Model | Window | Net | Total Return | CAGR/yr |
+| --- | ---: | --- | ---: | ---: | ---: |
+| `lowatr_current` | `4` | `2024.01.01` to `2026.07.12` | `+1,195.69` | `+119.57%` | `+36.51%/yr` |
+| `dec_islp_off` | `4` | `2024.01.01` to `2026.07.12` | `+1,195.04` | `+119.50%` | `+36.49%/yr` |
+
+The older `+4,507.51` Dec-ISLP-Off Model4 continuous result equals `+450.75%` total and about `+96.43%/yr` CAGR from a `$1,000` start, but it is now treated as historical/stale until reproduced on the current local source and compact tester path.
 
 ## Risk Warning
 
