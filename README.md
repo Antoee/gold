@@ -6,7 +6,7 @@ No martingale. No grid. No averaging down. No recovery sizing. Risk control stay
 
 ## Latest Status
 
-Last updated: 2026-07-13 after the local FMLR sweep-unlimited runner package and source-manifest refresh.
+Last updated: 2026-07-13 after clarifying profit tables and annualized return math.
 
 Use this README as the GitHub status board. The local workspace is still the research source of truth because this Codex folder is not a valid Git checkout, but this page tracks the current local research state.
 
@@ -17,7 +17,6 @@ Use this README as the GitHub status board. The local workspace is still the res
 - Latest promoted idea: Low-ATR ISLP trades require order-flow confirmation.
 - Latest local source hash: `0289641ABE4F1B93FB69D81FF098FFBAA28FFA14478282ACD0BCA4B3A1CBAFC3`.
 - Latest source manifest: `outputs/SOURCE_MANIFEST.md`.
-- Latest source change: default-off FMLR no-fixed-TP runner permission now recognizes proven non-structural sweep-runner setups when forward clearance, runner-stretch evidence, and FMLR structure trailing are present.
 - Latest package/profile refinement: added isolated `fmlr_sweep_unlimited_runner` validation profile.
 - Active full FMLR validation package: `444` Model4 configs, `37` profiles.
 - Active fast FMLR screen: `144` Model4 configs, `24` profiles.
@@ -25,20 +24,44 @@ Use this README as the GitHub status board. The local workspace is still the res
 - MT5 local launch lock: still active to prevent popups/focus stealing.
 - GitHub Actions: manual-only; heavy tester runs should stay local, not in Actions.
 
+## Screenshot Clarification
+
+The first screenshot is a profit-context table, not a pure best-to-worst leaderboard.
+
+The second screenshot is the older Dec-ISLP-Off promotion comparison. Some of those larger numbers are sampled validation totals. They are useful for comparing profiles, but they are not one continuous account curve and should not be read as yearly account growth.
+
+Return math below assumes a `$1,000` starting balance and uses CAGR over `2024.01.01` to `2026.07.12`, about `2.53` years. Sampled totals are marked `N/A` because they are aggregate validation scores, not sequential account returns.
+
 ## Profit Context
 
-The old `$866 in 2.5 years` number is outdated. The best promoted research profile remains better than that baseline, but the newest FMLR work has not produced a confirmed new best yet.
-
-Known headline numbers still need caution:
-
-| Result | Meaning |
-| --- | --- |
-| `+$10,127.76` | Best historical/current Model1 continuous research result for Dec-ISLP-Off style profile |
-| `+$4,507.51` | Historical Model4 continuous Dec-ISLP-Off result, stale until reproduced on current compact path |
-| `+$1,195.69` | Fresh current-source Model4 continuous LowATR OrderFlow check from earlier validation |
-| `+$7,469.00` | Aggregate sampled Model4 validation-window score, not a sequential account return |
+| Result | Type | Return Math | Meaning |
+| --- | --- | --- | --- |
+| `+$10,127.76` | Continuous Model1 | `+1012.78%` total, `+159.47%/yr` CAGR | Best historical/current Model1 continuous research result for Dec-ISLP-Off style profile |
+| `+$4,507.51` | Continuous Model4 | `+450.75%` total, `+96.43%/yr` CAGR | Historical real-tick Dec-ISLP-Off result, stale until reproduced on current compact path |
+| `+$1,195.69` | Continuous Model4 | `+119.57%` total, `+36.51%/yr` CAGR | Fresh current-source real-tick LowATR OrderFlow check |
+| `+$7,469.00` | Sampled Model4 total | N/A, sampled score | Aggregate validation-window score, not a sequential account return |
 
 The bot is still a research project. The current evidence is good enough to keep testing, not good enough to fund seriously.
+
+## Dec-ISLP-Off Comparison
+
+These `total` rows match the second screenshot. They are sampled-window scores, so yearly percent is not applicable.
+
+| Model | Previous No-M1-Shock | Dec-ISLP-Off | Annualized % | Decision |
+| --- | ---: | ---: | --- | --- |
+| Model0 total | `+$4,495.93` | `+$8,768.34` | N/A, sampled score | Guard wins |
+| Model1 total | `+$14,739.08` | `+$15,361.76` | N/A, sampled score | Guard wins |
+| Model2 total | `+$17,890.63` | `+$15,361.76` | N/A, sampled score | Previous wins |
+| Model4 real-tick total | `+$4,075.62` | `+$7,469.00` | N/A, sampled score | Guard wins |
+
+Continuous-window comparison from the same Dec-ISLP-Off validation:
+
+| Model | Previous No-M1-Shock | Previous CAGR/yr | Dec-ISLP-Off | Dec CAGR/yr |
+| --- | ---: | ---: | ---: | ---: |
+| Model0 continuous | `+$1,288.93` | `+38.78%/yr` | `+$5,386.54` | `+108.29%/yr` |
+| Model1 continuous | `+$9,753.58` | `+155.98%/yr` | `+$10,127.76` | `+159.47%/yr` |
+| Model2 continuous | `+$12,054.55` | `+176.39%/yr` | `+$10,127.76` | `+159.47%/yr` |
+| Model4 real-tick continuous | `+$1,288.93` | `+38.78%/yr` | `+$4,507.51` | `+96.43%/yr` |
 
 ## Latest Local Work
 
