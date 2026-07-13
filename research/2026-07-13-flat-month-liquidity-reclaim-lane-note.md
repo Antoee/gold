@@ -18,6 +18,7 @@ This change adds a different entry mechanism instead of only relaxing old filter
 - Optionally target the nearest opposing forward liquidity instead of a fixed ATR take-profit.
 - Optionally trade a retest after a recent sweep/reclaim instead of requiring the sweep to happen only on the immediately previous candle.
 - Optionally require enough forward room toward session or Asian-range liquidity before taking the retest.
+- Optionally use FVG/order-block retests as a controlled substitute when tick/order-flow confirmation is missing.
 
 ## New Lane
 
@@ -37,6 +38,10 @@ Key controls:
 - `InpFlatMonthLiquidityReclaimMinScore=6`
 - `InpFlatMonthLiquidityReclaimRequireLiquidSession=true`
 - `InpFlatMonthLiquidityReclaimRequireOrderFlow=true`
+- `InpFlatMonthLiquidityReclaimUseImbalanceRetest=false`
+- `InpFlatMonthLiquidityReclaimRequireImbalanceRetest=false`
+- `InpFlatMonthLiquidityReclaimAllowImbalanceInsteadOfOrderFlow=false`
+- `InpFlatMonthLiquidityReclaimImbalanceLookbackBars=18`
 - `InpFlatMonthLiquidityReclaimRequireVWAPReclaim=false`
 - `InpFlatMonthLiquidityReclaimLookbackBars=18`
 - `InpFlatMonthLiquidityReclaimMinWickPercent=32.0`
@@ -98,7 +103,8 @@ Offline validation package builder:
   - `fmlr_liquidity_target`
   - `fmlr_recent_retest`
   - `fmlr_session_target`
-- Windows prepared: 12 weak/flat/control windows from 2024-2026, now `84` configs total.
+  - `fmlr_imbalance_retest`
+- Windows prepared: 12 weak/flat/control windows from 2024-2026, now `96` configs total.
 
 Compact-source safeguard:
 
@@ -106,6 +112,7 @@ Compact-source safeguard:
 - The forward-liquidity target controls are preserved for the `fmlr_liquidity_target` profile.
 - The recent-sweep retest controls are preserved for the `fmlr_recent_retest` profile.
 - The session/Asian forward-clearance controls are preserved for the `fmlr_session_target` profile.
+- The FVG/order-block imbalance retest controls are preserved for the `fmlr_imbalance_retest` profile.
 - Unrelated inactive knobs, including winner scale-in inputs, are converted to globals.
 - The smoke test enforces a maximum kept-input count of `450` before any MT5 compile/backtest attempt.
 
