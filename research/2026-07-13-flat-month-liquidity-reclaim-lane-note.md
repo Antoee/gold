@@ -58,8 +58,21 @@ Month-filter bypass controls were also added but default off:
 Completed local checks:
 
 - `work/test_price_action_strategy_modules.ps1`: `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`
+- `work/test_flat_month_liquidity_reclaim_probe_package.ps1`: `FLAT_MONTH_LIQUIDITY_RECLAIM_PROBE_PACKAGE_SMOKE_PASS`
 - `work/audit_mt5_local_safety.ps1`: `PASS`, `39 / 39`
 - Root and canonical EA copies match: `Professional_XAUUSD_EA.mq5` equals `outputs/Professional_XAUUSD_EA.mq5`
+
+Offline validation package builder:
+
+- `work/build_flat_month_liquidity_reclaim_probe_package.ps1`
+- Default package path: `outputs/flat_month_liquidity_reclaim_probe_package`
+- Default manifest: `outputs/FLAT_MONTH_LIQUIDITY_RECLAIM_PROBE_MANIFEST.csv`
+- Profiles prepared for later MT5 execution:
+  - `lowatr_current`
+  - `fmlr_conservative`
+  - `fmlr_balanced`
+  - `fmlr_vwap_discovery`
+- Windows prepared: 12 weak/flat/control windows from 2024-2026.
 
 Not yet completed:
 
