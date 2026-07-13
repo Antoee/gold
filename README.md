@@ -17,10 +17,11 @@ Quick answer:
 - Current best research profile: `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
 - Old `$866 in 2.5 years` result: outdated baseline, not the current best
 - Best current continuous research result: `+$10,127.76` on `Model=1`, `2024.01.01` to `2026.07.12`
-- Best current real-tick continuous result: `+$4,507.51` on `Model=4`, `2024.01.01` to `2026.07.12`
+- Fresh current-source real-tick continuous result: `+$1,195.69` on `Model=4`, `2024.01.01` to `2026.07.12`
+- Historical Dec-ISLP-Off real-tick continuous result: `+$4,507.51`; treat this as stale until reproduced on the current local source/compact path
 - Best sampled real-tick validation total: `+$7,469.00` across six Model4 windows
 - Latest promoted change: Low-ATR ISLP trades now require order-flow confirmation
-- Latest validation decision: Flat-month probes and liquidity-stop extension probes were tested and rejected; LowATR OrderFlow remains best
+- Latest validation decision: block diagnostics, month-filter bypass, and March/May risk-shape probes were tested and rejected; LowATR OrderFlow remains best
 - Live trading status: research only, not live-ready
 - GitHub Actions status: keep manual-only to protect monthly Actions usage
 - Source status: local folder is not a valid Git checkout right now; `.git` exists but is empty
@@ -32,20 +33,21 @@ Current decision: keep `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR Ord
 | Current research-best | `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow` |
 | What changed | Low-ATR ISLP trades require order-flow confirmation |
 | Best continuous result | `+$10,127.76` on `Model=1`, `2024.01.01` to `2026.07.12` |
-| Best real-tick result | `+$4,507.51` continuous on `Model=4`, `2024.01.01` to `2026.07.12` |
+| Fresh current-source real-tick result | `+$1,195.69` continuous on `Model=4`, `2024.01.01` to `2026.07.12` |
+| Historical real-tick result | `+$4,507.51` continuous on `Model=4`; stale until reproduced on current source/compact path |
 | Full sampled real-tick total | `+$7,469.00` across the six Model4 validation windows |
 | Monthly real-tick gate | LowATR OrderFlow beat Dec-ISLP-Off `+$3,682.17` vs `+$3,637.53`, with `0` losing months vs `1` |
 | Quarterly real-tick gate | LowATR OrderFlow beat Dec-ISLP-Off `+$3,435.65` vs `+$3,421.49`, with worst quarter improved from `-$44.64` to `-$30.48` |
 | Monthly tester stats | LowATR OrderFlow parsed `31 / 31`, total trades `38`, worst equity DD `30.9408%` |
 | Quarterly tester stats | LowATR OrderFlow parsed `11 / 11`, total trades `34`, worst equity DD `30.9408%` |
-| Latest code probe | Flat-month probes and liquidity-stop extension probes failed to improve current and were rejected |
+| Latest code probe | Block diagnostics, month-filter bypass, and March/May risk-shape probes failed to improve current and were rejected |
 | Old `$866` result | Outdated baseline, no longer the current research-best |
 | Live-ready? | No. Still a research candidate |
 | GitHub Actions | Manual-only; do not use for heavy tester runs |
 | Local MT5 safety | Latest audit passed `39 / 39` checks |
 | Repository cleanup | Generated logs/temp artifacts archived; active cleanup candidates now `0` |
 
-Plain English: the bot is no longer at the old `$866 in 2.5 years` baseline. The newest stability-best profile improves the prior Dec-ISLP-Off profile in sampled, monthly, and quarterly real-tick parsed-log gates. The latest flat-month work did not produce a better profile: conservative/balanced FMB tied current, loose FMB added losing trades, expanded micro-reversion added losing trades, wake-up tied current, and probe-mode reduced existing winners. Extra liquidity-stop extensions also failed; the current base liquidity-aware structure stop remains better. The bot is still not a live-profit promise. Tester-stat extraction now works, and the biggest warning is the `30.9408%` worst equity drawdown reading in the monthly/quarterly summaries.
+Plain English: the bot is no longer at the old `$866 in 2.5 years` baseline, but the current-source continuous result is also not the older `+$4,507.51` headline. A fresh same-source Model4 check puts LowATR OrderFlow at `+$1,195.69` continuous, only slightly ahead of Dec-ISLP-Off at `+$1,195.04`. The newest stability-best profile still improves the prior Dec-ISLP-Off profile in sampled, monthly, and quarterly real-tick parsed-log gates. The latest flat-month and risk-shape work did not produce a better profile: FSD month-filter bypass added losing trades, high-price-action bypass changed nothing, and March/May risk scaling lowered continuous performance or introduced losing windows. The bot is still not a live-profit promise. Tester-stat extraction now works, and the biggest warning is the `30.9408%` worst equity drawdown reading in the monthly/quarterly summaries.
 
 ## How To Check Progress Without Asking Codex
 
@@ -69,11 +71,12 @@ What to look for:
 
 Next local work:
 
-1. Rerun Model1 and Model2 validation on the LowATR OrderFlow candidate.
-2. Add hold-time, average winner/loser, largest loss, consecutive loss, exposure, spread, swap, commission, and slippage evidence.
-3. Run older-data, walk-forward, Monte Carlo, and broker-variation validation before considering live use.
-4. Attack zero-trade months with a different entry mechanism; FSD relaxation and FMW tied current, FMP reduced winners, and FMB/FMR added losing trades.
-5. Keep all heavy tests local and hidden, not on GitHub Actions.
+1. Investigate why the historical `+$4,507.51` Dec-ISLP-Off continuous result is not reproduced by the current local source/compact path.
+2. Rerun Model1 and Model2 validation on the LowATR OrderFlow candidate.
+3. Add hold-time, average winner/loser, largest loss, consecutive loss, exposure, spread, swap, commission, and slippage evidence.
+4. Run older-data, walk-forward, Monte Carlo, and broker-variation validation before considering live use.
+5. Attack zero-trade months with a different entry mechanism; FSD relaxation and FMW tied current, FMP reduced winners, FMB/FMR added losing trades, and month-filter bypass added losses.
+6. Keep all heavy tests local and hidden, not on GitHub Actions.
 
 Repository cleanup completed on 2026-07-12:
 
@@ -81,11 +84,14 @@ Repository cleanup completed on 2026-07-12:
 - Compressed old archive folders into ignored zip files.
 - Removed active `outputs/offline_refresh_logs/`.
 - Archived the generated FMB/FMR/FMW/FMP/liquidity-stop package folders/logs and generated compact/tester `.mq5` sources.
+- Archived the latest block-diagnostics, month-filter bypass, March/May risk-shape, and continuous-check package folders/logs plus generated compact `.mq5` sources.
+- Archived the bulky raw block-diagnostics dump after keeping the summarized diagnostic CSVs.
 - Active generated cleanup candidates after latest pass: `0`.
-- Local file count reduced from about `46k` files to about `4.2k` filesystem items.
-- Local workspace size after latest zip cleanup: about `90.4 MB`.
+- Local file count reduced from about `46k` files to about `4.3k` filesystem items.
+- Local workspace size after latest zip cleanup: about `91.7 MB`.
 - `work/` reduced from about `143 MB` to about `4 MB`.
 - `outputs/` now keeps current promoted validation package folders, root evidence CSV/source artifacts, and only one canonical `.mq5` source copy.
+- Latest cleanup note: `research/2026-07-12-repository-cleanup-note.md`
 
 Known cautions:
 
@@ -171,6 +177,16 @@ Quarterly real-tick validation was run on 2026-07-12:
 - Decision: supports keeping Dec-ISLP-Off promoted for net-profit/quarter comparison
 
 ## Latest Code Probe
+
+Block diagnostics, month-filter bypass, and March/May risk-shape probes were tested on 2026-07-12 and rejected:
+
+- Block diagnostics showed the actionable blocker was mostly the month filter, not missing indicator data.
+- FSD month-filter bypass increased activity but added losing trades in `2024_10`, `2025_04`, and `2025_06`.
+- High-price-action month-filter bypass made no trade-set difference.
+- Fresh same-source continuous check showed LowATR OrderFlow at `+$1,195.69` versus Dec-ISLP-Off at `+$1,195.04`.
+- March/May risk-shape ladder did not beat current: `mar200_may220` improved 2026 YTD to `+$1,238.40`, but lowered continuous profit to `+$993.28` and added a `2025_03` loss.
+- Decision: not promoted. Keep LowATR OrderFlow as the current research-best, but treat the old `+$4,507.51` real-tick continuous number as historical until reproduced.
+- Research note: `research/2026-07-12-block-diagnostics-and-risk-shape-note.md`
 
 Liquidity-stop extension variants were tested on 2026-07-12 and rejected:
 
@@ -443,7 +459,8 @@ Do not read the test numbers as guaranteed live profit.
 Useful interpretation:
 
 - `+$10,127.76` is the best current Model1 continuous research result.
-- `+$4,507.51` is the current Model4 real-tick continuous result.
+- `+$1,195.69` is the fresh current-source Model4 real-tick continuous result.
+- `+$4,507.51` is a historical Dec-ISLP-Off Model4 continuous result and should be treated as stale until reproduced on the current local source/compact path.
 - `+$7,469.00` is the Model4 total across sampled validation windows.
 - Monthly Model4 parsed-log validation also supports the guard: `+$3,779.52` vs `+$3,687.00`, and `0` losing months vs `2`.
 - Quarterly Model4 parsed-log validation supports the same guard: `+$3,455.89` vs `+$3,404.59`, and `0` losing quarters vs `1`.
