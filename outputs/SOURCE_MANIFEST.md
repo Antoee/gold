@@ -19,19 +19,33 @@ Both local source copies currently match this hash.
 - Current stability-best profile remains `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`.
 - Adaptive Reverse remains quarantined behind default-off gates and smoke-test coverage.
 - MT5 local launch lock remains active to avoid windows, sounds, and focus stealing.
-- Default-off FMLR sweep-unlimited runner permission is present.
-- Default-off FMLR tick-speed reclaim path is present:
+- New default-off FMLR sweep-unlimited runner permission is present:
+  - `FlatMonthLiquidityReclaimUnlimitedRunnerAllows`
+  - `liquiditySweepRunner`
+  - `FMLR sweep unlimited runner`
+- New default-off FMLR tick-speed reclaim path is present:
   - `tickSpeedReclaim`
   - `FMLR tick-speed reclaim`
-- Conservative demo/forward-test profile is present locally:
+- Low-risk FMLR activity-blend package profiles are present:
+  - `fmlr_activity_blend`
+  - `fmlr_activity_blend_tight`
+  - `outputs/CANDIDATE_FMLR_ACTIVITY_BLEND_PROFILE.set`
+  - SHA-256 `149481621EC3194A08CF2B291033FEA38AE7D40B1EDA677820780A51F9A9DBDB`
+  - `outputs/CANDIDATE_FMLR_ACTIVITY_BLEND_TIGHT_PROFILE.set`
+  - SHA-256 `50F2000B153458B5DB494DD6AA873BDD6256F2C8B3AE11BABE5E4C615E2BC67A`
+- Conservative demo/forward-test profile is present:
   - `outputs/CANDIDATE_TRADE_READINESS_PROFILE.set`
   - SHA-256 `B683100CA5BE912A9A848C3F715A67E4705473B00DEEF4B9070AE02BFDB708C5`
 
 ## Active FMLR Research Surface
 
-- Full FMLR package: `456` Model4 configs, `38` profiles
-- Fast FMLR screen: `150` Model4 configs, `25` profiles
-- New isolated profile: `fmlr_tick_speed_reclaim`
+- Full FMLR package: `480` Model4 configs, `40` profiles
+- Fast FMLR screen: `162` Model4 configs, `27` profiles
+- New isolated profiles:
+  - `fmlr_sweep_unlimited_runner`
+  - `fmlr_tick_speed_reclaim`
+  - `fmlr_activity_blend`
+  - `fmlr_activity_blend_tight`
 
 ## Static Checks
 
