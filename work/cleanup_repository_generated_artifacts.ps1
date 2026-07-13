@@ -1,5 +1,6 @@
 param(
    [string]$ArchiveRoot = "",
+   [switch]$IncludeGeneratedPackages,
    [switch]$Apply
 )
 
@@ -60,6 +61,7 @@ Add-Candidate $rows (Join-Path $repo "outputs\offline_refresh_logs") "outputs" "
 
 foreach($path in Get-ChildItem -LiteralPath (Join-Path $repo "outputs") -Recurse -File -Filter "*.log" -ErrorAction SilentlyContinue) {
    if($path.Name -eq "MT5_HIDDEN_COMPILE_ISLP_LOWATR_TESTER_STATS.log") { continue }
+   if($path.Name -eq "MT5_HIDDEN_COMPILE_FSD_EFFICIENCY_RELAXATION.log") { continue }
    Add-Candidate $rows $path.FullName "outputs\logs" "Generated output log."
 }
 
@@ -73,9 +75,47 @@ foreach($pattern in @("LOWATR_STATS_BACKGROUND.*", "TESTER_STATS_COLLECTOR_SMOKE
    }
 }
 
+foreach($pattern in @("*_COMPACT.mq5", "*_TESTER.mq5", "BLOCK_REASON_DIAGNOSTICS_RAW.csv")) {
+   foreach($path in Get-ChildItem -LiteralPath (Join-Path $repo "outputs") -File -Filter $pattern -ErrorAction SilentlyContinue) {
+      Add-Candidate $rows $path.FullName "outputs\generated_sources" "Generated MT5 tester source or bulky raw diagnostic artifact; summarized by root result files."
+   }
+}
+
+foreach($pattern in @("*_BACKGROUND.*", "*.pid")) {
+   foreach($path in Get-ChildItem -LiteralPath (Join-Path $repo "outputs") -File -Filter $pattern -ErrorAction SilentlyContinue) {
+      Add-Candidate $rows $path.FullName "outputs\temp" "Temporary background-run coordination artifact."
+   }
+}
+
 foreach($pattern in @("*.unlock", "*.pid")) {
    foreach($path in Get-ChildItem -LiteralPath (Join-Path $repo "work") -File -Filter $pattern -ErrorAction SilentlyContinue) {
       Add-Candidate $rows $path.FullName "work\temp" "Local coordination artifact."
+   }
+}
+
+if($IncludeGeneratedPackages) {
+   $keepOutputDirs = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
+   @(
+      "realtick_islp_lowatr_orderflow_probe_package",
+      "realtick_islp_lowatr_orderflow_monthly_validation_package",
+      "realtick_islp_lowatr_orderflow_quarterly_validation_package",
+      "realtick_dec_islp_monthly_validation_package",
+      "realtick_dec_islp_quarterly_validation_package"
+   ) | ForEach-Object { [void]$keepOutputDirs.Add($_) }
+
+   foreach($path in Get-ChildItem -LiteralPath (Join-Path $repo "work") -Directory -ErrorAction SilentlyContinue) {
+      Add-Candidate $rows $path.FullName "work\generated_packages" "Generated local MT5 package/config folder."
+   }
+
+   foreach($path in Get-ChildItem -LiteralPath (Join-Path $repo "outputs") -Directory -ErrorAction SilentlyContinue) {
+      if($keepOutputDirs.Contains($path.Name)) { continue }
+      Add-Candidate $rows $path.FullName "outputs\generated_packages" "Generated MT5 package/config folder; summarized by root CSVs and research notes."
+   }
+
+   foreach($pattern in @("outputs_ci_generated_*", "quality_tp_*")) {
+      foreach($path in Get-ChildItem -LiteralPath $repo -Directory -Filter $pattern -ErrorAction SilentlyContinue) {
+         Add-Candidate $rows $path.FullName "root\generated_packages" "Generated root-level validation package folder."
+      }
    }
 }
 
