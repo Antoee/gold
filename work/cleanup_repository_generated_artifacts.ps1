@@ -100,7 +100,8 @@ if($IncludeGeneratedPackages) {
       "realtick_islp_lowatr_orderflow_monthly_validation_package",
       "realtick_islp_lowatr_orderflow_quarterly_validation_package",
       "realtick_dec_islp_monthly_validation_package",
-      "realtick_dec_islp_quarterly_validation_package"
+      "realtick_dec_islp_quarterly_validation_package",
+      "flat_month_liquidity_reclaim_probe_package"
    ) | ForEach-Object { [void]$keepOutputDirs.Add($_) }
 
    foreach($path in Get-ChildItem -LiteralPath (Join-Path $repo "work") -Directory -ErrorAction SilentlyContinue) {
