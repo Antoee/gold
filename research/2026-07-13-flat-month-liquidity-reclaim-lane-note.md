@@ -17,6 +17,7 @@ This change adds a different entry mechanism instead of only relaxing old filter
 - Use a direct structural stop beyond the swept liquidity level.
 - Optionally target the nearest opposing forward liquidity instead of a fixed ATR take-profit.
 - Optionally trade a retest after a recent sweep/reclaim instead of requiring the sweep to happen only on the immediately previous candle.
+- Optionally require enough forward room toward session or Asian-range liquidity before taking the retest.
 
 ## New Lane
 
@@ -51,6 +52,11 @@ Key controls:
 - `InpFlatMonthLiquidityReclaimTargetUseEqualLevels=true`
 - `InpFlatMonthLiquidityReclaimTargetUsePreviousDay=true`
 - `InpFlatMonthLiquidityReclaimTargetUsePreviousWeek=false`
+- `InpFlatMonthLiquidityReclaimTargetUseSessionRange=false`
+- `InpFlatMonthLiquidityReclaimTargetSessionLookbackHours=8`
+- `InpFlatMonthLiquidityReclaimTargetUseAsianRange=false`
+- `InpFlatMonthLiquidityReclaimRequireForwardClearance=false`
+- `InpFlatMonthLiquidityReclaimMinClearanceATR=0.90`
 - `InpFlatMonthLiquidityReclaimMinTargetATR=0.80`
 - `InpFlatMonthLiquidityReclaimMaxTargetATR=2.40`
 - `InpFlatMonthLiquidityReclaimAllowRecentRetest=false`
@@ -91,13 +97,15 @@ Offline validation package builder:
   - `fmlr_vwap_discovery`
   - `fmlr_liquidity_target`
   - `fmlr_recent_retest`
-- Windows prepared: 12 weak/flat/control windows from 2024-2026, now `72` configs total.
+  - `fmlr_session_target`
+- Windows prepared: 12 weak/flat/control windows from 2024-2026, now `84` configs total.
 
 Compact-source safeguard:
 
 - Required FMLR inputs are preserved as optimizer-visible `input` values.
 - The forward-liquidity target controls are preserved for the `fmlr_liquidity_target` profile.
 - The recent-sweep retest controls are preserved for the `fmlr_recent_retest` profile.
+- The session/Asian forward-clearance controls are preserved for the `fmlr_session_target` profile.
 - Unrelated inactive knobs, including winner scale-in inputs, are converted to globals.
 - The smoke test enforces a maximum kept-input count of `450` before any MT5 compile/backtest attempt.
 
