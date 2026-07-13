@@ -138,7 +138,7 @@ Remaining gaps:
 - Local `Professional_XAUUSD_EA.mq5` is ahead of the GitHub source and contains newer default-off flat-month probe/wake-up infrastructure.
 - The local workspace is not currently a valid Git checkout because `.git` exists but is empty.
 
-Adaptive Reverse remains disabled.
+Adaptive Reverse remains disabled and is now source-quarantined against accidental stop-and-reverse research reuse.
 
 ## Latest Default-Off Research Code
 
@@ -150,13 +150,23 @@ Status:
 - Not promoted.
 - Not backtested yet.
 - Added to both `Professional_XAUUSD_EA.mq5` and `outputs/Professional_XAUUSD_EA.mq5`.
+- Offline package builder: `work/build_flat_month_liquidity_reclaim_probe_package.ps1`.
+- Latest default-off addition: optional FMLR forward-liquidity target/recent-sweep retest controls and `fmlr_liquidity_target` / `fmlr_recent_retest` probe profiles.
+- Compact-source prep: `work/prepare_flat_month_liquidity_reclaim_compact_source.ps1`.
 - Source smoke: `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`.
+- Package-builder smoke: `FLAT_MONTH_LIQUIDITY_RECLAIM_PROBE_PACKAGE_SMOKE_PASS`.
+- Compact-source smoke: `FLAT_MONTH_LIQUIDITY_RECLAIM_COMPACT_SOURCE_SMOKE_PASS`.
+- Adaptive Reverse quarantine smoke: `ADAPTIVE_REVERSE_QUARANTINE_SMOKE_PASS`.
 - MT5 local safety audit: `PASS 39 / 39`.
 - Compile/backtest: pending while `work/MT5_LOCAL_LAUNCH_DISABLED.lock` remains active.
 
 Research note:
 
 `research/2026-07-13-flat-month-liquidity-reclaim-lane-note.md`
+
+Adaptive Reverse quarantine note:
+
+`research/2026-07-13-adaptive-reverse-quarantine-note.md`
 
 ## Latest Rejected Probes
 
