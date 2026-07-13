@@ -129,6 +129,66 @@ Adaptive Reverse remains disabled.
 
 ## Latest Rejected Probes
 
+Liquidity-stop extension variants were tested on 2026-07-12 and rejected.
+
+Summary:
+
+| Profile | Parsed | Active Windows | Zero-Trade Windows | Total Net | Losing Windows | Total Trades | Worst Equity DD % |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `lowatr_current` | `12 / 12` | `3` | `9` | `+508.07` | `0` | `6` | `30.9408` |
+| `lstop_cluster` | `12 / 12` | `3` | `9` | `+387.68` | `0` | `5` | `31.7511` |
+| `lstop_cluster_pocket` | `12 / 12` | `3` | `9` | `+122.50` | `0` | `5` | `29.0642` |
+| `lstop_prevday` | `12 / 12` | `2` | `10` | `-90.55` | `1` | `2` | `16.4294` |
+
+Decision:
+
+Do not promote. The current base liquidity-aware structure stop is already active and remains better than the extra cluster / previous-day / pocket extensions.
+
+Research note:
+
+`research/2026-07-12-liquidity-stop-extension-probe-note.md`
+
+Flat-month wake-up and flat-month probe-mode reality checks were tested on 2026-07-12 and rejected.
+
+Summary:
+
+| Profile | Parsed | Active Windows | Zero-Trade Windows | Total Net | Losing Windows | Total Trades | Worst Equity DD % |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `lowatr_current` | `12 / 12` | `3` | `9` | `+508.07` | `0` | `6` | `30.9408` |
+| `fmw_wake_strict` | `12 / 12` | `3` | `9` | `+508.07` | `0` | `6` | `30.9408` |
+| `fmw_wake_balanced` | `12 / 12` | `3` | `9` | `+508.07` | `0` | `6` | `30.9408` |
+| `fmw_stale_elite` | `12 / 12` | `3` | `9` | `+508.07` | `0` | `6` | `30.9408` |
+| `fmp_strict_low_risk` | `12 / 12` | `3` | `9` | `+453.17` | `0` | `6` | `30.9408` |
+| `fmp_quality_ramp` | `12 / 12` | `3` | `9` | `+453.17` | `0` | `6` | `30.9408` |
+| `fmp_tiny_discovery` | `12 / 12` | `2` | `10` | `+444.02` | `0` | `5` | `30.9408` |
+
+Decision:
+
+Do not promote. Wake-up tied current; probe-mode reduced existing winners and did not create useful new flat-month trades.
+
+Research notes:
+
+- `research/2026-07-12-flat-month-wakeup-probe-note.md`
+- `research/2026-07-12-flat-month-probe-mode-reality-note.md`
+
+Flat-month micro-reversion expansion was tested on 2026-07-12 and rejected.
+
+Summary:
+
+| Profile | Parsed | Active Windows | Zero-Trade Windows | Total Net | Losing Windows | Total Trades | Worst Equity DD % |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `lowatr_current` | `12 / 12` | `3` | `9` | `+508.07` | `0` | `6` | `30.9408` |
+| `fmr_expand_strict` | `12 / 12` | `4` | `8` | `+484.43` | `1` | `7` | `30.9408` |
+| `fmr_expand_soft` | `12 / 12` | `5` | `7` | `+477.12` | `2` | `8` | `30.9408` |
+
+Decision:
+
+Do not promote. The expanded candidates increased activity, but the added trades were losers in `2025_04` and `2026_01`.
+
+Research note:
+
+`research/2026-07-12-flat-month-micro-reversion-expansion-probe-note.md`
+
 Flat-month breakout structural and activation probes were tested on 2026-07-12 and rejected.
 
 Summary:
