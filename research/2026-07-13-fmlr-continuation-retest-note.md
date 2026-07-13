@@ -56,13 +56,13 @@ Important settings:
 - `InpFlatMonthLiquidityReclaimUseStopClusterBuffer=true`
 - `InpFlatMonthLiquidityReclaimUseStopPocketShift=true`
 
-The continuation-retest profile remains one of the active FMLR probe profiles. After the compression-breakout follow-up, the offline package now prepares 13 profiles across 12 windows, or `156` total configs.
+The continuation-retest profile remains one of the active FMLR probe profiles. After the session-range breakout follow-up, the offline package now prepares 14 profiles across 12 windows, or `168` total configs.
 
 ## Verification
 
 Completed local checks:
 
-- `work/build_flat_month_liquidity_reclaim_probe_package.ps1`: latest package build prepared `156` configs
+- `work/build_flat_month_liquidity_reclaim_probe_package.ps1`: latest package build prepared `168` configs
 - `work/test_price_action_strategy_modules.ps1`: `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`
 - `work/test_flat_month_liquidity_reclaim_probe_package.ps1`: `FLAT_MONTH_LIQUIDITY_RECLAIM_PROBE_PACKAGE_SMOKE_PASS`
 - `work/test_flat_month_liquidity_reclaim_compact_source.ps1`: `FLAT_MONTH_LIQUIDITY_RECLAIM_COMPACT_SOURCE_SMOKE_PASS`
@@ -86,3 +86,7 @@ MT5 compile/backtest remains pending because `work/MT5_LOCAL_LAUNCH_DISABLED.loc
 Follow-up note:
 
 `research/2026-07-13-fmlr-compression-breakout-note.md`
+
+Latest follow-up note:
+
+`research/2026-07-13-fmlr-session-range-breakout-note.md`
