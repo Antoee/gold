@@ -16,6 +16,7 @@ This change adds a different entry mechanism instead of only relaxing old filter
 - Optionally require order-flow confirmation.
 - Use a direct structural stop beyond the swept liquidity level.
 - Optionally target the nearest opposing forward liquidity instead of a fixed ATR take-profit.
+- Optionally trade a retest after a recent sweep/reclaim instead of requiring the sweep to happen only on the immediately previous candle.
 
 ## New Lane
 
@@ -52,6 +53,11 @@ Key controls:
 - `InpFlatMonthLiquidityReclaimTargetUsePreviousWeek=false`
 - `InpFlatMonthLiquidityReclaimMinTargetATR=0.80`
 - `InpFlatMonthLiquidityReclaimMaxTargetATR=2.40`
+- `InpFlatMonthLiquidityReclaimAllowRecentRetest=false`
+- `InpFlatMonthLiquidityReclaimRetestLookbackBars=5`
+- `InpFlatMonthLiquidityReclaimRetestToleranceATR=0.18`
+- `InpFlatMonthLiquidityReclaimRetestTolerancePoints=40.0`
+- `InpFlatMonthLiquidityReclaimRetestMinBodyPercent=20.0`
 
 Month-filter bypass controls were also added but default off:
 
@@ -84,12 +90,14 @@ Offline validation package builder:
   - `fmlr_balanced`
   - `fmlr_vwap_discovery`
   - `fmlr_liquidity_target`
-- Windows prepared: 12 weak/flat/control windows from 2024-2026, now `60` configs total.
+  - `fmlr_recent_retest`
+- Windows prepared: 12 weak/flat/control windows from 2024-2026, now `72` configs total.
 
 Compact-source safeguard:
 
 - Required FMLR inputs are preserved as optimizer-visible `input` values.
 - The forward-liquidity target controls are preserved for the `fmlr_liquidity_target` profile.
+- The recent-sweep retest controls are preserved for the `fmlr_recent_retest` profile.
 - Unrelated inactive knobs, including winner scale-in inputs, are converted to globals.
 - The smoke test enforces a maximum kept-input count of `450` before any MT5 compile/backtest attempt.
 
@@ -103,6 +111,10 @@ Not yet completed:
 Reason:
 
 `work/MT5_LOCAL_LAUNCH_DISABLED.lock` remains active to prevent MT5 or MetaEditor from stealing focus. Do not override that lock unless hidden/external MT5 execution is explicitly being used and focus risk is accepted.
+
+GitHub sync caveat:
+
+This note is safe to publish as a dashboard update, but the full local EA source and long package-builder scripts may still be ahead of GitHub until source publishing is repaired. Treat this note as the current local research status, not proof that every implementation file on GitHub has already caught up.
 
 ## Decision
 
