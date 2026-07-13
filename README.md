@@ -6,23 +6,48 @@ No martingale. No grid. No averaging down. No recovery sizing. Risk control stay
 
 ## Latest Status
 
-Last updated: 2026-07-13 after clarifying profit tables and annualized return math.
+Last updated: 2026-07-13 after adding a conservative trade-readiness candidate and FMLR tick-speed reclaim probe.
 
 Use this README as the GitHub status board. The local workspace is still the research source of truth because this Codex folder is not a valid Git checkout, but this page tracks the current local research state.
 
 ## Current Answer
 
 - Current stability-best research profile: `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`.
+- Trade-readiness candidate: `outputs/CANDIDATE_TRADE_READINESS_PROFILE.set`.
+- Trade-readiness profile SHA-256: `B683100CA5BE912A9A848C3F715A67E4705473B00DEEF4B9070AE02BFDB708C5`.
+- Trade-readiness status: demo/forward-test only, not real-money approved.
 - Live trading status: not live-ready.
 - Latest promoted idea: Low-ATR ISLP trades require order-flow confirmation.
-- Latest local source hash: `0289641ABE4F1B93FB69D81FF098FFBAA28FFA14478282ACD0BCA4B3A1CBAFC3`.
+- Latest local source hash: `B6AA1915D2CA7483B1066C227F2506D7A85756D918820FF1100BAF66B0FBDBBE`.
 - Latest source manifest: `outputs/SOURCE_MANIFEST.md`.
-- Latest package/profile refinement: added isolated `fmlr_sweep_unlimited_runner` validation profile.
-- Active full FMLR validation package: `444` Model4 configs, `37` profiles.
-- Active fast FMLR screen: `144` Model4 configs, `24` profiles.
-- MT5 compile/backtest for the new FMLR package: pending. No new profit result yet.
+- Latest package/profile refinement: added isolated `fmlr_tick_speed_reclaim` validation profile.
+- Active full FMLR validation package: `456` Model4 configs, `38` profiles.
+- Active fast FMLR screen: `150` Model4 configs, `25` profiles.
+- MT5 compile/backtest for the new FMLR package and readiness candidate: pending. No new profit result yet.
 - MT5 local launch lock: still active to prevent popups/focus stealing.
 - GitHub Actions: manual-only; heavy tester runs should stay local, not in Actions.
+
+## Trade-Readiness Candidate
+
+The readiness candidate starts from the current stability-best profile but tightens risk and execution controls:
+
+- `InpRiskPercent=0.50`
+- `InpMaxEffectiveRiskPercent=0.50`
+- `InpMaxOpenRiskPercent=0.75`
+- `InpMaxPositionLots=0.05`
+- `InpMaxDailyLossPercent=0.75`
+- `InpMaxWeeklyLossPercent=2.00`
+- `InpMaxMonthlyLossPercent=4.00`
+- `InpMaxEquityDrawdownPercent=10.00`
+- `InpMaxDailyLossCount=1`
+- `InpMaxConsecutiveLosses=2`
+- `InpCooldownMinutesAfterLoss=240`
+- Adaptive Reverse disabled
+- FMLR research lane disabled
+- tick-speed research input disabled
+- spread, margin, drawdown, loss-scaling, and profit-giveback guards enabled
+
+This is safer than the research profile, but it still needs fresh Model4 real-tick backtests, full report exports, monthly/quarterly validation, broker-specific stress checks, Monte Carlo, and demo forward testing before real money.
 
 ## Screenshot Clarification
 
@@ -43,43 +68,20 @@ Return math below assumes a `$1,000` starting balance and uses CAGR over `2024.0
 
 The bot is still a research project. The current evidence is good enough to keep testing, not good enough to fund seriously.
 
-## Dec-ISLP-Off Comparison
-
-These `total` rows match the second screenshot. They are sampled-window scores, so yearly percent is not applicable.
-
-| Model | Previous No-M1-Shock | Dec-ISLP-Off | Annualized % | Decision |
-| --- | ---: | ---: | --- | --- |
-| Model0 total | `+$4,495.93` | `+$8,768.34` | N/A, sampled score | Guard wins |
-| Model1 total | `+$14,739.08` | `+$15,361.76` | N/A, sampled score | Guard wins |
-| Model2 total | `+$17,890.63` | `+$15,361.76` | N/A, sampled score | Previous wins |
-| Model4 real-tick total | `+$4,075.62` | `+$7,469.00` | N/A, sampled score | Guard wins |
-
-Continuous-window comparison from the same Dec-ISLP-Off validation:
-
-| Model | Previous No-M1-Shock | Previous CAGR/yr | Dec-ISLP-Off | Dec CAGR/yr |
-| --- | ---: | ---: | ---: | ---: |
-| Model0 continuous | `+$1,288.93` | `+38.78%/yr` | `+$5,386.54` | `+108.29%/yr` |
-| Model1 continuous | `+$9,753.58` | `+155.98%/yr` | `+$10,127.76` | `+159.47%/yr` |
-| Model2 continuous | `+$12,054.55` | `+176.39%/yr` | `+$10,127.76` | `+159.47%/yr` |
-| Model4 real-tick continuous | `+$1,288.93` | `+38.78%/yr` | `+$4,507.51` | `+96.43%/yr` |
-
 ## Latest Local Work
 
-The local workspace now has a larger default-off FMLR research surface. The newest profit-capture change lets clean non-structural sweep-runner setups use the existing no-fixed-TP runner only when the setup still proves forward clearance, runner-stretch evidence, planned RR, spread-adjusted RR, and FMLR structure trailing.
+The local source now has a default-off FMLR tick-speed reclaim path. It can tag `FMLR tick-speed reclaim` when an existing sweep/reclaim context is followed by a directional tick-speed impulse through `InpUseTickSpeedImpulse`.
 
-The latest isolated package profile is `fmlr_sweep_unlimited_runner`. It tests the new no-fixed-TP sweep-runner payoff path without requiring sweep-displacement BOS.
-
-The source manifest records the current local `.mq5` hash, size, line count, active FMLR package counts, and smoke-test status so GitHub can still track the real local research state while full Git push access is unavailable.
+The latest isolated package profile is `fmlr_tick_speed_reclaim`. It is not promoted and has not been MT5 backtested.
 
 ## Validation Passed Locally
-
-These checks passed locally after the `fmlr_sweep_unlimited_runner` package refresh:
 
 - `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`
 - `EA_SOURCE_ARTIFACT_SYNC_SMOKE_PASS`
 - `FLAT_MONTH_LIQUIDITY_RECLAIM_PROBE_PACKAGE_SMOKE_PASS`
 - `FLAT_MONTH_LIQUIDITY_RECLAIM_FAST_PROBE_PACKAGE_SMOKE_PASS`
 - `FLAT_MONTH_LIQUIDITY_RECLAIM_COMPACT_SOURCE_SMOKE_PASS`
+- `TRADE_READINESS_PROFILE_SMOKE_PASS`
 - `ADAPTIVE_REVERSE_QUARANTINE_SMOKE_PASS`
 - `MT5_HIDDEN_LAUNCHER_LOCK_SMOKE_PASS`
 - MT5 local safety audit: `PASS 39 / 39`
@@ -90,8 +92,8 @@ Cleanup dry-run after the package refresh found `0` active generated cleanup can
 
 1. Do not run heavy MT5 tests in GitHub Actions.
 2. Keep the MT5 launch lock active until the focus-stealing issue is solved.
-3. Run the 144-config fast FMLR screen locally first.
-4. Only run the full 444-config FMLR package if a candidate beats `lowatr_current` without adding red control windows.
+3. Run the trade-readiness candidate in local hidden Model4 real-tick tests when MT5 launch safety is acceptable.
+4. Run the 150-config fast FMLR screen locally before the full 456-config FMLR package.
 5. Extract full trade stats: drawdown, trades, profit factor, expected payoff, average winner/loss, largest loss, consecutive losses, exposure, spread, swap, commission, and slippage.
 6. Validate with older data, walk-forward, Monte Carlo, and broker variation before any live use.
 
@@ -105,20 +107,7 @@ That means this GitHub update refreshes lightweight dashboard/evidence files. Th
 
 - `outputs/CURRENT_RESEARCH_BEST_PROFILE.md`
 - `outputs/SOURCE_MANIFEST.md`
+- `research/2026-07-13-trade-readiness-candidate-note.md`
+- `research/2026-07-13-fmlr-tick-speed-reclaim-note.md`
 - `research/2026-07-13-fmlr-sweep-unlimited-runner-note.md`
-- `research/2026-07-13-fmlr-sweep-runner-profile-note.md`
-- `research/2026-07-13-repository-cleanup-refresh-note.md`
 - `research/2026-07-13-flat-month-liquidity-reclaim-lane-note.md`
-
-## Rules For Future Updates
-
-When Codex changes the bot or runs meaningful tests, update this README with:
-
-1. Current best profile, or say the old best still stands.
-2. Exact tester model: `Model=0`, `Model=1`, `Model=2`, or `Model=4`.
-3. Exact date window.
-4. Net profit, worst window, losing-window count, and failures.
-5. Evidence CSV or research note.
-6. Promotion decision: promoted, rejected, or probe only.
-
-If a run returns `NO_REPORT`, it does not count as proof.
