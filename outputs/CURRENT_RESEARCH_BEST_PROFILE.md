@@ -151,7 +151,7 @@ Status:
 - Not backtested yet.
 - Added to both `Professional_XAUUSD_EA.mq5` and `outputs/Professional_XAUUSD_EA.mq5`.
 - Offline package builder: `work/build_flat_month_liquidity_reclaim_probe_package.ps1`.
-- Latest default-off addition: optional FMLR forward-liquidity target, recent-sweep retest, continuation-retest, compression-breakout, session-range breakout, session/Asian target, imbalance-retest, swing-target, phase-aligned regime gate, forward-clearance, and structural stop cluster/pocket controls with `fmlr_liquidity_target`, `fmlr_recent_retest`, `fmlr_continuation_retest`, `fmlr_compression_breakout`, `fmlr_session_range_breakout`, `fmlr_session_target`, `fmlr_imbalance_retest`, `fmlr_swing_target`, `fmlr_phase_aligned`, and `fmlr_structural_stop` probe profiles. The offline FMLR package now prepares `168` configs.
+- Latest default-off addition: optional FMLR forward-liquidity target, recent-sweep retest, continuation-retest, compression-breakout, session-range breakout, range-failure reclaim, session/Asian target, imbalance-retest, swing-target, phase-aligned regime gate, forward-clearance, and structural stop cluster/pocket controls with `fmlr_liquidity_target`, `fmlr_recent_retest`, `fmlr_continuation_retest`, `fmlr_compression_breakout`, `fmlr_session_range_breakout`, `fmlr_range_failure_reclaim`, `fmlr_session_target`, `fmlr_imbalance_retest`, `fmlr_swing_target`, `fmlr_phase_aligned`, and `fmlr_structural_stop` probe profiles. The offline FMLR package now prepares `180` configs.
 - Compact-source prep: `work/prepare_flat_month_liquidity_reclaim_compact_source.ps1`.
 - Source smoke: `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`.
 - Package-builder smoke: `FLAT_MONTH_LIQUIDITY_RECLAIM_PROBE_PACKAGE_SMOKE_PASS`.
@@ -179,6 +179,10 @@ Compression-breakout note:
 Session-range breakout note:
 
 `research/2026-07-13-fmlr-session-range-breakout-note.md`
+
+Range-failure reclaim note:
+
+`research/2026-07-13-fmlr-range-failure-reclaim-note.md`
 
 Adaptive Reverse quarantine note:
 
