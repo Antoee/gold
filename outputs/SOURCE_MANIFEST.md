@@ -57,7 +57,7 @@ Money-ready/demo candidate:
 - Passing gates: `5`
 - Pending gates: `8`
 - Failed gates: `0`
-- Reproducibility bundle: `PASS`, `49` pass / `0` pending / `0` fail
+- Reproducibility bundle: `PASS`, `52` pass / `0` pending / `0` fail
 - Money-ready refresh: `PENDING`, `4` pass / `10` pending / `0` fail
 
 Remaining proof blockers:
