@@ -4,7 +4,9 @@ param(
    [string]$OutQueueManifest = "outputs\RANGE_ELITE_RISK_SHAPE_PROBE_QUEUE.csv",
    [string]$OutPackageManifest = "outputs\RANGE_ELITE_RISK_SHAPE_PROBE_PACKAGE_MANIFEST.csv",
    [string]$OutMarkdown = "outputs\RANGE_ELITE_RISK_SHAPE_PROBE_PACKAGE.md",
-   [int]$Model = 1
+   [int]$Model = 1,
+   [string[]]$CandidateFilter = @(),
+   [switch]$Include2025
 )
 
 Set-StrictMode -Version Latest
@@ -96,6 +98,11 @@ $windows = @(
    [pscustomobject]@{ Window = "2024_full"; Short = "2024"; From = "2024.01.01"; To = "2024.12.31"; Role = "profit_control" },
    [pscustomobject]@{ Window = "2026_ytd"; Short = "2026ytd"; From = "2026.01.01"; To = "2026.07.12"; Role = "high_dd_recent" }
 )
+if($Include2025) {
+   $windows = @($windows[0..3]) +
+              [pscustomobject]@{ Window = "2025_full"; Short = "2025"; From = "2025.01.01"; To = "2025.12.31"; Role = "profit_control" } +
+              @($windows[4..($windows.Count - 1)])
+}
 
 $candidates = @(
    [pscustomobject]@{
@@ -205,8 +212,63 @@ $candidates = @(
          InpDiagnosticFallbackBlockLiquiditySweep = "true"
          InpMayRiskMultiplier = "1.00"
       }
+   },
+   [pscustomobject]@{
+      Name = "re_dgf_late16_pure"
+      Thesis = "Block pure diagnostic-fallback entries at or after hour 16 while keeping stronger confirmed setups."
+      Overrides = @{
+         InpUseDiagnosticFallbackLateSessionGuard = "true"
+         InpDiagnosticFallbackLateSessionStartHour = "16"
+         InpDiagnosticFallbackLateSessionPureOnly = "true"
+      }
+   },
+   [pscustomobject]@{
+      Name = "re_dgf_late15_pure"
+      Thesis = "Stricter pure diagnostic-fallback late-session guard starting at hour 15."
+      Overrides = @{
+         InpUseDiagnosticFallbackLateSessionGuard = "true"
+         InpDiagnosticFallbackLateSessionStartHour = "15"
+         InpDiagnosticFallbackLateSessionPureOnly = "true"
+      }
+   },
+   [pscustomobject]@{
+      Name = "re_may140_late16_pure"
+      Thesis = "Combine smaller May risk with the hour-16 pure diagnostic-fallback guard."
+      Overrides = @{
+         InpMayRiskMultiplier = "1.40"
+         InpUseDiagnosticFallbackLateSessionGuard = "true"
+         InpDiagnosticFallbackLateSessionStartHour = "16"
+         InpDiagnosticFallbackLateSessionPureOnly = "true"
+      }
+   },
+   [pscustomobject]@{
+      Name = "re_may140_late15_pure"
+      Thesis = "Combine smaller May risk with the stricter hour-15 pure diagnostic-fallback guard."
+      Overrides = @{
+         InpMayRiskMultiplier = "1.40"
+         InpUseDiagnosticFallbackLateSessionGuard = "true"
+         InpDiagnosticFallbackLateSessionStartHour = "15"
+         InpDiagnosticFallbackLateSessionPureOnly = "true"
+      }
    }
 )
+
+if($CandidateFilter.Count -gt 0) {
+   $wanted = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+   foreach($name in $CandidateFilter) {
+      foreach($part in ([string]$name -split ',')) {
+         if(![string]::IsNullOrWhiteSpace($part)) {
+            $wanted.Add($part.Trim()) | Out-Null
+         }
+      }
+   }
+   $candidates = @($candidates | Where-Object { $wanted.Contains($_.Name) })
+   $selectedCandidateNames = @($candidates | ForEach-Object { $_.Name })
+   $missingCandidates = @($wanted | Where-Object { $selectedCandidateNames -notcontains $_ })
+   if($missingCandidates.Count -gt 0) {
+      throw "CandidateFilter requested unknown candidate(s): $($missingCandidates -join ', ')"
+   }
+}
 
 $baseSet = Resolve-RepoPath $BaseSetPath
 if(!(Test-Path -LiteralPath $baseSet)) {

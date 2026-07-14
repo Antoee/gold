@@ -1080,9 +1080,6 @@ input bool            InpDiagnosticFallbackRequireStructure = false;
 input bool            InpDiagnosticFallbackRequireLiquidity = false;
 bool            InpDiagnosticFallbackRequireExecution = true;
 input bool            InpDiagnosticFallbackBlockLiquiditySweep = false;
-input bool            InpUseDiagnosticFallbackLateSessionGuard = false;
-input int             InpDiagnosticFallbackLateSessionStartHour = 16;
-input bool            InpDiagnosticFallbackLateSessionPureOnly = true;
 bool            InpUseDiagnosticFallbackSpreadGuard = false;
 double          InpDiagnosticFallbackMaxSpreadPoints = 0.0;
 double          InpDiagnosticFallbackMaxSpreadATRPercent = 0.0;
@@ -14916,18 +14913,6 @@ public:
       {
          diagnosticFallbackBase = false;
          signal.reasons += "Diagnostic fallback liquidity sweep reject;";
-      }
-      if(diagnosticFallbackBase && InpUseDiagnosticFallbackLateSessionGuard)
-      {
-         MqlDateTime diagnosticFallbackTime;
-         TimeToStruct(TimeCurrent(), diagnosticFallbackTime);
-         bool pureDiagnosticFallback = (signal.confirmations <= 0);
-         if(diagnosticFallbackTime.hour >= MathMax(0, MathMin(23, InpDiagnosticFallbackLateSessionStartHour)) &&
-            (!InpDiagnosticFallbackLateSessionPureOnly || pureDiagnosticFallback))
-         {
-            diagnosticFallbackBase = false;
-            signal.reasons += "Diagnostic fallback late-session reject;";
-         }
       }
       bool diagnosticFallbackSpreadAllowed = !diagnosticFallbackBase ||
                                              DiagnosticFallbackSpreadAllows(atr, diagnosticFallbackSpreadReason);
