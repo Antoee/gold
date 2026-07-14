@@ -1,0 +1,9 @@
+Area,Status,Actual,Notes
+best-profile,UNCHANGED,"Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow","No newly validated best profile."
+first-pass-reports,PENDING,"routed=0; missing=4; invalid=0","No first-pass MT5 reports found in outputs/returned_mt5_reports/first_pass_inbox."
+conservative-validation-reports,PENDING,"routed=0; missing=63; invalid=0","Full validation and broker-proxy reports are still missing."
+compile-proof,PENDING,"routed=0; missing=2; invalid=0; waiting=1","Current-source compile log and matching source copy are still missing; one stale prior compile row is waiting."
+live-evidence,PENDING,"routed=0; missing=3; invalid=0","Forward/demo, second-broker, and trade/deal evidence are still missing."
+money-ready-refresh,PENDING,"pass=5; pending=10; fail=0","Evidence gates are cleanly pending, not failed."
+smoke-tests,PASS,"first-pass routing; conservative routing; compile routing; hidden-runner lock; static safety; reproducibility bundle; money-ready refresh","All checks completed without launching MT5."
+process-check,PASS,"NO_MT5_PROCESSES","No MT5, MetaEditor, or metatester processes were running after the check."
