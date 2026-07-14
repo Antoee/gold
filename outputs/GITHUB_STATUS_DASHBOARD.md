@@ -1,6 +1,6 @@
 # GitHub Status Dashboard
 
-Last updated: 2026-07-14 UTC after strict returned-report routing, current-source money-ready audit refresh, and local reproducibility-bundle rebuild.
+Last updated: 2026-07-14 UTC after strict returned-report routing, current-source money-ready audit refresh, local reproducibility-bundle rebuild, and required-artifact sync-package generation.
 
 ## Short Answer
 
@@ -10,7 +10,7 @@ The current stability-best research profile is still:
 
 `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
 
-The newer conservative trade-ready profile and FMLR research lanes are prepared, but they are not proven better yet because the required MT5 reports and live-readiness evidence are still missing. The latest local change is a safety/readiness improvement, not a new profit result.
+The newer conservative trade-ready profile and FMLR research lanes are prepared, but they are not proven better yet because the required MT5 reports and live-readiness evidence are still missing. The latest local change is a reproducibility/readiness improvement, not a new profit result.
 
 ## Current Best Evidence
 
@@ -26,7 +26,7 @@ Return math assumes a `$1,000` starting balance over `2024.01.01` to `2026.07.12
 ## Money-Ready Status
 
 - Overall money-ready refresh: `PENDING`
-- Passing areas: `4`
+- Passing areas: `5`
 - Pending areas: `10`
 - Failed areas: `0`
 - Money-ready scorecard: `NOT_READY_PENDING_EVIDENCE`
@@ -37,9 +37,10 @@ Return math assumes a `$1,000` starting balance over `2024.01.01` to `2026.07.12
 ## GitHub Publication Sync
 
 - Overall: `PENDING`
-- Required source/profile artifacts verified on GitHub: `2 / 7`; the source manifest and current-best note now match the connector-published text docs, while the exact EA source and profile artifacts remain pending
+- Required source/profile artifacts verified on GitHub: `2 / 7`; the source manifest and current-best note match the connector-published text docs, while the exact EA source and profile artifacts remain pending
 - Required pending artifacts: `5`
 - Required failed artifacts: `0`
+- Exact local upload package: `outputs/GITHUB_REQUIRED_ARTIFACT_SYNC_PACKAGE.md`
 - Evidence file: `outputs/GITHUB_PUBLICATION_SYNC.md`
 
 The source/profile publication gate is still blocking live-readiness because the local folder is not a valid git checkout and the two large EA source paths are not yet exact connector-verified matches. This is a reproducibility blocker, not a trading-profit result.
@@ -51,7 +52,7 @@ The current conservative candidate is not live-ready and should remain paper/dem
 - Local MT5 safety audit: `PASS`, `43 / 43`
 - Static repo safety audit: `PASS`, `25` checks
 - Static MQL compile preflight: `PASS`, `29` checks / `1802` inputs
-- Static Safety workflow missing-script fix: `work/static_repo_safety_audit.py` and `work/static_mql_compile_preflight.py` now exist locally, pass locally, and have been published to GitHub
+- Required artifact sync package smoke: `PASS`, 5 required artifacts, unsafe profile rows `0`
 - GitHub publication sync smoke: `PASS`
 - Trade-ready live-readiness smoke: `PASS`
 - FMLR package smoke: `PASS`
@@ -102,6 +103,7 @@ The local workspace now has a stricter offline evidence system:
 - trade-quality and Monte Carlo gates
 - forward/demo and second-broker evidence gates
 - local reproducibility bundle
+- exact required-artifact sync package for remaining GitHub source/profile publication
 - evidence handoff package
 - four parallel first-pass lanes for faster testing
 
@@ -137,7 +139,7 @@ Required before any live-money review:
 Current local reproducibility bundle:
 
 - Status: `PASS`
-- Passing rows: `56`
+- Passing rows: `60`
 - Zip SHA-256: recorded in `outputs/TRADE_READY_REPRODUCIBILITY_BUNDLE.md`
 - Reminder: this is a local hash freeze only; it does not clear the GitHub/source-publication sync gate.
 
