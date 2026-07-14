@@ -20,8 +20,8 @@ At least one required artifact is missing, stale, or inaccessible through the ra
 | trade-ready-conservative-profile | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | `621F54A4BFE6` | Conservative profile used by live-readiness gates. |
 | money-ready-profile | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | `0CF800571C22` | Money-ready demo/forward-test candidate profile. |
 | trade-readiness-alias-profile | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | `0CF800571C22` | Alias profile expected to match money-ready profile. |
-| source-manifest | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | `5EDCB8CCA8AC` | Source hash/status manifest. |
-| current-research-best | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | `F9724532D70C` | Current promoted research profile status. |
+| source-manifest | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | `1BC9D0708519` | Source hash/status manifest. |
+| current-research-best | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | `D36557E328BE` | Current promoted research profile status. |
 
 ## Meaning
 
