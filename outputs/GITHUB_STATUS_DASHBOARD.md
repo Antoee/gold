@@ -1,6 +1,6 @@
 # GitHub Status Dashboard
 
-Last updated: 2026-07-14 UTC after validation package-shape gate hardening, annualized-return/CAGR report metrics, strict returned-report routing, current-source money-ready audit refresh, local reproducibility-bundle rebuild, source-artifact upload-plan generation, first-pass hidden-runner plan generation, and hard-lock runner smoke testing.
+Last updated: 2026-07-14 UTC after annualized-return/CAGR report metrics, strict returned-report routing, current-source money-ready audit refresh, validation package-shape gate generation, local reproducibility-bundle rebuild, required-artifact sync-package generation, source-artifact upload-plan generation, first-pass hidden-runner plan generation, and hard-lock runner smoke testing.
 
 ## Short Answer
 
@@ -10,7 +10,7 @@ The current stability-best research profile is still:
 
 `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
 
-The newer conservative trade-ready profile and FMLR research lanes are prepared, but they are not proven better yet because the required MT5 reports and live-readiness evidence are still missing. The latest change is validation discipline: full validation now fails malformed or reduced packages before profit can be trusted.
+The newer conservative trade-ready profile and FMLR research lanes are prepared, but they are not proven better yet because the required MT5 reports and live-readiness evidence are still missing. The latest local change is a safety/readiness improvement, not a new profit result.
 
 ## Current Best Evidence
 
@@ -44,30 +44,33 @@ Return math assumes a `$1,000` starting balance over `2024.01.01` to `2026.07.12
 - Exact local upload package: `outputs/GITHUB_REQUIRED_ARTIFACT_SYNC_PACKAGE.md`
 - Source upload plan/helper: `outputs/GITHUB_SOURCE_ARTIFACT_UPLOAD_PLAN.md`
 
-The source/profile publication gate is still blocking live-readiness because the two large EA source paths are not yet exact connector-verified matches. The profile artifacts are connector-verified. The source upload plan is `READY`: root EA source would be updated and mirrored output EA source would be created when a noninteractive token is available. This is a reproducibility blocker, not a trading-profit result.
+The source/profile publication gate is still blocking live-readiness because the local folder is not a valid git checkout and the two large EA source paths are not yet exact connector-verified matches. The profile artifacts are now connector-verified. The source upload plan is `READY`: the stale root EA source would be updated and the missing mirrored output EA source would be created when a noninteractive token is available. This is a reproducibility blocker, not a trading-profit result.
 
 The current conservative candidate is not live-ready and should remain paper/demo only.
 
 ## Latest Background Check
 
-- Validation package-shape gate: `PASS`, required `53` rows are present (`4` fast, `4` exact, `11` quarterly, `31` monthly, `3` stress)
-- Validation package-shape smoke: `PASS`; reduced manifests fail even when returned rows are profitable
 - Local MT5 safety audit: `PASS`, `43 / 43`
 - Static repo safety audit: `PASS`, `25` checks
 - Static MQL compile preflight: `PASS`, `29` checks / `1802` inputs
 - Report collector annualized return/CAGR smoke: `PASS`
 - Minimum continuous annualized-return/CAGR gate smoke: `PASS`
 - GitHub profile artifact sync: `PASS`, `3 / 3` profile artifacts connector-verified
+- Static Safety workflow missing-script fix: `work/static_repo_safety_audit.py` and `work/static_mql_compile_preflight.py` now exist locally, pass locally, and have been published to GitHub
 - GitHub publication sync smoke: `PASS`
+- Required artifact sync package smoke: `PASS`, `5` required artifacts, `0` unsafe profile rows
 - Source artifact upload plan smoke: `PASS`, root source `WOULD_UPDATE`, mirrored output source `WOULD_CREATE`
 - First-pass hidden runner plan smoke: `PASS`, current state `LOCKED`, `4` configs, `0` MT5 processes launched
 - First-pass hidden runner hard-lock smoke: `PASS`, accidental `-Run` exits before writing run outputs or launching MT5
 - Trade-ready live-readiness smoke: `PASS`
+- FMLR package smoke: `PASS`
 - Money-ready refresh smoke: `PASS`
 - Visible MT5/MetaEditor/Metatester/Git process check: clear
 - Current EA source hash: `5D148DAE2335F9037BDED3C9A82BD916C1FCFB6F43EE2EC5EAAE7E67384ED412`
 - First-pass active package: `4` fast Model1 configs for `trade_ready_conservative`, split into `4` window lanes
 - First-pass active profile hash: current conservative `825308011021`
+- First-pass comparison profile hash: current money-ready `553A967B5FCE` is available only when explicitly re-enabled
+- Stale first-pass hashes `621F54A4...` and `0CF80057...`: removed from active run packages
 
 ## Current Conservative Candidate
 
@@ -92,28 +95,37 @@ Risk shape:
 - `1.25%` monthly loss cap
 - `3.00%` equity drawdown cap
 - real-account approval fields disabled
-- trade-environment guard enabled
+- trade-environment guard enabled: stale quote, insufficient bars, invalid symbol spec, disabled/close-only trade mode, excessive stop/freeze levels, or missing tick value blocks new entries
 
 ## What Changed Locally
 
 The local workspace now has a stricter offline evidence system:
 
-- validation package-shape gate documented in `outputs/VALIDATION_PACKAGE_SHAPE_GATE.md`
 - current-source trade-environment guard and safety-gate checks
+- one-command refresh status
 - first-pass report routing
 - strict returned-report validation that rejects screenshots, balance-only snippets, and log-only rows
 - annualized return and CAGR fields in exported-report CSV/Markdown summaries
-- first-pass and full-validation decisions require minimum continuous annualized return and CAGR
-- full validation requires exact 53-row validation package shape before returned profit rows can be trusted
+- first-pass and full-validation decisions now require minimum continuous annualized return and CAGR
 - live-evidence routing
 - compile-evidence routing
 - conservative full-validation routing
+- validation package-shape gate
 - trade-quality and Monte Carlo gates
 - forward/demo and second-broker evidence gates
 - local reproducibility bundle
-- source-artifact upload plan/helper for the two remaining large EA source files
+- exact required-artifact sync package for source/profile publication
+- exact source-artifact upload plan/helper for the two remaining large EA source files
 - plan-only first-pass hidden runner guarded by the MT5 hard lock
 - hard-lock smoke test proving the first-pass hidden runner fails closed if `-Run` is requested while locked
+- evidence handoff package
+- four parallel first-pass lanes for faster testing
+
+Current first-pass package:
+
+- `4` configs total
+- split into `4` window-based lanes
+- each lane contains the selected `trade_ready_conservative` config for one window
 
 ## Next Required Evidence
 
@@ -143,8 +155,8 @@ Required before any live-money review:
 Current local reproducibility bundle:
 
 - Status: `PASS`
-- Passing rows: `72`
-- Zip SHA-256: `663A0008BC220CF6BA982941D5CD9B6AD1C5F8317AC13A52839E41E4404D0FFD`
+- Passing rows: `75`
+- Zip SHA-256: `4341D3B4A66FF31ED70E871DCAFE5CA4E2C3DC4899DD695EF80E8F5FFFD11446`
 - Reminder: this is a local hash freeze only; it does not clear the GitHub/source-publication sync gate.
 
 ## Why There Is No New Best On GitHub
