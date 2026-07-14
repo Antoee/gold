@@ -28,6 +28,7 @@ Generated offline. This does not launch MT5, MetaEditor, Git, or GitHub Actions.
 
 Run the `4` first-pass configs, export reports into `outputs\returned_mt5_reports\first_pass_inbox`, return compile proof into `outputs\returned_mt5_reports\compile_inbox`, then run `work\refresh_money_ready_status.ps1`.
 You can use `FIRST_PASS_PARALLEL_LANES.csv` to run those same first-pass checks as window-based chunks.
+For local hidden execution, use `work\run_first_pass_package_hidden.ps1` in plan mode first; `-Run` is guarded by the workspace MT5 unlock policy.
 Required exported MT5 report stats: net profit, profit factor, expected payoff, Sharpe ratio, profit trades (% of total) / win rate, total trades, maximal consecutive losses, balance/equity drawdown maximal with percent, and recovery factor.
 Screenshots, balance-only logs, and log-only profit rows are not enough for the strict trade-ready gate.
 Trade-log CSVs must include broad realized-R, spread, held-bars, and MFE/MAE coverage.
