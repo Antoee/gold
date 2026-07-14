@@ -2,112 +2,129 @@
 
 Professional-grade MetaTrader 5 Expert Advisor research project for XAUUSD / Gold.
 
-No martingale. No grid. No averaging down. No recovery sizing. Risk control stays above profit chasing.
+No martingale. No grid. No averaging down. No recovery sizing. Risk control stays above profit chasing. Heavy optimization and validation should run locally, hidden in the background, not in GitHub Actions.
 
 ## Latest Status
 
-Last updated: 2026-07-13 after adding a conservative trade-readiness candidate and FMLR tick-speed reclaim probe.
+Last updated: 2026-07-14 UTC.
 
-Use this README as the GitHub status board. The local workspace is still the research source of truth because this Codex folder is not a valid Git checkout, but this page tracks the current local research state.
+Short answer: there is no newly validated best profile yet.
 
-## Current Answer
+The current stability-best research profile is still:
 
-- Current stability-best research profile: `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`.
-- Trade-readiness candidate: `outputs/CANDIDATE_TRADE_READINESS_PROFILE.set`.
-- Trade-readiness profile SHA-256: `B683100CA5BE912A9A848C3F715A67E4705473B00DEEF4B9070AE02BFDB708C5`.
-- Trade-readiness status: demo/forward-test only, not real-money approved.
-- Live trading status: not live-ready.
-- Latest promoted idea: Low-ATR ISLP trades require order-flow confirmation.
-- Latest local source hash: `B6AA1915D2CA7483B1066C227F2506D7A85756D918820FF1100BAF66B0FBDBBE`.
-- Latest source manifest: `outputs/SOURCE_MANIFEST.md`.
-- Latest package/profile refinement: added isolated `fmlr_tick_speed_reclaim` validation profile.
-- Active full FMLR validation package: `456` Model4 configs, `38` profiles.
-- Active fast FMLR screen: `150` Model4 configs, `25` profiles.
-- MT5 compile/backtest for the new FMLR package and readiness candidate: pending. No new profit result yet.
-- MT5 local launch lock: still active to prevent popups/focus stealing.
-- GitHub Actions: manual-only; heavy tester runs should stay local, not in Actions.
+`Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
 
-## Trade-Readiness Candidate
+The newer conservative trade-ready profile and FMLR research lanes are prepared, but they are not proven better yet because the required MT5 reports and live-readiness evidence are still missing.
 
-The readiness candidate starts from the current stability-best profile but tightens risk and execution controls:
+## Current Best Evidence
 
-- `InpRiskPercent=0.50`
-- `InpMaxEffectiveRiskPercent=0.50`
-- `InpMaxOpenRiskPercent=0.75`
-- `InpMaxPositionLots=0.05`
-- `InpMaxDailyLossPercent=0.75`
-- `InpMaxWeeklyLossPercent=2.00`
-- `InpMaxMonthlyLossPercent=4.00`
-- `InpMaxEquityDrawdownPercent=10.00`
-- `InpMaxDailyLossCount=1`
-- `InpMaxConsecutiveLosses=2`
-- `InpCooldownMinutesAfterLoss=240`
-- Adaptive Reverse disabled
-- FMLR research lane disabled
-- tick-speed research input disabled
-- spread, margin, drawdown, loss-scaling, and profit-giveback guards enabled
+Return math assumes a `$1,000` starting balance over `2024.01.01` to `2026.07.12`, about `2.53` years.
 
-This is safer than the research profile, but it still needs fresh Model4 real-tick backtests, full report exports, monthly/quarterly validation, broker-specific stress checks, Monte Carlo, and demo forward testing before real money.
-
-## Screenshot Clarification
-
-The first screenshot is a profit-context table, not a pure best-to-worst leaderboard.
-
-The second screenshot is the older Dec-ISLP-Off promotion comparison. Some of those larger numbers are sampled validation totals. They are useful for comparing profiles, but they are not one continuous account curve and should not be read as yearly account growth.
-
-Return math below assumes a `$1,000` starting balance and uses CAGR over `2024.01.01` to `2026.07.12`, about `2.53` years. Sampled totals are marked `N/A` because they are aggregate validation scores, not sequential account returns.
-
-## Profit Context
-
-| Result | Type | Return Math | Meaning |
+| Result | Type | Return Math | Status |
 | --- | --- | --- | --- |
-| `+$10,127.76` | Continuous Model1 | `+1012.78%` total, `+159.47%/yr` CAGR | Best historical/current Model1 continuous research result for Dec-ISLP-Off style profile |
-| `+$4,507.51` | Continuous Model4 | `+450.75%` total, `+96.43%/yr` CAGR | Historical real-tick Dec-ISLP-Off result, stale until reproduced on current compact path |
-| `+$1,195.69` | Continuous Model4 | `+119.57%` total, `+36.51%/yr` CAGR | Fresh current-source real-tick LowATR OrderFlow check |
-| `+$7,469.00` | Sampled Model4 total | N/A, sampled score | Aggregate validation-window score, not a sequential account return |
+| `+$10,127.76` | Continuous Model1 | `+1012.78%` total, about `+159.47%/yr` CAGR | Best historical/current Model1 research result |
+| `+$4,507.51` | Continuous Model4 | `+450.75%` total, about `+96.43%/yr` CAGR | Historical/stale until reproduced on current source |
+| `+$1,195.69` | Continuous Model4 | `+119.57%` total, about `+36.51%/yr` CAGR | Fresh current-source real-tick LowATR OrderFlow result |
+| `+$7,469.00` | Sampled Model4 total | Not annualizable | Aggregate validation-window score, not a sequential account curve |
 
-The bot is still a research project. The current evidence is good enough to keep testing, not good enough to fund seriously.
+The correct current reading is: the bot is better than the old `$866` baseline, but there is not a newly promoted better profile beyond LowATR OrderFlow.
 
-## Latest Local Work
+## Money-Ready Status
 
-The local source now has a default-off FMLR tick-speed reclaim path. It can tag `FMLR tick-speed reclaim` when an existing sweep/reclaim context is followed by a directional tick-speed impulse through `InpUseTickSpeedImpulse`.
+- Overall money-ready refresh: `PENDING`
+- Passing areas: `4`
+- Pending areas: `9`
+- Failed areas: `0`
+- Money-ready scorecard: `NOT_READY_PENDING_EVIDENCE`
+- Release-candidate gate: `NOT_RELEASEABLE_PENDING_EVIDENCE`
+- Real-account trading: locked
 
-The latest isolated package profile is `fmlr_tick_speed_reclaim`. It is not promoted and has not been MT5 backtested.
+The current conservative candidate is not live-ready and should remain paper/demo only.
 
-## Validation Passed Locally
+## Conservative Trade-Ready Candidate
 
-- `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`
-- `EA_SOURCE_ARTIFACT_SYNC_SMOKE_PASS`
-- `FLAT_MONTH_LIQUIDITY_RECLAIM_PROBE_PACKAGE_SMOKE_PASS`
-- `FLAT_MONTH_LIQUIDITY_RECLAIM_FAST_PROBE_PACKAGE_SMOKE_PASS`
-- `FLAT_MONTH_LIQUIDITY_RECLAIM_COMPACT_SOURCE_SMOKE_PASS`
-- `TRADE_READINESS_PROFILE_SMOKE_PASS`
-- `ADAPTIVE_REVERSE_QUARANTINE_SMOKE_PASS`
-- `MT5_HIDDEN_LAUNCHER_LOCK_SMOKE_PASS`
-- MT5 local safety audit: `PASS 39 / 39`
+Profile:
 
-Cleanup dry-run after the package refresh found `0` active generated cleanup candidates.
+`outputs/CANDIDATE_TRADE_READY_CONSERVATIVE_PROFILE.set`
 
-## Current Work Queue
+SHA-256:
 
-1. Do not run heavy MT5 tests in GitHub Actions.
-2. Keep the MT5 launch lock active until the focus-stealing issue is solved.
-3. Run the trade-readiness candidate in local hidden Model4 real-tick tests when MT5 launch safety is acceptable.
-4. Run the 150-config fast FMLR screen locally before the full 456-config FMLR package.
-5. Extract full trade stats: drawdown, trades, profit factor, expected payoff, average winner/loss, largest loss, consecutive losses, exposure, spread, swap, commission, and slippage.
-6. Validate with older data, walk-forward, Monte Carlo, and broker variation before any live use.
+`621F54A4BFE61761577D87DB212CF024163F25066209C205090E72227FE584A6`
 
-## Source Sync Status
+Risk shape:
 
-Important: this GitHub status update was made through the GitHub connector because the local folder is not a valid Git checkout. The local `.git` directory exists but is empty. Local shell also has no GitHub CLI, no SSH key for GitHub, and HTTPS Git needs credentials.
+- `0.10%` trade risk
+- `0.20%` open-risk cap
+- `0.01` max lots
+- one position
+- max `2` trades/day
+- `120` minutes between trades
+- `0.20%` daily loss cap
+- `0.60%` weekly loss cap
+- `1.25%` monthly loss cap
+- `3.00%` equity drawdown cap
+- real-account approval fields disabled
 
-That means this GitHub update refreshes lightweight dashboard/evidence files. The full local EA source and generated scripts may still be ahead of GitHub until a proper authenticated Git push path is available.
+This is the safest current test candidate, not a live-money profile.
 
-## Latest Evidence Notes
+## What Changed Locally
 
-- `outputs/CURRENT_RESEARCH_BEST_PROFILE.md`
-- `outputs/SOURCE_MANIFEST.md`
-- `research/2026-07-13-trade-readiness-candidate-note.md`
-- `research/2026-07-13-fmlr-tick-speed-reclaim-note.md`
-- `research/2026-07-13-fmlr-sweep-unlimited-runner-note.md`
-- `research/2026-07-13-flat-month-liquidity-reclaim-lane-note.md`
+The local workspace now has a stricter offline evidence system:
+
+- one-command refresh status
+- first-pass report routing
+- live-evidence routing
+- compile-evidence routing
+- conservative full-validation routing
+- trade-quality and Monte Carlo gates
+- forward/demo and second-broker evidence gates
+- local reproducibility bundle
+- evidence handoff package
+- four parallel first-pass lanes for faster testing
+
+Current first-pass package:
+
+- `8` configs total
+- split into `4` window-based lanes
+- each lane contains both candidate configs for one window
+
+## Next Required Evidence
+
+The next useful testing step is to run the `8` first-pass configs from either:
+
+- `outputs/first_pass_next_run_package`
+- `outputs/first_pass_parallel_lanes`
+
+Then export reports into:
+
+`outputs/returned_mt5_reports/first_pass_inbox`
+
+Required before any live-money review:
+
+- current-source compile proof
+- first-pass MT5 reports
+- full conservative validation reports
+- broker-proxy reports
+- trade/deal logs with realized R
+- Monte Carlo trade-stress pass
+- forward/demo evidence
+- second-broker evidence
+- source/profile reproducibility sync
+
+## Why There Is No New Best Yet
+
+The newer FMLR and trade-ready work is mostly code, package, safety, and evidence-gate preparation. It has not produced a validated better backtest yet.
+
+Keep LowATR OrderFlow as the current research best, keep the conservative profile as the safest current test candidate, and do not promote anything else until broad-window MT5 evidence proves it.
+
+## Status Files To Check
+
+1. `outputs/GITHUB_STATUS_DASHBOARD.md` - compact GitHub-facing dashboard.
+2. `outputs/MONEY_READY_REFRESH_STATUS.md` - one-command offline refresh result.
+3. `outputs/CURRENT_RESEARCH_BEST_PROFILE.md` - current promoted research profile.
+4. `outputs/FIRST_PASS_PARALLEL_LANES.md` - faster first-pass lane split.
+5. `outputs/SOURCE_MANIFEST.md` - current local source hash/status.
+
+## GitHub Sync Note
+
+This page is updated through the GitHub connector because the local Codex folder is not a valid Git checkout and local `git`/`gh` are not installed. That means GitHub can be refreshed for dashboard/status files, but the live-readiness `reproducible-github-sync` gate remains pending until a full source/profile publication path is restored and verified.
