@@ -23,7 +23,7 @@ MAX_MQL_IDENTIFIER = 63
 def sha256(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+        for chunk in iter(lambda: handle.read(1024 * 1024), b=""):
             h.update(chunk)
     return h.hexdigest().upper()
 
@@ -195,6 +195,18 @@ def main() -> int:
     audit.check(on_init_idx >= 0, "OnInit exists")
     audit.check(symbol_idx >= 0 and real_idx >= 0 and readiness_idx >= 0,
                 "OnInit calls symbol, real-account, and trade-readiness gates")
+
+    real_decl_idx = text.find("bool RealAccountSafetyLockAllows()")
+    real_end_idx = text.find("int OnInit()", real_decl_idx)
+    real_section = text[real_decl_idx:real_end_idx] if real_decl_idx >= 0 and real_end_idx > real_decl_idx else ""
+    audit.check("tradeMode != ACCOUNT_TRADE_MODE_REAL" in real_section,
+                "real-account lock allows only non-real accounts before approval checks")
+    audit.check("if(!InpUseRealAccountSafetyLock)" in real_section and
+                "InpUseRealAccountSafetyLock=false is not allowed on real accounts" in real_section,
+                "real-account lock rejects disabled lock state on real accounts")
+    normalized_real_section = real_section.replace("\r\n", "\n").replace("\r", "\n")
+    audit.check("if(!InpUseRealAccountSafetyLock)\n      return true;" not in normalized_real_section,
+                "real-account lock cannot be bypassed by disabling InpUseRealAccountSafetyLock")
 
     names = input_names(code)
     audit.check(bool(names), "input declarations parsed")
