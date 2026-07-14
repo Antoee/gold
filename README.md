@@ -6,7 +6,7 @@ No martingale. No grid. No averaging down. No recovery sizing. Risk control stay
 
 ## Latest Status
 
-Last updated: 2026-07-14 UTC after adding minimum annualized-return/CAGR validation gates, current-source money-ready audit refresh, local reproducibility-bundle rebuild, and required-artifact sync-package generation.
+Last updated: 2026-07-14 UTC after connector-syncing the three required profile artifacts, adding minimum annualized-return/CAGR validation gates, current-source money-ready audit refresh, and local reproducibility-bundle rebuild.
 
 Short answer: there is no newly validated best profile yet.
 
@@ -14,7 +14,7 @@ The current stability-best research profile is still:
 
 `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
 
-The conservative trade-ready candidate is the safest current test candidate, but it is still paper/demo only. The latest progress is stricter evidence quality: exported MT5 report summaries calculate yearly return metrics, and first-pass/full-validation decisions now require the exact continuous real-tick run to clear minimum annualized-return and CAGR floors.
+The conservative trade-ready candidate is the safest current test candidate, but it is still paper/demo only. The latest progress is reproducibility: the conservative profile, money-ready profile, and trade-readiness alias profile now match GitHub connector blobs. The two remaining publication blockers are the large root EA source and mirrored output EA source.
 
 ## Current Best Evidence
 
@@ -38,19 +38,19 @@ Return math assumes a `$1,000` starting balance over `2024.01.01` to `2026.07.12
 - Live-readiness gate: `PENDING`, `5` pass / `8` pending / `0` fail
 - Release-candidate gate: `NOT_RELEASEABLE_PENDING_EVIDENCE`
 - Reproducibility bundle: `PASS`, `60` pass / `0` pending / `0` fail
-- GitHub publication sync: `PENDING`, `2` required artifacts pass / `5` pending / `0` fail
+- GitHub publication sync: `PENDING`, `5` required artifacts pass / `2` pending / `0` fail
 - Real-account trading: locked
 
 The current conservative candidate is not live-ready and should remain paper/demo only.
 
 ## Latest Offline Progress
 
-- Exported-report summaries now calculate total return %, annualized return %, and CAGR %.
-- First-pass validation now requires the continuous exact real-tick report to clear `>= 1%` annualized return and `>= 1%` CAGR.
-- Full money-ready/conservative validation now applies the same continuous annualized-return and CAGR floors.
-- Synthetic tests prove weak yearly return fails those gates.
-- First-pass pending gates rose from `19` to `21` by design because annualized return and CAGR must now be proven.
-- Reproducibility bundle hash: `9773220EC39B09FEA50463B74F56C9094CC19C4FA9FD1AAD64D20AF69E9739A9`.
+- Three required profile artifacts are now connector-verified on GitHub: conservative, money-ready, and trade-readiness alias.
+- Remaining required GitHub publication blockers: `Professional_XAUUSD_EA.mq5` and `outputs/Professional_XAUUSD_EA.mq5`.
+- Exported-report summaries calculate total return %, annualized return %, and CAGR %.
+- First-pass validation requires the continuous exact real-tick report to clear `>= 1%` annualized return and `>= 1%` CAGR.
+- Full money-ready/conservative validation applies the same continuous annualized-return and CAGR floors.
+- Reproducibility bundle hash: `CE4258019616FDB829ADC0335C54BF9548BCC93C3198A938F4106A5DFCA5DDAC`.
 - MT5, MetaEditor, and Metatester were not launched.
 
 ## Current Conservative Candidate
@@ -88,15 +88,14 @@ Risk shape:
 2. If first-pass evidence is trusted, import the `53` conservative validation reports plus `10` broker-proxy reports.
 3. Import conservative trade/deal logs with realized R for trade-quality and Monte Carlo gates.
 4. Add forward/demo evidence and second-broker evidence.
-5. Publish the exact refreshed source/profile artifacts to GitHub. The large EA source files remain the hardest publication blocker because this workspace is not a valid git checkout and noninteractive git auth is unavailable.
+5. Publish the exact refreshed EA source files to GitHub. The large source files remain the hardest publication blocker because this workspace is not a valid git checkout and noninteractive git auth is unavailable.
 
 ## Key Status Files
 
 - `outputs/GITHUB_STATUS_DASHBOARD.md`
+- `outputs/GITHUB_PUBLICATION_SYNC.md`
 - `outputs/MONEY_READY_REFRESH_STATUS.md`
 - `outputs/FIRST_PASS_VALIDATION_QUEUE_DECISION.md`
-- `outputs/FIRST_PASS_VALIDATION_QUEUE_REPORT_METRICS.md`
 - `outputs/TRADE_READY_REPRODUCIBILITY_BUNDLE.md`
-- `outputs/GITHUB_PUBLICATION_SYNC.md`
 
 Until those gates pass, this is a serious research project, not a live-money bot.
