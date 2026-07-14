@@ -1,6 +1,6 @@
 # GitHub Status Dashboard
 
-Last updated: 2026-07-14 UTC after current-source trade-environment hardening and profile/package rebuild.
+Last updated: 2026-07-14 UTC after strict returned-report routing, current-source money-ready audit refresh, and local reproducibility-bundle rebuild.
 
 ## Short Answer
 
@@ -30,6 +30,7 @@ Return math assumes a `$1,000` starting balance over `2024.01.01` to `2026.07.12
 - Pending areas: `10`
 - Failed areas: `0`
 - Money-ready scorecard: `NOT_READY_PENDING_EVIDENCE`
+- Money-ready scorecard rows: `5` PASS / `14` PENDING / `0` FAIL
 - Release-candidate gate: `NOT_RELEASEABLE_PENDING_EVIDENCE`
 - Real-account trading: locked
 
@@ -92,6 +93,7 @@ The local workspace now has a stricter offline evidence system:
 - current-source trade-environment guard and safety-gate checks
 - one-command refresh status
 - first-pass report routing
+- strict returned-report validation that rejects screenshots, balance-only snippets, and log-only rows
 - live-evidence routing
 - compile-evidence routing
 - conservative full-validation routing
@@ -129,6 +131,13 @@ Required before any live-money review:
 - forward/demo evidence
 - second-broker evidence
 - source/profile reproducibility sync
+
+Current local reproducibility bundle:
+
+- Status: `PASS`
+- Passing rows: `56`
+- Zip SHA-256: recorded in `outputs/TRADE_READY_REPRODUCIBILITY_BUNDLE.md`
+- Reminder: this is a local hash freeze only; it does not clear the GitHub/source-publication sync gate.
 
 ## Why There Is No New Best On GitHub
 
