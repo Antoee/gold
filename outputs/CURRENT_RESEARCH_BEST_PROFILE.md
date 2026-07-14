@@ -1,79 +1,28 @@
 # Current Research Best Profile
 
-Last updated: 2026-07-13 after adding the trade-readiness candidate and FMLR tick-speed reclaim probe.
+Last updated: 2026-07-14 UTC.
 
 ## Profile
 
+Current stability-best research profile:
+
 `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
 
-Status: current stability-best research profile. Not live-ready.
+Status: current research best, not live-ready.
 
-## Current Judgment
+There is no newly validated better profile yet. The latest FMLR and conservative trade-ready work is prepared for testing, but it has not produced validated broad-window MT5 evidence that beats this profile.
 
-Keep LowATR OrderFlow as the most stable promoted research profile. Do not promote the latest FMLR work yet because it has not been MT5 backtested.
+## Why This Is Still The Best
 
-## Trade-Readiness Candidate
+LowATR OrderFlow kept the Dec-ISLP-Off profile and added a smarter low-volatility ISLP guard:
 
-A conservative demo/forward-test candidate now exists locally:
+- `InpInSessionLiquidityPullbackMinATR=0.00`
+- `InpInSessionLiquidityPullbackLowATRRequireOrderFlow=true`
+- `InpInSessionLiquidityPullbackLowATRThreshold=5.00`
 
-`outputs/CANDIDATE_TRADE_READINESS_PROFILE.set`
+The blunt MinATR5 guard was rejected because it removed an October 2024 loser but also deleted a larger June 2024 winner. LowATR OrderFlow kept the June winner and blocked the October loser.
 
-SHA-256:
-
-`B683100CA5BE912A9A848C3F715A67E4705473B00DEEF4B9070AE02BFDB708C5`
-
-This candidate does not replace the current research-best. It lowers risk and enables stricter safety controls for demo/forward testing.
-
-Key settings:
-
-- `InpRiskPercent=0.50`
-- `InpMaxEffectiveRiskPercent=0.50`
-- `InpMaxOpenRiskPercent=0.75`
-- `InpMaxPositionLots=0.05`
-- `InpMaxDailyLossPercent=0.75`
-- `InpMaxWeeklyLossPercent=2.00`
-- `InpMaxMonthlyLossPercent=4.00`
-- `InpMaxEquityDrawdownPercent=10.00`
-- `InpUseAdaptiveReverse=false`
-- `InpUseFlatMonthLiquidityReclaimLane=false`
-- `InpUseTickSpeedImpulse=false`
-
-## Source Manifest
-
-Latest local source manifest:
-
-`outputs/SOURCE_MANIFEST.md`
-
-Latest local EA source hash:
-
-`B6AA1915D2CA7483B1066C227F2506D7A85756D918820FF1100BAF66B0FBDBBE`
-
-Local source size/lines:
-
-- `904009` bytes
-- `19213` lines
-
-## Latest Default-Off Research Code
-
-The local EA source includes a default-off Flat Month Liquidity Reclaim lane tagged `FMLR;`.
-
-Latest source changes:
-
-- FMLR no-fixed-TP runner permission recognizes proven non-structural sweep-runner setups when forward clearance, runner-stretch evidence, and FMLR structure trailing are present.
-- FMLR can now tag `FMLR tick-speed reclaim` when an existing sweep/reclaim context is followed by a directional tick-speed impulse through `InpUseTickSpeedImpulse`.
-
-Latest isolated package profile:
-
-`fmlr_tick_speed_reclaim`
-
-Package counts:
-
-- Full FMLR validation package: `456` Model4 configs, `38` profiles
-- Fast FMLR screen: `150` Model4 configs, `25` profiles
-
-## Model4 Evidence For Current Best
-
-Sampled, monthly, and quarterly totals below are validation-window comparisons, not annualized account curves.
+## Model4 Evidence
 
 Sampled probe:
 
@@ -102,29 +51,35 @@ Return math uses a `$1,000` starting balance and CAGR over `2024.01.01` to `2026
 
 | Profile | Model | Window | Net | Total Return | CAGR/yr |
 | --- | ---: | --- | ---: | ---: | ---: |
-| `lowatr_current` | `4` | `2024.01.01` to `2026.07.12` | `+1,195.69` | `+119.57%` | `+36.51%/yr` |
+| `islp_lowatr_of` | `4` | `2024.01.01` to `2026.07.12` | `+1,195.69` | `+119.57%` | `+36.51%/yr` |
 | `dec_islp_off` | `4` | `2024.01.01` to `2026.07.12` | `+1,195.04` | `+119.50%` | `+36.49%/yr` |
 
 The older `+4,507.51` Dec-ISLP-Off Model4 continuous result equals `+450.75%` total and about `+96.43%/yr` CAGR from a `$1,000` start, but it is now treated as historical/stale until reproduced on the current local source and compact tester path.
 
-## Risk Warning
+## Conservative Trade-Ready Candidate
 
-The bot is still research-only. The readiness candidate is safer but unproven. No live funding decision should be made until current-source Model4 backtests, full reports, walk-forward checks, broker variation, Monte Carlo stress, and demo forward tests are complete.
+Current safest test candidate:
 
-## Latest Local Checks Passed
+`outputs/CANDIDATE_TRADE_READY_CONSERVATIVE_PROFILE.set`
 
-- `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`
-- `EA_SOURCE_ARTIFACT_SYNC_SMOKE_PASS`
-- `FLAT_MONTH_LIQUIDITY_RECLAIM_PROBE_PACKAGE_SMOKE_PASS`
-- `FLAT_MONTH_LIQUIDITY_RECLAIM_FAST_PROBE_PACKAGE_SMOKE_PASS`
-- `FLAT_MONTH_LIQUIDITY_RECLAIM_COMPACT_SOURCE_SMOKE_PASS`
-- `TRADE_READINESS_PROFILE_SMOKE_PASS`
-- `ADAPTIVE_REVERSE_QUARANTINE_SMOKE_PASS`
-- `MT5_HIDDEN_LAUNCHER_LOCK_SMOKE_PASS`
-- MT5 local safety audit: `PASS 39 / 39`
+SHA-256:
 
-## Decision
+`621F54A4BFE61761577D87DB212CF024163F25066209C205090E72227FE584A6`
 
-No promotion from the latest FMLR source/package refresh yet.
+This candidate does not replace the research-best profile. It is a stricter paper/demo candidate with lower risk, tighter loss caps, one position, `0.01` max lots, and real-account approval disabled.
 
-Next testing target: run the trade-readiness candidate and the 150-config fast FMLR screen locally while keeping MT5 hidden/non-focus-stealing. Promote nothing unless it beats `lowatr_current` without adding red control windows.
+## Current Gaps
+
+The project remains research-only until these are proven:
+
+- current-source compile proof
+- first-pass MT5 report exports
+- full conservative validation reports
+- broker-proxy reports
+- trade-quality logs
+- Monte Carlo trade stress
+- forward/demo evidence
+- second-broker evidence
+- reproducible source/profile publication sync
+
+Bottom line: no new best yet; LowATR OrderFlow remains the current promoted research profile.
