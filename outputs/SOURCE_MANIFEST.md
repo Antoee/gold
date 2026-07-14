@@ -7,329 +7,79 @@ Generated from the local EA source without launching MT5.
 - File: `Professional_XAUUSD_EA.mq5`
 - Mirrored file: `outputs/Professional_XAUUSD_EA.mq5`
 - Lines: `19508`
-- Size: `919502` bytes
-- SHA-256: `44D9EBA868C86EB6C57DF82C3B94D83ACFE994B1A665917EC05AB8313188A5F7`
-- Last verified locally: `2026-07-13`
+- Size: `919094` bytes
+- SHA-256: `46770EACA60826F90E1E9A9B7425356F96F7C8F83CF8F8C1FBE271632866933E`
+- Last verified locally: `2026-07-14`
+- Root/mirror sync: `PASS`
+- Current-source compile: `PASS`, `0` errors / `0` warnings
 
-The local source, output mirror, money-ready package sources, and conservative package sources currently match this hash.
+The latest compile proof was imported through `outputs/MT5_COMPILE_EVIDENCE_ROUTING.md`, and the compiled source hash matched the mirrored source hash.
 
-## Current Source Highlights
+## Current Research Best
 
-- Modular research EA for XAUUSD with no martingale, grid, averaging down, or recovery sizing.
-- Current stability-best profile remains `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`.
-- Adaptive Reverse remains quarantined behind default-off gates and smoke-test coverage.
-- MT5 local launch lock remains active to avoid windows, sounds, and focus stealing.
-- New default-off FMLR sweep-unlimited runner permission is present:
-  - `FlatMonthLiquidityReclaimUnlimitedRunnerAllows`
-  - `liquiditySweepRunner`
-  - `FMLR sweep unlimited runner`
-- New default-off FMLR tick-speed reclaim path is present:
-  - `tickSpeedReclaim`
-  - `FMLR tick-speed reclaim`
-- Low-risk FMLR activity-blend package profiles are present:
-  - `fmlr_activity_blend`
-  - `fmlr_activity_blend_tight`
-  - `outputs/CANDIDATE_FMLR_ACTIVITY_BLEND_PROFILE.set`
-  - SHA-256 `149481621EC3194A08CF2B291033FEA38AE7D40B1EDA677820780A51F9A9DBDB`
-  - `outputs/CANDIDATE_FMLR_ACTIVITY_BLEND_TIGHT_PROFILE.set`
-  - SHA-256 `50F2000B153458B5DB494DD6AA873BDD6256F2C8B3AE11BABE5E4C615E2BC67A`
-- Shared structure-stop pocket logic now also treats enabled previous-day/week/month liquidity stop levels as pocket evidence when the existing liquidity-pocket shift is active.
-- Trade-log evidence identity is present:
-  - `InpEvidenceProfileId`
-  - `InpEvidenceSourceHash`
-  - `InpEvidenceRunLabel`
-  - Returned conservative trade logs must identify `trade_ready_conservative` and source hash `44D9EBA868C86EB6C57DF82C3B94D83ACFE994B1A665917EC05AB8313188A5F7` before the trade-quality and Monte Carlo evidence can be trusted.
-- Money-ready demo/forward-test profile is present:
-  - `outputs/CANDIDATE_MONEY_READY_PROFILE.set`
-  - SHA-256 `0CF800571C2276F90D657BDFD2C7ACDC8F8D33CCAB8959AC55A81FAE46283FFB`
-  - Alias: `outputs/CANDIDATE_TRADE_READINESS_PROFILE.set`
-  - Alias SHA-256 `0CF800571C2276F90D657BDFD2C7ACDC8F8D33CCAB8959AC55A81FAE46283FFB`
-  - Symbol gate: `InpUseSymbolSafetyLock=true`
-  - Source gate: `InpUseTradeReadinessSafetyGate=true`
-  - EA refuses initialization if the gate is enabled and risk/spread/margin/exit guardrails are loosened past the configured caps.
-  - Real-account trading is disabled by default: `InpUseRealAccountSafetyLock=true`, `InpAllowRealAccountTrading=false`, `InpRealAccountApprovalCode=DISABLED`, `InpRealAccountApprovalProfileId=DISABLED`, `InpRealAccountApprovalSourceHash=DISABLED`
-- Conservative trade-ready profile is present:
-  - `outputs/CANDIDATE_TRADE_READY_CONSERVATIVE_PROFILE.set`
-  - SHA-256 `621F54A4BFE61761577D87DB212CF024163F25066209C205090E72227FE584A6`
-  - Profile note: `outputs/TRADE_READY_CONSERVATIVE_PROFILE.md`
-  - Audit: `outputs/TRADE_READY_CONSERVATIVE_AUDIT.md`
-  - Current result: `103` PASS, `5` OPEN proof gaps, `0` critical failures
-  - Risk shape: `0.10%` trade risk, `0.20%` open-risk cap, `0.01` max lots, one position, max `2` trades/day, `120` minutes between trades, `0.20%` daily loss cap, `0.60%` weekly loss cap, `1.25%` monthly loss cap, `3.00%` equity drawdown cap
-  - Symbol safety is enabled by default: `InpUseSymbolSafetyLock=true`, `InpAllowedSymbol=XAUUSD`
-  - Real-account trading is disabled by default: `InpUseRealAccountSafetyLock=true`, `InpAllowRealAccountTrading=false`, `InpRealAccountApprovalCode=DISABLED`, `InpRealAccountApprovalProfileId=DISABLED`, `InpRealAccountApprovalSourceHash=DISABLED`
-- Symbol safety-lock instrumentation:
-  - `SymbolSafetyLockAllows()`
-  - `InpUseSymbolSafetyLock`
-  - `InpAllowedSymbol`
-  - Initialization fails if the attached symbol does not contain `InpAllowedSymbol`
-- Real-account safety-lock instrumentation:
-  - `RealAccountSafetyLockAllows()`
-  - `InpUseRealAccountSafetyLock`
-  - `InpAllowRealAccountTrading`
-  - `InpRealAccountApprovalCode`
-  - `InpRealAccountApprovalProfileId`
-  - `InpRealAccountApprovalSourceHash`
-  - Real accounts require `InpAllowRealAccountTrading=true`, `InpUseTradeReadinessSafetyGate=true`, `InpRealAccountApprovalCode=ALLOW_REAL_ACCOUNT_TRADING`, matching approval/evidence profile id, matching approval/evidence source hash, and a non-empty evidence run label; demo/tester accounts remain usable
-- Conservative trade-quality evidence gate:
-  - `outputs/TRADE_READY_CONSERVATIVE_TRADE_QUALITY.md`
-  - `outputs/TRADE_READY_CONSERVATIVE_TRADE_QUALITY.csv`
-  - Current result: `PENDING`, `0` returned trade-log files, `0` closed rows, `2` pending gates, `0` failures
-  - Analyzer: `work/analyze_trade_ready_conservative_trade_quality.ps1`
-  - Strict rule: returned trade logs must include enough closed trades plus high realized-R, spread, held-bars, and MFE/MAE coverage before quality gates can pass
-- Conservative Monte Carlo trade-stress gate:
-  - `outputs/TRADE_READY_CONSERVATIVE_MONTE_CARLO.md`
-  - `outputs/TRADE_READY_CONSERVATIVE_MONTE_CARLO.csv`
-  - Current result: `PENDING`, `1000` seeded trials prepared, `0` returned trade-log files, `0` R trades, `3` pending gates, `0` failures
-  - Analyzer: `work/analyze_trade_ready_conservative_monte_carlo.ps1`
-  - Strict rule: seeded stress checks net R, PF, drawdown, failure rate, and 95th-percentile consecutive loss streaks
-- Conservative forward/demo evidence gate:
-  - `outputs/TRADE_READY_CONSERVATIVE_FORWARD_TEST.md`
-  - `outputs/TRADE_READY_CONSERVATIVE_FORWARD_TEST.csv`
-  - Current result: `PENDING`, `0` returned evidence rows, `0` failures
-  - Analyzer: `work/analyze_trade_ready_conservative_forward_test.ps1`
-- Conservative second-broker evidence gate:
-  - `outputs/TRADE_READY_CONSERVATIVE_SECOND_BROKER_DECISION.md`
-  - `outputs/TRADE_READY_CONSERVATIVE_SECOND_BROKER_DECISION.csv`
-  - Current result: `PENDING`, `0` returned evidence rows, `0` failures
-  - Analyzer: `work/analyze_trade_ready_conservative_second_broker.ps1`
-- Conservative final live-readiness gate:
-  - `outputs/TRADE_READY_LIVE_READINESS_DECISION.md`
-  - `outputs/TRADE_READY_LIVE_READINESS_DECISION.csv`
-  - Current result: `PENDING`, `5` passing gates, `8` pending gates, `0` failures
-  - Analyzer: `work/analyze_trade_ready_live_readiness.ps1`
-  - Compile freshness check: `currentSourceStatus` must be `CURRENT`; stale compile logs remain `PENDING` even when their own imported `SourceHashStatus` says `MATCH`
-  - Reproducibility split: local reproducibility freeze passes from `outputs/TRADE_READY_REPRODUCIBILITY_BUNDLE.md`, while GitHub/source-publication sync remains a separate pending gate backed by `outputs/GITHUB_PUBLICATION_SYNC.md`
-- Money-ready status scorecard:
-  - `outputs/MONEY_READY_STATUS_SCORECARD.md`
-  - `outputs/MONEY_READY_STATUS_SCORECARD.csv`
-  - Current result: `NOT_READY_PENDING_EVIDENCE`, `5` PASS, `14` PENDING, `0` FAIL
-  - Analyzer: `work/build_money_ready_status_scorecard.ps1`
-  - Purpose: single offline summary of whether the conservative candidate can be considered money-ready
-- Trade-ready release-candidate gate:
-  - `outputs/TRADE_READY_RELEASE_CANDIDATE_DECISION.md`
-  - `outputs/TRADE_READY_RELEASE_CANDIDATE_DECISION.csv`
-  - `outputs/TRADE_READY_RELEASE_PROFILE_LOCKED.set`
-  - Current result: `NOT_RELEASEABLE_PENDING_EVIDENCE`
-  - Analyzer: `work/build_trade_ready_release_candidate.ps1`
-  - Smoke test: `work/test_trade_ready_release_candidate.ps1`
-  - Purpose: refuse to write `outputs/TRADE_READY_MANUAL_LIVE_REVIEW_PROFILE.set` unless live-readiness and scorecard evidence are fully passing and an explicit approval identity matches the profile evidence identity
-- Money-ready proof runway:
-  - `outputs/MONEY_READY_PROOF_RUNWAY.md`
-  - `outputs/MONEY_READY_PROOF_RUNWAY.csv`
-  - Current next action: run the `8` configs in `outputs/first_pass_next_run_package`
-  - Analyzer: `work/build_money_ready_proof_runway.ps1`
-  - Smoke test: `work/test_money_ready_proof_runway.ps1`
-  - Purpose: convert pending release, scorecard, live-readiness, and first-pass gates into the exact next evidence checklist with expected report names, return paths, consumer scripts, and strict exported-report metric requirements
-- Money-ready evidence handoff:
-  - `outputs/MONEY_READY_EVIDENCE_HANDOFF.md`
-  - `outputs/money_ready_evidence_handoff`
-  - `outputs/money_ready_evidence_handoff.zip`
-  - Current result: ready with `8` first-pass configs, `4` first-pass parallel lanes, `8` lane configs, `53` validation configs, `10` broker-proxy configs, `2` compile evidence file definitions, `3` live evidence file definitions, and `3` CSV templates
-  - Builder: `work/build_money_ready_evidence_handoff.ps1`
-  - Smoke test: `work/test_money_ready_evidence_handoff.ps1`
-  - Purpose: package the exact first-pass run list, first-pass parallel lanes, full validation run list, expected report names, compile-evidence accepted names, live-evidence accepted names, CSV templates, external evidence quality columns, and strict MT5 report-stat requirements for returning evidence cleanly
-- Trade-ready reproducibility bundle:
-  - `outputs/TRADE_READY_REPRODUCIBILITY_BUNDLE.md`
-  - `outputs/TRADE_READY_REPRODUCIBILITY_BUNDLE_MANIFEST.csv`
-  - `outputs/trade_ready_reproducibility_bundle`
-  - `outputs/trade_ready_reproducibility_bundle.zip`
-  - Current result: `PASS`, `44` artifact rows and `5` check rows passing, `0` pending, `0` failed
-  - Zip SHA-256: recorded in `outputs/TRADE_READY_REPRODUCIBILITY_BUNDLE.md` after each refresh
-  - Builder: `work/build_trade_ready_reproducibility_bundle.ps1`
-  - Smoke test: `work/test_trade_ready_reproducibility_bundle.ps1`
-  - Purpose: freeze the exact local source, mirrored source, profiles, manifests, status decisions, safety evidence, connector publication-verification input, and GitHub publication-sync audit for local reproducibility. This does not satisfy `reproducible-github-sync` by itself.
-- GitHub publication sync audit:
-  - `outputs/GITHUB_PUBLICATION_SYNC.md`
-  - `outputs/GITHUB_PUBLICATION_SYNC.csv`
-  - Current result: `PENDING`, `0` required artifacts passing, `7` pending, `0` failed
-  - Auditor: `work/audit_github_publication_sync.ps1`
-  - Smoke test: `work/test_github_publication_sync.ps1`
-  - Purpose: verify exact source/profile publication by comparing local SHA-256 values against GitHub-accessible artifacts; live-readiness keeps `reproducible-github-sync` pending until this passes or a valid git checkout exists.
-- First-pass returned-report inbox:
-  - Inbox: `outputs/returned_mt5_reports/first_pass_inbox`
-  - Routing report: `outputs/FIRST_PASS_RETURNED_REPORT_ROUTING.md`
-  - Routing CSV: `outputs/FIRST_PASS_RETURNED_REPORT_ROUTING.csv`
-  - Current result: `0` routed, `8` missing, `0` duplicates, `0` invalid, `0` unmatched files
-  - Router: `work/route_first_pass_returned_reports.ps1`
-  - Smoke test: `work/test_first_pass_returned_report_routing.ps1`
-  - Purpose: route exact-name returned `.htm/.html/.xml` reports into trusted first-pass `reports_here` folders and refuse duplicate ambiguous evidence or empty/whitespace-only report files
-- Trade-ready live evidence inbox:
-  - Inbox: `outputs/returned_mt5_reports/live_evidence_inbox`
-  - Routing report: `outputs/TRADE_READY_LIVE_EVIDENCE_ROUTING.md`
-  - Routing CSV: `outputs/TRADE_READY_LIVE_EVIDENCE_ROUTING.csv`
-  - Current result: `0` routed, `3` missing, `0` duplicates, `0` invalid, `0` unmatched files
-  - Router: `work/route_trade_ready_live_evidence.ps1`
-  - Smoke test: `work/test_trade_ready_live_evidence_routing.ps1`
-  - Purpose: route trade log, forward evidence, and second-broker evidence CSVs into canonical analyzer inputs before live-readiness is rebuilt, while refusing invalid CSVs whose required columns, external quality columns, XAUUSD symbol, or expected profile/source identity do not preflight
-- MT5 compile evidence inbox:
-  - Inbox: `outputs/returned_mt5_reports/compile_inbox`
-  - Routing report: `outputs/MT5_COMPILE_EVIDENCE_ROUTING.md`
-  - Routing CSV: `outputs/MT5_COMPILE_EVIDENCE_ROUTING.csv`
-  - Current result: `0` routed, `2` missing, `0` duplicates, `0` invalid, `0` imported, `1` waiting row
-  - Router: `work/route_mt5_compile_evidence.ps1`
-  - Smoke test: `work/test_mt5_compile_evidence_routing.ps1`
-  - Purpose: route a returned MetaEditor compile log plus the exact compiled `.mq5` source copy, then import `outputs/MT5_COMPILE_STATUS.csv` only when the compiled source hash matches the current EA source
-- Conservative full-validation returned-report inbox:
-  - Inbox: `outputs/returned_mt5_reports/trade_ready_conservative_validation_inbox`
-  - Routing report: `outputs/TRADE_READY_CONSERVATIVE_RETURNED_REPORT_ROUTING.md`
-  - Routing CSV: `outputs/TRADE_READY_CONSERVATIVE_RETURNED_REPORT_ROUTING.csv`
-  - Current result: `0` routed, `53` validation missing, `10` broker-proxy missing, `0` duplicates, `0` invalid, `0` unmatched files
-  - Router: `work/route_trade_ready_conservative_validation_reports.ps1`
-  - Smoke test: `work/test_trade_ready_conservative_report_routing.ps1`
-  - Purpose: route exact-name returned `.htm/.html/.xml` reports into the conservative validation and broker-proxy `reports_here` folders, while refusing duplicate, empty, whitespace-only, or unmatched report files
-- One-command money-ready refresh:
-  - `outputs/MONEY_READY_REFRESH_STATUS.md`
-  - `outputs/MONEY_READY_REFRESH_STATUS.csv`
-  - Current result: `PENDING`, `4` PASS, `10` PENDING, `0` FAIL
-  - Refresher: `work/refresh_money_ready_status.ps1`
-  - Smoke test: `work/test_money_ready_refresh_status.ps1`
-  - Quiet-mode proof: child PowerShell steps use `ProcessStartInfo`, `CreateNoWindow`, hidden window style, and captured logs under `outputs/money_ready_refresh_logs`
-  - Purpose: run the offline status pipeline end-to-end after evidence is returned: first-pass report routing, live-evidence routing, compile-evidence routing, conservative full-validation report routing, first-pass refresh, local safety audit, live evidence analyzers, GitHub publication sync audit, live-readiness, scorecard, release decision, proof runway, reproducibility bundle, and evidence handoff
-- Closed-deal logging instrumentation:
-  - `closed_deal` rows now estimate realized R from stored initial risk, closed volume, and realized profit when available
-  - `closed_deal` rows now record held bars when the matching history entry is available
-  - Trade rows include `profile_id`, `source_hash`, and `run_label` for reproducibility
-  - No entry, exit, or risk-sizing rules were changed by this instrumentation
-- Conservative trade-ready validation package:
-  - `outputs/trade_ready_conservative_validation_package`
-  - `outputs/TRADE_READY_CONSERVATIVE_VALIDATION_MANIFEST.csv`
-  - `53` staged configs: `4` fast Model1, `4` exact Model4 split, `11` quarterly Model4, `31` monthly Model4, `3` stress Model4
-  - Report names include phase and tester model to prevent fast/exact report-name collisions
-- Conservative trade-ready broker-proxy package:
-  - `outputs/trade_ready_conservative_broker_proxy_package`
-  - `outputs/TRADE_READY_CONSERVATIVE_BROKER_PROXY_MANIFEST.csv`
-  - `10` Model4 configs across base, wide-spread, high-commission, tight-slippage, and margin-pressure broker proxies
-- First-pass validation queue:
-  - `outputs/first_pass_validation_queue`
-  - `outputs/FIRST_PASS_VALIDATION_QUEUE.csv`
-  - `outputs/FIRST_PASS_VALIDATION_QUEUE.md`
-  - `outputs/FIRST_PASS_VALIDATION_QUEUE_RESULTS.csv`
-  - `outputs/FIRST_PASS_VALIDATION_QUEUE_REPORT_METRICS.md`
-  - `outputs/FIRST_PASS_VALIDATION_QUEUE_DECISION.md`
-  - `outputs/FIRST_PASS_VALIDATION_QUEUE_CANDIDATE_RANKING.csv`
-  - `outputs/FIRST_PASS_NEXT_RUN_BATCH.md`
-  - `outputs/FIRST_PASS_NEXT_RUN_BATCH.csv`
-  - `outputs/FIRST_PASS_NEXT_RUN_STATUS.csv`
-  - `outputs/first_pass_next_run_package`
-  - `outputs/FIRST_PASS_NEXT_RUN_PACKAGE.md`
-  - `outputs/FIRST_PASS_NEXT_RUN_PACKAGE_MANIFEST.csv`
-  - `outputs/first_pass_parallel_lanes`
-  - `outputs/FIRST_PASS_PARALLEL_LANES.md`
-  - `outputs/FIRST_PASS_PARALLEL_LANE_MANIFEST.csv`
-  - `outputs/FIRST_PASS_PARALLEL_LANE_RUN_MANIFEST.csv`
-  - `outputs/FIRST_PASS_REFRESH_STATUS.md`
-  - `outputs/FIRST_PASS_REFRESH_STATUS.csv`
-  - `outputs/FIRST_PASS_EVIDENCE_INTEGRITY.md`
-  - `outputs/FIRST_PASS_EVIDENCE_INTEGRITY.csv`
-  - `outputs/FIRST_PASS_TRUSTED_DECISION.md`
-  - `outputs/FIRST_PASS_TRUSTED_DECISION.csv`
-  - `44` unique-report configs total, `22` per candidate: `16` validation configs and `6` broker-proxy configs for each of `trade_ready_conservative` and `money_ready`
-  - Purpose: reject weak candidates faster before running the full `53`-config validation packages; parsed rows must include PF, expected payoff, Sharpe, win rate, trades, max consecutive losses, drawdown %, and recovery factor before advancing
-  - Current result: `PENDING`, `0 / 44` reports parsed, `7` passing prep/import gates, `38` pending evidence/quality gates, `0` failures
-  - Evidence integrity: `PENDING`, `9` PASS, `1` PENDING, `0` FAIL; pending only because reports are missing
-  - Trusted decision: `PENDING`, `0` trusted promotions, `2` waits, `0` failures
-  - Candidate ranking: both `money_ready` and `trade_ready_conservative` currently say `WAIT_FOR_REPORTS`
-  - Next batch/package: `8` selected configs, fast Model1 sanity for both candidates
-  - Parallel lanes: `4` window-based lanes with `8` total configs; each lane contains both candidates for the same window and returns reports to the normal first-pass inbox
-  - Report importer: `work/import_first_pass_validation_queue_reports.ps1`
-  - Evidence integrity audit: `work/audit_first_pass_evidence_integrity.ps1`
-  - Trusted decision gate: `work/build_first_pass_trusted_decision.ps1`
-  - Decision analyzer: `work/analyze_first_pass_validation_queue.ps1`
-  - Next-batch selector: `work/select_first_pass_next_run_batch.ps1`
-  - Next-package builder: `work/build_first_pass_next_run_package.ps1`
-  - Parallel-lane builder: `work/build_first_pass_parallel_lanes.ps1`
-  - One-command refresh: `work/refresh_first_pass_validation_state.ps1`
-  - Trust-aware package rule: if evidence integrity fails, the refresh blocks next-stage selection/package building and writes blocked next-run artifacts instead of keeping stale runnable configs
-- Conservative trade-ready validation decision gate:
-  - `outputs/TRADE_READY_CONSERVATIVE_VALIDATION_DECISION.md`
-  - `outputs/TRADE_READY_CONSERVATIVE_VALIDATION_DECISION.csv`
-  - Current result: `PENDING`, `2` passing prep/import gates, `23` pending result/evidence gates, `0` failures
-  - Strict evidence rule: exported MT5 reports must import with `Status=PARSED`; log-only profit rows cannot pass the conservative trade-ready gate
-  - Full-stat rule: every exported validation/broker report must include profit factor, expected payoff, Sharpe ratio, win rate, trades, max consecutive losses, drawdown %, and recovery factor
-  - Continuous trade-count rule: exact continuous real-tick validation must include at least `20` trades
-  - Imported validation results: `outputs/TRADE_READY_CONSERVATIVE_VALIDATION_RESULTS.csv`, currently `0 / 53` parsed and `53` missing
-  - Imported broker-proxy results: `outputs/TRADE_READY_CONSERVATIVE_BROKER_PROXY_RESULTS.csv`, currently `0 / 10` parsed and `10` missing
-  - Report importer: `work/import_trade_ready_conservative_validation_reports.ps1`
-- Money-ready audit:
-  - `outputs/MONEY_READY_PROFILE_AUDIT.md`
-  - `outputs/MONEY_READY_PROFILE_AUDIT.csv`
-  - Current result: `79` PASS, `4` OPEN proof gaps, `0` critical failures
-- Money-ready validation package:
-  - `outputs/money_ready_validation_package`
-  - `outputs/MONEY_READY_VALIDATION_MANIFEST.csv`
-  - `53` staged configs: `4` fast Model1, `4` exact Model4 split, `11` quarterly Model4, `31` monthly Model4, `3` stress Model4
-  - Report names include phase and tester model to prevent fast/exact report-name collisions
-- Money-ready broker-proxy package:
-  - `outputs/money_ready_broker_proxy_package`
-  - `outputs/MONEY_READY_BROKER_PROXY_MANIFEST.csv`
-  - `10` Model4 configs across base, wide-spread, high-commission, tight-slippage, and margin-pressure broker proxies
-- Money-ready validation decision gate:
-  - `outputs/MONEY_READY_VALIDATION_DECISION.md`
-  - `outputs/MONEY_READY_VALIDATION_DECISION.csv`
-  - Current result: `PENDING`, `1` passing prep gate, `16` pending result gates, `0` failures, waiting for `outputs/MONEY_READY_VALIDATION_RESULTS.csv` and `outputs/MONEY_READY_BROKER_PROXY_RESULTS.csv`
+Current stability-best research profile:
 
-## Active FMLR Research Surface
+`Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
 
-- Full FMLR package: `480` Model4 configs, `40` profiles
-- Fast FMLR screen: `162` Model4 configs, `27` profiles
-- New isolated profiles:
-  - `fmlr_sweep_unlimited_runner`
-  - `fmlr_tick_speed_reclaim`
-  - `fmlr_activity_blend`
-  - `fmlr_activity_blend_tight`
+Fresh current-source real-tick continuous result:
 
-## Static Checks
+- Model: `4`
+- Period: `2024.01.01` to `2026.07.12`
+- Net: `+$1,195.69`
+- Total return from `$1,000`: `+119.57%`
+- CAGR: about `+36.51%/yr`
 
-Latest local checks reported:
+The historical `+$4,507.51` Model4 result remains stale until reproduced on the current source.
 
-- `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`
-- `EA_SOURCE_ARTIFACT_SYNC_SMOKE_PASS`
-- `FLAT_MONTH_LIQUIDITY_RECLAIM_PROBE_PACKAGE_SMOKE_PASS`
-- `FLAT_MONTH_LIQUIDITY_RECLAIM_FAST_PROBE_PACKAGE_SMOKE_PASS`
-- `FLAT_MONTH_LIQUIDITY_RECLAIM_COMPACT_SOURCE_SMOKE_PASS`
-- `MONEY_READY_PROFILE_SMOKE_PASS`
-- `MONEY_READY_SAFETY_CONTRACT_PASS`
-- `TRADE_READINESS_PROFILE_SMOKE_PASS`
-- `TRADE_READY_CONSERVATIVE_PROFILE_SMOKE_PASS`
-- `TRADE_READY_CONSERVATIVE_VALIDATION_PACKAGE_SMOKE_PASS`
-- `TRADE_READY_CONSERVATIVE_BROKER_PROXY_PACKAGE_SMOKE_PASS`
-- `TRADE_READY_CONSERVATIVE_VALIDATION_DECISION_SMOKE_PASS`
-- `TRADE_READY_CONSERVATIVE_REPORT_IMPORT_SMOKE_PASS`
-- `REPORT_COLLECTOR_PARSER_SMOKE_PASS`
-- `TRADE_READY_CONSERVATIVE_REPORT_ROUTING_SMOKE_PASS`
-- `TRADE_QUALITY_ANALYZER_SMOKE_PASS`
-- `MONTE_CARLO_TRADE_STRESS_SMOKE_PASS`
-- `TRADE_READY_EXTERNAL_EVIDENCE_SMOKE_PASS`
-- `TRADE_READY_LIVE_READINESS_SMOKE_PASS`
-- `TRADE_READY_CLOSED_DEAL_LOGGING_SMOKE_PASS`
-- `FIRST_PASS_VALIDATION_QUEUE_SMOKE_PASS`
-- `FIRST_PASS_VALIDATION_QUEUE_DECISION_SMOKE_PASS`
-- `FIRST_PASS_VALIDATION_QUEUE_REPORT_IMPORT_SMOKE_PASS`
-- `FIRST_PASS_NEXT_RUN_BATCH_SMOKE_PASS`
-- `FIRST_PASS_NEXT_RUN_PACKAGE_SMOKE_PASS`
-- `FIRST_PASS_REFRESH_STATE_SMOKE_PASS`
-- `FIRST_PASS_EVIDENCE_INTEGRITY_SMOKE_PASS`
-- `FIRST_PASS_TRUSTED_DECISION_SMOKE_PASS`
-- `TRADE_READY_CONSERVATIVE_AUDIT_WRITTEN`
-- `MONEY_READY_VALIDATION_PACKAGE_SMOKE_PASS`
-- `MONEY_READY_BROKER_PROXY_PACKAGE_SMOKE_PASS`
-- `MONEY_READY_VALIDATION_DECISION_SMOKE_PASS`
-- `MONEY_READY_STATUS_SCORECARD_SMOKE_PASS`
-- `TRADE_READY_RELEASE_CANDIDATE_SMOKE_PASS`
-- `MONEY_READY_PROOF_RUNWAY_SMOKE_PASS`
-- `MONEY_READY_EVIDENCE_HANDOFF_SMOKE_PASS`
-- `FIRST_PASS_RETURNED_REPORT_ROUTING_SMOKE_PASS`
-- `TRADE_READY_LIVE_EVIDENCE_ROUTING_SMOKE_PASS`
-- `MT5_COMPILE_EVIDENCE_ROUTING_SMOKE_PASS`
-- `MONEY_READY_REFRESH_STATUS_SMOKE_PASS`
-- `OFFLINE_REFRESH_QUIET_MODE_SMOKE_PASS`
-- `MONEY_READY_PROFILE_AUDIT_WRITTEN`
-- `ADAPTIVE_REVERSE_QUARANTINE_SMOKE_PASS`
-- `MT5_HIDDEN_LAUNCHER_LOCK_SMOKE_PASS`
-- MT5 local safety audit: `PASS 43 / 43`
+## Candidate Profiles
 
-MT5 was not launched during this manifest refresh.
+Conservative trade-ready candidate:
 
-## GitHub Note
+- File: `outputs/CANDIDATE_TRADE_READY_CONSERVATIVE_PROFILE.set`
+- SHA-256: `0A97B46D7E3A3C3566EF4E787BCB63E2138D114C2F0F898F9A8B1A10F842BF90`
+- Evidence profile id: `trade_ready_conservative`
+- Evidence source hash: `46770EACA60826F90E1E9A9B7425356F96F7C8F83CF8F8C1FBE271632866933E`
+- Real-account trading: locked/disabled
 
-The full `.mq5` file is verified locally by the SHA-256 above. The current Codex workspace is not a valid Git checkout, and the connector file API is being used only for lightweight dashboard/evidence files. If an authenticated Git push path is restored, upload both `Professional_XAUUSD_EA.mq5` and `outputs/Professional_XAUUSD_EA.mq5`, then confirm the GitHub download hash matches `44D9EBA868C86EB6C57DF82C3B94D83ACFE994B1A665917EC05AB8313188A5F7`.
+Money-ready/demo candidate:
+
+- File: `outputs/CANDIDATE_MONEY_READY_PROFILE.set`
+- SHA-256: `2F2B757768AA14CC864F5A161305E1A4E05C1B4228B880BEBA6CD5C50D8D6231`
+- Alias: `outputs/CANDIDATE_TRADE_READINESS_PROFILE.set`
+- Alias SHA-256: `2F2B757768AA14CC864F5A161305E1A4E05C1B4228B880BEBA6CD5C50D8D6231`
+- Evidence profile id: `money_ready`
+- Evidence source hash: `46770EACA60826F90E1E9A9B7425356F96F7C8F83CF8F8C1FBE271632866933E`
+- Real-account trading: locked/disabled
+
+## Live-Readiness Snapshot
+
+- Overall: `PENDING`
+- Passing gates: `6`
+- Pending gates: `7`
+- Failed gates: `0`
+- Reproducibility bundle: `PASS`, `49` pass / `0` pending / `0` fail
+- Money-ready refresh: `PENDING`, `5` pass / `9` pending / `0` fail
+
+Remaining proof blockers:
+
+- first-pass MT5 reports
+- full conservative validation reports
+- broker-proxy reports
+- conservative trade/deal logs with realized R
+- Monte Carlo trade-stress pass
+- forward/demo evidence
+- second-broker evidence
+- GitHub source/profile publication sync
+
+## Source Notes
+
+The 2026-07-14 source change shortened six overlong FMLR input identifiers so MetaEditor can compile the current EA source:
+
+- `InpFMLRDispPBBreakLookbackBars`
+- `InpFMLRDispPBBreakBufferPoints`
+- `InpFMLRDispPBMinCloseLocation`
+- `InpFMLRDispPBMinBreakRangeATR`
+- `InpFMLRDispPBMinBreakBodyPercent`
+- `InpFMLROBRetestMinImpulseBodyPercent`
+
+This was a compile/readiness fix, not a new profitable strategy promotion.
