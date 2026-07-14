@@ -1,6 +1,6 @@
 # GitHub Status Dashboard
 
-Last updated: 2026-07-14 05:21 UTC.
+Last updated: 2026-07-14 UTC after current-profile package rebuild.
 
 ## Short Answer
 
@@ -36,8 +36,8 @@ Return math assumes a `$1,000` starting balance over `2024.01.01` to `2026.07.12
 ## GitHub Publication Sync
 
 - Overall: `PENDING`
-- Required source/profile artifacts verified on GitHub: `2 / 7`; source manifest and current research-best note match, while exact EA source/profile artifacts remain pending
-- Required pending artifacts: `5`
+- Required source/profile artifacts verified on GitHub: `1 / 7`; source manifest matches, while the corrected current-best note and exact EA source/profile artifacts remain pending
+- Required pending artifacts: `6`
 - Required failed artifacts: `0`
 - Evidence file: `outputs/GITHUB_PUBLICATION_SYNC.md`
 
@@ -53,6 +53,8 @@ The current conservative candidate is not live-ready and should remain paper/dem
 - FMLR package smoke: `PASS`
 - Money-ready refresh smoke: `PASS`
 - Visible MT5/MetaEditor/Metatester/Git process check: clear
+- First-pass package hashes: current conservative `0A97B46D7E3A`, current money-ready `2F2B757768AA`
+- Stale first-pass hashes `621F54A4...` and `0CF80057...`: removed from active run packages
 
 ## Current Conservative Candidate
 
