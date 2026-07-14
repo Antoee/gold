@@ -156,7 +156,7 @@ Current local reproducibility bundle:
 
 - Status: `PASS`
 - Passing rows: `75`
-- Zip SHA-256: `E70BFA99B229F0B32BA294D2C09E35AE3BCE8360402780C9C532013025F11B66`
+- Zip SHA-256: `1327E3F7E95F8A45D332BEC52B8F3FD3110FB1D6D558E7AFC6D2E9788BD47534`
 - Reminder: this is a local hash freeze only; it does not clear the GitHub/source-publication sync gate.
 
 ## Why There Is No New Best On GitHub
