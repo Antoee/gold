@@ -7,10 +7,10 @@ Last updated: 2026-07-14.
 Created a strict paper/demo or tiny-size evaluation profile:
 
 - Profile: `outputs/CANDIDATE_TRADE_READY_CONSERVATIVE_PROFILE.set`
-- Profile SHA-256: `0A97B46D7E3A3C3566EF4E787BCB63E2138D114C2F0F898F9A8B1A10F842BF90`
-- EA source SHA-256: `46770EACA60826F90E1E9A9B7425356F96F7C8F83CF8F8C1FBE271632866933E`
+- Profile SHA-256: `82530801102198E81E08E1EF772D5501B52FB88CCFD67E6651CE32EF1D055665`
+- EA source SHA-256: `5D148DAE2335F9037BDED3C9A82BD916C1FCFB6F43EE2EC5EAAE7E67384ED412`
 - Audit: `outputs/TRADE_READY_CONSERVATIVE_AUDIT.md`
-- Audit result: `103` PASS, `5` OPEN, `0` FAIL
+- Audit result: `110` PASS, `5` OPEN, `0` FAIL
 - Validation package: `outputs/trade_ready_conservative_validation_package`
 - Validation manifest: `outputs/TRADE_READY_CONSERVATIVE_VALIDATION_MANIFEST.csv`
 - Broker-proxy package: `outputs/trade_ready_conservative_broker_proxy_package`
@@ -30,8 +30,8 @@ Created a strict paper/demo or tiny-size evaluation profile:
 - Current Monte Carlo status: `PENDING`, with `0` returned trade logs, `0` R trades, `3` pending gates, and `0` failures.
 - Current forward/demo status: `PENDING`, with `0` returned evidence rows and `0` failures.
 - Current second-broker status: `PENDING`, with `0` returned evidence rows and `0` failures.
-- Current live-readiness status: `PENDING`, with `6` passing gates, `7` pending gates, and `0` failures.
-- Evidence identity expected in returned trade logs: `profile_id=trade_ready_conservative`, `source_hash=46770EACA60826F90E1E9A9B7425356F96F7C8F83CF8F8C1FBE271632866933E`, and a non-empty `run_label`.
+- Current live-readiness status: `PENDING`, with `5` passing gates, `8` pending gates, and `0` failures.
+- Evidence identity expected in returned trade logs: `profile_id=trade_ready_conservative`, `source_hash=5D148DAE2335F9037BDED3C9A82BD916C1FCFB6F43EE2EC5EAAE7E67384ED412`, and a non-empty `run_label`.
 
 This is the safest current candidate profile, but it is not approved for meaningful real money until the open proof gaps are closed.
 
@@ -59,15 +59,22 @@ The profile enables:
 - `InpUseTradeReadinessSafetyGate=true`
 - `InpUseSymbolSafetyLock=true`
 - `InpUseRealAccountSafetyLock=true`
+- `InpUseTradeEnvironmentGuard=true`
+- `InpTradeEnvMinSignalBars=300`
+- `InpTradeEnvMaxQuoteAgeSeconds=30`
+- `InpTradeEnvMaxStopsLevelPoints=250.0`
+- `InpTradeEnvMaxFreezeLevelPoints=250.0`
+- `InpTradeEnvRequireTickValue=true`
 - `InpAllowRealAccountTrading=false`
 - `InpRealAccountApprovalCode=DISABLED`
 - `InpRealAccountApprovalProfileId=DISABLED`
 - `InpRealAccountApprovalSourceHash=DISABLED`
 - `InpEvidenceProfileId=trade_ready_conservative`
-- `InpEvidenceSourceHash=46770EACA60826F90E1E9A9B7425356F96F7C8F83CF8F8C1FBE271632866933E`
+- `InpEvidenceSourceHash=5D148DAE2335F9037BDED3C9A82BD916C1FCFB6F43EE2EC5EAAE7E67384ED412`
 - `InpEvidenceRunLabel=trade_ready_conservative_validation`
 
 The EA source contains `TradeReadinessSafetyGateAllows()` and returns `INIT_PARAMETERS_INCORRECT` if this gate is enabled and the profile is loosened past the configured risk, spread, margin, loss, or exit-protection caps.
+The EA source also contains `TradeEnvironmentAllows()` and blocks new entries when enabled if quotes are stale/invalid, the signal timeframe has too little history, broker symbol specs are invalid, trade mode is disabled/close-only, stop/freeze levels exceed the cap, or tick value is unavailable.
 The EA source also contains `SymbolSafetyLockAllows()` and refuses initialization when attached to a chart whose symbol does not contain `InpAllowedSymbol`.
 The EA source also contains `RealAccountSafetyLockAllows()` and refuses real-account initialization unless real trading is explicitly enabled, the approval code is set to `ALLOW_REAL_ACCOUNT_TRADING`, the trade-readiness gate is enabled, and the approval profile/source identity matches the evidence profile/source identity.
 
@@ -81,6 +88,7 @@ The EA source also contains `RealAccountSafetyLockAllows()` and refuses real-acc
 - Min-lot risk overflow: off
 - Unprotected exposure: blocked
 - Spread-adjusted RR filter: on
+- Trade environment guard: on
 - Trading-cost guard: on
 - Spread regime guard: on
 - M1 spread-shock guard: on
@@ -120,6 +128,7 @@ Static checks passed without launching MT5:
 - `FIRST_PASS_PARALLEL_LANES_SMOKE_PASS`
 - `MT5_COMPILE_EVIDENCE_ROUTING_SMOKE_PASS`
 - MT5 local safety audit: `PASS 43 / 43`
+- Current-source compile evidence: `PENDING`; previous compile proof is stale for old source hash `46770EACA60826F90E1E9A9B7425356F96F7C8F83CF8F8C1FBE271632866933E`
 
 Open proof gaps:
 
