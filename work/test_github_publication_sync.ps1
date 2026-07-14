@@ -99,6 +99,32 @@ try {
    Assert-True (@($connectorPassRows | Where-Object { $_.Required -eq "True" -and $_.Status -ne "PASS" }).Count -eq 0) "Connector blob matches should pass required rows even when raw remote fixture is stale"
    Assert-True (@($connectorPassRows | Where-Object { $_.Role -eq "trade-ready-conservative-profile" -and $_.Detail -eq "CONNECTOR_BLOB_MATCH" }).Count -eq 1) "Connector match detail should be visible"
 
+   $connectorRowsText = foreach($path in $requiredPaths) {
+      $full = Join-Path $localRoot $path
+      $blob = if($path -eq "outputs\CANDIDATE_TRADE_READY_CONSERVATIVE_PROFILE.set") {
+         $filterPath = $path -replace '\\', '/'
+         & $git hash-object "--path=$filterPath" -- $full
+      } else {
+         & $git hash-object --no-filters -- $full
+      }
+      [pscustomobject]@{
+         Role = ""
+         RemotePath = ($path -replace '\\', '/')
+         RemoteExists = "True"
+         RemoteGitBlobSha = $blob
+      }
+   }
+   $connectorRowsText | Export-Csv -LiteralPath $connectorCsv -NoTypeInformation -Encoding ASCII
+   & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $repo "work\audit_github_publication_sync.ps1") `
+      -LocalRoot $localRoot `
+      -RemoteRoot $remoteRoot `
+      -ConnectorVerificationPath $connectorCsv `
+      -OutCsv $outCsv `
+      -OutMarkdown $outMd | Out-Null
+   $connectorTextRows = @(Import-Csv -LiteralPath $outCsv)
+   Assert-True (@($connectorTextRows | Where-Object { $_.Required -eq "True" -and $_.Status -ne "PASS" }).Count -eq 0) "Connector text-normalized blob matches should pass required rows"
+   Assert-True (@($connectorTextRows | Where-Object { $_.Role -eq "trade-ready-conservative-profile" -and $_.Detail -eq "CONNECTOR_TEXT_BLOB_MATCH" }).Count -eq 1) "Connector text-normalized match detail should be visible"
+
    Remove-Item -LiteralPath (Join-Path $localRoot "outputs\CANDIDATE_MONEY_READY_PROFILE.set") -Force
    & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $repo "work\audit_github_publication_sync.ps1") `
       -LocalRoot $localRoot `
