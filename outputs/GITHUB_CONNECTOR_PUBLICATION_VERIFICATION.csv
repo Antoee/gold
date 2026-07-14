@@ -1,0 +1,8 @@
+"Role","RemotePath","RemoteExists","RemoteGitBlobSha","CheckedAtUtc","Source"
+"root-ea-source","Professional_XAUUSD_EA.mq5","True","483667b91ca9d10e7386a9291de578fdc525ff6c","2026-07-14T04:27:18.3483967Z","github-connector-fetch_file"
+"mirrored-ea-source","outputs/Professional_XAUUSD_EA.mq5","False","","2026-07-14T04:27:18.3483967Z","github-connector-fetch_file"
+"trade-ready-conservative-profile","outputs/CANDIDATE_TRADE_READY_CONSERVATIVE_PROFILE.set","True","856f810518917c350f228a0264db3841d1dfa5d5","2026-07-14T04:27:18.3483967Z","github-connector-fetch_file"
+"money-ready-profile","outputs/CANDIDATE_MONEY_READY_PROFILE.set","True","94ba77b2863370b8c63c5ff2b405ae040dd8fc71","2026-07-14T04:27:18.3483967Z","github-connector-fetch_file"
+"trade-readiness-alias-profile","outputs/CANDIDATE_TRADE_READINESS_PROFILE.set","True","94ba77b2863370b8c63c5ff2b405ae040dd8fc71","2026-07-14T04:27:18.3483967Z","github-connector-fetch_file"
+"source-manifest","outputs/SOURCE_MANIFEST.md","True","8aa18509464c930b6f4b66f55b0160f65620fba1","2026-07-14T04:27:18.3483967Z","github-connector-fetch_file"
+"current-research-best","outputs/CURRENT_RESEARCH_BEST_PROFILE.md","True","76e5272c86a7da6b766519102a6f78937add615b","2026-07-14T04:27:18.3483967Z","github-connector-fetch_file"
