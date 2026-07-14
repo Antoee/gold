@@ -6,7 +6,7 @@ No martingale. No grid. No averaging down. No recovery sizing. Risk control stay
 
 ## Latest Status
 
-Last updated: 2026-07-14 UTC after annualized-return/CAGR report metrics, current-source money-ready audit refresh, local reproducibility-bundle rebuild, and required-artifact sync-package generation.
+Last updated: 2026-07-14 UTC after adding minimum annualized-return/CAGR validation gates, current-source money-ready audit refresh, local reproducibility-bundle rebuild, and required-artifact sync-package generation.
 
 Short answer: there is no newly validated best profile yet.
 
@@ -14,7 +14,7 @@ The current stability-best research profile is still:
 
 `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
 
-The conservative trade-ready candidate is the safest current test candidate, but it is still paper/demo only. The latest progress is evidence quality: exported MT5 report summaries now calculate total return %, annualized return %, and CAGR %, so future results are harder to misread as raw dollars only.
+The conservative trade-ready candidate is the safest current test candidate, but it is still paper/demo only. The latest progress is stricter evidence quality: exported MT5 report summaries calculate yearly return metrics, and first-pass/full-validation decisions now require the exact continuous real-tick run to clear minimum annualized-return and CAGR floors.
 
 ## Current Best Evidence
 
@@ -33,6 +33,7 @@ Return math assumes a `$1,000` starting balance over `2024.01.01` to `2026.07.12
 - Passing areas: `5`
 - Pending areas: `10`
 - Failed areas: `0`
+- First-pass decision: `PENDING`, `5` pass / `21` pending / `0` fail
 - Money-ready scorecard: `NOT_READY_PENDING_EVIDENCE`, `5` pass / `14` pending / `0` fail
 - Live-readiness gate: `PENDING`, `5` pass / `8` pending / `0` fail
 - Release-candidate gate: `NOT_RELEASEABLE_PENDING_EVIDENCE`
@@ -44,10 +45,12 @@ The current conservative candidate is not live-ready and should remain paper/dem
 
 ## Latest Offline Progress
 
-- `work/collect_validation_results.ps1` now emits `InitialDeposit`, `CalendarDays`, `Years`, `TotalReturnPercent`, `AnnualizedReturnPercent`, and `CagrPercent` for parsed MT5 reports.
-- `outputs/FIRST_PASS_VALIDATION_QUEUE_REPORT_METRICS.md` now includes average/worst annualized return and CAGR columns.
-- Parser smoke tests now explicitly verify the annualized-return and CAGR math.
-- The reproducibility bundle was rebuilt: zip SHA-256 `01491DF4A9888E8075F5A8C6D34B399EB3FE6D87C2492ABA32D6927DB621D57B`.
+- Exported-report summaries now calculate total return %, annualized return %, and CAGR %.
+- First-pass validation now requires the continuous exact real-tick report to clear `>= 1%` annualized return and `>= 1%` CAGR.
+- Full money-ready/conservative validation now applies the same continuous annualized-return and CAGR floors.
+- Synthetic tests prove weak yearly return fails those gates.
+- First-pass pending gates rose from `19` to `21` by design because annualized return and CAGR must now be proven.
+- Reproducibility bundle hash: `9773220EC39B09FEA50463B74F56C9094CC19C4FA9FD1AAD64D20AF69E9739A9`.
 - MT5, MetaEditor, and Metatester were not launched.
 
 ## Current Conservative Candidate
@@ -91,6 +94,7 @@ Risk shape:
 
 - `outputs/GITHUB_STATUS_DASHBOARD.md`
 - `outputs/MONEY_READY_REFRESH_STATUS.md`
+- `outputs/FIRST_PASS_VALIDATION_QUEUE_DECISION.md`
 - `outputs/FIRST_PASS_VALIDATION_QUEUE_REPORT_METRICS.md`
 - `outputs/TRADE_READY_REPRODUCIBILITY_BUNDLE.md`
 - `outputs/GITHUB_PUBLICATION_SYNC.md`
