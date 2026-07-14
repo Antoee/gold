@@ -1,0 +1,6 @@
+"Candidate","SourceType","Phase","Expected","ParsedReports","ParsedLogs","ParsedTotal","Missing","Unparsed","TotalNetProfit","WorstNetProfit","AverageAnnualizedReturnPercent","WorstAnnualizedReturnPercent","AverageCagrPercent","WorstCagrPercent","WorstDrawdownPercent","MinProfitFactor","TotalTrades"
+"r10_base","peak_r20_drawdown_shortlist","phase1_model4_shortlist","1","0","1","1","0","0","1564.01","1564.01","61.89","61.89","45.15","45.15","10.64","2.6874","74"
+"r10_dailytrail35","peak_r20_drawdown_shortlist","phase1_model4_shortlist","1","0","1","1","0","0","1577.25","1577.25","62.42","62.42","45.45","45.45","10.64","2.7264","73"
+"r10_loss_scale_25","peak_r20_drawdown_shortlist","phase1_model4_shortlist","1","0","1","1","0","0","1396.22","1396.22","55.25","55.25","41.31","41.31","9.32","2.6496","75"
+"r10_loss_scale_15","peak_r20_drawdown_shortlist","phase1_model4_shortlist","1","0","1","1","0","0","1281.41","1281.41","50.71","50.71","38.6","38.6","8.53","2.7634","68"
+"r10_profit_guard40","peak_r20_drawdown_shortlist","phase1_model4_shortlist","1","0","1","1","0","0","1000.97","1000.97","39.61","39.61","31.59","31.59","7.76","3.4058","46"

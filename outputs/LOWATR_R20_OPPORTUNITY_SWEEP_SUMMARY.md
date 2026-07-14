@@ -52,7 +52,9 @@ Aggregate yearly split score: +$1,248.34. This is a validation-window score, not
 
 The strict R20 profile was too small because the equity profit peak trail effectively froze the continuous account after early gains. Removing that blocker lets the strategy keep trading and produces much better profit and trade count, including a green 2025 split. The cost is higher drawdown.
 
-The next useful work is not to raise risk. It is to replace the blunt equity profit peak blocker with a smarter profit-protection rule that keeps later-year participation while cutting the 2025 drawdown path.
+Follow-up complete on 2026-07-14: `outputs/PEAK_R20_DRAWDOWN_SWEEP_SUMMARY.md` records a 22-variant R10 drawdown sweep plus a 5-profile Model4 shortlist. The best lower-drawdown fallback was `r10_profit_guard40`, which made `+$1,000.97` on Model4 with `7.76%` drawdown, PF `3.4058`, and recovery `8.5240`. The best high-profit branch still has about `10.6%` drawdown. No trade-ready profile was promoted.
+
+The next useful work is not to raise risk. It is to validate the lower-drawdown fallback and/or make a strategy-code/risk-shape change that preserves later-year participation while cutting the 2025 drawdown path.
 
 ## Artifacts
 
@@ -62,4 +64,7 @@ The next useful work is not to raise risk. It is to replace the blunt equity pro
 - Yearly split metrics: `outputs/PEAK_R20_NO_PEAKTRAIL_R10_SPLIT_REPORT_METRICS.md`
 - Model4 continuous result: `outputs/PEAK_R20_NO_PEAKTRAIL_R10_MODEL4_RESULTS.csv`
 - Model4 metrics: `outputs/PEAK_R20_NO_PEAKTRAIL_R10_MODEL4_REPORT_METRICS.md`
+- R10 drawdown sweep summary: `outputs/PEAK_R20_DRAWDOWN_SWEEP_SUMMARY.md`
+- R10 drawdown Model1 results: `outputs/PEAK_R20_DRAWDOWN_RESULTS.csv`
+- R10 drawdown Model4 shortlist results: `outputs/PEAK_R20_DRAWDOWN_SHORTLIST_MODEL4_RESULTS.csv`
 - Candidate profile: `outputs/lowatr_r20_opportunity_sweep_package/profiles/peak_r20_no_peaktrail_r10.set`

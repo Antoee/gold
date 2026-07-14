@@ -118,6 +118,30 @@ Model1 yearly splits stayed green: 2024 `+$814.43`, 2025 `+$186.95`, and 2026 YT
 
 Reason not promoted: drawdown is above the strict safety band and full exported MT5 reports are still missing. See `outputs/LOWATR_R20_OPPORTUNITY_SWEEP_SUMMARY.md`.
 
+## R10 Drawdown Follow-Up
+
+On 2026-07-14, a 22-variant drawdown-reduction sweep tested risk floors, loss-risk scaling, equity/realized giveback quality gates, profit guards, and daily equity trailing around the aggressive R10 branch.
+
+No new trade-ready profile was promoted.
+
+Model4 shortlist:
+
+| Candidate | Net | Ann. Return | CAGR | PF | Recovery | Sharpe | Trades | Max DD |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `r10_dailytrail35` | `+$1,577.25` | `62.42%` | `45.45%` | `2.7264` | `7.1609` | `39.7757` | `73` | `10.64%` |
+| `r10_base` | `+$1,564.01` | `61.89%` | `45.15%` | `2.6874` | `7.1007` | `38.3838` | `74` | `10.64%` |
+| `r10_loss_scale_25` | `+$1,396.22` | `55.25%` | `41.31%` | `2.6496` | `7.2448` | `38.5606` | `75` | `9.32%` |
+| `r10_loss_scale_15` | `+$1,281.41` | `50.71%` | `38.60%` | `2.7634` | `7.2787` | `40.9187` | `68` | `8.53%` |
+| `r10_profit_guard40` | `+$1,000.97` | `39.61%` | `31.59%` | `3.4058` | `8.5240` | `42.3443` | `46` | `7.76%` |
+
+Decision:
+
+- `r10_dailytrail35` is not promoted because it adds only `+$13.24` over the Model4 R10 baseline and leaves drawdown unchanged.
+- `r10_profit_guard40` is the best lower-drawdown fallback, but it gives up too much profit to replace the aggressive frontier outright.
+- Both remain research-only until exported full reports, split validation, stress testing, broker variation, and forward/demo evidence exist.
+
+See `outputs/PEAK_R20_DRAWDOWN_SWEEP_SUMMARY.md`.
+
 ## Evidence Files
 
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_PROBE_DIFF.csv`
