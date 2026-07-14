@@ -94,6 +94,8 @@ $md.Add("# Validation Package Shape Gate")
 $md.Add("")
 $md.Add("Generated offline. This does not launch MT5, MetaEditor, GitHub Actions, Git, or GitHub CLI.")
 $md.Add("")
+$md.Add("- Generator: ``work/write_validation_package_shape_gate.ps1``")
+$md.Add("")
 $md.Add("- Overall: **$overall**")
 $md.Add(('- Manifest rows: `{0}` / `{1}`' -f $manifest.Count, $requiredTotal))
 if($null -ne $shapeGate) {
