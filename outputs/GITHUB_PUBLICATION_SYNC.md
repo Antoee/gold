@@ -20,13 +20,13 @@ At least one required artifact is missing, stale, or inaccessible through the ra
 | trade-ready-conservative-profile | True | PENDING | CONNECTOR_BLOB_MISMATCH | 825308011021 | 8c4a3eb4df10 | 856f81051891 | Conservative profile used by live-readiness gates. |
 | money-ready-profile | True | PENDING | CONNECTOR_BLOB_MISMATCH | 553A967B5FCE | d8389ca533a7 | 94ba77b28633 | Money-ready demo/forward-test candidate profile. |
 | trade-readiness-alias-profile | True | PENDING | CONNECTOR_BLOB_MISMATCH | 553A967B5FCE | d8389ca533a7 | 94ba77b28633 | Alias profile expected to match money-ready profile. |
-| source-manifest | True | PASS | CONNECTOR_BLOB_MATCH | 96198A3F47F2 | 191de0d8ed79 | 191de0d8ed79 | Source hash/status manifest. |
+| source-manifest | True | PASS | CONNECTOR_BLOB_MATCH | 0B62F721D9FB | 793c586ceddc | 793c586ceddc | Source hash/status manifest. |
 | current-research-best | True | PASS | CONNECTOR_BLOB_MATCH | 396DD04027D7 | 4d1c7b813e3e | 4d1c7b813e3e | Current promoted research profile status. |
-| readme-dashboard | False | INFO | OPTIONAL_NOT_VERIFIED | CB2FC3CBAD7B | edb4eed8cffe |  | Human-facing repository dashboard. |
-| github-status-dashboard | False | INFO | OPTIONAL_NOT_VERIFIED | C22A17D96906 | 9eb12dc4437f |  | Compact GitHub-facing status board. |
-| money-ready-refresh | False | INFO | OPTIONAL_NOT_VERIFIED | 86CB62CAB9B8 | b93583319c73 |  | Latest one-command refresh status. |
-| money-ready-scorecard | False | INFO | OPTIONAL_NOT_VERIFIED | 784AC16B3A33 | 0efcd65572d8 |  | Money-ready scorecard. |
-| live-readiness-decision | False | INFO | OPTIONAL_NOT_VERIFIED | 4EECFD6E2279 | 93e69289d9ee |  | Final conservative live-readiness gate. |
+| readme-dashboard | False | INFO | OPTIONAL_NOT_VERIFIED | C72E15DA886A | 53a1a36cfd5d |  | Human-facing repository dashboard. |
+| github-status-dashboard | False | INFO | OPTIONAL_NOT_VERIFIED | B7D73F156166 | b76618fda981 |  | Compact GitHub-facing status board. |
+| money-ready-refresh | False | INFO | OPTIONAL_NOT_VERIFIED | CF3EFF000B17 | ac76bb33bdc8 |  | Latest one-command refresh status. |
+| money-ready-scorecard | False | INFO | OPTIONAL_NOT_VERIFIED | 3DD360756589 | 85c7e0a00ff0 |  | Money-ready scorecard. |
+| live-readiness-decision | False | INFO | OPTIONAL_NOT_VERIFIED | 07F472C8C57D | 25553d226758 |  | Final conservative live-readiness gate. |
 | release-candidate-decision | False | INFO | OPTIONAL_NOT_VERIFIED | BDC7E355C28F | 1d772796edb6 |  | Release-candidate gate. |
 | first-pass-parallel-lanes | False | INFO | OPTIONAL_NOT_VERIFIED | 706EBFCA5C5F | 4a6d0cf2eac4 |  | Fast first-pass lane split. |
 | evidence-handoff | False | INFO | OPTIONAL_NOT_VERIFIED | CFA93C33EADB | 31921ae45fee |  | Evidence handoff summary. |
