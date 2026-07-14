@@ -1,6 +1,6 @@
 # GitHub Status Dashboard
 
-Last updated: 2026-07-14 UTC after annualized-return/CAGR report metrics, strict returned-report routing, connector profile-artifact sync, current-source money-ready audit refresh, and local reproducibility-bundle rebuild.
+Last updated: 2026-07-14 UTC after annualized-return/CAGR report metrics, strict returned-report routing, current-source money-ready audit refresh, local reproducibility-bundle rebuild, required-artifact sync-package generation, and source-artifact upload-plan generation.
 
 ## Short Answer
 
@@ -10,7 +10,7 @@ The current stability-best research profile is still:
 
 `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
 
-The newer conservative trade-ready profile and FMLR research lanes are prepared, but they are not proven better yet because the required MT5 reports and live-readiness evidence are still missing. The latest local change is a reproducibility improvement, not a new profit result.
+The newer conservative trade-ready profile and FMLR research lanes are prepared, but they are not proven better yet because the required MT5 reports and live-readiness evidence are still missing. The latest local change is a reproducibility/source-publication improvement, not a new profit result.
 
 ## Current Best Evidence
 
@@ -42,8 +42,9 @@ Return math assumes a `$1,000` starting balance over `2024.01.01` to `2026.07.12
 - Required failed artifacts: `0`
 - Evidence file: `outputs/GITHUB_PUBLICATION_SYNC.md`
 - Exact local upload package: `outputs/GITHUB_REQUIRED_ARTIFACT_SYNC_PACKAGE.md`
+- Source upload plan/helper: `outputs/GITHUB_SOURCE_ARTIFACT_UPLOAD_PLAN.md`
 
-The source/profile publication gate is still blocking live-readiness because the local folder is not a valid git checkout and the two large EA source paths are not yet exact connector-verified matches. The profile artifacts are now connector-verified. This is a reproducibility blocker, not a trading-profit result.
+The source/profile publication gate is still blocking live-readiness because the local folder is not a valid git checkout and the two large EA source paths are not yet exact connector-verified matches. The profile artifacts are now connector-verified. The source upload plan is `READY`: the stale root EA source would be updated and the missing mirrored output EA source would be created when a noninteractive token is available. This is a reproducibility blocker, not a trading-profit result.
 
 The current conservative candidate is not live-ready and should remain paper/demo only.
 
@@ -55,18 +56,16 @@ The current conservative candidate is not live-ready and should remain paper/dem
 - Report collector annualized return/CAGR smoke: `PASS`
 - Minimum continuous annualized-return/CAGR gate smoke: `PASS`
 - GitHub profile artifact sync: `PASS`, `3 / 3` profile artifacts connector-verified
-- Static Safety workflow missing-script fix: `work/static_repo_safety_audit.py` and `work/static_mql_compile_preflight.py` now exist locally, pass locally, and have been published to GitHub
 - GitHub publication sync smoke: `PASS`
 - Required artifact sync package smoke: `PASS`, `5` required artifacts, `0` unsafe profile rows
-- Trade-ready live-readiness smoke: `PASS`
-- FMLR package smoke: `PASS`
+- Source artifact upload plan smoke: `PASS`, root source `WOULD_UPDATE`, mirrored output source `WOULD_CREATE`
+- Trade-ready reproducibility bundle smoke: `PASS`
 - Money-ready refresh smoke: `PASS`
-- Visible MT5/MetaEditor/Metatester/Git process check: clear
+- Visible MT5/MetaEditor/Metatester process check: clear
 - Current EA source hash: `5D148DAE2335F9037BDED3C9A82BD916C1FCFB6F43EE2EC5EAAE7E67384ED412`
 - First-pass active package: `4` fast Model1 configs for `trade_ready_conservative`, split into `4` window lanes
 - First-pass active profile hash: current conservative `825308011021`
 - First-pass comparison profile hash: current money-ready `553A967B5FCE` is available only when explicitly re-enabled
-- Stale first-pass hashes `621F54A4...` and `0CF80057...`: removed from active run packages
 
 ## Current Conservative Candidate
 
@@ -103,7 +102,6 @@ The local workspace now has a stricter offline evidence system:
 - strict returned-report validation that rejects screenshots, balance-only snippets, and log-only rows
 - annualized return and CAGR fields in exported-report CSV/Markdown summaries
 - first-pass and full-validation decisions now require minimum continuous annualized return and CAGR
-- connector-verified profile artifacts for conservative, money-ready, and trade-readiness alias profiles
 - live-evidence routing
 - compile-evidence routing
 - conservative full-validation routing
@@ -111,6 +109,7 @@ The local workspace now has a stricter offline evidence system:
 - forward/demo and second-broker evidence gates
 - local reproducibility bundle
 - exact required-artifact sync package for source/profile publication
+- exact source-artifact upload plan/helper for the two remaining large EA source files
 - evidence handoff package
 - four parallel first-pass lanes for faster testing
 
@@ -142,12 +141,13 @@ Required before any live-money review:
 - forward/demo evidence
 - second-broker evidence
 - source/profile reproducibility sync
+- exact EA source publication from `outputs/GITHUB_SOURCE_ARTIFACT_UPLOAD_PLAN.md`
 
 Current local reproducibility bundle:
 
 - Status: `PASS`
-- Passing rows: `60`
-- Zip SHA-256: `CE4258019616FDB829ADC0335C54BF9548BCC93C3198A938F4106A5DFCA5DDAC`
+- Passing rows: `64`
+- Zip SHA-256: `A3DF5F841268EA9332DE1EE83FD5E8F7A0E7A2E37F9112208722A292C0193348`
 - Reminder: this is a local hash freeze only; it does not clear the GitHub/source-publication sync gate.
 
 ## Why There Is No New Best On GitHub
