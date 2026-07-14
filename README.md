@@ -38,7 +38,7 @@ The correct current reading is: the bot is better than the old `$866` baseline, 
 - Money-ready scorecard: `NOT_READY_PENDING_EVIDENCE`
 - Live-readiness gate: `PENDING`, `5` pass / `8` pending / `0` fail
 - Release-candidate gate: `NOT_RELEASEABLE_PENDING_EVIDENCE`
-- GitHub publication sync: `PENDING`, `0 / 7` required source/profile artifacts verified
+- GitHub publication sync: `PENDING`, `5 / 7` required source/profile artifacts verified
 - Real-account trading: locked
 
 The current conservative candidate is not live-ready and should remain paper/demo only.
@@ -116,9 +116,22 @@ Required before any live-money review:
 
 ## GitHub Publication Sync
 
-`outputs/GITHUB_PUBLICATION_SYNC.md` is now the dedicated source/profile publication audit. Current result is `PENDING`: `0` required artifacts pass, `7` are pending, and `0` failed.
+`outputs/GITHUB_PUBLICATION_SYNC.md` is the dedicated source/profile publication audit. Current result is `PENDING`: `5` required artifacts pass, `2` are pending, and `0` failed.
 
-This does not mean the bot is worse. It means the repo still lacks an independently verified publication path for the exact current EA source/profile artifacts. Until that is fixed, the final live-readiness gate must stay pending.
+Verified exact GitHub connector blob matches:
+
+- conservative trade-ready profile
+- money-ready profile
+- trade-readiness alias profile
+- source manifest
+- current research-best profile doc
+
+Still pending:
+
+- root EA source: `Professional_XAUUSD_EA.mq5`
+- mirrored output EA source: `outputs/Professional_XAUUSD_EA.mq5`
+
+This does not mean the bot is worse. It means the repo still lacks independently verified publication for the exact current EA source files. Until that is fixed, the final live-readiness gate must stay pending.
 
 ## Why There Is No New Best Yet
 
@@ -137,4 +150,4 @@ Keep LowATR OrderFlow as the current research best, keep the conservative profil
 
 ## GitHub Sync Note
 
-This page is updated through the GitHub connector because the local Codex folder is not a valid Git checkout and local `git`/`gh` are not installed. Dashboard/status files can be refreshed through the connector, but the final live-readiness `reproducible-github-sync` gate remains pending until exact source/profile artifacts are published and hash-verified through a reproducible path.
+This page is updated through the GitHub connector because the local Codex folder is not a valid Git checkout and local Git authentication is not usable non-interactively. Dashboard/status files can be refreshed through the connector, but the final live-readiness `reproducible-github-sync` gate remains pending until the exact EA source artifacts are published and hash-verified through a reproducible path.
