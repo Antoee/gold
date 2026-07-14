@@ -46,6 +46,30 @@ Decision:
 
 This is the current stability lead, but it is not money-ready. The blocker is the 2020 Model4 loss, which was one `Diagnostic trend fallback` sell trade on 2020-08-13 with ATR `3.82`, spread `30.0`, and profit `-$22.92`. The first diagnostic-quality follow-up did not solve it; the next branch should test a legitimate spread/volatility/risk-control guard rather than disabling a calendar year.
 
+## 2026-07-14 DGF Risk Follow-Up
+
+No new best was promoted.
+
+The EA now includes default-off diagnostic-fallback risk controls:
+
+- `InpUseDiagnosticFallbackSpreadGuard`
+- `InpUseDiagnosticFallbackSpreadRiskScaling`
+- `InpUseDiagnosticFallbackPerformanceRiskScaling`
+
+Evidence:
+
+- Hard diagnostic-fallback spread/ATR caps were rejected because they created red Model1 yearly windows.
+- `r10_a7_dfg_risk_25_45_50` partially improved Model4 yearly validation: total `+$270.66` versus `+$263.72`, worst DD `6.20%` versus `7.09%`, and the 2020 blocker improved from `-$22.92` to `-$15.28`.
+- The 2020 Model4 window is still red, so `r10_a7_dfg_risk_25_45_50` is not promoted.
+- DGF performance-risk throttle variants were rejected in Model1 yearly validation because every throttle variant created at least one red yearly window while the base remained all-green.
+
+See:
+
+- `outputs/PEAK_R20_DGF_RISK_FOLLOWUP_SUMMARY.md`
+- `outputs/PEAK_R20_DFG_SPREAD_YEARLY_RESULTS.csv`
+- `outputs/PEAK_R20_DFG_SPREAD_RISK_MODEL4_YEARLY_RESULTS.csv`
+- `outputs/PEAK_R20_DGF_PERF_RISK_YEARLY_RESULTS.csv`
+
 Evidence:
 
 - `outputs/PEAK_R20_REGIME_COMBO_STABILITY_LEAD_SUMMARY.md`

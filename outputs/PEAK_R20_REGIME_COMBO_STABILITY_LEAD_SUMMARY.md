@@ -85,15 +85,23 @@ File: `outputs/PEAK_R20_DIAG_QUALITY_YEARLY_RESULTS.csv`
 | `r10_a7_diagq_struct_liq` | `+$195.55` | `1` | `-$17.60` | `4.79%` | Rejected |
 | `r10_a7_no_diagfallback` | `+$123.15` | `2` | `-$23.40` | `4.79%` | Rejected |
 
+## 2026-07-14 DGF Risk Follow-Up
+
+File: `outputs/PEAK_R20_DGF_RISK_FOLLOWUP_SUMMARY.md`
+
+No new best was promoted.
+
+- Hard diagnostic-fallback spread/ATR caps were rejected because they created red Model1 yearly windows.
+- `r10_a7_dfg_risk_25_45_50` partially improved Model4: total `+$270.66`, worst DD `6.20%`, and the 2020 loss improved from `-$22.92` to `-$15.28`.
+- The 2020 Model4 yearly window is still red, so the spread-risk variant is not promoted.
+- Diagnostic-fallback performance-risk throttle variants were rejected in Model1 yearly validation because every throttle variant created a red yearly window while the control stayed green.
+
 ## Next Best Work
 
-The next branch should target a legitimate spread/volatility/risk-control guard around high-spread diagnostic fallback entries, not a calendar-year block.
+The next branch should not be another narrow one-off filter. First priority is getting exported MT5 reports for the current stability lead and any serious replacement candidate, then testing broker/stress variation and only promoting a candidate if Model4 yearly windows are no-red and trade-quality evidence is available.
 
 Useful next tests:
 
-- August spread cap or diagnostic-fallback spread cap
-- M1 spread-shock guard
-- spread risk scaling
-- diagnostic fallback ATR/spread guard as a new strategy-code input if existing controls are not enough
 - full exported MT5 reports once a no-red Model4 yearly candidate exists
-
+- broker/stress variation around spread, commission, slippage, and execution delay
+- a broader diagnostic-fallback entry-quality model only if it passes Model1 yearly splits before Model4

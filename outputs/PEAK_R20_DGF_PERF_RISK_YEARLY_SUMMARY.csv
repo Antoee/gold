@@ -1,0 +1,7 @@
+"Candidate","SourceType","Phase","Expected","ParsedReports","ParsedLogs","ParsedTotal","Missing","Unparsed","TotalNetProfit","WorstNetProfit","AverageAnnualizedReturnPercent","WorstAnnualizedReturnPercent","AverageCagrPercent","WorstCagrPercent","WorstDrawdownPercent","MinProfitFactor","TotalTrades"
+"r10_a7_dgf_perf_base","peak_r20_dgf_perf_risk_yearly","phase7_dgf_perf_risk_yearly_model1","8","0","8","8","0","0","344.6","9.25","4.94","0.93","4.97","0.93","7.08","0","28"
+"r10_a7_dgf_perf_4_2_50","peak_r20_dgf_perf_risk_yearly","phase7_dgf_perf_risk_yearly_model1","8","0","8","8","0","0","319.92","-8.96","4.63","-0.9","4.66","-0.9","6.11","0","28"
+"r10_a7_dgf_perf_3_2_40","peak_r20_dgf_perf_risk_yearly","phase7_dgf_perf_risk_yearly_model1","8","0","8","8","0","0","292.4","-13.62","4.28","-1.36","4.32","-1.36","6.22","0","28"
+"r10_a7_dgf_perf_5_2_50","peak_r20_dgf_perf_risk_yearly","phase7_dgf_perf_risk_yearly_model1","8","0","8","8","0","0","297.06","-8.96","4.34","-0.9","4.38","-0.9","6.22","0","28"
+"r10_a7_dgf_spread_perf_4_2_50","peak_r20_dgf_perf_risk_yearly","phase7_dgf_perf_risk_yearly_model1","8","0","8","8","0","0","319.24","-9.64","4.62","-0.96","4.65","-0.96","6.11","0","28"
+"r10_a7_dgf_spread_perf_3_2_40","peak_r20_dgf_perf_risk_yearly","phase7_dgf_perf_risk_yearly_model1","8","0","8","8","0","0","288.7","-17.32","4.24","-1.73","4.27","-1.73","6.22","0","28"

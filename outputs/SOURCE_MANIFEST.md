@@ -6,14 +6,14 @@ Generated from the local EA source without launching MT5.
 
 - File: `Professional_XAUUSD_EA.mq5`
 - Mirrored file: `outputs/Professional_XAUUSD_EA.mq5`
-- Lines: `21943`
-- Size: `923394` bytes
-- SHA-256: `FF1BCDB06E5D628F37039B7A2E6D96CE0EC60E2F0D33F2A1F8E3FF2EE4130394`
+- Lines: `22072`
+- Size: `929618` bytes
+- SHA-256: `2219F6AE66CF1121972848C118213B50C01F91E783ABFE6D66F75105C655EB4D`
 - Last verified locally: `2026-07-14`
 - Root/mirror sync: `PASS`
-- Current-source compile: `PENDING`, stale previous compile proof exists for source hash `46770EACA60826F90E1E9A9B7425356F96F7C8F83CF8F8C1FBE271632866933E`
+- Current-source compile: `PASS` locally via `outputs/DIAGNOSTIC_FALLBACK_PERFORMANCE_RISK_COMPILE.log`, `0 errors, 0 warnings`
 
-The latest source hardening changed the mirrored source hash to `FF1BCDB06E5D628F37039B7A2E6D96CE0EC60E2F0D33F2A1F8E3FF2EE4130394`. The old compile proof was archived as stale; a fresh MetaEditor compile log plus the exact compiled `.mq5` source copy must be returned through `outputs/MT5_COMPILE_EVIDENCE_ROUTING.md` before the compile gate can pass again.
+The latest source update changed the mirrored source hash to `2219F6AE66CF1121972848C118213B50C01F91E783ABFE6D66F75105C655EB4D`. Root and mirrored source hashes match. The live-readiness compile-evidence router may still require a returned compile proof package before a final live gate can pass, but the local hidden MetaEditor compile for this exact source is clean.
 
 ## Current Research Best
 
@@ -89,4 +89,6 @@ An earlier 2026-07-14 source change also shortened six overlong FMLR input ident
 - `InpFMLRDispPBMinBreakBodyPercent`
 - `InpFMLROBRetestMinImpulseBodyPercent`
 
-These were safety/readiness fixes, not new profitable strategy promotions. No new backtest has promoted the `FF1BCDB06E5D628F37039B7A2E6D96CE0EC60E2F0D33F2A1F8E3FF2EE4130394` source hash yet.
+The latest 2026-07-14 source change adds default-off diagnostic-fallback spread guard, spread risk scaling, and performance risk scaling. Follow-up testing did not promote a new best: spread risk scaling was a partial Model4 improvement but left 2020 red, and performance risk scaling created red Model1 years.
+
+These were safety/readiness and research-infrastructure fixes, not new profitable strategy promotions. No new backtest has promoted the `2219F6AE66CF1121972848C118213B50C01F91E783ABFE6D66F75105C655EB4D` source hash yet.

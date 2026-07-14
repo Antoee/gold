@@ -681,6 +681,12 @@ input double          InpSetupLaneStrongAverageR = 0.45;
 input double          InpMinSetupLaneRiskMultiplier = 0.55;
 input double          InpMaxSetupLaneRiskMultiplier = 1.20;
 input bool            InpSetupLaneBoostRequiresClosedProfit = true;
+input bool            InpUseDiagnosticFallbackPerformanceRiskScaling = false;
+input int             InpDiagnosticFallbackPerformanceLookbackTrades = 4;
+input int             InpDiagnosticFallbackPerformanceMinTrades = 2;
+input double          InpDiagnosticFallbackWeakAverageR = -0.10;
+input double          InpDiagnosticFallbackStrongAverageR = 0.25;
+input double          InpMinDiagnosticFallbackPerformanceRiskMultiplier = 0.50;
 input bool            InpUseHourPerformanceRiskScaling = false;
 input int             InpHourPerformanceLookbackDays = 45;
 input int             InpHourPerformanceMinTrades = 4;
@@ -1073,6 +1079,13 @@ input int             InpDiagnosticFallbackMinSmartMoneyScore = 3;
 input bool            InpDiagnosticFallbackRequireStructure = false;
 input bool            InpDiagnosticFallbackRequireLiquidity = false;
 input bool            InpDiagnosticFallbackRequireExecution = true;
+input bool            InpUseDiagnosticFallbackSpreadGuard = false;
+input double          InpDiagnosticFallbackMaxSpreadPoints = 0.0;
+input double          InpDiagnosticFallbackMaxSpreadATRPercent = 0.0;
+input bool            InpUseDiagnosticFallbackSpreadRiskScaling = false;
+input double          InpDiagnosticFallbackSpreadRiskStartPoints = 25.0;
+input double          InpDiagnosticFallbackSpreadRiskFullPoints = 45.0;
+input double          InpDiagnosticFallbackMinSpreadRiskMultiplier = 0.50;
 input bool            InpUseM5TightLiquiditySecondaryLane = false;
 input ENUM_TIMEFRAMES InpM5TightLiquidityTimeframe = PERIOD_M5;
 input bool            InpAllowM5TightLiquidityOutsideMonthFilter = false;
@@ -2125,6 +2138,7 @@ struct SSignal
    bool isFlatMonthLiquidityReclaim;
    bool isInSessionLiquidityPullback;
    bool isHighEfficiencyTrend;
+   bool isDiagnosticFallback;
    bool useDirectStop;
    double riskMultiplier;
    double rangeReversionStopPrice;
@@ -2264,6 +2278,8 @@ private:
          lanes += "in_session_liquidity_pullback|";
       if(signal.isHighEfficiencyTrend)
          lanes += "high_efficiency_trend|";
+      if(signal.isDiagnosticFallback)
+         lanes += "diagnostic_fallback|";
 
       int length = StringLen(lanes);
       if(length > 0)
@@ -3041,21 +3057,23 @@ private:
       return false;
    }
 
-   bool SetupLanePerformanceSample(const string laneNeedle,
-                                   double &averageR,
-                                   int &sampleTrades,
-                                   datetime &latestCloseTime)
+   bool SetupLanePerformanceSampleWindow(const string laneNeedle,
+                                         const int lookbackTrades,
+                                         const int minTrades,
+                                         double &averageR,
+                                         int &sampleTrades,
+                                         datetime &latestCloseTime)
    {
       averageR = 0.0;
       sampleTrades = 0;
       latestCloseTime = 0;
-      if(StringLen(laneNeedle) <= 0 || InpSetupLanePerformanceLookbackTrades <= 0)
+      if(StringLen(laneNeedle) <= 0 || lookbackTrades <= 0)
          return false;
 
       HistorySelect(0, TimeCurrent());
       double totalR = 0.0;
       int total = HistoryDealsTotal();
-      for(int i = total - 1; i >= 0 && sampleTrades < InpSetupLanePerformanceLookbackTrades; i--)
+      for(int i = total - 1; i >= 0 && sampleTrades < lookbackTrades; i--)
       {
          ulong exitDeal = HistoryDealGetTicket(i);
          if(exitDeal == 0)
@@ -3118,11 +3136,24 @@ private:
          sampleTrades++;
       }
 
-      if(sampleTrades < MathMax(1, InpSetupLanePerformanceMinTrades))
+      if(sampleTrades < MathMax(1, minTrades))
          return false;
 
       averageR = totalR / sampleTrades;
       return true;
+   }
+
+   bool SetupLanePerformanceSample(const string laneNeedle,
+                                   double &averageR,
+                                   int &sampleTrades,
+                                   datetime &latestCloseTime)
+   {
+      return SetupLanePerformanceSampleWindow(laneNeedle,
+                                             InpSetupLanePerformanceLookbackTrades,
+                                             InpSetupLanePerformanceMinTrades,
+                                             averageR,
+                                             sampleTrades,
+                                             latestCloseTime);
    }
 
    bool RecentProfitFactorSample(const int lookbackTrades,
@@ -3343,6 +3374,35 @@ public:
          return 1.0 + boostProgress * (maxMultiplier - 1.0);
       }
       return multiplier;
+   }
+
+   double DiagnosticFallbackPerformanceRiskMultiplier(const bool isDiagnosticFallback)
+   {
+      if(!InpUseDiagnosticFallbackPerformanceRiskScaling || !isDiagnosticFallback)
+         return 1.0;
+
+      double averageR = 0.0;
+      int sampleTrades = 0;
+      datetime latestCloseTime = 0;
+      if(!SetupLanePerformanceSampleWindow("DGF;",
+                                           InpDiagnosticFallbackPerformanceLookbackTrades,
+                                           InpDiagnosticFallbackPerformanceMinTrades,
+                                           averageR,
+                                           sampleTrades,
+                                           latestCloseTime))
+         return 1.0;
+
+      double minMultiplier = MathMax(0.0, MathMin(1.0, InpMinDiagnosticFallbackPerformanceRiskMultiplier));
+      double weakR = InpDiagnosticFallbackWeakAverageR;
+      double strongR = MathMax(weakR + 0.01, InpDiagnosticFallbackStrongAverageR);
+      if(averageR <= weakR)
+         return minMultiplier;
+      if(averageR >= strongR)
+         return 1.0;
+
+      double progress = (averageR - weakR) / (strongR - weakR);
+      progress = MathMin(1.0, MathMax(0.0, progress));
+      return minMultiplier + progress * (1.0 - minMultiplier);
    }
 
    bool HourPerformanceSample(double &netPercent, int &sampleTrades)
@@ -6377,6 +6437,34 @@ private:
          return false;
       if(InpDiagnosticFallbackRequireExecution && !hasExecution)
          return false;
+
+      return true;
+   }
+
+   bool DiagnosticFallbackSpreadAllows(const double atr, string &reason)
+   {
+      reason = "";
+      if(!InpUseDiagnosticFallbackSpreadGuard)
+         return true;
+
+      double spreadPoints = CLogger::SpreadPoints();
+      double maxSpreadPoints = MathMax(0.0, InpDiagnosticFallbackMaxSpreadPoints);
+      if(maxSpreadPoints > 0.0 && spreadPoints > maxSpreadPoints)
+      {
+         reason = "diagnostic fallback spread points";
+         return false;
+      }
+
+      double maxSpreadATRPercent = MathMax(0.0, InpDiagnosticFallbackMaxSpreadATRPercent);
+      if(maxSpreadATRPercent > 0.0 && atr > 0.0)
+      {
+         double spreadATRPercent = 100.0 * spreadPoints / (atr / _Point);
+         if(spreadATRPercent > maxSpreadATRPercent)
+         {
+            reason = "diagnostic fallback spread ATR";
+            return false;
+         }
+      }
 
       return true;
    }
@@ -14436,6 +14524,7 @@ public:
       signal.isFlatMonthLiquidityReclaim = false;
       signal.isInSessionLiquidityPullback = false;
       signal.isHighEfficiencyTrend = false;
+      signal.isDiagnosticFallback = false;
       signal.useDirectStop = false;
       signal.riskMultiplier = 1.0;
 
@@ -14811,11 +14900,22 @@ public:
                       signal.confirmations,
                       signal.qualityScore,
                       signal.reasons);
-      bool diagnosticFallback = DiagnosticTrendFallback(bias) &&
-                                DiagnosticFallbackQualityAllows(bias,
-                                                                atr,
-                                                                priceActionScore,
-                                                                smartMoneyScore);
+      string diagnosticFallbackSpreadReason = "";
+      bool diagnosticFallbackBase = DiagnosticTrendFallback(bias) &&
+                                    DiagnosticFallbackQualityAllows(bias,
+                                                                    atr,
+                                                                    priceActionScore,
+                                                                    smartMoneyScore);
+      bool diagnosticFallbackSpreadAllowed = !diagnosticFallbackBase ||
+                                             DiagnosticFallbackSpreadAllows(atr, diagnosticFallbackSpreadReason);
+      bool diagnosticFallback = diagnosticFallbackBase && diagnosticFallbackSpreadAllowed;
+      if(diagnosticFallbackBase && !diagnosticFallbackSpreadAllowed)
+      {
+         signal.reasons += "Diagnostic fallback spread reject;";
+         if(InpDiagnosticFallbackDebug)
+            Print("DIAG_FALLBACK_REJECT ", diagnosticFallbackSpreadReason);
+      }
+      signal.isDiagnosticFallback = diagnosticFallback;
       AddConfirmation(diagnosticFallback,
                       1,
                       "Diagnostic trend fallback;",
@@ -16828,6 +16928,7 @@ SSignal BuildM5TightLiquiditySecondarySignal(const ENUM_TRADE_BIAS primaryBias)
    signal.isFlatMonthLiquidityReclaim = false;
    signal.isInSessionLiquidityPullback = false;
    signal.isHighEfficiencyTrend = false;
+   signal.isDiagnosticFallback = false;
    signal.useDirectStop = false;
    signal.riskMultiplier = 1.0;
    signal.rangeReversionStopPrice = 0.0;
@@ -17526,6 +17627,23 @@ double SpreadRiskMultiplier()
    return 1.0 - progress * (1.0 - minMultiplier);
 }
 
+double DiagnosticFallbackSpreadRiskMultiplier(const SSignal &signal)
+{
+   if(!InpUseDiagnosticFallbackSpreadRiskScaling || !signal.isDiagnosticFallback)
+      return 1.0;
+
+   double currentSpread = CLogger::SpreadPoints();
+   double startPoints = MathMax(0.0, InpDiagnosticFallbackSpreadRiskStartPoints);
+   double fullPoints = MathMax(startPoints + 1.0, InpDiagnosticFallbackSpreadRiskFullPoints);
+   if(currentSpread <= startPoints)
+      return 1.0;
+
+   double minMultiplier = MathMax(0.0, MathMin(1.0, InpDiagnosticFallbackMinSpreadRiskMultiplier));
+   double progress = (currentSpread - startPoints) / (fullPoints - startPoints);
+   progress = MathMin(1.0, MathMax(0.0, progress));
+   return 1.0 - progress * (1.0 - minMultiplier);
+}
+
 double CurrentPeriodProfit(const ENUM_TIMEFRAMES period)
 {
    datetime start = iTime(_Symbol, period, 0);
@@ -18171,6 +18289,8 @@ string SetupLaneNeedle(const SSignal &signal)
       return "RRO;";
    if(signal.isBreakoutContinuation)
       return "BCQ;";
+   if(signal.isDiagnosticFallback)
+      return "DGF;";
    return "";
 }
 
@@ -20298,6 +20418,9 @@ bool OpenSignal(const SSignal &signal)
    double directionalRiskMultiplier = riskManager.DirectionalLossRiskMultiplier(signal.bias);
    double volatilityRiskMultiplier = VolatilityRiskMultiplier(signal.atr);
    double spreadRiskMultiplier = SpreadRiskMultiplier();
+   double diagnosticFallbackSpreadRiskMultiplier = DiagnosticFallbackSpreadRiskMultiplier(signal);
+   double diagnosticFallbackPerformanceRiskMultiplier =
+      riskManager.DiagnosticFallbackPerformanceRiskMultiplier(signal.isDiagnosticFallback);
    double correlationRiskMultiplier = CorrelationRiskMultiplier(signal.bias);
    double marketPhaseRiskMultiplier = MarketPhaseRiskMultiplier();
    double trendRegimeRiskMultiplier = TrendRegimeRiskMultiplier();
@@ -20332,6 +20455,8 @@ bool OpenSignal(const SSignal &signal)
                            directionalRiskMultiplier *
                            volatilityRiskMultiplier *
                            spreadRiskMultiplier *
+                           diagnosticFallbackSpreadRiskMultiplier *
+                           diagnosticFallbackPerformanceRiskMultiplier *
                            correlationRiskMultiplier *
                            marketPhaseRiskMultiplier *
                            trendRegimeRiskMultiplier *
@@ -20483,6 +20608,10 @@ bool OpenSignal(const SSignal &signal)
          entryReason += "Volatility risk x" + DoubleToString(volatilityRiskMultiplier, 2) + ";";
       if(InpUseSpreadRiskScaling)
          entryReason += "Spread risk x" + DoubleToString(spreadRiskMultiplier, 2) + ";";
+      if(InpUseDiagnosticFallbackSpreadRiskScaling && signal.isDiagnosticFallback)
+         entryReason += "DGF spread risk x" + DoubleToString(diagnosticFallbackSpreadRiskMultiplier, 2) + ";";
+      if(InpUseDiagnosticFallbackPerformanceRiskScaling && signal.isDiagnosticFallback)
+         entryReason += "DGF perf risk x" + DoubleToString(diagnosticFallbackPerformanceRiskMultiplier, 2) + ";";
       if(InpUseCorrelationRiskScaling)
          entryReason += "Correlation risk x" + DoubleToString(correlationRiskMultiplier, 2) + ";";
       if(InpUseMarketPhaseRiskScaling)
