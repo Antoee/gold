@@ -17,7 +17,7 @@ Offline refresh only. This does not launch MT5.
 
 | Candidate | Evidence | Raw Recommendation | Trusted Recommendation | Parsed | Fail Gates | Pending Gates |
 | --- | --- | --- | --- | ---: | ---: | ---: |
-| `trade_ready_conservative` | PENDING | WAIT_FOR_REPORTS | WAIT_FOR_TRUSTED_EVIDENCE | 0/22 | 0 | 19 |
+| `trade_ready_conservative` | PENDING | WAIT_FOR_REPORTS | WAIT_FOR_TRUSTED_EVIDENCE | 0/22 | 0 | 21 |
 
 ## Next Batch
 
