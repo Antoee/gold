@@ -1,0 +1,7 @@
+"Phase","RequiredRows","ActualRows","Status","Description"
+"TOTAL","53","53","PASS","Complete conservative validation package shape"
+"phase0_fast_model1","4","4","PASS","Fast Model1 sanity windows"
+"phase1_exact_realtick","4","4","PASS","Exact continuous/train/oos/recent real-tick windows"
+"phase2_realtick_quarterly","11","11","PASS","Quarterly Model4 windows"
+"phase3_realtick_monthly","31","31","PASS","Monthly Model4 windows"
+"phase4_stress_realtick","3","3","PASS","Stress Model4 variants"
