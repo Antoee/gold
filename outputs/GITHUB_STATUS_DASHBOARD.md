@@ -26,8 +26,8 @@ Return math assumes a `$1,000` starting balance over `2024.01.01` to `2026.07.12
 ## Money-Ready Status
 
 - Overall money-ready refresh: `PENDING`
-- Passing areas: `5`
-- Pending areas: `9`
+- Passing areas: `4`
+- Pending areas: `10`
 - Failed areas: `0`
 - Money-ready scorecard: `NOT_READY_PENDING_EVIDENCE`
 - Release-candidate gate: `NOT_RELEASEABLE_PENDING_EVIDENCE`
@@ -36,8 +36,8 @@ Return math assumes a `$1,000` starting balance over `2024.01.01` to `2026.07.12
 ## GitHub Publication Sync
 
 - Overall: `PENDING`
-- Required source/profile artifacts verified on GitHub: `1 / 7`; source manifest matches, while the corrected current-best note and exact EA source/profile artifacts remain pending
-- Required pending artifacts: `6`
+- Required source/profile artifacts verified on GitHub: `2 / 7`; source manifest and current-best note match, while the exact EA source/profile artifacts remain pending
+- Required pending artifacts: `5`
 - Required failed artifacts: `0`
 - Evidence file: `outputs/GITHUB_PUBLICATION_SYNC.md`
 
