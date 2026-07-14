@@ -47,6 +47,13 @@ function Clear-OutputDirSafe {
    New-Item -ItemType Directory -Path $resolved -Force | Out-Null
 }
 
+function Apply-Overrides {
+   param($Inputs, [hashtable]$Overrides)
+   foreach($entry in $Overrides.GetEnumerator()) {
+      Set-InputLine -Inputs $Inputs -Name $entry.Key -Value ([string]$entry.Value)
+   }
+}
+
 $windows = @(
    [pscustomobject]@{ Window = "2019_full"; From = "2019.01.01"; To = "2019.12.31" },
    [pscustomobject]@{ Window = "2020_full"; From = "2020.01.01"; To = "2020.12.31" },
@@ -86,9 +93,30 @@ foreach($candidate in $Candidates) {
 
    $setName = "{0}.set" -f $candidate
    $setPath = Join-Path $profileOutDir $setName
-   Copy-Item -LiteralPath $sourceSet -Destination $setPath -Force
+   $inputs = Import-SetInputs $sourceSet
+   Apply-Overrides -Inputs $inputs -Overrides @{
+      InpEvidenceProfileId = $candidate
+      InpEvidenceSourceHash = $sourceHash
+      InpEvidenceRunLabel = "peak_r20_oos_yearly_model$Model"
+      InpLogLevel = "0"
+      InpUseBlockReasonDiagnostics = "false"
+      InpShowDashboard = "false"
+      InpDashboardInTester = "false"
+      InpTesterFitnessMode = "1"
+      InpAllowedSymbol = "XAUUSD"
+      InpUseSymbolSafetyLock = "true"
+      InpUseRealAccountSafetyLock = "true"
+      InpAllowRealAccountTrading = "false"
+      InpRealAccountApprovalCode = "DISABLED"
+      InpRealAccountApprovalProfileId = "DISABLED"
+      InpRealAccountApprovalSourceHash = "DISABLED"
+   }
+   $setLines = [System.Collections.Generic.List[string]]::new()
+   foreach($key in ($inputs.Keys | Sort-Object)) {
+      $setLines.Add($inputs[$key]) | Out-Null
+   }
+   $setLines | Set-Content -LiteralPath $setPath -Encoding ASCII
    $profileHash = (Get-FileHash -LiteralPath $setPath -Algorithm SHA256).Hash
-   $inputs = Import-SetInputs $setPath
 
    foreach($window in $windows) {
       $rank++

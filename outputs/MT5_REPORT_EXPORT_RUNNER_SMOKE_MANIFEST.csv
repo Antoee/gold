@@ -1,0 +1,2 @@
+"QueueRank","Candidate","Window","Model","PackageConfig","SourceConfig","ExpectedReportName","ReportDestination","ProfileSha256","StopRule"
+"1","runner_report_smoke","2026_smoke","1","outputs\mt5_report_export_runner_smoke\configs\001_runner_report_plain.ini","outputs\mt5_report_export_runner_smoke\configs\001_runner_report_plain.ini","mt5_runner_report_plain_smoke","outputs\mt5_report_export_runner_smoke\reports_here\mt5_runner_report_plain_smoke","","Report export smoke only."

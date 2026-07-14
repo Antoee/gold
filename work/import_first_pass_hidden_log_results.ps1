@@ -72,7 +72,7 @@ function To-DateTimeOrNull {
 function To-DoubleOrNull {
    param([object]$Value)
    if($null -eq $Value -or "$Value" -eq "") { return $null }
-   $text = ([string]$Value).Trim().Replace("%", "")
+   $text = ([string]$Value).Trim().Replace("%", "").Replace(",", "").Replace(" ", "")
    $number = 0.0
    if([double]::TryParse($text, [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$number)) {
       return $number
@@ -150,6 +150,149 @@ function Get-ReturnMetrics {
       TotalReturnPercent = $totalReturnPercent
       AnnualizedReturnPercent = $annualizedReturnPercent
       CagrPercent = $cagrPercent
+   }
+}
+
+function Convert-ReportCellText {
+   param([string]$Html)
+   if($null -eq $Html) { return "" }
+   $decoded = [System.Net.WebUtility]::HtmlDecode($Html)
+   $decoded = [regex]::Replace($decoded, '<[^>]+>', ' ')
+   $decoded = $decoded.Replace([string][char]160, " ")
+   return ([regex]::Replace($decoded, '\s+', ' ')).Trim()
+}
+
+function Get-ReportCells {
+   param([string]$Path)
+   $raw = Get-Content -LiteralPath $Path -Raw -ErrorAction Stop
+   $cells = [System.Collections.Generic.List[string]]::new()
+   foreach($match in [regex]::Matches($raw, '<td\b[^>]*>(?<cell>.*?)</td>', [System.Text.RegularExpressions.RegexOptions]::IgnoreCase -bor [System.Text.RegularExpressions.RegexOptions]::Singleline)) {
+      $cell = Convert-ReportCellText $match.Groups["cell"].Value
+      if($cell -ne "") { $cells.Add($cell) | Out-Null }
+   }
+   if($cells.Count -eq 0) {
+      foreach($line in ($raw -split "`r?`n")) {
+         $cell = Convert-ReportCellText $line
+         if($cell -ne "") { $cells.Add($cell) | Out-Null }
+      }
+   }
+   return @($cells)
+}
+
+function Get-ReportValueAfterLabel {
+   param([string[]]$Cells, [string]$LabelPattern)
+   for($i = 0; $i -lt $Cells.Count; $i++) {
+      $label = $Cells[$i].Trim().TrimEnd(":")
+      if($label -match $LabelPattern) {
+         for($j = $i + 1; $j -lt $Cells.Count; $j++) {
+            $value = $Cells[$j].Trim()
+            if($value -ne "" -and $value -notmatch ':$') { return $value }
+         }
+      }
+   }
+   return ""
+}
+
+function Get-FirstReportNumber {
+   param([string]$Text)
+   if([string]::IsNullOrWhiteSpace($Text)) { return $null }
+   $match = [regex]::Match($Text, '[-+]?(?:\d{1,3}(?:[,\s]\d{3})+|\d+)(?:\.\d+)?')
+   if(!$match.Success) { return $null }
+   return To-DoubleOrNull $match.Value
+}
+
+function Get-ReportPercent {
+   param([string]$Text)
+   if([string]::IsNullOrWhiteSpace($Text)) { return $null }
+   $match = [regex]::Match($Text, '\((?<pct>[-+]?\d+(?:\.\d+)?)%\)')
+   if(!$match.Success) {
+      $match = [regex]::Match($Text, '(?<pct>[-+]?\d+(?:\.\d+)?)%')
+   }
+   if(!$match.Success) { return $null }
+   return To-DoubleOrNull $match.Groups["pct"].Value
+}
+
+function Get-ReportCandidatePaths {
+   param([object]$ManifestRow, [object]$RunRow)
+
+   $paths = [System.Collections.Generic.List[string]]::new()
+   $reports = [string](Get-Field -Row $RunRow -Names @("Reports") -Default "")
+   if($reports -ne "") {
+      foreach($path in ($reports -split ';')) {
+         if(![string]::IsNullOrWhiteSpace($path)) {
+            $paths.Add((Resolve-RepoPath $path.Trim())) | Out-Null
+         }
+      }
+   }
+
+   $expected = [string](Get-Field -Row $ManifestRow -Names @("ExpectedReportName") -Default (Get-Field -Row $RunRow -Names @("ExpectedReportName") -Default ""))
+   $destination = [string](Get-Field -Row $ManifestRow -Names @("ReportDestination") -Default (Get-Field -Row $RunRow -Names @("ReportDestination") -Default ""))
+   $inbox = [string](Get-Field -Row $RunRow -Names @("FirstPassInbox") -Default "outputs\returned_mt5_reports\first_pass_inbox")
+   $configPath = [string](Get-Field -Row $RunRow -Names @("Config", "PackageConfig") -Default (Get-Field -Row $ManifestRow -Names @("PackageConfig", "Config") -Default ""))
+
+   foreach($base in @($destination, (Join-Path (Resolve-RepoPath $inbox) $expected))) {
+      if([string]::IsNullOrWhiteSpace($base)) { continue }
+      $resolvedBase = Resolve-RepoPath $base
+      $extension = [System.IO.Path]::GetExtension($resolvedBase)
+      if($extension -in @(".htm", ".html", ".xml")) {
+         $paths.Add($resolvedBase) | Out-Null
+      } else {
+         foreach($candidateExtension in @(".htm", ".html", ".xml")) {
+            $paths.Add($resolvedBase + $candidateExtension) | Out-Null
+         }
+      }
+   }
+
+   if($configPath -ne "" -and $expected -ne "") {
+      $configFull = Resolve-RepoPath $configPath
+      $configDir = Split-Path -Parent $configFull
+      $packageDir = if($configDir) { Split-Path -Parent $configDir } else { "" }
+      if($packageDir -ne "") {
+         foreach($candidateExtension in @(".htm", ".html", ".xml")) {
+            $paths.Add((Join-Path (Join-Path $packageDir "reports_here") ($expected + $candidateExtension))) | Out-Null
+         }
+      }
+   }
+
+   return @($paths | Where-Object { ![string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique)
+}
+
+function Read-MT5ReportStats {
+   param([string]$Path)
+   if(!(Test-Path -LiteralPath $Path -PathType Leaf)) { return $null }
+
+   $cells = @(Get-ReportCells -Path $Path)
+   if($cells.Count -eq 0) { return $null }
+
+   $netText = Get-ReportValueAfterLabel -Cells $cells -LabelPattern '^Total\s+Net\s+Profit$'
+   $balanceDdText = Get-ReportValueAfterLabel -Cells $cells -LabelPattern '^Balance\s+Drawdown\s+Maximal$'
+   $equityDdText = Get-ReportValueAfterLabel -Cells $cells -LabelPattern '^Equity\s+Drawdown\s+Maximal$'
+   $profitFactorText = Get-ReportValueAfterLabel -Cells $cells -LabelPattern '^Profit\s+Factor$'
+   $expectedPayoffText = Get-ReportValueAfterLabel -Cells $cells -LabelPattern '^Expected\s+Payoff$'
+   $sharpeText = Get-ReportValueAfterLabel -Cells $cells -LabelPattern '^Sharpe\s+Ratio$'
+   $recoveryText = Get-ReportValueAfterLabel -Cells $cells -LabelPattern '^Recovery\s+Factor$'
+   $tradesText = Get-ReportValueAfterLabel -Cells $cells -LabelPattern '^Total\s+Trades$'
+   $profitTradesText = Get-ReportValueAfterLabel -Cells $cells -LabelPattern '^Profit\s+Trades\s+\(%\s+of\s+total\)$'
+   $lossStreakText = Get-ReportValueAfterLabel -Cells $cells -LabelPattern '^Max(?:imum|imal)\s+consecutive\s+loss(?:es)?\s+\(\$\)$'
+
+   $net = Get-FirstReportNumber $netText
+   $trades = Get-FirstReportNumber $tradesText
+   if($null -eq $net -or $null -eq $trades) { return $null }
+
+   [pscustomobject]@{
+      Path = $Path
+      NetProfit = $net
+      ProfitFactor = Get-FirstReportNumber $profitFactorText
+      ExpectedPayoff = Get-FirstReportNumber $expectedPayoffText
+      SharpeRatio = Get-FirstReportNumber $sharpeText
+      RecoveryFactor = Get-FirstReportNumber $recoveryText
+      TotalTrades = [int][Math]::Round([double]$trades, 0)
+      WinRatePercent = Get-ReportPercent $profitTradesText
+      MaxConsecutiveLosses = Get-FirstReportNumber $lossStreakText
+      BalanceDrawdownMoney = Get-FirstReportNumber $balanceDdText
+      BalanceDrawdownPercent = Get-ReportPercent $balanceDdText
+      EquityDrawdownMoney = Get-FirstReportNumber $equityDdText
+      EquityDrawdownPercent = Get-ReportPercent $equityDdText
    }
 }
 
@@ -353,26 +496,26 @@ function Test-ExistingMatchesManifest {
 function New-MissingRow {
    param([object]$ManifestRow, [string]$Status = "MISSING_REPORT", [string]$ReportPath = "")
 
-   $from = [string]$ManifestRow.From
-   $to = [string]$ManifestRow.To
+   $from = [string](Get-Field -Row $ManifestRow -Names @("From") -Default "")
+   $to = [string](Get-Field -Row $ManifestRow -Names @("To") -Default "")
    $calendarDays = Get-CalendarDays -From $from -To $to
    [pscustomobject]@{
-      QueueRank = $ManifestRow.QueueRank
-      Candidate = $ManifestRow.Candidate
-      CandidateRank = $ManifestRow.CandidateRank
-      SourceType = $ManifestRow.SourceType
-      SourceRank = $ManifestRow.SourceRank
-      Phase = $ManifestRow.Phase
-      Set = $ManifestRow.Set
-      Window = $ManifestRow.Window
+      QueueRank = Get-Field -Row $ManifestRow -Names @("QueueRank", "Rank") -Default ""
+      Candidate = Get-Field -Row $ManifestRow -Names @("Candidate") -Default ""
+      CandidateRank = Get-Field -Row $ManifestRow -Names @("CandidateRank") -Default ""
+      SourceType = Get-Field -Row $ManifestRow -Names @("SourceType") -Default ""
+      SourceRank = Get-Field -Row $ManifestRow -Names @("SourceRank") -Default ""
+      Phase = Get-Field -Row $ManifestRow -Names @("Phase") -Default ""
+      Set = Get-Field -Row $ManifestRow -Names @("Set") -Default ""
+      Window = Get-Field -Row $ManifestRow -Names @("Window") -Default ""
       From = $from
       To = $to
-      Model = $ManifestRow.Model
-      Config = $ManifestRow.Config
-      ExpectedReportName = $ManifestRow.ExpectedReportName
-      ProfileSnapshot = $ManifestRow.ProfileSnapshot
-      ProfileSha256 = $ManifestRow.ProfileSha256
-      StopRule = $ManifestRow.StopRule
+      Model = Get-Field -Row $ManifestRow -Names @("Model") -Default ""
+      Config = Get-Field -Row $ManifestRow -Names @("Config", "PackageConfig") -Default ""
+      ExpectedReportName = Get-Field -Row $ManifestRow -Names @("ExpectedReportName") -Default ""
+      ProfileSnapshot = Get-Field -Row $ManifestRow -Names @("ProfileSnapshot") -Default ""
+      ProfileSha256 = Get-Field -Row $ManifestRow -Names @("ProfileSha256") -Default ""
+      StopRule = Get-Field -Row $ManifestRow -Names @("StopRule") -Default ""
       Status = $Status
       ReportPath = $ReportPath
       InitialDeposit = $InitialDeposit
@@ -399,6 +542,70 @@ function New-MissingRow {
       LogTimestamp = ""
       TesterStatsTimestamp = ""
    }
+}
+
+function New-ReportResultRow {
+   param([object]$ManifestRow, [object]$RunRow)
+
+   foreach($candidatePath in (Get-ReportCandidatePaths -ManifestRow $ManifestRow -RunRow $RunRow)) {
+      $stats = Read-MT5ReportStats -Path $candidatePath
+      if($null -eq $stats) { continue }
+
+      $from = [string](Get-Field -Row $ManifestRow -Names @("From") -Default "")
+      $to = [string](Get-Field -Row $ManifestRow -Names @("To") -Default "")
+      $calendarDays = Get-CalendarDays -From $from -To $to
+      $balance = [Math]::Round($InitialDeposit + [double]$stats.NetProfit, 2)
+      $returnMetrics = Get-ReturnMetrics -NetProfit $stats.NetProfit -Balance $balance -InitialDepositValue $InitialDeposit -CalendarDays $calendarDays
+
+      $drawdownMoney = if($null -ne $stats.EquityDrawdownMoney) { $stats.EquityDrawdownMoney } else { $stats.BalanceDrawdownMoney }
+      $drawdownPercent = if($null -ne $stats.EquityDrawdownPercent) { $stats.EquityDrawdownPercent } else { $stats.BalanceDrawdownPercent }
+
+      return [pscustomobject]@{
+         QueueRank = Get-Field -Row $ManifestRow -Names @("QueueRank", "Rank") -Default ""
+         Candidate = Get-Field -Row $ManifestRow -Names @("Candidate") -Default ""
+         CandidateRank = Get-Field -Row $ManifestRow -Names @("CandidateRank") -Default ""
+         SourceType = Get-Field -Row $ManifestRow -Names @("SourceType") -Default ""
+         SourceRank = Get-Field -Row $ManifestRow -Names @("SourceRank") -Default ""
+         Phase = Get-Field -Row $ManifestRow -Names @("Phase") -Default ""
+         Set = Get-Field -Row $ManifestRow -Names @("Set") -Default ""
+         Window = Get-Field -Row $ManifestRow -Names @("Window") -Default ""
+         From = $from
+         To = $to
+         Model = Get-Field -Row $ManifestRow -Names @("Model") -Default ""
+         Config = Get-Field -Row $ManifestRow -Names @("Config", "PackageConfig") -Default ""
+         ExpectedReportName = Get-Field -Row $ManifestRow -Names @("ExpectedReportName") -Default ""
+         ProfileSnapshot = Get-Field -Row $ManifestRow -Names @("ProfileSnapshot") -Default ""
+         ProfileSha256 = Get-Field -Row $ManifestRow -Names @("ProfileSha256") -Default ""
+         StopRule = Get-Field -Row $ManifestRow -Names @("StopRule") -Default ""
+         Status = "PARSED"
+         ReportPath = Convert-ToRepoRelative $stats.Path
+         InitialDeposit = $InitialDeposit
+         CalendarDays = if($null -eq $calendarDays) { "" } else { $calendarDays }
+         Years = if($null -eq $returnMetrics.Years) { "" } else { [Math]::Round($returnMetrics.Years, 4) }
+         NetProfit = [Math]::Round([double]$stats.NetProfit, 2)
+         Balance = $balance
+         TotalReturnPercent = if($null -eq $returnMetrics.TotalReturnPercent) { "" } else { [Math]::Round($returnMetrics.TotalReturnPercent, 2) }
+         AnnualizedReturnPercent = if($null -eq $returnMetrics.AnnualizedReturnPercent) { "" } else { [Math]::Round($returnMetrics.AnnualizedReturnPercent, 2) }
+         CagrPercent = if($null -eq $returnMetrics.CagrPercent) { "" } else { [Math]::Round($returnMetrics.CagrPercent, 2) }
+         ProfitFactor = if($null -eq $stats.ProfitFactor) { "" } else { [Math]::Round([double]$stats.ProfitFactor, 4) }
+         ExpectedPayoff = if($null -eq $stats.ExpectedPayoff) { "" } else { [Math]::Round([double]$stats.ExpectedPayoff, 4) }
+         SharpeRatio = if($null -eq $stats.SharpeRatio) { "" } else { [Math]::Round([double]$stats.SharpeRatio, 4) }
+         WinRatePercent = if($null -eq $stats.WinRatePercent) { "" } else { [Math]::Round([double]$stats.WinRatePercent, 2) }
+         TotalTrades = [int]$stats.TotalTrades
+         MaxConsecutiveLosses = if($null -eq $stats.MaxConsecutiveLosses) { "" } else { [int][Math]::Round([double]$stats.MaxConsecutiveLosses, 0) }
+         MaxDrawdownMoney = if($null -eq $drawdownMoney) { "" } else { [Math]::Round([double]$drawdownMoney, 2) }
+         MaxDrawdownPercent = if($null -eq $drawdownPercent) { "" } else { [Math]::Round([double]$drawdownPercent, 2) }
+         BalanceDrawdownMaximal = if($null -eq $stats.BalanceDrawdownMoney) { "" } else { [Math]::Round([double]$stats.BalanceDrawdownMoney, 2) }
+         EquityDrawdownMaximal = if($null -eq $stats.EquityDrawdownMoney) { "" } else { [Math]::Round([double]$stats.EquityDrawdownMoney, 2) }
+         RecoveryFactor = if($null -eq $stats.RecoveryFactor) { "" } else { [Math]::Round([double]$stats.RecoveryFactor, 4) }
+         RunnerStatus = Get-Field -Row $RunRow -Names @("Status") -Default ""
+         RunnerEvidence = Get-Field -Row $RunRow -Names @("Evidence") -Default ""
+         LogTimestamp = ""
+         TesterStatsTimestamp = ""
+      }
+   }
+
+   return $null
 }
 
 function New-LogResultRow {
@@ -582,7 +789,20 @@ foreach($manifest in ($manifestRows | Sort-Object { [int](Get-Field -Row $_ -Nam
    $started = To-DateTimeOrNull (Get-Field -Row $run -Names @("Started") -Default "")
    $finished = To-DateTimeOrNull (Get-Field -Row $run -Names @("Finished") -Default "")
    if($null -eq $run -or $null -eq $started -or $null -eq $finished) {
-      if($null -ne $existing) { $results.Add($existing) | Out-Null } else { $results.Add((New-MissingRow -ManifestRow $manifest)) | Out-Null }
+      $reportResult = New-ReportResultRow -ManifestRow $manifest -RunRow $run
+      if($null -ne $reportResult) {
+         $results.Add($reportResult) | Out-Null
+      } elseif($null -ne $existing) {
+         $results.Add($existing) | Out-Null
+      } else {
+         $results.Add((New-MissingRow -ManifestRow $manifest)) | Out-Null
+      }
+      continue
+   }
+
+   $reportResult = New-ReportResultRow -ManifestRow $manifest -RunRow $run
+   if($null -ne $reportResult) {
+      $results.Add($reportResult) | Out-Null
       continue
    }
 

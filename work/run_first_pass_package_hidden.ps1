@@ -14,6 +14,7 @@ $ErrorActionPreference = "Stop"
 $repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $firstPassInbox = Join-Path $repo "outputs\returned_mt5_reports\first_pass_inbox"
 $hardLockFile = Join-Path $PSScriptRoot "MT5_LOCAL_LAUNCH_DISABLED.lock"
+$terminalDataRoot = Join-Path $env:APPDATA "MetaQuotes\Terminal\D0E8209F77C8CF37AD8BF550E51FF075"
 
 function Resolve-RepoPath {
    param([string]$Path)
@@ -48,6 +49,7 @@ function Get-ReportCandidates {
       }
       $candidates.Add((Join-Path $firstPassInbox ($baseName + $extension))) | Out-Null
       $candidates.Add((Join-Path $repo ("outputs\{0}{1}" -f $baseName, $extension))) | Out-Null
+      $candidates.Add((Join-Path $terminalDataRoot ($baseName + $extension))) | Out-Null
    }
    return @($candidates | Select-Object -Unique)
 }

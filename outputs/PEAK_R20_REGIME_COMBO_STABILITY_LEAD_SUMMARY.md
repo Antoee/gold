@@ -45,6 +45,14 @@ Summary: `+$344.60`, `0` losing yearly windows, worst yearly net `+$9.25`, worst
 
 File: `outputs/PEAK_R20_REGIME_COMBO_MODEL4_YEARLY_RESULTS.csv`
 
+Fresh current-source full-report reproduction: `outputs/PEAK_R20_REGIME_COMBO_MODEL4_CURRENT_SOURCE_REPORT_METRICS.md`.
+
+- Source SHA-256: `2219F6AE66CF1121972848C118213B50C01F91E783ABFE6D66F75105C655EB4D`
+- Current-source yearly profile SHA-256: `3E6B806E2941A993579756C8E503B7886E06891F077A104D39428704E48545BC`
+- MT5 platform: `MetaQuotes-Demo (Build 5989)`
+- Exported reports parsed: `8 / 8`
+- Tester-log fallback rows: `0 / 8`
+
 | Window | Net | Trades | Max DD | Note |
 | --- | ---: | ---: | ---: | --- |
 | 2019 | `+$44.30` | `1` | `2.39%` | Green |
@@ -57,6 +65,19 @@ File: `outputs/PEAK_R20_REGIME_COMBO_MODEL4_YEARLY_RESULTS.csv`
 | 2026 YTD | `$0.00` | `0` | `0.00%` | No real-tick trades |
 
 Summary: `+$263.72`, `1` losing yearly window, worst yearly net `-$22.92`, worst DD `7.09%`, `22` trades.
+
+Percent-per-year context from the full MT5 reports:
+
+| Window | Ann. Return | CAGR | PF | Sharpe | Recovery |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 2019 | `+4.45%/yr` | `+4.45%/yr` | `0.00` | `0.71` | `1.82` |
+| 2020 | `-2.29%/yr` | `-2.29%/yr` | `0.00` | `-4.80` | `-0.97` |
+| 2021 | `+7.67%/yr` | `+7.67%/yr` | `4.27` | `2.63` | `1.49` |
+| 2022 | `+3.74%/yr` | `+3.74%/yr` | `1.49` | `4.16` | `0.57` |
+| 2023 | `+6.42%/yr` | `+6.42%/yr` | `0.00` | `1.82` | `1.59` |
+| 2024 | `+1.58%/yr` | `+1.58%/yr` | `1.30` | `1.07` | `0.22` |
+| 2025 | `+4.89%/yr` | `+4.90%/yr` | `8.41` | `2.10` | `1.47` |
+| 2026 YTD | `0.00%/yr` | `0.00%/yr` | `0.00` | `0.00` | `0.00` |
 
 ## 2020 Model 4 Failure Diagnostic
 

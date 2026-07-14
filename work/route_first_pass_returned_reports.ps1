@@ -71,7 +71,7 @@ function Test-ReportFile {
       [pscustomobject]@{ Name = "Sharpe ratio"; Patterns = @("Sharpe\s+Ratio") },
       [pscustomobject]@{ Name = "total trades"; Patterns = @("Total\s+Trades") },
       [pscustomobject]@{ Name = "win rate/profit trades"; Patterns = @("Profit\s+Trades\s*\(%\s*of\s*total\)", "Win\s*Rate") },
-      [pscustomobject]@{ Name = "max consecutive losses"; Patterns = @("Maximal\s+consecutive\s+losses", "Max\s+Consecutive\s+Losses") },
+      [pscustomobject]@{ Name = "max consecutive losses"; Patterns = @("Max(?:imum|imal)\s+consecutive\s+loss(?:es)?", "Max\s+Consecutive\s+Losses") },
       [pscustomobject]@{ Name = "drawdown"; Patterns = @("Equity\s+Drawdown\s+Maximal", "Balance\s+Drawdown\s+Maximal") },
       [pscustomobject]@{ Name = "recovery factor"; Patterns = @("Recovery\s+Factor") }
    )
@@ -243,7 +243,7 @@ $md.Add(('- Duplicate expected reports: `{0}`' -f $duplicates))
 $md.Add(('- Invalid expected reports: `{0}`' -f $invalid))
 $md.Add(('- Unmatched inbox files: `{0}`' -f $unmatched))
 $md.Add(('- Ready to import: `{0}`' -f $readyToImport))
-$md.Add("- Required tester-stat labels: `Total Net Profit`, `Profit Factor`, `Expected Payoff`, `Sharpe Ratio`, `Total Trades`, `Profit Trades (% of total)` or `Win Rate`, `Maximal consecutive losses`, `Balance/Equity Drawdown Maximal`, and `Recovery Factor`.")
+$md.Add("- Required tester-stat labels: `Total Net Profit`, `Profit Factor`, `Expected Payoff`, `Sharpe Ratio`, `Total Trades`, `Profit Trades (% of total)` or `Win Rate`, `Maximum/Maximal consecutive losses`, `Balance/Equity Drawdown Maximal`, and `Recovery Factor`.")
 $md.Add("")
 if($readyToImport) {
    if($manifest.Count -eq 0) {

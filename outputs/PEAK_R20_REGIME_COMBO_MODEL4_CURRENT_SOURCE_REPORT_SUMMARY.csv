@@ -1,0 +1,2 @@
+"Candidate","SourceType","Phase","Expected","ParsedReports","ParsedLogs","ParsedTotal","Missing","Unparsed","TotalNetProfit","WorstNetProfit","AverageAnnualizedReturnPercent","WorstAnnualizedReturnPercent","AverageCagrPercent","WorstCagrPercent","WorstDrawdownPercent","MinProfitFactor","TotalTrades"
+"r10_pg40_atr085_adapt7","peak_r20_oos_yearly","phase2_oos_yearly_model4","8","8","0","8","0","0","263.72","-22.92","3.31","-2.29","3.31","-2.29","7.09","0","22"

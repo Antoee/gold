@@ -15,7 +15,7 @@ function Import-SetInputs {
 
 function Set-InputLine {
    param($Inputs, [string]$Name, [string]$Value)
-   if($Name -in @("InpAllowedSymbol", "InpLogFileName", "InpNewsTimesCsv", "InpCorrelationSymbol", "InpBlockReasonDiagnosticsFile")) {
+   if($Name -in @("InpAllowedSymbol", "InpLogFileName", "InpNewsTimesCsv", "InpCorrelationSymbol", "InpBlockReasonDiagnosticsFile", "InpRealAccountApprovalCode", "InpRealAccountApprovalProfileId", "InpRealAccountApprovalSourceHash", "InpEvidenceProfileId", "InpEvidenceSourceHash", "InpEvidenceRunLabel")) {
       $Inputs[$Name] = "$Name=$Value"
       return
    }
@@ -102,7 +102,10 @@ function Write-SeasonalTesterConfig {
       $Inputs,
       [int]$Model = 2
    )
-   $reportPath = Join-Path (Resolve-Path $ReportRoot).Path $ReportName
+   # MT5 command-line tester silently skips report export for absolute Report=
+   # paths on this install. Use a plain filename, then the runner collects it
+   # from the terminal data root and routes it to the intended package folder.
+   $reportFileName = [System.IO.Path]::GetFileName($ReportName)
    $lines = @(
       "[Tester]",
       "Expert=Professional_XAUUSD_EA.ex5",
@@ -120,7 +123,7 @@ function Write-SeasonalTesterConfig {
       "ExecutionMode=0",
       "OptimizationCriterion=6",
       "Visual=0",
-      "Report=$reportPath",
+      "Report=$reportFileName",
       "ReplaceReport=1",
       "ShutdownTerminal=1",
       "[TesterInputs]"

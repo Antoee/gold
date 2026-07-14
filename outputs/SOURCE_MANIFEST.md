@@ -78,7 +78,7 @@ The 2026-07-14 source changes include a trade-environment guard for test/live ca
 
 The latest 2026-07-14 source hardening also makes `RealAccountSafetyLockAllows()` fail closed on real accounts when `InpUseRealAccountSafetyLock=false`. Real-account initialization now requires the safety lock to remain enabled plus the explicit approval code, matching evidence profile id, matching evidence source hash, non-empty evidence run label, and enabled trade-readiness gate.
 
-The returned-report routers now reject non-empty but incomplete `.htm`, `.html`, or `.xml` files unless they contain the expected full MT5 tester-stat labels: net profit, profit factor, expected payoff, Sharpe ratio, total trades, win rate/profit trades, max consecutive losses, and balance/equity drawdown. This prevents screenshots, balance-only exports, or log snippets from being routed into first-pass or conservative validation folders.
+The returned-report routers now reject non-empty but incomplete `.htm`, `.html`, or `.xml` files unless they contain the expected full MT5 tester-stat labels: net profit, profit factor, expected payoff, Sharpe ratio, total trades, win rate/profit trades, maximum/maximal consecutive losses, and balance/equity drawdown. This prevents screenshots, balance-only exports, or log snippets from being routed into first-pass or conservative validation folders.
 
 An earlier 2026-07-14 source change also shortened six overlong FMLR input identifiers so MetaEditor can compile the EA source:
 
