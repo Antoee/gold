@@ -53,6 +53,7 @@ The current conservative candidate is not live-ready and should remain paper/dem
 - Static repo safety audit: `PASS`, `25` checks
 - Static MQL compile preflight: `PASS`, `29` checks / `1802` inputs
 - Report collector annualized return/CAGR smoke: `PASS`
+- Minimum continuous annualized-return/CAGR gate smoke: `PASS`
 - Static Safety workflow missing-script fix: `work/static_repo_safety_audit.py` and `work/static_mql_compile_preflight.py` now exist locally, pass locally, and have been published to GitHub
 - GitHub publication sync smoke: `PASS`
 - Required artifact sync package smoke: `PASS`, `5` required artifacts, `0` unsafe profile rows
@@ -100,6 +101,7 @@ The local workspace now has a stricter offline evidence system:
 - first-pass report routing
 - strict returned-report validation that rejects screenshots, balance-only snippets, and log-only rows
 - annualized return and CAGR fields in exported-report CSV/Markdown summaries
+- first-pass and full-validation decisions now require minimum continuous annualized return and CAGR
 - live-evidence routing
 - compile-evidence routing
 - conservative full-validation routing
@@ -143,7 +145,7 @@ Current local reproducibility bundle:
 
 - Status: `PASS`
 - Passing rows: `60`
-- Zip SHA-256: recorded in `outputs/TRADE_READY_REPRODUCIBILITY_BUNDLE.md`
+- Zip SHA-256: `9773220EC39B09FEA50463B74F56C9094CC19C4FA9FD1AAD64D20AF69E9739A9`
 - Reminder: this is a local hash freeze only; it does not clear the GitHub/source-publication sync gate.
 
 ## Why There Is No New Best On GitHub
