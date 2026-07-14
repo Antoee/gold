@@ -58,7 +58,9 @@ The current conservative candidate is not live-ready and should remain paper/dem
 - Money-ready refresh smoke: `PASS`
 - Visible MT5/MetaEditor/Metatester/Git process check: clear
 - Current EA source hash: `5D148DAE2335F9037BDED3C9A82BD916C1FCFB6F43EE2EC5EAAE7E67384ED412`
-- First-pass package hashes: current conservative `825308011021`, current money-ready `553A967B5FCE`
+- First-pass active package: `4` fast Model1 configs for `trade_ready_conservative`, split into `4` window lanes
+- First-pass active profile hash: current conservative `825308011021`
+- First-pass comparison profile hash: current money-ready `553A967B5FCE` is available only when explicitly re-enabled
 - Stale first-pass hashes `621F54A4...` and `0CF80057...`: removed from active run packages
 
 ## Current Conservative Candidate
@@ -105,13 +107,13 @@ The local workspace now has a stricter offline evidence system:
 
 Current first-pass package:
 
-- `8` configs total
+- `4` configs total
 - split into `4` window-based lanes
-- each lane contains both candidate configs for one window
+- each lane contains the selected `trade_ready_conservative` config for one window
 
 ## Next Required Evidence
 
-The next useful testing step is to run the `8` first-pass configs from either:
+The next useful testing step is to run the `4` first-pass configs from either:
 
 - `outputs/first_pass_next_run_package`
 - `outputs/first_pass_parallel_lanes`
