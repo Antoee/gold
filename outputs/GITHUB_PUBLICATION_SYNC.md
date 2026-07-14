@@ -22,11 +22,11 @@ At least one required artifact is missing, stale, or inaccessible through the ra
 | trade-readiness-alias-profile | True | PASS | CONNECTOR_BLOB_MATCH | 0CF800571C22 | 94ba77b28633 | 94ba77b28633 | Alias profile expected to match money-ready profile. |
 | source-manifest | True | PASS | CONNECTOR_BLOB_MATCH | 18E4161618CE | 8aa18509464c | 8aa18509464c | Source hash/status manifest. |
 | current-research-best | True | PASS | CONNECTOR_BLOB_MATCH | D36557E328BE | 76e5272c86a7 | 76e5272c86a7 | Current promoted research profile status. |
-| readme-dashboard | False | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | 4FA9E700705C | 7a205951ed05 |  | Human-facing repository dashboard. |
-| github-status-dashboard | False | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | B465C228FDA4 | b4808d1659b6 |  | Compact GitHub-facing status board. |
-| money-ready-refresh | False | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | 223DBA93593F | bc276b687c77 |  | Latest one-command refresh status. |
-| money-ready-scorecard | False | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | BFAF39E1A70E | a430c78d1192 |  | Money-ready scorecard. |
-| live-readiness-decision | False | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | ED08FC0B526C | 9c888245990e |  | Final conservative live-readiness gate. |
-| release-candidate-decision | False | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | 953FD949A224 | 42eacb6100f5 |  | Release-candidate gate. |
-| first-pass-parallel-lanes | False | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | 706EBFCA5C5F | 4a6d0cf2eac4 |  | Fast first-pass lane split. |
-| evidence-handoff | False | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | 51B57307B82F | cebb7629fc4c |  | Evidence handoff summary. |
+| readme-dashboard | False | INFO | OPTIONAL_NOT_VERIFIED | 4FA9E700705C | 7a205951ed05 |  | Human-facing repository dashboard. |
+| github-status-dashboard | False | INFO | OPTIONAL_NOT_VERIFIED | B465C228FDA4 | b4808d1659b6 |  | Compact GitHub-facing status board. |
+| money-ready-refresh | False | INFO | OPTIONAL_NOT_VERIFIED | 223DBA93593F | bc276b687c77 |  | Latest one-command refresh status. |
+| money-ready-scorecard | False | INFO | OPTIONAL_NOT_VERIFIED | BFAF39E1A70E | a430c78d1192 |  | Money-ready scorecard. |
+| live-readiness-decision | False | INFO | OPTIONAL_NOT_VERIFIED | BE95BA432A63 | 447b01f71cc5 |  | Final conservative live-readiness gate. |
+| release-candidate-decision | False | INFO | OPTIONAL_NOT_VERIFIED | 953FD949A224 | 42eacb6100f5 |  | Release-candidate gate. |
+| first-pass-parallel-lanes | False | INFO | OPTIONAL_NOT_VERIFIED | 706EBFCA5C5F | 4a6d0cf2eac4 |  | Fast first-pass lane split. |
+| evidence-handoff | False | INFO | OPTIONAL_NOT_VERIFIED | 51B57307B82F | cebb7629fc4c |  | Evidence handoff summary. |
