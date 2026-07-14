@@ -2,6 +2,8 @@
 
 Generated offline. This does not launch MT5, MetaEditor, GitHub Actions, Git, or GitHub CLI.
 
+- Generator: `work/write_validation_package_shape_gate.ps1`
+
 - Overall: **PASS**
 - Manifest rows: `53` / `53`
 - Decision gate status: `PASS`
