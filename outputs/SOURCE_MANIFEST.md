@@ -57,7 +57,7 @@ Money-ready/demo candidate:
 - Passing gates: `5`
 - Pending gates: `8`
 - Failed gates: `0`
-- Reproducibility bundle: `PASS`, `52` pass / `0` pending / `0` fail
+- Reproducibility bundle: `PASS`, `56` pass / `0` pending / `0` fail
 - Money-ready refresh: `PENDING`, `4` pass / `10` pending / `0` fail
 
 Remaining proof blockers:
@@ -75,6 +75,8 @@ Remaining proof blockers:
 ## Source Notes
 
 The 2026-07-14 source changes include a trade-environment guard for test/live candidate profiles. When enabled, it blocks new entries on bad or stale quotes, insufficient signal bars, invalid symbol specs, disabled/close-only trade mode, excessive broker stop/freeze levels, or missing tick value. The conservative and money-ready profiles enable this guard.
+
+The returned-report routers now reject non-empty but incomplete `.htm`, `.html`, or `.xml` files unless they contain the expected full MT5 tester-stat labels: net profit, profit factor, expected payoff, Sharpe ratio, total trades, win rate/profit trades, max consecutive losses, and balance/equity drawdown. This prevents screenshots, balance-only exports, or log snippets from being routed into first-pass or conservative validation folders.
 
 An earlier 2026-07-14 source change also shortened six overlong FMLR input identifiers so MetaEditor can compile the EA source:
 
