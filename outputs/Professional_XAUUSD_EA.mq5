@@ -1080,6 +1080,8 @@ input bool            InpDiagnosticFallbackRequireStructure = false;
 input bool            InpDiagnosticFallbackRequireLiquidity = false;
 bool            InpDiagnosticFallbackRequireExecution = true;
 input bool            InpDiagnosticFallbackBlockLiquiditySweep = false;
+input bool            InpDiagnosticFallbackRejectLiquiditySweepSignal = false;
+input int             InpDiagnosticFallbackLiquidityRejectMaxConfirmations = 1;
 input bool            InpUseDiagnosticFallbackLateSessionGuard = false;
 input int             InpDiagnosticFallbackLateSessionStartHour = 16;
 input bool            InpDiagnosticFallbackLateSessionPureOnly = true;
@@ -14916,6 +14918,14 @@ public:
       {
          diagnosticFallbackBase = false;
          signal.reasons += "Diagnostic fallback liquidity sweep reject;";
+      }
+      if(diagnosticFallbackBase &&
+         InpDiagnosticFallbackRejectLiquiditySweepSignal &&
+         StringFind(signal.reasons, "Liquidity sweep;") >= 0 &&
+         signal.confirmations <= MathMax(0, InpDiagnosticFallbackLiquidityRejectMaxConfirmations))
+      {
+         signal.reasons += "Diagnostic fallback liquidity signal reject;";
+         return signal;
       }
       if(diagnosticFallbackBase && InpUseDiagnosticFallbackLateSessionGuard)
       {

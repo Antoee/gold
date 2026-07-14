@@ -214,6 +214,35 @@ $candidates = @(
       }
    },
    [pscustomobject]@{
+      Name = "re_dgf_liq_reject1"
+      Thesis = "Reject DGF plus liquidity-sweep entries when liquidity sweep is the only pre-DGF confirmation."
+      Overrides = @{
+         InpDiagnosticFallbackRejectLiquiditySweepSignal = "true"
+         InpDiagnosticFallbackLiquidityRejectMaxConfirmations = "1"
+      }
+   },
+   [pscustomobject]@{
+      Name = "re_may140_dgf_liq_reject1"
+      Thesis = "Combine smaller May risk with true rejection of weak DGF plus liquidity-sweep entries."
+      Overrides = @{
+         InpMayRiskMultiplier = "1.40"
+         InpDiagnosticFallbackRejectLiquiditySweepSignal = "true"
+         InpDiagnosticFallbackLiquidityRejectMaxConfirmations = "1"
+      }
+   },
+   [pscustomobject]@{
+      Name = "re_may140_late15_dgf_liq_reject1"
+      Thesis = "Combine May risk cap, late pure-DGF guard, and true rejection of weak DGF plus liquidity-sweep entries."
+      Overrides = @{
+         InpMayRiskMultiplier = "1.40"
+         InpUseDiagnosticFallbackLateSessionGuard = "true"
+         InpDiagnosticFallbackLateSessionStartHour = "15"
+         InpDiagnosticFallbackLateSessionPureOnly = "true"
+         InpDiagnosticFallbackRejectLiquiditySweepSignal = "true"
+         InpDiagnosticFallbackLiquidityRejectMaxConfirmations = "1"
+      }
+   },
+   [pscustomobject]@{
       Name = "re_dgf_late16_pure"
       Thesis = "Block pure diagnostic-fallback entries at or after hour 16 while keeping stronger confirmed setups."
       Overrides = @{
