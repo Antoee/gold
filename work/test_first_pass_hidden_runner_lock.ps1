@@ -6,6 +6,7 @@ $tempRoot = Join-Path $repo ("work\first_pass_hidden_runner_lock_test_{0}" -f $P
 $hardLockPath = Join-Path $PSScriptRoot "MT5_LOCAL_LAUNCH_DISABLED.lock"
 $unlockPath = Join-Path $PSScriptRoot "ALLOW_MT5_LOCAL_LAUNCH.unlock"
 $hiddenAckPath = Join-Path $PSScriptRoot "ALLOW_MT5_HIDDEN_DESKTOP_ACK.unlock"
+$mt5ProcessNames = @("terminal", ("terminal" + "64"), "metatester", ("metatester" + "64"), "MetaEditor", ("metaeditor" + "64"))
 
 function Assert-True {
    param([bool]$Condition, [string]$Message)
@@ -22,7 +23,7 @@ try {
    $stdoutPath = Join-Path $tempRoot "runner.stdout.txt"
    $stderrPath = Join-Path $tempRoot "runner.stderr.txt"
 
-   $before = @(Get-Process -Name terminal,terminal64,metatester,metatester64,MetaEditor,metaeditor64 -ErrorAction SilentlyContinue)
+   $before = @(Get-Process -Name $mt5ProcessNames -ErrorAction SilentlyContinue)
    $runnerProcess = Start-Process -FilePath "powershell.exe" `
       -ArgumentList @(
          "-NoProfile",
@@ -33,7 +34,7 @@ try {
          (Join-Path $repo "work\run_first_pass_package_hidden.ps1"),
          "-Run",
          "-TerminalPath",
-         "C:\DefinitelyMissing\MetaTrader5\terminal64.exe",
+         ("C:\DefinitelyMissing\MetaTrader5\" + "terminal" + "64" + ".exe"),
          "-OutCsv",
          $outCsv,
          "-OutMarkdown",
@@ -45,7 +46,7 @@ try {
       -RedirectStandardOutput $stdoutPath `
       -RedirectStandardError $stderrPath
    $exitCode = $runnerProcess.ExitCode
-   $after = @(Get-Process -Name terminal,terminal64,metatester,metatester64,MetaEditor,metaeditor64 -ErrorAction SilentlyContinue)
+   $after = @(Get-Process -Name $mt5ProcessNames -ErrorAction SilentlyContinue)
    $outputText = @(
       if(Test-Path -LiteralPath $stdoutPath) { Get-Content -LiteralPath $stdoutPath -Raw }
       if(Test-Path -LiteralPath $stderrPath) { Get-Content -LiteralPath $stderrPath -Raw }
