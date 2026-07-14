@@ -23,7 +23,7 @@ Before this hardening, disabling that input caused the real-account safety funct
 
 ## Verification
 
-- `STATIC_MQL_COMPILE_PREFLIGHT_PASS checks=29 inputs=1802`
+- `STATIC_MQL_COMPILE_PREFLIGHT_PASS checks=32 inputs=1802`
 - `MONEY_READY_SAFETY_CONTRACT_PASS`
 - `TRADE_READY_CONSERVATIVE_PROFILE_SMOKE_PASS`
 - `TRADE_READINESS_PROFILE_SMOKE_PASS`
