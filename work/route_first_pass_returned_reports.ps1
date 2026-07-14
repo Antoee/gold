@@ -103,9 +103,6 @@ if(!(Test-Path -LiteralPath $resolvedInbox)) {
 }
 
 $manifest = @(Import-Csv -LiteralPath $resolvedManifest)
-if($manifest.Count -eq 0) {
-   throw "First-pass report routing manifest has no rows: $resolvedManifest"
-}
 
 $inboxFiles = @(Get-ChildItem -LiteralPath $resolvedInbox -File -Recurse | Where-Object {
    $allowedExtensions -contains $_.Extension.ToLowerInvariant()
@@ -239,6 +236,7 @@ $md.Add("Generated offline. This does not launch MT5, MetaEditor, Git, or GitHub
 $md.Add("")
 $md.Add(('- Inbox: `{0}`' -f $InboxDir))
 $md.Add(('- Manifest: `{0}`' -f $ManifestPath))
+$md.Add(('- Active expected reports: `{0}`' -f $manifest.Count))
 $md.Add(('- Routed reports: `{0}`' -f $routed))
 $md.Add(('- Missing expected reports: `{0}`' -f $missing))
 $md.Add(('- Duplicate expected reports: `{0}`' -f $duplicates))
@@ -248,7 +246,11 @@ $md.Add(('- Ready to import: `{0}`' -f $readyToImport))
 $md.Add("- Required tester-stat labels: `Total Net Profit`, `Profit Factor`, `Expected Payoff`, `Sharpe Ratio`, `Total Trades`, `Profit Trades (% of total)` or `Win Rate`, `Maximal consecutive losses`, `Balance/Equity Drawdown Maximal`, and `Recovery Factor`.")
 $md.Add("")
 if($readyToImport) {
-   $md.Add("All active first-pass reports are routed. Run `work\refresh_first_pass_validation_state.ps1` to import and evaluate them.")
+   if($manifest.Count -eq 0) {
+      $md.Add("No active first-pass reports are currently expected. The next-run package is empty.")
+   } else {
+      $md.Add("All active first-pass reports are routed. Run `work\refresh_first_pass_validation_state.ps1` to import and evaluate them.")
+   }
 } else {
    $md.Add("The inbox is not ready for import yet. Fix missing, duplicate, invalid, or unmatched files below, then rerun this router.")
 }

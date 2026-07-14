@@ -3,27 +3,22 @@
 Generated offline. This does not launch MT5, MetaEditor, Git, or GitHub Actions.
 
 - Verdict: **NOT_RELEASEABLE_PENDING_EVIDENCE**
-- Passing rows: `2`
-- Pending rows: `4`
-- Failed rows: `0`
-- Profile hash: `621F54A4BFE61761577D87DB212CF024163F25066209C205090E72227FE584A6`
-- Source hash: `44D9EBA868C86EB6C57DF82C3B94D83ACFE994B1A665917EC05AB8313188A5F7`
+- Source profile: `outputs\CANDIDATE_TRADE_READY_CONSERVATIVE_PROFILE.set`
+- Source profile hash: `F708C68A68016C13C4ADAECFE472A270748F4DAD9F2DF8C12F9870C2324DA13F`
+- Evidence profile id: `trade_ready_conservative`
+- Evidence source hash: `FF1BCDB06E5D628F37039B7A2E6D96CE0EC60E2F0D33F2A1F8E3FF2EE4130394`
+- Locked profile: `outputs\TRADE_READY_RELEASE_PROFILE_LOCKED.set`
+- Manual live-review profile: `not written`
 
-## Current Output
+The candidate is not releaseable yet because required evidence is still missing or stale. Real-account trading remains locked.
 
-Only the locked conservative profile exists:
+## Release Checks
 
-`outputs/TRADE_READY_RELEASE_PROFILE_LOCKED.set`
-
-No manual live-review profile should be written until every live-readiness and money-ready scorecard gate passes and an explicit approval identity matches the evidence profile/source identity.
-
-## Why It Is Blocked
-
-- Money-ready scorecard is still `NOT_READY_PENDING_EVIDENCE`.
-- Live-readiness is still `PENDING`.
-- Validation reports are missing.
-- Trade-quality, Monte Carlo, forward/demo, and second-broker evidence are missing.
-
-## Bottom Line
-
-Not releaseable. Do not trade this profile with real money yet.
+| Area | Status | Actual | Required | Evidence | Next Action |
+| --- | --- | --- | --- | --- | --- |
+| profile-source | PASS | exists=True; hash=F708C68A68016C13C4ADAECFE472A270748F4DAD9F2DF8C12F9870C2324DA13F; evidenceProfile=trade_ready_conservative; evidenceSource=FF1BCDB06E5D628F37039B7A2E6D96CE0EC60E2F0D33F2A1F8E3FF2EE4130394; evidenceRun=trade_ready_conservative_validation | Conservative profile exists with evidence identity | outputs\CANDIDATE_TRADE_READY_CONSERVATIVE_PROFILE.set | Generate the conservative trade-ready profile. |
+| live-readiness-decision | PENDING | rows=14; pass=5; pending=9; fail=0 | Final live-readiness decision has zero pending and zero failed gates | outputs\TRADE_READY_LIVE_READINESS_DECISION.csv | Close every live-readiness gate before release review. |
+| money-ready-scorecard | PENDING | rows=20; pass=5; pending=15; fail=0 | Money-ready scorecard has zero pending and zero failed rows | outputs\MONEY_READY_STATUS_SCORECARD.csv | Regenerate the scorecard after proof gates pass. |
+| locked-release-profile | PASS | written=outputs\TRADE_READY_RELEASE_PROFILE_LOCKED.set | A locked profile is always written for paper/demo use | outputs\TRADE_READY_RELEASE_PROFILE_LOCKED.set | Use this profile only for demo/paper or tester work. |
+| approval-identity | PENDING | evidence not complete; live approval ignored | Approval identity is only considered after evidence gates pass | command parameters | Finish proof gates first. |
+| manual-live-review-profile | PENDING | not written; verdict=NOT_RELEASEABLE_PENDING_EVIDENCE | No live-review profile is written until evidence and explicit approval both pass | outputs\TRADE_READY_MANUAL_LIVE_REVIEW_PROFILE.set | Do not create or use a real-account profile yet. |

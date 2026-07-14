@@ -1,6 +1,6 @@
 # GitHub Status Dashboard
 
-Last updated: 2026-07-14 UTC after real-account safety-lock hardening, regenerated money-ready/conservative profiles, rebuilt validation packages, current-source money-ready audit refresh, local reproducibility-bundle rebuild, required-artifact sync-package regeneration, source-artifact upload-plan regeneration, first-pass hidden-runner plan generation, and hard-lock runner smoke testing.
+Last updated: 2026-07-14 UTC after real-account safety-lock hardening, regenerated money-ready/conservative profiles, rebuilt validation packages, current-source money-ready audit refresh, local reproducibility-bundle rebuild, seven-artifact required-publication sync-package regeneration, required-publication upload-plan regeneration, first-pass hidden-runner plan generation, first-pass advance-wrapper generation, stricter first-pass efficiency-floor documentation, and hard-lock runner smoke testing.
 
 ## Short Answer
 
@@ -26,48 +26,55 @@ Return math assumes a `$1,000` starting balance over `2024.01.01` to `2026.07.12
 ## Money-Ready Status
 
 - Overall money-ready refresh: `PENDING`
-- Passing areas: `5`
-- Pending areas: `10`
+- Passing areas: `4`
+- Pending areas: `12`
 - Failed areas: `0`
 - Money-ready scorecard: `NOT_READY_PENDING_EVIDENCE`
-- Money-ready scorecard rows: `5` PASS / `14` PENDING / `0` FAIL
+- Money-ready scorecard rows: `5` PASS / `15` PENDING / `0` FAIL
+- Money-ready efficiency audit: `PENDING`, `0` PASS / `17` PENDING / `0` FAIL
 - Release-candidate gate: `NOT_RELEASEABLE_PENDING_EVIDENCE`
 - Real-account trading: locked
 
 ## GitHub Publication Sync
 
 - Overall: `PENDING`
-- Required source/profile artifacts verified on GitHub: `1 / 7`; the source manifest now matches the connector-published GitHub blob for the hardened source
-- Required pending artifacts: `6`
+- Required source/profile artifacts verified on GitHub: `0 / 7`
+- Required pending artifacts: `7`
 - Required failed artifacts: `0`
 - Evidence file: `outputs/GITHUB_PUBLICATION_SYNC.md`
 - Exact local upload package: `outputs/GITHUB_REQUIRED_ARTIFACT_SYNC_PACKAGE.md`
-- Source upload plan/helper: `outputs/GITHUB_SOURCE_ARTIFACT_UPLOAD_PLAN.md`
+- Required-publication upload plan/helper: `outputs/GITHUB_SOURCE_ARTIFACT_UPLOAD_PLAN.md`
 
-The source/profile publication gate is still blocking live-readiness because the local folder is not a valid git checkout and the large EA source files, regenerated profile files, and current-best note are not yet exact connector-verified matches. The source manifest has been connector-verified for the hardened source. The source upload plan is `READY`: the stale root EA source would be updated and the missing mirrored output EA source would be created when a noninteractive token is available. This is a reproducibility blocker, not a trading-profit result.
+The source/profile publication gate is still blocking live-readiness because the local folder is not a valid git checkout and the root EA source, mirrored EA source, three regenerated profile files, source manifest, and current-best note are not yet exact connector-verified matches. The upload plan is `READY` with all `7` required rows ready for noninteractive token upload. Current session blocker: local `git` is missing, `GH_TOKEN`/`GITHUB_TOKEN` are absent, and the GitHub connector fetch returned `token_expired`. This is a reproducibility blocker, not a trading-profit result.
 
 The current conservative candidate is not live-ready and should remain paper/demo only.
 
 ## Latest Background Check
 
-- Local MT5 safety audit: `PASS`, `43 / 43`
+- Local MT5 safety audit: `PASS`, `44 / 44`
 - Static repo safety audit: `PASS`, `25` checks
 - Static MQL compile preflight: `PASS`, `32` checks / `1802` inputs
 - Report collector annualized return/CAGR smoke: `PASS`
 - Minimum continuous annualized-return/CAGR gate smoke: `PASS`
-- GitHub profile artifact sync: `PASS`, `3 / 3` profile artifacts connector-verified
-- Static Safety workflow missing-script fix: `work/static_repo_safety_audit.py` and `work/static_mql_compile_preflight.py` now exist locally, pass locally, and have been published to GitHub
+- GitHub profile artifact sync: `PENDING`; regenerated profile artifacts still need exact connector or token publication
+- Static Safety workflow missing-script fix: `work/static_repo_safety_audit.py` and `work/static_mql_compile_preflight.py` exist locally and pass locally; exact GitHub/source publication remains pending in `outputs/GITHUB_PUBLICATION_SYNC.md`
 - GitHub publication sync smoke: `PASS`
-- Required artifact sync package smoke: `PASS`, `5` required artifacts, `0` unsafe profile rows
-- Source artifact upload plan smoke: `PASS`, root source `WOULD_UPDATE`, mirrored output source `WOULD_CREATE`
-- First-pass hidden runner plan smoke: `PASS`, current state `LOCKED`, `4` configs, `0` MT5 processes launched
+- Required artifact sync package smoke: `PASS`, `7` required artifacts, `0` unsafe profile rows
+- Required-publication upload plan smoke: `PASS`, `7` ready upload rows
+- First-pass hidden runner plan smoke: `PASS`, current state `LOCKED`, `1` config, `0` MT5 processes launched
 - First-pass hidden runner hard-lock smoke: `PASS`, accidental `-Run` exits before writing run outputs or launching MT5
+- First-pass advance wrapper smoke: `PASS`, current state `PENDING_REPORT`, `1` expected report, `0` MT5 processes
+- First-pass validation queue decision smoke: `PASS`, strict threshold gates checked
+- First-pass next-run batch smoke: `PASS`, numeric efficiency floors shown in the next-run file
+- Money-ready proof runway smoke: `PASS`
+- Money-ready evidence handoff smoke: `PASS`
 - Trade-ready live-readiness smoke: `PASS`
+- Money-ready efficiency audit smoke: `PASS`
 - FMLR package smoke: `PASS`
 - Money-ready refresh smoke: `PASS`
 - Visible MT5/MetaEditor/Metatester/Git process check: clear
 - Current EA source hash: `FF1BCDB06E5D628F37039B7A2E6D96CE0EC60E2F0D33F2A1F8E3FF2EE4130394`
-- First-pass active package: `4` fast Model1 configs for `trade_ready_conservative`, split into `4` window lanes
+- First-pass active package: `1` continuous fast Model1 config for `trade_ready_conservative`, split into `1` window lane; fast continuous must clear annualized return >= `8%` and return/DD >= `1.5`
 - First-pass active profile hash: current conservative `F708C68A6801`
 - First-pass comparison profile hash: current money-ready `2A16CEEC3379` is available only when explicitly re-enabled
 - Stale first-pass hashes `621F54A4...` and `0CF80057...`: removed from active run packages
@@ -104,10 +111,12 @@ The local workspace now has a stricter offline evidence system:
 - current-source trade-environment guard and safety-gate checks
 - non-bypassable real-account lock: real accounts now fail closed if `InpUseRealAccountSafetyLock=false`
 - one-command refresh status
+- one-command first-pass advance wrapper after returned reports
+- stricter money-ready efficiency audit for growth, return/drawdown, recent data, no-red-window, and broker/stress survival
 - first-pass report routing
 - strict returned-report validation that rejects screenshots, balance-only snippets, log-only rows, and exported reports missing recovery-factor stats
 - annualized return and CAGR fields in exported-report CSV/Markdown summaries
-- first-pass and full-validation decisions now require minimum continuous annualized return and CAGR
+- first-pass and full-validation decisions now require minimum continuous annualized return, CAGR, return/drawdown efficiency, PF, recovery, and drawdown caps where applicable; first-pass fast continuous requires `8%` annualized and `1.5` return/DD, while exact continuous requires `12%` annualized, `10%` CAGR, and `3.0` return/DD
 - live-evidence routing
 - compile-evidence routing
 - conservative full-validation routing
@@ -116,21 +125,22 @@ The local workspace now has a stricter offline evidence system:
 - forward/demo and second-broker evidence gates
 - local reproducibility bundle
 - exact required-artifact sync package for source/profile publication
-- exact source-artifact upload plan/helper for the two remaining large EA source files
+- exact required-publication upload plan/helper for all seven pending source/profile/status artifacts
 - plan-only first-pass hidden runner guarded by the MT5 hard lock
 - hard-lock smoke test proving the first-pass hidden runner fails closed if `-Run` is requested while locked
 - evidence handoff package
-- four parallel first-pass lanes for faster testing
+- window-based first-pass lanes for faster testing
 
 Current first-pass package:
 
-- `4` configs total
-- split into `4` window-based lanes
+- `1` config total
+- split into `1` window-based lane
 - each lane contains the selected `trade_ready_conservative` config for one window
+- promotion is blocked unless the fast continuous report clears annualized return >= `8%` and return/DD >= `1.5`; exact continuous later must clear annualized return >= `12%`, CAGR >= `10%`, return/DD >= `3.0`, worst parsed DD <= `6%`, PF >= `1.20`, and recovery >= `1.25`
 
 ## Next Required Evidence
 
-The next useful testing step is to run the `4` first-pass configs from either:
+The next useful testing step is to run the `1` continuous-first first-pass config from either:
 
 - `outputs/first_pass_next_run_package`
 - `outputs/first_pass_parallel_lanes`
@@ -139,6 +149,12 @@ The next useful testing step is to run the `4` first-pass configs from either:
 Then export reports into:
 
 `outputs/returned_mt5_reports/first_pass_inbox`
+
+Then run:
+
+`work/advance_first_pass_after_report.ps1`
+
+It routes the report, refreshes first-pass state, refreshes money-ready status, and writes `outputs/FIRST_PASS_ADVANCE_STATUS.md`.
 
 Required before any live-money review:
 
@@ -152,12 +168,13 @@ Required before any live-money review:
 - second-broker evidence
 - source/profile reproducibility sync
 - exact EA source publication from `outputs/GITHUB_SOURCE_ARTIFACT_UPLOAD_PLAN.md`
+- refreshed GitHub connector auth or a noninteractive GitHub token, because the current connector token is expired and local `git` is unavailable
 
 Current local reproducibility bundle:
 
 - Status: `PASS`
-- Passing rows: `75`
-- Zip SHA-256: `24F22DFBF1720276A3F0FB223F6982EE725AACC6ECAED842EAB0566C8DB403F7`
+- Passing rows: `83`
+- Zip SHA-256: `E02B1207BF21E3D8431A8ED56335D06E25DDADF6A709806A9115F1C3415E39A3`
 - Reminder: this is a local hash freeze only; it does not clear the GitHub/source-publication sync gate.
 
 ## Why There Is No New Best On GitHub

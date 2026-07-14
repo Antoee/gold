@@ -1,0 +1,2 @@
+"Rank","Candidate","EvidenceStatus","Recommendation","Parsed","Expected","CandidatePassGates","CandidatePendingGates","CandidateFailGates","RedWindows","TotalNetProfit","WorstNetProfit","BestNetProfit","ExactContinuousNetProfit","ExactContinuousAnnualizedReturnPercent","ExactContinuousCagrPercent","WorstDrawdownPercent","MinProfitFactor","ProfitToDrawdownScore","FirstPassScore"
+"1","lowatr_locked_risk18pure","FAIL","REJECT_FIRST_PASS","1","22","11","13","2","0","419.14","419.14","419.14","","","","7.33","5.0524","57.1814",""

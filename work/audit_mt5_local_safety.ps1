@@ -59,6 +59,7 @@ $stopWatchdogPath = Join-Path $WorkDir "stop_mt5_focus_watchdog.ps1"
 $watchdogPath = Join-Path $WorkDir "mt5_focus_watchdog.ps1"
 $startWatchdogPath = Join-Path $WorkDir "start_mt5_focus_watchdog_hidden.ps1"
 $offlineRefreshPath = Join-Path $WorkDir "refresh_offline_validation_state.ps1"
+$moneyReadyRefreshPath = Join-Path $WorkDir "refresh_money_ready_status.ps1"
 $handoffIntegrityPath = "outputs\HANDOFF_CONFIG_INTEGRITY.csv"
 
 $mt5Processes = @(Get-Process -Name $mt5ProcessNames -ErrorAction SilentlyContinue)
@@ -117,6 +118,7 @@ Add-Result $rows "Helper" "Start-MT5Hidden requires unlock file" ((Contains-Text
 Add-Result $rows "Helper" "Start-MT5Hidden requires hidden desktop ack file" ((Contains-Text $helperText 'function Start-MT5Hidden') -and (Contains-Text $helperText 'ALLOW_MT5_HIDDEN_DESKTOP_ACK.unlock')) $helperPath "Start-MT5Hidden must require work\ALLOW_MT5_HIDDEN_DESKTOP_ACK.unlock."
 Add-Result $rows "Helper" "Start-MT5Hidden honors hard lock" ((Contains-Text $helperText 'function Start-MT5Hidden') -and (Contains-Text $helperText 'MT5_LOCAL_LAUNCH_DISABLED.lock')) $helperPath "Start-MT5Hidden must stop when work\MT5_LOCAL_LAUNCH_DISABLED.lock exists."
 Add-Result $rows "Helper" "Background helper has low-impact controls" ((Contains-Text $helperText 'Set-MT5ProcessMute') -and (Contains-Text $helperText 'Set-MT5ProcessLowImpact') -and (Contains-Text $helperText 'Hide-MT5Windows')) $helperPath "Keep mute, lower-priority, and hide-window controls in the helper."
+Add-Result $rows "Helper" "Background helper covers broad MT5 process variants" ((Contains-Text $helperText 'Get-MT5FamilyProcessNames') -and (Contains-Text $helperText 'terminal64') -and (Contains-Text $helperText 'terminal') -and (Contains-Text $helperText 'metatester64') -and (Contains-Text $helperText 'metatester') -and (Contains-Text $helperText 'MetaEditor') -and (Contains-Text $helperText 'metaeditor64')) $helperPath "Mute, priority, and hide-window controls should cover terminal/metatester/MetaEditor variants."
 
 $stopHelperText = Read-TextSafe $stopHelperPath
 Add-Result $rows "Cleanup" "Stop-stray helper exists" (Test-Path -LiteralPath $stopHelperPath) $stopHelperPath "Restore work\stop_mt5_stray_processes.ps1."
@@ -131,10 +133,16 @@ Add-Result $rows "Offline refresh" "Offline refresh child steps run without wind
 Add-Result $rows "Offline refresh" "Offline refresh avoids direct visible child shells" (!(Contains-Text $offlineRefreshText 'powershell -NoProfile') -and !(Contains-Text $offlineRefreshText 'powershell -ExecutionPolicy') -and !(Contains-Text $offlineRefreshText '& powershell')) $offlineRefreshPath "Replace direct powershell child calls with Invoke-QuietPowerShell."
 Add-Result $rows "Offline refresh" "Offline refresh does not launch MT5" (!(Contains-Text $offlineRefreshText 'Start-MT5Hidden') -and !(Contains-Text $offlineRefreshText 'terminal64.exe') -and !(Contains-Text $offlineRefreshText 'MetaEditor.exe')) $offlineRefreshPath "Offline refresh must rebuild state only; it must not launch MT5, MetaEditor, or Strategy Tester."
 
+$moneyReadyRefreshText = Read-TextSafe $moneyReadyRefreshPath
+Add-Result $rows "Money-ready refresh" "Money-ready refresh script exists" (Test-Path -LiteralPath $moneyReadyRefreshPath) $moneyReadyRefreshPath "Restore work\refresh_money_ready_status.ps1."
+Add-Result $rows "Money-ready refresh" "Money-ready refresh child steps run without windows" ((Contains-Text $moneyReadyRefreshText 'function Invoke-QuietPowerShell') -and (Contains-Text $moneyReadyRefreshText 'ProcessStartInfo') -and (Contains-Text $moneyReadyRefreshText 'CreateNoWindow') -and (Contains-Text $moneyReadyRefreshText 'ProcessWindowStyle]::Hidden') -and (Contains-Text $moneyReadyRefreshText 'RedirectStandardOutput = $true') -and (Contains-Text $moneyReadyRefreshText 'RedirectStandardError = $true') -and !(Contains-Text $moneyReadyRefreshText 'Start-Process')) $moneyReadyRefreshPath "Money-ready refresh child PowerShell steps must use ProcessStartInfo with CreateNoWindow and write logs."
+Add-Result $rows "Money-ready refresh" "Money-ready refresh avoids direct visible child shells" (!(Contains-Text $moneyReadyRefreshText 'powershell -NoProfile') -and !(Contains-Text $moneyReadyRefreshText 'powershell -ExecutionPolicy') -and !(Contains-Text $moneyReadyRefreshText '& powershell')) $moneyReadyRefreshPath "Replace direct powershell child calls with Invoke-QuietPowerShell."
+Add-Result $rows "Money-ready refresh" "Money-ready refresh does not launch MT5" (!(Contains-Text $moneyReadyRefreshText 'Start-MT5Hidden') -and !(Contains-Text $moneyReadyRefreshText 'terminal64.exe') -and !(Contains-Text $moneyReadyRefreshText 'MetaEditor.exe')) $moneyReadyRefreshPath "Money-ready refresh must rebuild state only; it must not launch MT5, MetaEditor, or Strategy Tester."
+
 $scriptFiles = @(Get-ChildItem -LiteralPath $WorkDir -Filter "*.ps1" -File)
 $runnerFiles = New-Object System.Collections.Generic.List[object]
 foreach($file in $scriptFiles) {
-   if($file.Name -in @("assert_mt5_launch_allowed.ps1", "mt5_background_helpers.ps1", "mt5_focus_watchdog.ps1", "stop_mt5_focus_watchdog.ps1", "audit_mt5_local_safety.ps1", "stop_mt5_stray_processes.ps1", "build_report_import_preflight.ps1", "test_mt5_hidden_launcher_lock.ps1")) {
+   if($file.Name -in @("assert_mt5_launch_allowed.ps1", "mt5_background_helpers.ps1", "mt5_focus_watchdog.ps1", "stop_mt5_focus_watchdog.ps1", "audit_mt5_local_safety.ps1", "stop_mt5_stray_processes.ps1", "build_report_import_preflight.ps1", "test_mt5_hidden_launcher_lock.ps1", "test_first_pass_hidden_runner_lock.ps1")) {
       continue
    }
 

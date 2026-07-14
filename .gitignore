@@ -9,6 +9,7 @@
 outputs/**/*.log
 work/**/*.log
 outputs/offline_refresh_logs/
+outputs/money_ready_refresh_logs/
 
 # Local background-run coordination files.
 work/*.unlock

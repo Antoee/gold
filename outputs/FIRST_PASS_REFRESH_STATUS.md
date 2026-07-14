@@ -2,28 +2,29 @@
 
 Offline refresh only. This does not launch MT5.
 
-- Overall first-pass decision: **PENDING**
-- Parsed reports: `0 / 22`
-- Missing reports: `22`
+- Overall first-pass decision: **FAIL**
+- Parsed exported reports: `0 / 22`
+- Parsed tester-log rows: `1 / 22`
+- Missing reports: `21`
 - Unparsed reports: `0`
 - Evidence integrity: **PENDING**
 - Trusted decision: **PENDING**
-- Next selected configs: `4`
-- Packaged configs: `4`
-- Parallel lanes: `4`
-- Parallel lane configs: `4`
+- Next selected configs: `0`
+- Packaged configs: `0`
+- Parallel lanes: `0`
+- Parallel lane configs: `0`
 
 ## Candidate Recommendations
 
 | Candidate | Evidence | Raw Recommendation | Trusted Recommendation | Parsed | Fail Gates | Pending Gates |
 | --- | --- | --- | --- | ---: | ---: | ---: |
-| `trade_ready_conservative` | PENDING | WAIT_FOR_REPORTS | WAIT_FOR_TRUSTED_EVIDENCE | 0/22 | 0 | 21 |
+| `lowatr_locked_risk18pure` | FAIL | REJECT_FIRST_PASS | WAIT_FOR_TRUSTED_EVIDENCE | 1/22 | 2 | 13 |
 
 ## Next Batch
 
 | Candidate | State | Parsed/Expected | Next Phase | Batch Rows |
 | --- | --- | ---: | --- | ---: |
-| `trade_ready_conservative` | RUN_NEXT_STAGE | 0/22 | Fast Model1 sanity | 4 |
+| `lowatr_locked_risk18pure` | STOP_FAILED | 1/22 |  | 0 |
 
 ## Files
 

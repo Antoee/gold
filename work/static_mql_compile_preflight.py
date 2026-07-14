@@ -23,7 +23,7 @@ MAX_MQL_IDENTIFIER = 63
 def sha256(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b=""):
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             h.update(chunk)
     return h.hexdigest().upper()
 
@@ -118,9 +118,9 @@ def check_balanced(code: str) -> list[str]:
         if ch == "\n":
             line += 1
             continue
-        if ch in "([{" :
+        if ch in "([{":
             stack.append((ch, line))
-        elif ch in ")]}" :
+        elif ch in ")]}":
             if not stack or stack[-1][0] != pairs[ch]:
                 failures.append(f"unmatched {ch!r} at line {line}")
                 continue

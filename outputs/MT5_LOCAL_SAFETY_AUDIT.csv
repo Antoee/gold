@@ -22,6 +22,7 @@
 "Helper","Start-MT5Hidden requires hidden desktop ack file","True","work\mt5_background_helpers.ps1","Start-MT5Hidden must require work\ALLOW_MT5_HIDDEN_DESKTOP_ACK.unlock."
 "Helper","Start-MT5Hidden honors hard lock","True","work\mt5_background_helpers.ps1","Start-MT5Hidden must stop when work\MT5_LOCAL_LAUNCH_DISABLED.lock exists."
 "Helper","Background helper has low-impact controls","True","work\mt5_background_helpers.ps1","Keep mute, lower-priority, and hide-window controls in the helper."
+"Helper","Background helper covers broad MT5 process variants","True","work\mt5_background_helpers.ps1","Mute, priority, and hide-window controls should cover terminal/metatester/MetaEditor variants."
 "Cleanup","Stop-stray helper exists","True","work\stop_mt5_stray_processes.ps1","Restore work\stop_mt5_stray_processes.ps1."
 "Cleanup","Stop-stray helper does not launch MT5","True","work\stop_mt5_stray_processes.ps1","Cleanup helper must only stop existing processes."
 "Cleanup","Stop-watchdog helper preserves quiet marker and avoids self-match","True","work\stop_mt5_focus_watchdog.ps1","Keep the quiet stop marker in place and avoid matching the stop helper command itself."
