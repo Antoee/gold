@@ -5,8 +5,8 @@ Generated offline. This does not launch MT5, MetaEditor, Git, or GitHub Actions.
 - Overall: **PASS**
 - Bundle folder: `outputs\trade_ready_reproducibility_bundle`
 - Zip: `outputs\trade_ready_reproducibility_bundle.zip`
-- Zip SHA-256: `4341D3B4A66FF31ED70E871DCAFE5CA4E2C3DC4899DD695EF80E8F5FFFD11446`
-- Zip bytes: `366148`
+- Zip SHA-256: `C92926370EB935F247AF8A1FE1FDF3D8EF2B2E4A451549E7B705892BCBD135DB`
+- Zip bytes: `366196`
 - Manifest: `outputs\TRADE_READY_REPRODUCIBILITY_BUNDLE_MANIFEST.csv`
 - Source hash: `5D148DAE2335F9037BDED3C9A82BD916C1FCFB6F43EE2EC5EAAE7E67384ED412`
 - Passing rows: `75`
