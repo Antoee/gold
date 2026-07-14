@@ -48,6 +48,9 @@ The current conservative candidate is not live-ready and should remain paper/dem
 ## Latest Background Check
 
 - Local MT5 safety audit: `PASS`, `43 / 43`
+- Static repo safety audit: `PASS`, `25` checks
+- Static MQL compile preflight: `PASS`, `29` checks / `1802` inputs
+- Static Safety workflow missing-script fix: `work/static_repo_safety_audit.py` and `work/static_mql_compile_preflight.py` now exist locally, pass locally, and have been published to GitHub
 - GitHub publication sync smoke: `PASS`
 - Trade-ready live-readiness smoke: `PASS`
 - FMLR package smoke: `PASS`
