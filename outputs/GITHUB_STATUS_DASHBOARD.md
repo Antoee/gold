@@ -1,6 +1,6 @@
 # GitHub Status Dashboard
 
-Last updated: 2026-07-14 UTC after annualized-return/CAGR report metrics, strict returned-report routing, current-source money-ready audit refresh, local reproducibility-bundle rebuild, and required-artifact sync-package generation.
+Last updated: 2026-07-14 UTC after annualized-return/CAGR report metrics, strict returned-report routing, connector profile-artifact sync, current-source money-ready audit refresh, and local reproducibility-bundle rebuild.
 
 ## Short Answer
 
@@ -10,7 +10,7 @@ The current stability-best research profile is still:
 
 `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
 
-The newer conservative trade-ready profile and FMLR research lanes are prepared, but they are not proven better yet because the required MT5 reports and live-readiness evidence are still missing. The latest local change is a safety/readiness improvement, not a new profit result.
+The newer conservative trade-ready profile and FMLR research lanes are prepared, but they are not proven better yet because the required MT5 reports and live-readiness evidence are still missing. The latest local change is a reproducibility improvement, not a new profit result.
 
 ## Current Best Evidence
 
@@ -37,13 +37,13 @@ Return math assumes a `$1,000` starting balance over `2024.01.01` to `2026.07.12
 ## GitHub Publication Sync
 
 - Overall: `PENDING`
-- Required source/profile artifacts verified on GitHub: `2 / 7`; the source manifest and current-best note now match the connector-published text docs, while the exact EA source and profile artifacts remain pending
-- Required pending artifacts: `5`
+- Required source/profile artifacts verified on GitHub: `5 / 7`; the source manifest, current-best note, conservative profile, money-ready profile, and trade-readiness alias profile now match connector-published GitHub blobs
+- Required pending artifacts: `2`
 - Required failed artifacts: `0`
 - Evidence file: `outputs/GITHUB_PUBLICATION_SYNC.md`
 - Exact local upload package: `outputs/GITHUB_REQUIRED_ARTIFACT_SYNC_PACKAGE.md`
 
-The source/profile publication gate is still blocking live-readiness because the local folder is not a valid git checkout and the two large EA source paths are not yet exact connector-verified matches. This is a reproducibility blocker, not a trading-profit result.
+The source/profile publication gate is still blocking live-readiness because the local folder is not a valid git checkout and the two large EA source paths are not yet exact connector-verified matches. The profile artifacts are now connector-verified. This is a reproducibility blocker, not a trading-profit result.
 
 The current conservative candidate is not live-ready and should remain paper/demo only.
 
@@ -54,6 +54,7 @@ The current conservative candidate is not live-ready and should remain paper/dem
 - Static MQL compile preflight: `PASS`, `29` checks / `1802` inputs
 - Report collector annualized return/CAGR smoke: `PASS`
 - Minimum continuous annualized-return/CAGR gate smoke: `PASS`
+- GitHub profile artifact sync: `PASS`, `3 / 3` profile artifacts connector-verified
 - Static Safety workflow missing-script fix: `work/static_repo_safety_audit.py` and `work/static_mql_compile_preflight.py` now exist locally, pass locally, and have been published to GitHub
 - GitHub publication sync smoke: `PASS`
 - Required artifact sync package smoke: `PASS`, `5` required artifacts, `0` unsafe profile rows
@@ -102,13 +103,14 @@ The local workspace now has a stricter offline evidence system:
 - strict returned-report validation that rejects screenshots, balance-only snippets, and log-only rows
 - annualized return and CAGR fields in exported-report CSV/Markdown summaries
 - first-pass and full-validation decisions now require minimum continuous annualized return and CAGR
+- connector-verified profile artifacts for conservative, money-ready, and trade-readiness alias profiles
 - live-evidence routing
 - compile-evidence routing
 - conservative full-validation routing
 - trade-quality and Monte Carlo gates
 - forward/demo and second-broker evidence gates
 - local reproducibility bundle
-- exact required-artifact sync package for the remaining GitHub source/profile blockers
+- exact required-artifact sync package for source/profile publication
 - evidence handoff package
 - four parallel first-pass lanes for faster testing
 
@@ -145,7 +147,7 @@ Current local reproducibility bundle:
 
 - Status: `PASS`
 - Passing rows: `60`
-- Zip SHA-256: `9773220EC39B09FEA50463B74F56C9094CC19C4FA9FD1AAD64D20AF69E9739A9`
+- Zip SHA-256: `CE4258019616FDB829ADC0335C54BF9548BCC93C3198A938F4106A5DFCA5DDAC`
 - Reminder: this is a local hash freeze only; it does not clear the GitHub/source-publication sync gate.
 
 ## Why There Is No New Best On GitHub
