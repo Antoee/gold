@@ -1,5 +1,6 @@
 param(
    [string]$ProfilePath = "outputs\lowatr_exit_sweep_package\profiles\lowatr_exit_peak_r20.set",
+   [string]$CandidateName = "lowatr_exit_peak_r20",
    [string]$OutDir = "outputs\lowatr_peak_r20_split_package",
    [string]$OutQueueManifest = "outputs\LOWATR_PEAK_R20_SPLIT_QUEUE.csv",
    [string]$OutPackageManifest = "outputs\LOWATR_PEAK_R20_SPLIT_PACKAGE_MANIFEST.csv",
@@ -61,7 +62,8 @@ $reportDir = Join-Path $packageDir "reports_here"
 $sourceDir = Join-Path $packageDir "source"
 New-Item -ItemType Directory -Path $configDir, $profileDir, $reportDir, $sourceDir -Force | Out-Null
 Copy-Item -LiteralPath $sourcePath -Destination (Join-Path $sourceDir "Professional_XAUUSD_EA.mq5") -Force
-Copy-Item -LiteralPath $resolvedProfile -Destination (Join-Path $profileDir "lowatr_exit_peak_r20.set") -Force
+$setFileName = "$CandidateName.set"
+Copy-Item -LiteralPath $resolvedProfile -Destination (Join-Path $profileDir $setFileName) -Force
 
 $windows = @(
    [pscustomobject]@{ Window = "2024_full"; From = "2024.01.01"; To = "2024.12.31" },
@@ -75,41 +77,41 @@ $rank = 0
 foreach($window in $windows) {
    $rank++
    $inputs = Import-SetInputs $resolvedProfile
-   $configName = "{0:000}_lowatr_exit_peak_r20_{1}_m{2}.ini" -f $rank, $window.Window, $Model
-   $reportName = "lowatr_peak_r20_split_{0}_m{1}" -f $window.Window, $Model
+   $configName = "{0:000}_{1}_{2}_m{3}.ini" -f $rank, $CandidateName, $window.Window, $Model
+   $reportName = "{0}_split_{1}_m{2}" -f $CandidateName, $window.Window, $Model
    $configPath = Join-Path $configDir $configName
    Write-SeasonalTesterConfig -Path $configPath -ReportRoot $reportDir -ReportName $reportName -From $window.From -To $window.To -Inputs $inputs -Model $Model
 
    $queue.Add([pscustomobject]@{
       QueueRank = $rank
-      Candidate = "lowatr_exit_peak_r20"
+      Candidate = $CandidateName
       CandidateRank = 1
       SourceType = "year_split"
       SourceRank = $rank
       Phase = "phase0_yearly_model1"
-      Set = "lowatr_exit_peak_r20.set"
+      Set = $setFileName
       Window = $window.Window
       From = $window.From
       To = $window.To
       Model = $Model
       Config = "configs\$configName"
       ExpectedReportName = $reportName
-      ProfileSnapshot = "profiles\lowatr_exit_peak_r20.set"
+      ProfileSnapshot = "profiles\$setFileName"
       ProfileSha256 = $profileHash
       StopRule = "Reject if any yearly split is red, too sparse, or has weak recovery."
    }) | Out-Null
 
    $runRows.Add([pscustomobject]@{
       QueueRank = $rank
-      Candidate = "lowatr_exit_peak_r20"
+      Candidate = $CandidateName
       Phase = "phase0_yearly_model1"
       PhaseLabel = "yearly Model1 split"
       Window = $window.Window
       Model = $Model
-      PackageConfig = "outputs\lowatr_peak_r20_split_package\configs\$configName"
-      SourceConfig = "outputs\lowatr_peak_r20_split_package\configs\$configName"
+      PackageConfig = "$OutDir\configs\$configName"
+      SourceConfig = "$OutDir\configs\$configName"
       ExpectedReportName = $reportName
-      ReportDestination = "outputs\lowatr_peak_r20_split_package\reports_here\$reportName"
+      ReportDestination = "$OutDir\reports_here\$reportName"
       ProfileSha256 = $profileHash
       StopRule = "Reject if any yearly split is red, too sparse, or has weak recovery."
    }) | Out-Null
@@ -130,7 +132,7 @@ $md = @(
    "",
    "Offline package builder only. This does not launch MT5.",
    "",
-   "- Candidate: ``lowatr_exit_peak_r20``",
+   "- Candidate: ``$CandidateName``",
    "- Source hash: ``$sourceHash``",
    "- Profile hash: ``$profileHash``",
    "- Model: ``$Model``",

@@ -103,6 +103,21 @@ Decision:
 
 Promoted as the current stability-best research profile.
 
+## Aggressive Research Frontier
+
+On 2026-07-14, a separate R20 opportunity sweep found `peak_r20_no_peaktrail_r10`.
+
+This profile is not promoted as the stability-best and is not trade-ready, but it is the current high-profit research frontier:
+
+| Profile | Model | Window | Net | Ann. Return | CAGR | PF | Recovery | Trades | Max DD |
+| --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `peak_r20_no_peaktrail_r10` | 1 | 2024-01-01 to 2026-07-12 | `+$1,716.76` | `67.94%` | `48.51%` | `2.8655` | `7.5227` | `76` | `10.62%` |
+| `peak_r20_no_peaktrail_r10` | 4 | 2024-01-01 to 2026-07-12 | `+$1,564.01` | `61.89%` | `45.15%` | `2.6874` | `7.1007` | `74` | `10.64%` |
+
+Model1 yearly splits stayed green: 2024 `+$814.43`, 2025 `+$186.95`, and 2026 YTD `+$246.96`.
+
+Reason not promoted: drawdown is above the strict safety band and full exported MT5 reports are still missing. See `outputs/LOWATR_R20_OPPORTUNITY_SWEEP_SUMMARY.md`.
+
 ## Evidence Files
 
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_PROBE_DIFF.csv`

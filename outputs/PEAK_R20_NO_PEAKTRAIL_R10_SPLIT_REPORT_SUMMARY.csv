@@ -1,0 +1,2 @@
+"Candidate","SourceType","Phase","Expected","ParsedReports","ParsedLogs","ParsedTotal","Missing","Unparsed","TotalNetProfit","WorstNetProfit","AverageAnnualizedReturnPercent","WorstAnnualizedReturnPercent","AverageCagrPercent","WorstCagrPercent","WorstDrawdownPercent","MinProfitFactor","TotalTrades"
+"peak_r20_no_peaktrail_r10","year_split","phase0_yearly_model1","3","0","3","3","0","0","1248.34","186.95","49.08","18.76","50.82","18.76","10.01","1.7478","74"
