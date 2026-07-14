@@ -1,0 +1,6 @@
+"Candidate","SourceType","Phase","Expected","ParsedReports","ParsedLogs","ParsedTotal","Missing","Unparsed","TotalNetProfit","WorstNetProfit","AverageAnnualizedReturnPercent","WorstAnnualizedReturnPercent","AverageCagrPercent","WorstCagrPercent","WorstDrawdownPercent","MinProfitFactor","TotalTrades"
+"r10_a7_diagq_default","peak_r20_diag_quality_yearly","phase5_diag_quality_yearly_model1","8","0","8","8","0","0","328.37","-20.84","4.73","-2.09","4.77","-2.09","6.47","0","22"
+"r10_a7_diagq_liq","peak_r20_diag_quality_yearly","phase5_diag_quality_yearly_model1","8","0","8","8","0","0","241.28","-17.6","3.64","-1.76","3.68","-1.76","5.63","0","17"
+"r10_a7_diagq_struct","peak_r20_diag_quality_yearly","phase5_diag_quality_yearly_model1","8","0","8","8","0","0","195.55","-17.6","3.07","-1.76","3.1","-1.76","4.79","0","9"
+"r10_a7_diagq_struct_liq","peak_r20_diag_quality_yearly","phase5_diag_quality_yearly_model1","8","0","8","8","0","0","195.55","-17.6","3.07","-1.76","3.1","-1.76","4.79","0","9"
+"r10_a7_no_diagfallback","peak_r20_diag_quality_yearly","phase5_diag_quality_yearly_model1","8","0","8","8","0","0","123.15","-23.4","2.16","-2.35","2.2","-2.35","4.79","0","8"

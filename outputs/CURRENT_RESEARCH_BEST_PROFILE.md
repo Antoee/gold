@@ -2,9 +2,61 @@
 
 Last updated: 2026-07-14.
 
+## 2026-07-14 Stability Lead Update
+
+The strongest new risk-first research lead is now:
+
+`r10_pg40_atr085_adapt7`
+
+Profile file:
+
+`outputs/peak_r20_regime_combo_candidate_profiles/r10_pg40_atr085_adapt7.set`
+
+SHA-256:
+
+`CB182D026A62AE499052949F88F514EF7FC67D8C071E9179AB069D29575C59B2`
+
+It adds the following to the `r10_profit_guard40` base:
+
+- `InpUseDynamicATRRegimeGuard=true`
+- `InpMinATRRegimeRatio=0.85`
+- `InpMaxATRRegimeRatio=1.65`
+- `InpUseAdaptiveRegimeConfidenceGate=true`
+- `InpAdaptiveRegimeMinScore=7`
+- `InpAdaptiveRegimeMinEfficiency=0.45`
+
+Model1 yearly validation across 2019-2026 YTD:
+
+- Total net: `+$344.60`
+- Losing years: `0`
+- Worst year: `+$9.25`
+- Worst DD: `7.08%`
+- Trades: `28`
+
+Model4 real-tick yearly validation across 2019-2026 YTD:
+
+- Total net: `+$263.72`
+- Losing years: `1`
+- Worst year: `-$22.92` in 2020
+- Worst DD: `7.09%`
+- Trades: `22`
+- 2026 YTD Model4 took `0` trades
+
+Decision:
+
+This is the current stability lead, but it is not money-ready. The blocker is the 2020 Model4 loss, which was one `Diagnostic trend fallback` sell trade on 2020-08-13 with ATR `3.82`, spread `30.0`, and profit `-$22.92`. The first diagnostic-quality follow-up did not solve it; the next branch should test a legitimate spread/volatility/risk-control guard rather than disabling a calendar year.
+
+Evidence:
+
+- `outputs/PEAK_R20_REGIME_COMBO_STABILITY_LEAD_SUMMARY.md`
+- `outputs/PEAK_R20_REGIME_COMBO_OOS_YEARLY_RESULTS.csv`
+- `outputs/PEAK_R20_REGIME_COMBO_MODEL4_YEARLY_RESULTS.csv`
+- `outputs/PEAK_R20_DIAG_QUALITY_YEARLY_RESULTS.csv`
+- `outputs/peak_r20_regime_combo_model4_diag_package/trade_logs/PXEA_R10A7_2020_m4_trades.csv`
+
 ## Profile
 
-Current stability-best research profile:
+Previous promoted stability-best research profile:
 
 `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
 
