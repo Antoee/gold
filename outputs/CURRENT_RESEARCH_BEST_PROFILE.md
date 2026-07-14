@@ -142,6 +142,22 @@ Decision:
 
 See `outputs/PEAK_R20_DRAWDOWN_SWEEP_SUMMARY.md`.
 
+## R10 Older-Year/OOS Rejection
+
+The R10 branch was then tested on 2019 through 2026 YTD yearly Model1 windows because 2024-2026 is now research-seen data.
+
+Result: all tested R10 candidates are rejected as money-ready.
+
+| Candidate | Total Net | Losing Years | Worst Year | Worst DD | Decision |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `r10_base` | `+$1,371.43` | `3` | `-$66.26` | `12.44%` | Rejected for red older years and high yearly DD |
+| `r10_loss_scale_15` | `+$956.26` | `4` | `-$90.25` | `14.21%` | Rejected for too many red years and high DD |
+| `r10_profit_guard40` | `+$848.09` | `2` | `-$61.65` | `12.78%` | Rejected as money-ready despite being the best recent lower-drawdown fallback |
+
+This means the R10 branch is recent-regime research, not a robust live candidate. The next useful work is diagnosing the older-year failures rather than raising risk.
+
+See `outputs/PEAK_R20_OOS_YEARLY_SUMMARY.md`.
+
 ## Evidence Files
 
 - `outputs/REALTICK_ISLP_LOWATR_ORDERFLOW_PROBE_DIFF.csv`

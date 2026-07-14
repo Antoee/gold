@@ -52,7 +52,7 @@ Aggregate yearly split score: +$1,248.34. This is a validation-window score, not
 
 The strict R20 profile was too small because the equity profit peak trail effectively froze the continuous account after early gains. Removing that blocker lets the strategy keep trading and produces much better profit and trade count, including a green 2025 split. The cost is higher drawdown.
 
-Follow-up complete on 2026-07-14: `outputs/PEAK_R20_DRAWDOWN_SWEEP_SUMMARY.md` records a 22-variant R10 drawdown sweep plus a 5-profile Model4 shortlist. The best lower-drawdown fallback was `r10_profit_guard40`, which made `+$1,000.97` on Model4 with `7.76%` drawdown, PF `3.4058`, and recovery `8.5240`. The best high-profit branch still has about `10.6%` drawdown. No trade-ready profile was promoted.
+Follow-up complete on 2026-07-14: `outputs/PEAK_R20_DRAWDOWN_SWEEP_SUMMARY.md` records a 22-variant R10 drawdown sweep plus a 5-profile Model4 shortlist. The best lower-drawdown fallback was `r10_profit_guard40`, which made `+$1,000.97` on Model4 with `7.76%` drawdown, PF `3.4058`, and recovery `8.5240`. The best high-profit branch still has about `10.6%` drawdown. A later 2019-2026 yearly OOS pass in `outputs/PEAK_R20_OOS_YEARLY_SUMMARY.md` rejected the R10 branches as money-ready because older years went red and worst yearly drawdown reached `12-14%`. No trade-ready profile was promoted.
 
 The next useful work is not to raise risk. It is to validate the lower-drawdown fallback and/or make a strategy-code/risk-shape change that preserves later-year participation while cutting the 2025 drawdown path.
 
@@ -67,4 +67,5 @@ The next useful work is not to raise risk. It is to validate the lower-drawdown 
 - R10 drawdown sweep summary: `outputs/PEAK_R20_DRAWDOWN_SWEEP_SUMMARY.md`
 - R10 drawdown Model1 results: `outputs/PEAK_R20_DRAWDOWN_RESULTS.csv`
 - R10 drawdown Model4 shortlist results: `outputs/PEAK_R20_DRAWDOWN_SHORTLIST_MODEL4_RESULTS.csv`
+- R10 OOS yearly summary: `outputs/PEAK_R20_OOS_YEARLY_SUMMARY.md`
 - Candidate profile: `outputs/lowatr_r20_opportunity_sweep_package/profiles/peak_r20_no_peaktrail_r10.set`

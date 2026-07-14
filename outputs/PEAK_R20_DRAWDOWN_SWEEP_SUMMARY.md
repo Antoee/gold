@@ -28,6 +28,8 @@ Best lower-drawdown fallback:
 
 This is a meaningful risk-adjusted fallback, but it gives up too much profit to replace the high-profit frontier outright. It also still needs exported full reports, split windows, stress tests, and forward/demo evidence before any real-money use.
 
+Follow-up older-year validation rejected it as money-ready: `r10_profit_guard40` had `2` losing yearly windows from 2019 through 2026 YTD and a `12.78%` worst yearly drawdown. See `outputs/PEAK_R20_OOS_YEARLY_SUMMARY.md`.
+
 ## Model4 Shortlist
 
 | Candidate | Net | Ann. Return | CAGR | PF | Recovery | Sharpe | Trades | Max DD |
@@ -69,5 +71,7 @@ Before any money-ready label, the branch still needs:
 - Model4 shortlist package: `outputs/peak_r20_drawdown_shortlist_validation_package`
 - Model4 shortlist results: `outputs/PEAK_R20_DRAWDOWN_SHORTLIST_MODEL4_RESULTS.csv`
 - Model4 shortlist metrics: `outputs/PEAK_R20_DRAWDOWN_SHORTLIST_MODEL4_METRICS.md`
+- OOS yearly summary: `outputs/PEAK_R20_OOS_YEARLY_SUMMARY.md`
+- OOS yearly results: `outputs/PEAK_R20_OOS_YEARLY_RESULTS.csv`
 - Builder: `work/build_peak_r20_drawdown_sweep_package.ps1`
 - Shortlist builder: `work/build_peak_r20_drawdown_shortlist_validation_package.ps1`

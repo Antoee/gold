@@ -1,0 +1,4 @@
+"Candidate","SourceType","Phase","Expected","ParsedReports","ParsedLogs","ParsedTotal","Missing","Unparsed","TotalNetProfit","WorstNetProfit","AverageAnnualizedReturnPercent","WorstAnnualizedReturnPercent","AverageCagrPercent","WorstCagrPercent","WorstDrawdownPercent","MinProfitFactor","TotalTrades"
+"r10_base","peak_r20_oos_yearly","phase2_oos_yearly_model1","8","0","8","8","0","0","1371.43","-66.26","19.94","-6.65","20.6","-6.65","12.44","0.3507","176"
+"r10_loss_scale_15","peak_r20_oos_yearly","phase2_oos_yearly_model1","8","0","8","8","0","0","956.26","-90.25","14.74","-9.06","15.39","-9.05","14.21","0.4153","180"
+"r10_profit_guard40","peak_r20_oos_yearly","phase2_oos_yearly_model1","8","0","8","8","0","0","848.09","-61.65","12.85","-6.19","13.28","-6.19","12.78","0.3507","116"
