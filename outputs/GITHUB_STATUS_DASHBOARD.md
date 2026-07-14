@@ -36,12 +36,12 @@ Return math assumes a `$1,000` starting balance over `2024.01.01` to `2026.07.12
 ## GitHub Publication Sync
 
 - Overall: `PENDING`
-- Required source/profile artifacts verified on GitHub: `0 / 7`
-- Required pending artifacts: `7`
+- Required source/profile artifacts verified on GitHub: `5 / 7`
+- Required pending artifacts: `2`
 - Required failed artifacts: `0`
 - Evidence file: `outputs/GITHUB_PUBLICATION_SYNC.md`
 
-The source/profile publication gate is still blocking live-readiness because the local folder is not a valid git checkout and the connector audit sees the required GitHub artifacts as stale or missing. This is a reproducibility blocker, not a trading-profit result.
+The source/profile publication gate is still blocking live-readiness because the local folder is not a valid git checkout and the two large EA source paths are not yet exact connector-verified matches. This is a reproducibility blocker, not a trading-profit result.
 
 The current conservative candidate is not live-ready and should remain paper/demo only.
 
