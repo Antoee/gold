@@ -6,7 +6,7 @@ No martingale. No grid. No averaging down. No recovery sizing. Risk control stay
 
 ## Latest Status
 
-Last updated: 2026-07-14 UTC after source-artifact upload-plan generation, current-source money-ready audit refresh, and local reproducibility-bundle rebuild.
+Last updated: 2026-07-14 UTC after first-pass hidden-runner plan generation, source-artifact upload-plan generation, current-source money-ready audit refresh, and local reproducibility-bundle rebuild.
 
 Short answer: there is no newly validated best profile yet.
 
@@ -14,7 +14,7 @@ The current stability-best research profile is still:
 
 `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
 
-The conservative trade-ready candidate is the safest current test candidate, but it is still paper/demo only. The latest progress is reproducibility and publication readiness: the profile artifacts match GitHub connector blobs, and `outputs/GITHUB_SOURCE_ARTIFACT_UPLOAD_PLAN.md` now shows the exact remaining source upload actions.
+The conservative trade-ready candidate is the safest current test candidate, but it is still paper/demo only. The latest progress is execution discipline: `work/run_first_pass_package_hidden.ps1` now writes a no-launch first-pass plan and remains blocked by the MT5 hard lock until local testing is explicitly re-enabled.
 
 ## Current Best Evidence
 
@@ -37,8 +37,9 @@ Return math assumes a `$1,000` starting balance over `2024.01.01` to `2026.07.12
 - Money-ready scorecard: `NOT_READY_PENDING_EVIDENCE`, `5` pass / `14` pending / `0` fail
 - Live-readiness gate: `PENDING`, `5` pass / `8` pending / `0` fail
 - Release-candidate gate: `NOT_RELEASEABLE_PENDING_EVIDENCE`
-- Reproducibility bundle: `PASS`, `64` pass / `0` pending / `0` fail
-- Reproducibility bundle SHA-256: `A3DF5F841268EA9332DE1EE83FD5E8F7A0E7A2E37F9112208722A292C0193348`
+- First-pass hidden runner: `LOCKED`, `4` configs, `0` reports found, `0` MT5 processes launched
+- Reproducibility bundle: `PASS`, `68` pass / `0` pending / `0` fail
+- Reproducibility bundle SHA-256: `EF26A7B8D240EA209A631FFE63DFC8B182332527126B4F247DDA440C6A558546`
 - GitHub publication sync: `PENDING`, `5` required artifacts pass / `2` pending / `0` fail
 - GitHub source upload plan: `READY`; root EA source `WOULD_UPDATE`, mirrored output EA source `WOULD_CREATE`
 - Real-account trading: locked
@@ -47,11 +48,13 @@ The current conservative candidate is not live-ready and should remain paper/dem
 
 ## Latest Offline Progress
 
+- First-pass hidden runner added: `work/run_first_pass_package_hidden.ps1`.
+- First-pass hidden plan added: `outputs/FIRST_PASS_HIDDEN_RUN_PLAN.md` and `.csv`.
 - Source upload helper added: `work/upload_github_required_source_artifacts.ps1`.
 - Source upload plan added: `outputs/GITHUB_SOURCE_ARTIFACT_UPLOAD_PLAN.md` and `.csv`.
 - Three required profile artifacts are connector-verified on GitHub: conservative, money-ready, and trade-readiness alias.
 - Remaining required GitHub publication blockers: `Professional_XAUUSD_EA.mq5` and `outputs/Professional_XAUUSD_EA.mq5`.
-- Reproducibility bundle now includes `64` passing rows and the source upload plan/helper.
+- Reproducibility bundle now includes `68` passing rows and the first-pass hidden runner plus source upload plan/helper.
 - MT5, MetaEditor, and Metatester were not launched.
 
 ## Current Conservative Candidate
@@ -86,7 +89,7 @@ Risk shape:
 ## Next Evidence Needed
 
 1. Publish the exact refreshed EA source files to GitHub using `outputs/GITHUB_SOURCE_ARTIFACT_UPLOAD_PLAN.md` when a noninteractive token is available.
-2. Run/import the current `4` first-pass MT5 reports from `outputs/first_pass_next_run_package` or `outputs/first_pass_parallel_lanes`.
+2. Run/import the current `4` first-pass MT5 reports from `outputs/first_pass_next_run_package`, `outputs/first_pass_parallel_lanes`, or `work/run_first_pass_package_hidden.ps1 -Run` after local MT5 execution is explicitly re-enabled.
 3. If first-pass evidence is trusted, import the `53` conservative validation reports plus `10` broker-proxy reports.
 4. Import conservative trade/deal logs with realized R for trade-quality and Monte Carlo gates.
 5. Add forward/demo evidence and second-broker evidence.
@@ -94,10 +97,11 @@ Risk shape:
 ## Key Status Files
 
 - `outputs/GITHUB_STATUS_DASHBOARD.md`
+- `outputs/FIRST_PASS_HIDDEN_RUN_PLAN.md`
 - `outputs/GITHUB_SOURCE_ARTIFACT_UPLOAD_PLAN.md`
 - `outputs/GITHUB_PUBLICATION_SYNC.md`
 - `outputs/MONEY_READY_REFRESH_STATUS.md`
-- `outputs/FIRST_PASS_VALIDATION_QUEUE_DECISION.md`
+- `outputs/MONEY_READY_PROOF_RUNWAY.md`
 - `outputs/TRADE_READY_REPRODUCIBILITY_BUNDLE.md`
 
 Until those gates pass, this is a serious research project, not a live-money bot.
