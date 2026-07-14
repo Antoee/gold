@@ -6,14 +6,15 @@ Generated from the local EA source without launching MT5.
 
 - File: `Professional_XAUUSD_EA.mq5`
 - Mirrored file: `outputs/Professional_XAUUSD_EA.mq5`
-- Lines: `22072`
-- Size: `929618` bytes
-- SHA-256: `2219F6AE66CF1121972848C118213B50C01F91E783ABFE6D66F75105C655EB4D`
+- Lines: `19734`
+- Size: `943006` bytes
+- SHA-256: `AF34F307DECFA45F53312DD53606E70141508973CEF60D30480779694396D7AC`
+- Exposed MT5 tester inputs: `308`
 - Last verified locally: `2026-07-14`
 - Root/mirror sync: `PASS`
-- Current-source compile: `PASS` locally via `outputs/DIAGNOSTIC_FALLBACK_PERFORMANCE_RISK_COMPILE.log`, `0 errors, 0 warnings`
+- Current-source compile: `PASS` locally via `outputs/MT5_HIDDEN_COMPILE_INPUT_DIET.log`, `0 errors, 0 warnings`
 
-The latest source update changed the mirrored source hash to `2219F6AE66CF1121972848C118213B50C01F91E783ABFE6D66F75105C655EB4D`. Root and mirrored source hashes match. The live-readiness compile-evidence router may still require a returned compile proof package before a final live gate can pass, but the local hidden MetaEditor compile for this exact source is clean.
+The latest source update changed the mirrored source hash to `AF34F307DECFA45F53312DD53606E70141508973CEF60D30480779694396D7AC`. Root and mirrored source hashes match. The source now stays below the MT5 tester input-limit guard after demoting stale research controls from `input` variables to internal defaults. The live-readiness compile-evidence router may still require a returned compile proof package before a final live gate can pass, but the local hidden MetaEditor compile for this exact source is clean.
 
 ## Current Research Best
 
@@ -89,6 +90,6 @@ An earlier 2026-07-14 source change also shortened six overlong FMLR input ident
 - `InpFMLRDispPBMinBreakBodyPercent`
 - `InpFMLROBRetestMinImpulseBodyPercent`
 
-The latest 2026-07-14 source change adds default-off diagnostic-fallback spread guard, spread risk scaling, and performance risk scaling. Follow-up testing did not promote a new best: spread risk scaling was a partial Model4 improvement but left 2020 red, and performance risk scaling created red Model1 years.
+The latest 2026-07-14 source change trims the exposed MT5 tester input surface from `1826` to `308`, adds the default-off `InpDiagnosticFallbackBlockLiquiditySweep` guard, and keeps the earlier default-off diagnostic-fallback spread guard, spread risk scaling, and performance risk scaling controls. Follow-up testing did not promote a new best: the range-elite risk-shape screen still had red 2019, 2021, and 2023 windows; spread risk scaling was a partial Model4 improvement but left 2020 red, and performance risk scaling created red Model1 years.
 
-These were safety/readiness and research-infrastructure fixes, not new profitable strategy promotions. No new backtest has promoted the `2219F6AE66CF1121972848C118213B50C01F91E783ABFE6D66F75105C655EB4D` source hash yet.
+These were safety/readiness and research-infrastructure fixes, not new profitable strategy promotions. No new backtest has promoted the `AF34F307DECFA45F53312DD53606E70141508973CEF60D30480779694396D7AC` source hash yet.

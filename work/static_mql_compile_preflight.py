@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "Professional_XAUUSD_EA.mq5"
 MIRROR = ROOT / "outputs" / "Professional_XAUUSD_EA.mq5"
 MAX_MQL_IDENTIFIER = 63
+MAX_MT5_TESTER_INPUTS = 1000
 
 
 def sha256(path: Path) -> str:
@@ -210,6 +211,8 @@ def main() -> int:
 
     names = input_names(code)
     audit.check(bool(names), "input declarations parsed")
+    audit.check(len(names) <= MAX_MT5_TESTER_INPUTS,
+                f"input declarations stay under MT5 tester limit guard ({len(names)}/{MAX_MT5_TESTER_INPUTS})")
     duplicates = sorted({name for name in names if names.count(name) > 1})
     audit.check(not duplicates, "input declarations are unique")
     too_long = [name for name in names if len(name) > MAX_MQL_IDENTIFIER]
