@@ -104,7 +104,7 @@ The local workspace now has a stricter offline evidence system:
 - current-source trade-environment guard and safety-gate checks
 - one-command refresh status
 - first-pass report routing
-- strict returned-report validation that rejects screenshots, balance-only snippets, and log-only rows
+- strict returned-report validation that rejects screenshots, balance-only snippets, log-only rows, and exported reports missing recovery-factor stats
 - annualized return and CAGR fields in exported-report CSV/Markdown summaries
 - first-pass and full-validation decisions now require minimum continuous annualized return and CAGR
 - live-evidence routing
