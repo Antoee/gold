@@ -31,8 +31,17 @@ Return math assumes a `$1,000` starting balance over `2024.01.01` to `2026.07.12
 - Failed areas: `0`
 - Money-ready scorecard: `NOT_READY_PENDING_EVIDENCE`
 - Release-candidate gate: `NOT_RELEASEABLE_PENDING_EVIDENCE`
-- GitHub publication sync: `PENDING`, `0 / 7` required artifacts verified
 - Real-account trading: locked
+
+## GitHub Publication Sync
+
+- Overall: `PENDING`
+- Required source/profile artifacts verified on GitHub: `0 / 7`
+- Required pending artifacts: `7`
+- Required failed artifacts: `0`
+- Evidence file: `outputs/GITHUB_PUBLICATION_SYNC.md`
+
+The source/profile publication gate is still blocking live-readiness because the local folder is not a valid git checkout and the connector audit sees the required GitHub artifacts as stale or missing. This is a reproducibility blocker, not a trading-profit result.
 
 The current conservative candidate is not live-ready and should remain paper/demo only.
 
@@ -60,6 +69,27 @@ Risk shape:
 - `3.00%` equity drawdown cap
 - real-account approval fields disabled
 
+## What Changed Locally
+
+The local workspace now has a stricter offline evidence system:
+
+- one-command refresh status
+- first-pass report routing
+- live-evidence routing
+- compile-evidence routing
+- conservative full-validation routing
+- trade-quality and Monte Carlo gates
+- forward/demo and second-broker evidence gates
+- local reproducibility bundle
+- evidence handoff package
+- four parallel first-pass lanes for faster testing
+
+Current first-pass package:
+
+- `8` configs total
+- split into `4` window-based lanes
+- each lane contains both candidate configs for one window
+
 ## Next Required Evidence
 
 The next useful testing step is to run the `8` first-pass configs from either:
@@ -81,7 +111,7 @@ Required before any live-money review:
 - Monte Carlo trade-stress pass
 - forward/demo evidence
 - second-broker evidence
-- exact source/profile publication sync
+- source/profile reproducibility sync
 
 ## Why There Is No New Best On GitHub
 
