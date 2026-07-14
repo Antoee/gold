@@ -6,7 +6,7 @@ No martingale. No grid. No averaging down. No recovery sizing. Risk control stay
 
 ## Latest Status
 
-Last updated: 2026-07-14 UTC after connector-syncing the three required profile artifacts, adding minimum annualized-return/CAGR validation gates, current-source money-ready audit refresh, and local reproducibility-bundle rebuild.
+Last updated: 2026-07-14 UTC after source-artifact upload-plan generation, current-source money-ready audit refresh, and local reproducibility-bundle rebuild.
 
 Short answer: there is no newly validated best profile yet.
 
@@ -14,7 +14,7 @@ The current stability-best research profile is still:
 
 `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
 
-The conservative trade-ready candidate is the safest current test candidate, but it is still paper/demo only. The latest progress is reproducibility: the conservative profile, money-ready profile, and trade-readiness alias profile now match GitHub connector blobs. The two remaining publication blockers are the large root EA source and mirrored output EA source.
+The conservative trade-ready candidate is the safest current test candidate, but it is still paper/demo only. The latest progress is reproducibility and publication readiness: the profile artifacts match GitHub connector blobs, and `outputs/GITHUB_SOURCE_ARTIFACT_UPLOAD_PLAN.md` now shows the exact remaining source upload actions.
 
 ## Current Best Evidence
 
@@ -37,20 +37,21 @@ Return math assumes a `$1,000` starting balance over `2024.01.01` to `2026.07.12
 - Money-ready scorecard: `NOT_READY_PENDING_EVIDENCE`, `5` pass / `14` pending / `0` fail
 - Live-readiness gate: `PENDING`, `5` pass / `8` pending / `0` fail
 - Release-candidate gate: `NOT_RELEASEABLE_PENDING_EVIDENCE`
-- Reproducibility bundle: `PASS`, `60` pass / `0` pending / `0` fail
+- Reproducibility bundle: `PASS`, `64` pass / `0` pending / `0` fail
+- Reproducibility bundle SHA-256: `A3DF5F841268EA9332DE1EE83FD5E8F7A0E7A2E37F9112208722A292C0193348`
 - GitHub publication sync: `PENDING`, `5` required artifacts pass / `2` pending / `0` fail
+- GitHub source upload plan: `READY`; root EA source `WOULD_UPDATE`, mirrored output EA source `WOULD_CREATE`
 - Real-account trading: locked
 
 The current conservative candidate is not live-ready and should remain paper/demo only.
 
 ## Latest Offline Progress
 
-- Three required profile artifacts are now connector-verified on GitHub: conservative, money-ready, and trade-readiness alias.
+- Source upload helper added: `work/upload_github_required_source_artifacts.ps1`.
+- Source upload plan added: `outputs/GITHUB_SOURCE_ARTIFACT_UPLOAD_PLAN.md` and `.csv`.
+- Three required profile artifacts are connector-verified on GitHub: conservative, money-ready, and trade-readiness alias.
 - Remaining required GitHub publication blockers: `Professional_XAUUSD_EA.mq5` and `outputs/Professional_XAUUSD_EA.mq5`.
-- Exported-report summaries calculate total return %, annualized return %, and CAGR %.
-- First-pass validation requires the continuous exact real-tick report to clear `>= 1%` annualized return and `>= 1%` CAGR.
-- Full money-ready/conservative validation applies the same continuous annualized-return and CAGR floors.
-- Reproducibility bundle hash: `CE4258019616FDB829ADC0335C54BF9548BCC93C3198A938F4106A5DFCA5DDAC`.
+- Reproducibility bundle now includes `64` passing rows and the source upload plan/helper.
 - MT5, MetaEditor, and Metatester were not launched.
 
 ## Current Conservative Candidate
@@ -84,15 +85,16 @@ Risk shape:
 
 ## Next Evidence Needed
 
-1. Run/import the current `4` first-pass MT5 reports from `outputs/first_pass_next_run_package` or `outputs/first_pass_parallel_lanes`.
-2. If first-pass evidence is trusted, import the `53` conservative validation reports plus `10` broker-proxy reports.
-3. Import conservative trade/deal logs with realized R for trade-quality and Monte Carlo gates.
-4. Add forward/demo evidence and second-broker evidence.
-5. Publish the exact refreshed EA source files to GitHub. The large source files remain the hardest publication blocker because this workspace is not a valid git checkout and noninteractive git auth is unavailable.
+1. Publish the exact refreshed EA source files to GitHub using `outputs/GITHUB_SOURCE_ARTIFACT_UPLOAD_PLAN.md` when a noninteractive token is available.
+2. Run/import the current `4` first-pass MT5 reports from `outputs/first_pass_next_run_package` or `outputs/first_pass_parallel_lanes`.
+3. If first-pass evidence is trusted, import the `53` conservative validation reports plus `10` broker-proxy reports.
+4. Import conservative trade/deal logs with realized R for trade-quality and Monte Carlo gates.
+5. Add forward/demo evidence and second-broker evidence.
 
 ## Key Status Files
 
 - `outputs/GITHUB_STATUS_DASHBOARD.md`
+- `outputs/GITHUB_SOURCE_ARTIFACT_UPLOAD_PLAN.md`
 - `outputs/GITHUB_PUBLICATION_SYNC.md`
 - `outputs/MONEY_READY_REFRESH_STATUS.md`
 - `outputs/FIRST_PASS_VALIDATION_QUEUE_DECISION.md`
