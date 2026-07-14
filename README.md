@@ -33,10 +33,12 @@ The correct current reading is: the bot is better than the old `$866` baseline, 
 
 - Overall money-ready refresh: `PENDING`
 - Passing areas: `4`
-- Pending areas: `9`
+- Pending areas: `10`
 - Failed areas: `0`
 - Money-ready scorecard: `NOT_READY_PENDING_EVIDENCE`
+- Live-readiness gate: `PENDING`, `5` pass / `8` pending / `0` fail
 - Release-candidate gate: `NOT_RELEASEABLE_PENDING_EVIDENCE`
+- GitHub publication sync: `PENDING`, `0 / 7` required source/profile artifacts verified
 - Real-account trading: locked
 
 The current conservative candidate is not live-ready and should remain paper/demo only.
@@ -79,6 +81,7 @@ The local workspace now has a stricter offline evidence system:
 - trade-quality and Monte Carlo gates
 - forward/demo and second-broker evidence gates
 - local reproducibility bundle
+- GitHub publication sync audit
 - evidence handoff package
 - four parallel first-pass lanes for faster testing
 
@@ -109,7 +112,13 @@ Required before any live-money review:
 - Monte Carlo trade-stress pass
 - forward/demo evidence
 - second-broker evidence
-- source/profile reproducibility sync
+- exact source/profile publication sync
+
+## GitHub Publication Sync
+
+`outputs/GITHUB_PUBLICATION_SYNC.md` is now the dedicated source/profile publication audit. Current result is `PENDING`: `0` required artifacts pass, `7` are pending, and `0` failed.
+
+This does not mean the bot is worse. It means the repo still lacks an independently verified publication path for the exact current EA source/profile artifacts. Until that is fixed, the final live-readiness gate must stay pending.
 
 ## Why There Is No New Best Yet
 
@@ -121,10 +130,11 @@ Keep LowATR OrderFlow as the current research best, keep the conservative profil
 
 1. `outputs/GITHUB_STATUS_DASHBOARD.md` - compact GitHub-facing dashboard.
 2. `outputs/MONEY_READY_REFRESH_STATUS.md` - one-command offline refresh result.
-3. `outputs/CURRENT_RESEARCH_BEST_PROFILE.md` - current promoted research profile.
-4. `outputs/FIRST_PASS_PARALLEL_LANES.md` - faster first-pass lane split.
-5. `outputs/SOURCE_MANIFEST.md` - current local source hash/status.
+3. `outputs/GITHUB_PUBLICATION_SYNC.md` - source/profile publication hash audit.
+4. `outputs/CURRENT_RESEARCH_BEST_PROFILE.md` - current promoted research profile.
+5. `outputs/FIRST_PASS_PARALLEL_LANES.md` - faster first-pass lane split.
+6. `outputs/SOURCE_MANIFEST.md` - current local source hash/status.
 
 ## GitHub Sync Note
 
-This page is updated through the GitHub connector because the local Codex folder is not a valid Git checkout and local `git`/`gh` are not installed. That means GitHub can be refreshed for dashboard/status files, but the live-readiness `reproducible-github-sync` gate remains pending until a full source/profile publication path is restored and verified.
+This page is updated through the GitHub connector because the local Codex folder is not a valid Git checkout and local `git`/`gh` are not installed. Dashboard/status files can be refreshed through the connector, but the final live-readiness `reproducible-github-sync` gate remains pending until exact source/profile artifacts are published and hash-verified through a reproducible path.
