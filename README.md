@@ -14,7 +14,7 @@ The current stability-best research profile is still:
 
 `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
 
-The newer conservative trade-ready profile and FMLR research lanes are prepared, but they are not proven better yet because the required MT5 reports and live-readiness evidence are still missing.
+The conservative trade-ready candidate is safer and better documented than the older baseline, but it is still paper/demo only. Today’s meaningful progress was a source-quality fix: the current EA source now compiles cleanly again after shortening six overlong FMLR input identifiers.
 
 ## Current Best Evidence
 
@@ -27,23 +27,23 @@ Return math assumes a `$1,000` starting balance over `2024.01.01` to `2026.07.12
 | `+$1,195.69` | Continuous Model4 | `+119.57%` total, about `+36.51%/yr` CAGR | Fresh current-source real-tick LowATR OrderFlow result |
 | `+$7,469.00` | Sampled Model4 total | Not annualizable | Aggregate validation-window score, not a sequential account curve |
 
-The correct current reading is: the bot is better than the old `$866` baseline, but there is not a newly promoted better profile beyond LowATR OrderFlow.
-
 ## Money-Ready Status
 
 - Overall money-ready refresh: `PENDING`
-- Passing areas: `4`
-- Pending areas: `10`
+- Passing areas: `5`
+- Pending areas: `9`
 - Failed areas: `0`
-- Money-ready scorecard: `NOT_READY_PENDING_EVIDENCE`
-- Live-readiness gate: `PENDING`, `5` pass / `8` pending / `0` fail
-- Release-candidate gate: `NOT_RELEASEABLE_PENDING_EVIDENCE`
-- GitHub publication sync: `PENDING`, `5 / 7` required source/profile artifacts verified
+- Live-readiness gate: `PENDING`, `6` pass / `7` pending / `0` fail
+- Money-ready scorecard: `NOT_READY_PENDING_EVIDENCE`, `6` pass / `13` pending / `0` fail
+- Current-source compile gate: `PASS`, `0` errors / `0` warnings, source hash current
+- Compile-evidence routing: `PASS`, already-routed canonical compile evidence is now idempotent across refreshes
+- Reproducibility bundle: `PASS`, `49` pass / `0` pending / `0` fail
+- GitHub publication sync: `PENDING`; local refreshed source/profile artifacts are not all published yet
 - Real-account trading: locked
 
 The current conservative candidate is not live-ready and should remain paper/demo only.
 
-## Conservative Trade-Ready Candidate
+## Current Conservative Candidate
 
 Profile:
 
@@ -51,7 +51,11 @@ Profile:
 
 SHA-256:
 
-`621F54A4BFE61761577D87DB212CF024163F25066209C205090E72227FE584A6`
+`0A97B46D7E3A3C3566EF4E787BCB63E2138D114C2F0F898F9A8B1A10F842BF90`
+
+Source SHA-256:
+
+`46770EACA60826F90E1E9A9B7425356F96F7C8F83CF8F8C1FBE271632866933E`
 
 Risk shape:
 
@@ -67,87 +71,12 @@ Risk shape:
 - `3.00%` equity drawdown cap
 - real-account approval fields disabled
 
-This is the safest current test candidate, not a live-money profile.
+## Remaining Blockers
 
-## What Changed Locally
+- Run/import the `8` first-pass MT5 reports.
+- Import the `53` conservative validation reports plus `10` broker-proxy reports after first-pass evidence passes.
+- Import conservative trade/deal logs with realized R for trade-quality and Monte Carlo gates.
+- Add forward/demo evidence and second-broker evidence.
+- Publish the refreshed source/profile artifacts to GitHub. The large EA source files remain the hardest publication blocker because this workspace is not a valid git checkout.
 
-The local workspace now has a stricter offline evidence system:
-
-- one-command refresh status
-- first-pass report routing
-- live-evidence routing
-- compile-evidence routing
-- conservative full-validation routing
-- trade-quality and Monte Carlo gates
-- forward/demo and second-broker evidence gates
-- local reproducibility bundle
-- GitHub publication sync audit
-- evidence handoff package
-- four parallel first-pass lanes for faster testing
-
-Current first-pass package:
-
-- `8` configs total
-- split into `4` window-based lanes
-- each lane contains both candidate configs for one window
-
-## Next Required Evidence
-
-The next useful testing step is to run the `8` first-pass configs from either:
-
-- `outputs/first_pass_next_run_package`
-- `outputs/first_pass_parallel_lanes`
-
-Then export reports into:
-
-`outputs/returned_mt5_reports/first_pass_inbox`
-
-Required before any live-money review:
-
-- current-source compile proof
-- first-pass MT5 reports
-- full conservative validation reports
-- broker-proxy reports
-- trade/deal logs with realized R
-- Monte Carlo trade-stress pass
-- forward/demo evidence
-- second-broker evidence
-- exact source/profile publication sync
-
-## GitHub Publication Sync
-
-`outputs/GITHUB_PUBLICATION_SYNC.md` is the dedicated source/profile publication audit. Current result is `PENDING`: `5` required artifacts pass, `2` are pending, and `0` failed.
-
-Verified exact GitHub connector blob matches:
-
-- conservative trade-ready profile
-- money-ready profile
-- trade-readiness alias profile
-- source manifest
-- current research-best profile doc
-
-Still pending:
-
-- root EA source: `Professional_XAUUSD_EA.mq5`
-- mirrored output EA source: `outputs/Professional_XAUUSD_EA.mq5`
-
-This does not mean the bot is worse. It means the repo still lacks independently verified publication for the exact current EA source files. Until that is fixed, the final live-readiness gate must stay pending.
-
-## Why There Is No New Best Yet
-
-The newer FMLR and trade-ready work is mostly code, package, safety, and evidence-gate preparation. It has not produced a validated better backtest yet.
-
-Keep LowATR OrderFlow as the current research best, keep the conservative profile as the safest current test candidate, and do not promote anything else until broad-window MT5 evidence proves it.
-
-## Status Files To Check
-
-1. `outputs/GITHUB_STATUS_DASHBOARD.md` - compact GitHub-facing dashboard.
-2. `outputs/MONEY_READY_REFRESH_STATUS.md` - one-command offline refresh result.
-3. `outputs/GITHUB_PUBLICATION_SYNC.md` - source/profile publication hash audit.
-4. `outputs/CURRENT_RESEARCH_BEST_PROFILE.md` - current promoted research profile.
-5. `outputs/FIRST_PASS_PARALLEL_LANES.md` - faster first-pass lane split.
-6. `outputs/SOURCE_MANIFEST.md` - current local source hash/status.
-
-## GitHub Sync Note
-
-This page is updated through the GitHub connector because the local Codex folder is not a valid Git checkout and local Git authentication is not usable non-interactively. Dashboard/status files can be refreshed through the connector, but the final live-readiness `reproducible-github-sync` gate remains pending until the exact EA source artifacts are published and hash-verified through a reproducible path.
+Until those gates pass, this is a serious research project, not a live-money bot.
