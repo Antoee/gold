@@ -5,8 +5,8 @@ Generated offline without launching MT5, MetaEditor, Git, GitHub CLI, or GitHub 
 - Overall: **PENDING**
 - Repository: `Antoee/gold`
 - Branch: `main`
-- Required passing: `0`
-- Required pending: `7`
+- Required passing: `5`
+- Required pending: `2`
 - Required failed: `0`
 
 At least one required artifact is missing, stale, or inaccessible through the raw-file audit. The live-readiness GitHub sync gate must remain pending.
@@ -17,16 +17,16 @@ At least one required artifact is missing, stale, or inaccessible through the ra
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | root-ea-source | True | PENDING | CONNECTOR_BLOB_MISMATCH | 44D9EBA868C8 | ac0b7d071394 | 483667b91ca9 | Exact root EA source required for reproducible publication. |
 | mirrored-ea-source | True | PENDING | CONNECTOR_REMOTE_MISSING | 44D9EBA868C8 | ac0b7d071394 |  | Mirrored output EA source required for hash identity. |
-| trade-ready-conservative-profile | True | PENDING | CONNECTOR_REMOTE_MISSING | 621F54A4BFE6 | 856f81051891 |  | Conservative profile used by live-readiness gates. |
-| money-ready-profile | True | PENDING | CONNECTOR_REMOTE_MISSING | 0CF800571C22 | 94ba77b28633 |  | Money-ready demo/forward-test candidate profile. |
-| trade-readiness-alias-profile | True | PENDING | CONNECTOR_REMOTE_MISSING | 0CF800571C22 | 94ba77b28633 |  | Alias profile expected to match money-ready profile. |
-| source-manifest | True | PENDING | CONNECTOR_BLOB_MISMATCH | 18E4161618CE | 8aa18509464c | 99b112ede259 | Source hash/status manifest. |
-| current-research-best | True | PENDING | CONNECTOR_BLOB_MISMATCH | D36557E328BE | 76e5272c86a7 | 3da2655f72d0 | Current promoted research profile status. |
-| readme-dashboard | False | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | E25FB44EFE00 | f4ed252b2a49 |  | Human-facing repository dashboard. |
-| github-status-dashboard | False | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | D6990AD5F232 | 31e2a5fe5e8e |  | Compact GitHub-facing status board. |
-| money-ready-refresh | False | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | 86CB62CAB9B8 | b93583319c73 |  | Latest one-command refresh status. |
-| money-ready-scorecard | False | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | F30AA901D347 | bf2103d65b97 |  | Money-ready scorecard. |
-| live-readiness-decision | False | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | E7D9CBF325B2 | 3c67758123cf |  | Final conservative live-readiness gate. |
+| trade-ready-conservative-profile | True | PASS | CONNECTOR_BLOB_MATCH | 621F54A4BFE6 | 856f81051891 | 856f81051891 | Conservative profile used by live-readiness gates. |
+| money-ready-profile | True | PASS | CONNECTOR_BLOB_MATCH | 0CF800571C22 | 94ba77b28633 | 94ba77b28633 | Money-ready demo/forward-test candidate profile. |
+| trade-readiness-alias-profile | True | PASS | CONNECTOR_BLOB_MATCH | 0CF800571C22 | 94ba77b28633 | 94ba77b28633 | Alias profile expected to match money-ready profile. |
+| source-manifest | True | PASS | CONNECTOR_BLOB_MATCH | 18E4161618CE | 8aa18509464c | 8aa18509464c | Source hash/status manifest. |
+| current-research-best | True | PASS | CONNECTOR_BLOB_MATCH | D36557E328BE | 76e5272c86a7 | 76e5272c86a7 | Current promoted research profile status. |
+| readme-dashboard | False | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | 4FA9E700705C | 7a205951ed05 |  | Human-facing repository dashboard. |
+| github-status-dashboard | False | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | B465C228FDA4 | b4808d1659b6 |  | Compact GitHub-facing status board. |
+| money-ready-refresh | False | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | 223DBA93593F | bc276b687c77 |  | Latest one-command refresh status. |
+| money-ready-scorecard | False | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | BFAF39E1A70E | a430c78d1192 |  | Money-ready scorecard. |
+| live-readiness-decision | False | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | ED08FC0B526C | 9c888245990e |  | Final conservative live-readiness gate. |
 | release-candidate-decision | False | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | 953FD949A224 | 42eacb6100f5 |  | Release-candidate gate. |
 | first-pass-parallel-lanes | False | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | 706EBFCA5C5F | 4a6d0cf2eac4 |  | Fast first-pass lane split. |
 | evidence-handoff | False | PENDING | REMOTE_UNAVAILABLE_OR_MISSING | 51B57307B82F | cebb7629fc4c |  | Evidence handoff summary. |
