@@ -1,6 +1,6 @@
 # Trade-Ready Live Readiness Decision
 
-Generated: 2026-07-14 02:07:25
+Generated: 2026-07-14 02:22:46
 
 - Overall: **PENDING**
 - Passing gates: `5`
@@ -24,7 +24,7 @@ This is the final approval gate for the conservative candidate. It does not laun
 | monte-carlo-trade-stress | PENDING | Monte Carlo trade-stress analyzer status is PASS under seeded slippage/delay/spread/missed-winner stress | status=PENDING; trials=1000; rTrades=0; pending=3; fail=0; failureRate= | outputs/TRADE_READY_CONSERVATIVE_MONTE_CARLO.csv | Return conservative closed-trade logs with realized R and rerun work/analyze_trade_ready_conservative_monte_carlo.ps1. |
 | forward-paper-demo | PENDING | Forward paper/demo evidence status is PASS on a sufficiently long non-red sample | status=PENDING; rows=0; parsed=0; pending=1; fail=0 | outputs/TRADE_READY_CONSERVATIVE_FORWARD_TEST.csv | Export paper/demo evidence to outputs/TRADE_READY_CONSERVATIVE_FORWARD_TEST_EVIDENCE.csv, then rerun work/analyze_trade_ready_conservative_forward_test.ps1. |
 | second-broker-validation | PENDING | Second-broker XAUUSD validation status is PASS on broker-specific symbol conditions | status=PENDING; rows=0; parsed=0; pending=1; fail=0 | outputs/TRADE_READY_CONSERVATIVE_SECOND_BROKER_DECISION.csv | Export second-broker evidence to outputs/TRADE_READY_CONSERVATIVE_SECOND_BROKER_EVIDENCE.csv, then rerun work/analyze_trade_ready_conservative_second_broker.ps1. |
-| local-reproducibility-freeze | PASS | Local reproducibility bundle manifest exists, zip exists, required checks pass, and every bundle row is PASS | rows=52; pass=52; pending=0; fail=0; zipExists=True; missingRequiredChecks=0 | outputs/TRADE_READY_REPRODUCIBILITY_BUNDLE_MANIFEST.csv + outputs/trade_ready_reproducibility_bundle.zip | Keep rebuilding the bundle after every source/profile/status change; this local freeze does not replace GitHub/source-publication sync. |
+| local-reproducibility-freeze | PASS | Local reproducibility bundle manifest exists, zip exists, required checks pass, and every bundle row is PASS | rows=56; pass=56; pending=0; fail=0; zipExists=True; missingRequiredChecks=0 | outputs/TRADE_READY_REPRODUCIBILITY_BUNDLE_MANIFEST.csv + outputs/trade_ready_reproducibility_bundle.zip | Keep rebuilding the bundle after every source/profile/status change; this local freeze does not replace GitHub/source-publication sync. |
 | reproducible-github-sync | PENDING | Either workspace is a clean pushed GitHub checkout with tracked required source/profile artifacts, or required source/profile artifacts match GitHub by SHA-256 through connector publication audit | gitValid=False; gitDetail=fatal: not a git repository (or any of the parent directories): .git; publicationRows=7; publicationPass=2; publicationPending=5; publicationFail=0 | .git + outputs/GITHUB_PUBLICATION_SYNC.csv | Restore a valid Git checkout or publish exact source/profile artifacts through the connector until outputs/GITHUB_PUBLICATION_SYNC.md has zero required pending/fail rows. |
 
 ## Bottom Line
