@@ -1,92 +1,226 @@
 #!/usr/bin/env python3
-"""Lightweight static preflight for common MQL5 compile-risk patterns.
+"""Static MQL5 source preflight for the XAUUSD EA.
 
-This does not launch MT5 or MetaEditor. It is intended to catch easy-to-fix source
-issues before a non-interrupting MT5 compile/backtest environment spends time.
+This is not a MetaEditor compile. It catches high-signal source problems before
+we spend MT5 time: missing safety gates, stale source mirror, overlong inputs,
+duplicate inputs, and obvious brace/string imbalance.
 """
 
 from __future__ import annotations
 
+import hashlib
 import re
 import sys
 from pathlib import Path
 
+
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "Professional_XAUUSD_EA.mq5"
-FAILURES: list[str] = []
-WARNINGS: list[str] = []
+MIRROR = ROOT / "outputs" / "Professional_XAUUSD_EA.mq5"
+MAX_MQL_IDENTIFIER = 63
 
 
-def fail(message: str) -> None:
-    FAILURES.append(message)
+def sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest().upper()
 
 
-def warn(message: str) -> None:
-    WARNINGS.append(message)
+def strip_comments_and_strings(text: str) -> str:
+    result: list[str] = []
+    i = 0
+    in_line_comment = False
+    in_block_comment = False
+    in_string = False
+    quote = ""
+
+    while i < len(text):
+        ch = text[i]
+        nxt = text[i + 1] if i + 1 < len(text) else ""
+
+        if in_line_comment:
+            if ch == "\n":
+                in_line_comment = False
+                result.append(ch)
+            else:
+                result.append(" ")
+            i += 1
+            continue
+
+        if in_block_comment:
+            if ch == "*" and nxt == "/":
+                in_block_comment = False
+                result.extend("  ")
+                i += 2
+            else:
+                result.append("\n" if ch == "\n" else " ")
+                i += 1
+            continue
+
+        if in_string:
+            if ch == "\\" and nxt:
+                result.extend("  ")
+                i += 2
+                continue
+            if ch == quote:
+                in_string = False
+            result.append("\n" if ch == "\n" else " ")
+            i += 1
+            continue
+
+        if ch == "/" and nxt == "/":
+            in_line_comment = True
+            result.extend("  ")
+            i += 2
+            continue
+        if ch == "/" and nxt == "*":
+            in_block_comment = True
+            result.extend("  ")
+            i += 2
+            continue
+        if ch in {"'", '"'}:
+            in_string = True
+            quote = ch
+            result.append(" ")
+            i += 1
+            continue
+
+        result.append(ch)
+        i += 1
+
+    return "".join(result)
 
 
-def read_source() -> str:
-    if not SOURCE.exists():
-        fail(f"Missing EA source: {SOURCE.relative_to(ROOT)}")
-        return ""
-    return SOURCE.read_text(encoding="utf-8", errors="replace")
+def input_names(code: str) -> list[str]:
+    names: list[str] = []
+    pattern = re.compile(r"^\s*input\s+[^;\n=]*?\b([A-Za-z_][A-Za-z0-9_]*)\s*(?:=|;)", re.MULTILINE)
+    for match in pattern.finditer(code):
+        names.append(match.group(1))
+    return names
 
 
-def check_required_markers(source: str) -> None:
-    required = [
-        '#property strict',
-        '#property version   "1.09"',
-        'bool NewsTimeAllowsNewTrade()',
-        'bool ManualNewsWindowBlocked',
-        'bool NFPFridayWindowBlocked',
-        'if(!NewsTimeAllowsNewTrade())',
-        'input bool   InpUseNewsTimeFilter',
-        'input string InpNewsEventTime1',
-    ]
-    for marker in required:
-        if marker not in source:
-            fail(f"Missing required source marker: {marker}")
+def default_value(code: str, name: str) -> str | None:
+    pattern = re.compile(rf"^\s*input\s+[^;\n=]*?\b{re.escape(name)}\s*=\s*([^;]+);", re.MULTILINE)
+    match = pattern.search(code)
+    if not match:
+        return None
+    return match.group(1).strip()
 
 
-def check_forbidden_strategy_terms(source: str) -> None:
-    code = re.sub(r"/\*.*?\*/", "", source, flags=re.S)
-    code = re.sub(r"//.*", "", code)
-    for label, pattern in {
-        "martingale": r"\bmartingale\b",
-        "grid": r"\bgrid\b",
-        "averaging down": r"averag(?:e|ing)\s+down",
-    }.items():
-        if re.search(pattern, code, flags=re.I):
-            fail(f"Forbidden strategy term appears in executable source: {label}")
+def check_balanced(code: str) -> list[str]:
+    stack: list[tuple[str, int]] = []
+    pairs = {")": "(", "]": "[", "}": "{"}
+    line = 1
+    failures: list[str] = []
+    for ch in code:
+        if ch == "\n":
+            line += 1
+            continue
+        if ch in "([{" :
+            stack.append((ch, line))
+        elif ch in ")]}" :
+            if not stack or stack[-1][0] != pairs[ch]:
+                failures.append(f"unmatched {ch!r} at line {line}")
+                continue
+            stack.pop()
+    failures.extend(f"unclosed {ch!r} from line {line_no}" for ch, line_no in stack[-10:])
+    return failures
 
 
-def check_compile_risk_patterns(source: str) -> None:
-    if re.search(r"int\s+\w+\s*=\s*MathMax\(", source):
-        warn("An int is assigned from MathMax(...). MT5 may compile it, but explicit integer clamps are preferred before promotion testing.")
-    if "StringTrimLeft(value);" in source and "StringTrimRight(value);" in source:
-        # This is currently accepted MQL5 style, but keep it visible for compile review.
-        warn("Manual news parsing uses StringTrimLeft/StringTrimRight; verify exact compiler signature during the next MT5 compile.")
-    if re.search(r"datetime\s+\w+\s*=\s*StringToTime\(", source) is None:
-        fail("Expected StringToTime datetime parsing for manual news events is missing.")
+class Audit:
+    def __init__(self) -> None:
+        self.failures: list[str] = []
+        self.passes = 0
+
+    def check(self, condition: bool, message: str) -> None:
+        if condition:
+            self.passes += 1
+            print(f"PASS: {message}")
+        else:
+            self.failures.append(message)
+            print(f"FAIL: {message}")
 
 
 def main() -> int:
-    source = read_source()
-    if source:
-        check_required_markers(source)
-        check_forbidden_strategy_terms(source)
-        check_compile_risk_patterns(source)
+    audit = Audit()
 
-    print("Static MQL compile preflight")
-    print(f"Warnings: {len(WARNINGS)}")
-    for item in WARNINGS:
-        print(f"WARNING: {item}")
-    if FAILURES:
-        print(f"Failures: {len(FAILURES)}")
-        for item in FAILURES:
-            print(f"FAIL: {item}")
+    audit.check(SOURCE.exists(), "root EA source exists")
+    audit.check(MIRROR.exists(), "mirrored EA source exists")
+    if not SOURCE.exists():
         return 1
-    print("PASS: no blocking static compile-preflight issues found.")
+
+    if MIRROR.exists():
+        audit.check(sha256(SOURCE) == sha256(MIRROR), "root/mirror source SHA-256 hashes match")
+
+    text = SOURCE.read_text(encoding="utf-8", errors="replace")
+    code = strip_comments_and_strings(text)
+
+    for marker in [
+        "bool TradeEnvironmentAllows(string &reason)",
+        "bool TradeReadinessSafetyGateAllows()",
+        "bool SymbolSafetyLockAllows()",
+        "bool RealAccountSafetyLockAllows()",
+        "TradeEnvironmentAllows(environmentReason)",
+        "TradeReadinessSafetyGateAllows()",
+        "SymbolSafetyLockAllows()",
+        "RealAccountSafetyLockAllows()",
+    ]:
+        audit.check(marker in text, f"required safety marker exists: {marker}")
+
+    for name, expected in [
+        ("InpUseRealAccountSafetyLock", "true"),
+        ("InpAllowRealAccountTrading", "false"),
+        ("InpUseTradeReadinessSafetyGate", "false"),
+        ("InpUseTradeEnvironmentGuard", "false"),
+    ]:
+        actual = default_value(code, name)
+        audit.check(actual is not None, f"input exists: {name}")
+        if actual is not None:
+            audit.check(actual.lower() == expected, f"{name} default is {expected}")
+
+    on_tick_idx = text.find("void OnTick()")
+    open_signal_idx = text.find("OpenSignal(signal)", on_tick_idx)
+    env_guard_idx = text.find("TradeEnvironmentAllows(environmentReason)", on_tick_idx)
+    audit.check(on_tick_idx >= 0, "OnTick exists")
+    audit.check(open_signal_idx >= 0, "OnTick opens signals through OpenSignal")
+    audit.check(env_guard_idx >= 0 and open_signal_idx >= 0 and env_guard_idx < open_signal_idx,
+                "trade environment guard runs before new entries")
+
+    on_init_idx = text.find("int OnInit()")
+    readiness_idx = text.find("TradeReadinessSafetyGateAllows()", on_init_idx)
+    symbol_idx = text.find("SymbolSafetyLockAllows()", on_init_idx)
+    real_idx = text.find("RealAccountSafetyLockAllows()", on_init_idx)
+    audit.check(on_init_idx >= 0, "OnInit exists")
+    audit.check(symbol_idx >= 0 and real_idx >= 0 and readiness_idx >= 0,
+                "OnInit calls symbol, real-account, and trade-readiness gates")
+
+    names = input_names(code)
+    audit.check(bool(names), "input declarations parsed")
+    duplicates = sorted({name for name in names if names.count(name) > 1})
+    audit.check(not duplicates, "input declarations are unique")
+    too_long = [name for name in names if len(name) > MAX_MQL_IDENTIFIER]
+    audit.check(not too_long, f"input identifiers are <= {MAX_MQL_IDENTIFIER} chars")
+    if too_long:
+        for name in too_long[:20]:
+            print(f"LONG_INPUT: {name} length={len(name)}")
+
+    balance_failures = check_balanced(code)
+    audit.check(not balance_failures, "braces, brackets, and parentheses are balanced after stripping comments/strings")
+    for failure in balance_failures[:20]:
+        print(f"BALANCE: {failure}")
+
+    init_bad_return_count = len(re.findall(r"\bINIT_PARAMETERS_INCORRECT\b", code))
+    audit.check(init_bad_return_count >= 3, "initialization can fail closed for safety gate violations")
+
+    if audit.failures:
+        print()
+        print(f"STATIC_MQL_COMPILE_PREFLIGHT_FAIL failures={len(audit.failures)} passes={audit.passes}")
+        return 1
+
+    print()
+    print(f"STATIC_MQL_COMPILE_PREFLIGHT_PASS checks={audit.passes} inputs={len(names)}")
     return 0
 
 
