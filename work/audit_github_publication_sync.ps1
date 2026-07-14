@@ -75,6 +75,26 @@ function Get-GitBlobSha {
    }
 }
 
+function Get-GitTextBlobSha {
+   param([string]$Path)
+   if(!(Test-Path -LiteralPath $Path)) { return "" }
+   $text = [IO.File]::ReadAllText($Path)
+   $normalized = $text -replace "`r`n", "`n"
+   $bytes = [Text.Encoding]::UTF8.GetBytes($normalized)
+   $prefix = [Text.Encoding]::ASCII.GetBytes(("blob {0}`0" -f $bytes.Length))
+   $combined = New-Object byte[] ($prefix.Length + $bytes.Length)
+   [Array]::Copy($prefix, 0, $combined, 0, $prefix.Length)
+   [Array]::Copy($bytes, 0, $combined, $prefix.Length, $bytes.Length)
+   $sha = [Security.Cryptography.SHA1]::Create()
+   try {
+      $hashBytes = $sha.ComputeHash($combined)
+      return ([BitConverter]::ToString($hashBytes)).Replace("-", "").ToLowerInvariant()
+   }
+   finally {
+      $sha.Dispose()
+   }
+}
+
 function Get-FileLength {
    param([string]$Path)
    if(!(Test-Path -LiteralPath $Path)) { return 0 }
@@ -173,6 +193,7 @@ $artifacts = @(
    [pscustomobject]@{ Role = "live-readiness-decision"; Required = $false; LocalPath = "outputs\TRADE_READY_LIVE_READINESS_DECISION.md"; RemotePath = "outputs/TRADE_READY_LIVE_READINESS_DECISION.md"; Note = "Final conservative live-readiness gate." },
    [pscustomobject]@{ Role = "release-candidate-decision"; Required = $false; LocalPath = "outputs\TRADE_READY_RELEASE_CANDIDATE_DECISION.md"; RemotePath = "outputs/TRADE_READY_RELEASE_CANDIDATE_DECISION.md"; Note = "Release-candidate gate." },
    [pscustomobject]@{ Role = "first-pass-parallel-lanes"; Required = $false; LocalPath = "outputs\FIRST_PASS_PARALLEL_LANES.md"; RemotePath = "outputs/FIRST_PASS_PARALLEL_LANES.md"; Note = "Fast first-pass lane split." },
+   [pscustomobject]@{ Role = "github-required-artifact-sync-package"; Required = $false; LocalPath = "outputs\GITHUB_REQUIRED_ARTIFACT_SYNC_PACKAGE.md"; RemotePath = "outputs/GITHUB_REQUIRED_ARTIFACT_SYNC_PACKAGE.md"; Note = "Exact upload package for remaining required source/profile blockers." },
    [pscustomobject]@{ Role = "evidence-handoff"; Required = $false; LocalPath = "outputs\MONEY_READY_EVIDENCE_HANDOFF.md"; RemotePath = "outputs/MONEY_READY_EVIDENCE_HANDOFF.md"; Note = "Evidence handoff summary." }
 )
 
@@ -183,6 +204,7 @@ $rows = foreach($artifact in $artifacts) {
    $localExists = Test-Path -LiteralPath $localFull
    $localHash = Get-FileSha256 $localFull
    $localGitBlobSha = Get-GitBlobSha $localFull
+   $localGitTextBlobSha = Get-GitTextBlobSha $localFull
    $localBytes = Get-FileLength $localFull
    $remote = Get-RemoteFileInfo $artifact.RemotePath
    $connector = $null
@@ -195,6 +217,8 @@ $rows = foreach($artifact in $artifacts) {
    $connectorBlob = if($null -eq $connector) { "" } else { ([string]$connector.RemoteGitBlobSha).ToLowerInvariant() }
    $connectorStatus = if($localExists -and $connectorExists -eq "True" -and $connectorBlob -eq $localGitBlobSha) {
       "MATCH"
+   } elseif($localExists -and $connectorExists -eq "True" -and $connectorBlob -eq $localGitTextBlobSha) {
+      "TEXT_MATCH"
    } elseif($null -ne $connector -and $connectorExists -eq "True" -and ![string]::IsNullOrWhiteSpace($connectorBlob)) {
       "MISMATCH"
    } elseif($null -ne $connector -and $connectorExists -eq "False") {
@@ -205,7 +229,7 @@ $rows = foreach($artifact in $artifacts) {
 
    $status = if(!$localExists) {
       "FAIL"
-   } elseif($connectorStatus -eq "MATCH") {
+   } elseif($connectorStatus -eq "MATCH" -or $connectorStatus -eq "TEXT_MATCH") {
       "PASS"
    } elseif($connectorStatus -eq "MISMATCH" -or $connectorStatus -eq "MISSING") {
       "PENDING"
@@ -216,10 +240,12 @@ $rows = foreach($artifact in $artifacts) {
    } else {
       "PENDING"
    }
-   $detail = if(!$localExists) {
-      "LOCAL_MISSING"
+    $detail = if(!$localExists) {
+       "LOCAL_MISSING"
    } elseif($connectorStatus -eq "MATCH") {
       "CONNECTOR_BLOB_MATCH"
+   } elseif($connectorStatus -eq "TEXT_MATCH") {
+      "CONNECTOR_TEXT_BLOB_MATCH"
    } elseif($connectorStatus -eq "MISMATCH") {
       "CONNECTOR_BLOB_MISMATCH"
    } elseif($connectorStatus -eq "MISSING") {
@@ -230,15 +256,15 @@ $rows = foreach($artifact in $artifacts) {
       "REMOTE_MISSING"
    } elseif($localHash -eq $remote.Sha256) {
       "MATCH"
-   } else {
-      "MISMATCH"
-   }
+    } else {
+       "MISMATCH"
+    }
    if([string]$artifact.Required -ne "True" -and $status -eq "PENDING" -and [string]::IsNullOrWhiteSpace($connectorStatus) -and !$remote.Exists) {
       $status = "INFO"
       $detail = "OPTIONAL_NOT_VERIFIED"
    }
 
-   [pscustomobject]@{
+    [pscustomobject]@{
       Role = $artifact.Role
       Required = [string]$artifact.Required
       Status = $status
@@ -247,6 +273,7 @@ $rows = foreach($artifact in $artifacts) {
       RemotePath = $artifact.RemotePath
       LocalSha256 = $localHash
       LocalGitBlobSha = $localGitBlobSha
+      LocalGitTextBlobSha = $localGitTextBlobSha
       RemoteSha256 = $remote.Sha256
       RemoteGitBlobSha = $connectorBlob
       LocalBytes = $localBytes
@@ -292,19 +319,21 @@ if($overall -eq "PASS") {
 $md.Add("")
 $md.Add("## Artifacts")
 $md.Add("")
-$md.Add("| Role | Required | Status | Detail | Local SHA-256 | Local Git Blob | Remote Git Blob | Note |")
-$md.Add("| --- | --- | --- | --- | --- | --- | --- | --- |")
+$md.Add("| Role | Required | Status | Detail | Local SHA-256 | Local Raw Blob | Local Text Blob | Remote Git Blob | Note |")
+$md.Add("| --- | --- | --- | --- | --- | --- | --- | --- | --- |")
 foreach($row in $rows) {
    $localShort = if([string]::IsNullOrWhiteSpace($row.LocalSha256)) { "" } else { $row.LocalSha256.Substring(0, [Math]::Min(12, $row.LocalSha256.Length)) }
    $localBlobShort = if([string]::IsNullOrWhiteSpace($row.LocalGitBlobSha)) { "" } else { $row.LocalGitBlobSha.Substring(0, [Math]::Min(12, $row.LocalGitBlobSha.Length)) }
+   $localTextBlobShort = if([string]::IsNullOrWhiteSpace($row.LocalGitTextBlobSha)) { "" } else { $row.LocalGitTextBlobSha.Substring(0, [Math]::Min(12, $row.LocalGitTextBlobSha.Length)) }
    $remoteBlobShort = if([string]::IsNullOrWhiteSpace($row.RemoteGitBlobSha)) { "" } else { $row.RemoteGitBlobSha.Substring(0, [Math]::Min(12, $row.RemoteGitBlobSha.Length)) }
-   $md.Add(("| {0} | {1} | {2} | {3} | {4} | {5} | {6} | {7} |" -f
+   $md.Add(("| {0} | {1} | {2} | {3} | {4} | {5} | {6} | {7} | {8} |" -f
       (Escape-MarkdownCell $row.Role),
       (Escape-MarkdownCell $row.Required),
       (Escape-MarkdownCell $row.Status),
       (Escape-MarkdownCell $row.Detail),
       (Escape-MarkdownCell $localShort),
       (Escape-MarkdownCell $localBlobShort),
+      (Escape-MarkdownCell $localTextBlobShort),
       (Escape-MarkdownCell $remoteBlobShort),
       (Escape-MarkdownCell $row.Note)))
 }
