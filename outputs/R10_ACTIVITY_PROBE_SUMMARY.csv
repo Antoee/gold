@@ -1,0 +1,7 @@
+"Candidate","SourceType","Phase","Expected","ParsedReports","ParsedLogs","ParsedTotal","Missing","Unparsed","TotalNetProfit","WorstNetProfit","AverageAnnualizedReturnPercent","WorstAnnualizedReturnPercent","AverageCagrPercent","WorstCagrPercent","WorstDrawdownPercent","MinProfitFactor","TotalTrades"
+"r10_a7_current","r10_activity_probe","phase7_activity_probe_model1","5","5","0","5","0","0","171.05","9.25","4.42","0.93","4.47","0.93","7.08","0","21"
+"r10_a7_dfg_risk_25_45_50","r10_activity_probe","phase7_activity_probe_model1","5","5","0","5","0","0","170.37","9.25","4.41","0.93","4.46","0.93","6.18","0","21"
+"r10_a7_fmlr_blend","r10_activity_probe","phase7_activity_probe_model1","5","5","0","5","0","0","171.05","9.25","4.42","0.93","4.47","0.93","7.08","0","21"
+"r10_a7_fmlr_tight","r10_activity_probe","phase7_activity_probe_model1","5","5","0","5","0","0","171.05","9.25","4.42","0.93","4.47","0.93","7.08","0","21"
+"r10_a7_dfg_fmlr_blend","r10_activity_probe","phase7_activity_probe_model1","5","5","0","5","0","0","170.37","9.25","4.41","0.93","4.46","0.93","6.18","0","21"
+"r10_a7_dfg_fmlr_tight","r10_activity_probe","phase7_activity_probe_model1","5","5","0","5","0","0","170.37","9.25","4.41","0.93","4.46","0.93","6.18","0","21"
