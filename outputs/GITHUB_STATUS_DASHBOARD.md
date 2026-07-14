@@ -1,6 +1,6 @@
 # GitHub Status Dashboard
 
-Last updated: 2026-07-14 UTC after annualized-return/CAGR report metrics, strict returned-report routing, current-source money-ready audit refresh, local reproducibility-bundle rebuild, required-artifact sync-package generation, source-artifact upload-plan generation, and first-pass hidden-runner plan generation.
+Last updated: 2026-07-14 UTC after annualized-return/CAGR report metrics, strict returned-report routing, current-source money-ready audit refresh, local reproducibility-bundle rebuild, required-artifact sync-package generation, source-artifact upload-plan generation, first-pass hidden-runner plan generation, and hard-lock runner smoke testing.
 
 ## Short Answer
 
@@ -10,7 +10,7 @@ The current stability-best research profile is still:
 
 `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
 
-The newer conservative trade-ready profile and FMLR research lanes are prepared, but they are not proven better yet because the required MT5 reports and live-readiness evidence are still missing. The latest local change is a safer and more repeatable first-pass execution path, not a new profit result.
+The newer conservative trade-ready profile and FMLR research lanes are prepared, but they are not proven better yet because the required MT5 reports and live-readiness evidence are still missing. The latest local change is a safety/readiness improvement, not a new profit result.
 
 ## Current Best Evidence
 
@@ -32,7 +32,6 @@ Return math assumes a `$1,000` starting balance over `2024.01.01` to `2026.07.12
 - Money-ready scorecard: `NOT_READY_PENDING_EVIDENCE`
 - Money-ready scorecard rows: `5` PASS / `14` PENDING / `0` FAIL
 - Release-candidate gate: `NOT_RELEASEABLE_PENDING_EVIDENCE`
-- First-pass hidden runner: `LOCKED`, `4` configs, `0` reports found, `0` MT5 processes launched
 - Real-account trading: locked
 
 ## GitHub Publication Sync
@@ -45,7 +44,7 @@ Return math assumes a `$1,000` starting balance over `2024.01.01` to `2026.07.12
 - Exact local upload package: `outputs/GITHUB_REQUIRED_ARTIFACT_SYNC_PACKAGE.md`
 - Source upload plan/helper: `outputs/GITHUB_SOURCE_ARTIFACT_UPLOAD_PLAN.md`
 
-The source/profile publication gate is still blocking live-readiness because the local folder is not a valid git checkout and the two large EA source paths are not yet exact connector-verified matches. The source upload plan is `READY`: the stale root EA source would be updated and the missing mirrored output EA source would be created when a noninteractive token is available. This is a reproducibility blocker, not a trading-profit result.
+The source/profile publication gate is still blocking live-readiness because the local folder is not a valid git checkout and the two large EA source paths are not yet exact connector-verified matches. The profile artifacts are now connector-verified. The source upload plan is `READY`: the stale root EA source would be updated and the missing mirrored output EA source would be created when a noninteractive token is available. This is a reproducibility blocker, not a trading-profit result.
 
 The current conservative candidate is not live-ready and should remain paper/demo only.
 
@@ -57,17 +56,21 @@ The current conservative candidate is not live-ready and should remain paper/dem
 - Report collector annualized return/CAGR smoke: `PASS`
 - Minimum continuous annualized-return/CAGR gate smoke: `PASS`
 - GitHub profile artifact sync: `PASS`, `3 / 3` profile artifacts connector-verified
+- Static Safety workflow missing-script fix: `work/static_repo_safety_audit.py` and `work/static_mql_compile_preflight.py` now exist locally, pass locally, and have been published to GitHub
 - GitHub publication sync smoke: `PASS`
 - Required artifact sync package smoke: `PASS`, `5` required artifacts, `0` unsafe profile rows
 - Source artifact upload plan smoke: `PASS`, root source `WOULD_UPDATE`, mirrored output source `WOULD_CREATE`
 - First-pass hidden runner plan smoke: `PASS`, current state `LOCKED`, `4` configs, `0` MT5 processes launched
-- Trade-ready reproducibility bundle smoke: `PASS`
+- First-pass hidden runner hard-lock smoke: `PASS`, accidental `-Run` exits before writing run outputs or launching MT5
+- Trade-ready live-readiness smoke: `PASS`
+- FMLR package smoke: `PASS`
 - Money-ready refresh smoke: `PASS`
-- Visible MT5/MetaEditor/Metatester process check: clear
+- Visible MT5/MetaEditor/Metatester/Git process check: clear
 - Current EA source hash: `5D148DAE2335F9037BDED3C9A82BD916C1FCFB6F43EE2EC5EAAE7E67384ED412`
 - First-pass active package: `4` fast Model1 configs for `trade_ready_conservative`, split into `4` window lanes
 - First-pass active profile hash: current conservative `825308011021`
 - First-pass comparison profile hash: current money-ready `553A967B5FCE` is available only when explicitly re-enabled
+- Stale first-pass hashes `621F54A4...` and `0CF80057...`: removed from active run packages
 
 ## Current Conservative Candidate
 
@@ -113,8 +116,15 @@ The local workspace now has a stricter offline evidence system:
 - exact required-artifact sync package for source/profile publication
 - exact source-artifact upload plan/helper for the two remaining large EA source files
 - plan-only first-pass hidden runner guarded by the MT5 hard lock
+- hard-lock smoke test proving the first-pass hidden runner fails closed if `-Run` is requested while locked
 - evidence handoff package
 - four parallel first-pass lanes for faster testing
+
+Current first-pass package:
+
+- `4` configs total
+- split into `4` window-based lanes
+- each lane contains the selected `trade_ready_conservative` config for one window
 
 ## Next Required Evidence
 
@@ -122,9 +132,9 @@ The next useful testing step is to run the `4` first-pass configs from either:
 
 - `outputs/first_pass_next_run_package`
 - `outputs/first_pass_parallel_lanes`
-- `work/run_first_pass_package_hidden.ps1` in plan mode first; `-Run` is guarded by the MT5 hard-lock/unlock policy
+- `work/run_first_pass_package_hidden.ps1` in plan mode first; `-Run` is guarded by the MT5 hard-lock/unlock policy and covered by `work/test_first_pass_hidden_runner_lock.ps1`
 
-Then export or route reports into:
+Then export reports into:
 
 `outputs/returned_mt5_reports/first_pass_inbox`
 
@@ -144,8 +154,8 @@ Required before any live-money review:
 Current local reproducibility bundle:
 
 - Status: `PASS`
-- Passing rows: `68`
-- Zip SHA-256: `EF26A7B8D240EA209A631FFE63DFC8B182332527126B4F247DDA440C6A558546`
+- Passing rows: `69`
+- Zip SHA-256: `29A376B8CB3E8864B0B8270A8D89257E144E4B98D6D206BBF4E5259867EA4EB6`
 - Reminder: this is a local hash freeze only; it does not clear the GitHub/source-publication sync gate.
 
 ## Why There Is No New Best On GitHub
