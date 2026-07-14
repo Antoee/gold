@@ -2,68 +2,38 @@
 
 Generated from the local EA source without launching MT5.
 
+Last updated on GitHub: 2026-07-14 UTC.
+
 ## Local EA Source
 
 - File: `Professional_XAUUSD_EA.mq5`
 - Mirrored file: `outputs/Professional_XAUUSD_EA.mq5`
-- Lines: `21527`
-- Size: `904915` bytes
-- SHA-256: `778E168D96A8185FBA8781210794A6B4547341D4D95F0470134EAC4E5F72C38F`
+- Lines: `19508`
+- Size: `919502` bytes
+- SHA-256: `44D9EBA868C86EB6C57DF82C3B94D83ACFE994B1A665917EC05AB8313188A5F7`
 - Last verified locally: `2026-07-13`
 
-Both local source copies currently match this hash.
+The local source, output mirror, money-ready package sources, and conservative package sources matched this hash when the local manifest was generated.
 
 ## Current Source Highlights
 
-- Modular research EA for XAUUSD with no martingale, grid, averaging down, or recovery sizing.
+- Modular XAUUSD EA with no martingale, grid, averaging down, or recovery sizing.
 - Current stability-best profile remains `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`.
 - Adaptive Reverse remains quarantined behind default-off gates and smoke-test coverage.
 - MT5 local launch lock remains active to avoid windows, sounds, and focus stealing.
-- New default-off FMLR sweep-unlimited runner permission is present:
-  - `FlatMonthLiquidityReclaimUnlimitedRunnerAllows`
-  - `liquiditySweepRunner`
-  - `FMLR sweep unlimited runner`
-- New default-off FMLR tick-speed reclaim path is present:
-  - `tickSpeedReclaim`
-  - `FMLR tick-speed reclaim`
-- Low-risk FMLR activity-blend package profiles are present:
-  - `fmlr_activity_blend`
-  - `fmlr_activity_blend_tight`
-  - `outputs/CANDIDATE_FMLR_ACTIVITY_BLEND_PROFILE.set`
-  - SHA-256 `149481621EC3194A08CF2B291033FEA38AE7D40B1EDA677820780A51F9A9DBDB`
-  - `outputs/CANDIDATE_FMLR_ACTIVITY_BLEND_TIGHT_PROFILE.set`
-  - SHA-256 `50F2000B153458B5DB494DD6AA873BDD6256F2C8B3AE11BABE5E4C615E2BC67A`
-- Shared structure-stop pocket logic now also treats enabled previous-day/week/month liquidity stop levels as pocket evidence when the existing liquidity-pocket shift is active.
-- Conservative demo/forward-test profile is present:
-  - `outputs/CANDIDATE_TRADE_READINESS_PROFILE.set`
-  - SHA-256 `B683100CA5BE912A9A848C3F715A67E4705473B00DEEF4B9070AE02BFDB708C5`
+- Trade-log evidence identity is present through `InpEvidenceProfileId`, `InpEvidenceSourceHash`, and `InpEvidenceRunLabel`.
+- Real-account safety-lock instrumentation requires explicit approval identity before any real-account profile can be considered.
+- Conservative trade-ready profile is present locally with hash `621F54A4BFE61761577D87DB212CF024163F25066209C205090E72227FE584A6`.
+- Money-ready scorecard is `NOT_READY_PENDING_EVIDENCE` with `5` PASS, `14` PENDING, and `0` FAIL.
+- Live-readiness decision is `PENDING` with `5` passing gates, `8` pending gates, and `0` failed gates.
+- Evidence handoff package is ready with `8` first-pass configs, `4` first-pass parallel lanes, `53` validation configs, and `10` broker-proxy configs.
 
-## Active FMLR Research Surface
+## Important GitHub Sync Caveat
 
-- Full FMLR package: `480` Model4 configs, `40` profiles
-- Fast FMLR screen: `162` Model4 configs, `27` profiles
-- New isolated profiles:
-  - `fmlr_sweep_unlimited_runner`
-  - `fmlr_tick_speed_reclaim`
-  - `fmlr_activity_blend`
-  - `fmlr_activity_blend_tight`
+The local Codex folder is not a valid git checkout and local `git`/`gh` are not installed. This file was updated through the GitHub connector as a status artifact.
 
-## Static Checks
+That means the dashboard/source-manifest status is refreshed, but the final live-readiness `reproducible-github-sync` gate remains pending until the exact EA source/profile artifacts are fully published and hash-verified through a reproducible path.
 
-Latest local checks reported:
+## Current Recommendation
 
-- `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`
-- `EA_SOURCE_ARTIFACT_SYNC_SMOKE_PASS`
-- `FLAT_MONTH_LIQUIDITY_RECLAIM_PROBE_PACKAGE_SMOKE_PASS`
-- `FLAT_MONTH_LIQUIDITY_RECLAIM_FAST_PROBE_PACKAGE_SMOKE_PASS`
-- `FLAT_MONTH_LIQUIDITY_RECLAIM_COMPACT_SOURCE_SMOKE_PASS`
-- `TRADE_READINESS_PROFILE_SMOKE_PASS`
-- `ADAPTIVE_REVERSE_QUARANTINE_SMOKE_PASS`
-- `MT5_HIDDEN_LAUNCHER_LOCK_SMOKE_PASS`
-- MT5 local safety audit: `PASS 39 / 39`
-
-MT5 was not launched during this manifest refresh.
-
-## GitHub Note
-
-The full `.mq5` file is verified locally by the SHA-256 above. The current Codex workspace is not a valid Git checkout, and the connector file API is being used only for lightweight dashboard/evidence files. If an authenticated Git push path is restored, upload both `Professional_XAUUSD_EA.mq5` and `outputs/Professional_XAUUSD_EA.mq5`, then confirm the GitHub download hash matches `778E168D96A8185FBA8781210794A6B4547341D4D95F0470134EAC4E5F72C38F`.
+Do not treat the source as live-ready. Keep testing the conservative candidate through first-pass reports, full validation, trade-quality logs, Monte Carlo, forward/demo, and second-broker evidence before any live-money decision.
