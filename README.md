@@ -6,7 +6,7 @@ No martingale. No grid. No averaging down. No recovery sizing. Risk control stay
 
 ## Latest Status
 
-Last updated: 2026-07-14 UTC after first-pass hidden-runner plan generation, hard-lock runner smoke testing, source-artifact upload-plan generation, current-source money-ready audit refresh, and local reproducibility-bundle rebuild.
+Last updated: 2026-07-14 UTC after validation package-shape gate hardening, first-pass hidden-runner hard-lock smoke testing, source-artifact upload-plan generation, current-source money-ready audit refresh, and local reproducibility-bundle rebuild.
 
 Short answer: there is no newly validated best profile yet.
 
@@ -14,7 +14,7 @@ The current stability-best research profile is still:
 
 `Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
 
-The conservative trade-ready candidate is the safest current test candidate, but it is still paper/demo only. The latest progress is execution discipline: `work/run_first_pass_package_hidden.ps1` writes a no-launch first-pass plan, and `work/test_first_pass_hidden_runner_lock.ps1` proves accidental `-Run` requests fail closed while the MT5 hard lock is present.
+The conservative trade-ready candidate is the safest current test candidate, but it is still paper/demo only. Latest progress: full validation now has an explicit 53-row package-shape gate, so a reduced or cherry-picked validation package cannot pass just because the returned rows are profitable.
 
 ## Current Best Evidence
 
@@ -39,8 +39,9 @@ Return math assumes a `$1,000` starting balance over `2024.01.01` to `2026.07.12
 - Release-candidate gate: `NOT_RELEASEABLE_PENDING_EVIDENCE`
 - First-pass hidden runner: `LOCKED`, `4` configs, `0` reports found, `0` MT5 processes launched
 - First-pass hidden runner hard-lock smoke: `PASS`; accidental `-Run` exits before writing run outputs or launching MT5
-- Reproducibility bundle: `PASS`, `69` pass / `0` pending / `0` fail
-- Reproducibility bundle SHA-256: `1333B8102CEAB7E814F581F0362CB71BCFAC217139EB4146B5F91D4EC5C126AD`
+- Conservative validation package shape: `PASS`, exactly `53` rows: `4` fast, `4` exact, `11` quarterly, `31` monthly, `3` stress
+- Reproducibility bundle: `PASS`, `72` pass / `0` pending / `0` fail
+- Reproducibility bundle SHA-256: `663A0008BC220CF6BA982941D5CD9B6AD1C5F8317AC13A52839E41E4404D0FFD`
 - GitHub publication sync: `PENDING`, `5` required artifacts pass / `2` pending / `0` fail
 - GitHub source upload plan: `READY`; root EA source `WOULD_UPDATE`, mirrored output EA source `WOULD_CREATE`
 - Real-account trading: locked
@@ -49,14 +50,13 @@ The current conservative candidate is not live-ready and should remain paper/dem
 
 ## Latest Offline Progress
 
-- First-pass hidden runner added: `work/run_first_pass_package_hidden.ps1`.
-- First-pass hidden runner lock test added: `work/test_first_pass_hidden_runner_lock.ps1`.
-- First-pass hidden plan added: `outputs/FIRST_PASS_HIDDEN_RUN_PLAN.md` and `.csv`.
-- Source upload helper added: `work/upload_github_required_source_artifacts.ps1`.
-- Source upload plan added: `outputs/GITHUB_SOURCE_ARTIFACT_UPLOAD_PLAN.md` and `.csv`.
+- Validation package-shape gate added and documented: `outputs/VALIDATION_PACKAGE_SHAPE_GATE.md`.
+- Conservative validation decision now starts with `validation-package-shape=PASS` for the full 53-row manifest.
+- Smoke tests prove a reduced manifest fails the shape gate even when returned rows are profitable.
+- First-pass hidden runner lock test exists: `work/test_first_pass_hidden_runner_lock.ps1`.
+- First-pass hidden plan exists: `outputs/FIRST_PASS_HIDDEN_RUN_PLAN.md` and `.csv`.
 - Three required profile artifacts are connector-verified on GitHub: conservative, money-ready, and trade-readiness alias.
 - Remaining required GitHub publication blockers: `Professional_XAUUSD_EA.mq5` and `outputs/Professional_XAUUSD_EA.mq5`.
-- Reproducibility bundle now includes `69` passing rows and the first-pass hidden runner plus hard-lock smoke test.
 - MT5, MetaEditor, and Metatester were not launched.
 
 ## Current Conservative Candidate
@@ -99,6 +99,7 @@ Risk shape:
 ## Key Status Files
 
 - `outputs/GITHUB_STATUS_DASHBOARD.md`
+- `outputs/VALIDATION_PACKAGE_SHAPE_GATE.md`
 - `outputs/FIRST_PASS_HIDDEN_RUN_PLAN.md`
 - `outputs/GITHUB_SOURCE_ARTIFACT_UPLOAD_PLAN.md`
 - `outputs/GITHUB_PUBLICATION_SYNC.md`
