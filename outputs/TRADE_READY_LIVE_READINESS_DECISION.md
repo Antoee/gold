@@ -28,6 +28,22 @@ Generated offline. This does not launch MT5 and it does not unlock real-account 
 - Second-broker XAUUSD evidence is missing.
 - Reproducible GitHub/source-publication sync is pending.
 
+## GitHub Sync Detail
+
+The `reproducible-github-sync` gate now accepts either:
+
+- a valid local git checkout, or
+- `outputs/GITHUB_PUBLICATION_SYNC.md` showing required source/profile artifacts match GitHub by SHA-256.
+
+Current local result:
+
+- `gitHead=False`
+- `gitConfig=False`
+- publication required rows: `7`
+- publication passing: `0`
+- publication pending: `7`
+- publication failed: `0`
+
 ## Bottom Line
 
 The conservative profile is not live-ready yet. Missing or stale proof remains, so real-account trading stays blocked.
