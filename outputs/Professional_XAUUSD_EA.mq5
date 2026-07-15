@@ -681,12 +681,17 @@ double          InpSetupLaneStrongAverageR = 0.45;
 double          InpMinSetupLaneRiskMultiplier = 0.55;
 double          InpMaxSetupLaneRiskMultiplier = 1.20;
 bool            InpSetupLaneBoostRequiresClosedProfit = true;
-bool            InpUseDiagnosticFallbackPerformanceRiskScaling = false;
-int             InpDiagnosticFallbackPerformanceLookbackTrades = 4;
-int             InpDiagnosticFallbackPerformanceMinTrades = 2;
-double          InpDiagnosticFallbackWeakAverageR = -0.10;
-double          InpDiagnosticFallbackStrongAverageR = 0.25;
-double          InpMinDiagnosticFallbackPerformanceRiskMultiplier = 0.50;
+input bool            InpUseDiagnosticFallbackPerformanceRiskScaling = false;
+input int             InpDiagnosticFallbackPerformanceLookbackTrades = 4;
+input int             InpDiagnosticFallbackPerformanceMinTrades = 2;
+input double          InpDiagnosticFallbackWeakAverageR = -0.10;
+input double          InpDiagnosticFallbackStrongAverageR = 0.25;
+input double          InpMinDiagnosticFallbackPerformanceRiskMultiplier = 0.50;
+input bool            InpUseDiagnosticFallbackNoCushionLossBlock = false;
+input double          InpDiagnosticFallbackLossBlockCushionPercent = 5.00;
+input int             InpDiagnosticFallbackLossBlockLookbackTrades = 3;
+input int             InpDiagnosticFallbackLossBlockMinTrades = 1;
+input double          InpDiagnosticFallbackLossBlockMaxAverageR = 0.00;
 bool            InpUseHourPerformanceRiskScaling = false;
 int             InpHourPerformanceLookbackDays = 45;
 int             InpHourPerformanceMinTrades = 4;
@@ -3412,6 +3417,20 @@ public:
       double progress = (averageR - weakR) / (strongR - weakR);
       progress = MathMin(1.0, MathMax(0.0, progress));
       return minMultiplier + progress * (1.0 - minMultiplier);
+   }
+
+   bool DiagnosticFallbackRecentAverageR(const int lookbackTrades,
+                                         const int minTrades,
+                                         double &averageR,
+                                         int &sampleTrades)
+   {
+      datetime latestCloseTime = 0;
+      return SetupLanePerformanceSampleWindow("DGF;",
+                                             lookbackTrades,
+                                             minTrades,
+                                             averageR,
+                                             sampleTrades,
+                                             latestCloseTime);
    }
 
    bool HourPerformanceSample(double &netPercent, int &sampleTrades)
@@ -17700,6 +17719,41 @@ double DiagnosticFallbackCushionRiskMultiplier(const SSignal &signal)
    return MathMax(0.0, MathMin(1.0, InpDiagnosticFallbackNoCushionRiskMultiplier));
 }
 
+bool DiagnosticFallbackNoCushionLossBlockAllows(const SSignal &signal, string &reason)
+{
+   reason = "";
+   if(!InpUseDiagnosticFallbackNoCushionLossBlock || !signal.isDiagnosticFallback)
+      return true;
+
+   double initialBalance = riskManager.InitialBalance();
+   if(initialBalance <= 0.0)
+      return true;
+
+   double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+   if(balance <= 0.0)
+      return true;
+
+   double closedProfitPercent = 100.0 * (balance - initialBalance) / initialBalance;
+   if(closedProfitPercent >= MathMax(0.0, InpDiagnosticFallbackLossBlockCushionPercent))
+      return true;
+
+   double averageR = 0.0;
+   int sampleTrades = 0;
+   if(!riskManager.DiagnosticFallbackRecentAverageR(MathMax(1, InpDiagnosticFallbackLossBlockLookbackTrades),
+                                                    MathMax(1, InpDiagnosticFallbackLossBlockMinTrades),
+                                                    averageR,
+                                                    sampleTrades))
+      return true;
+
+   if(averageR > InpDiagnosticFallbackLossBlockMaxAverageR)
+      return true;
+
+   reason = "DGF no-cushion loss block avgR " + DoubleToString(averageR, 2) +
+            " samples " + IntegerToString(sampleTrades) +
+            " cushion " + DoubleToString(closedProfitPercent, 2) + "%";
+   return false;
+}
+
 double CurrentPeriodProfit(const ENUM_TIMEFRAMES period)
 {
    datetime start = iTime(_Symbol, period, 0);
@@ -20077,6 +20131,15 @@ bool OpenSignal(const SSignal &signal)
       g_lastBlockReason = weakRegimeReason;
       if(InpDiagnosticFallbackDebug)
          Print("DIAG_OPEN_BLOCK ", weakRegimeReason);
+      return false;
+   }
+
+   string diagnosticFallbackLossBlockReason = "";
+   if(!DiagnosticFallbackNoCushionLossBlockAllows(signal, diagnosticFallbackLossBlockReason))
+   {
+      g_lastBlockReason = diagnosticFallbackLossBlockReason;
+      if(InpDiagnosticFallbackDebug)
+         Print("DIAG_OPEN_BLOCK ", diagnosticFallbackLossBlockReason);
       return false;
    }
 

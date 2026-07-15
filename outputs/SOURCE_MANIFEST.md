@@ -6,33 +6,46 @@ Generated from the local EA source without launching MT5.
 
 - File: `Professional_XAUUSD_EA.mq5`
 - Mirrored file: `outputs/Professional_XAUUSD_EA.mq5`
-- Lines: `19781`
-- Size: `945552` bytes
-- SHA-256: `C23144DDE1F26C29135489FC9DF065FC5B5575C0B3F1B388BECC01E70E5965B4`
-- Exposed MT5 tester inputs: `316`
+- Lines: `22195`
+- Size: `948230` bytes
+- SHA-256: `F254FDF07B932FD8009E1ABFD761D1C9195568596A559F0DCB73A8CD29157D8F`
+- Exposed MT5 tester inputs: `327`
 - Last verified locally: `2026-07-14`
 - Root/mirror sync: `PASS`
-- Current-source compile: `PASS` locally via `outputs/MT5_HIDDEN_COMPILE_DGF_CUSHION_RISK.log`, `0 errors, 0 warnings`
+- Current-source compile: `PASS` locally via `outputs/MT5_HIDDEN_COMPILE_DGF_LOSS_BLOCK.log`, `0 errors, 0 warnings`
 
-The latest source update changed the mirrored source hash to `C23144DDE1F26C29135489FC9DF065FC5B5575C0B3F1B388BECC01E70E5965B4`. Root and mirrored source hashes match. The source now stays below the MT5 tester input-limit guard after demoting stale research controls from `input` variables to internal defaults, and adds default-off DGF cushion-risk throttle controls for research. The live-readiness compile-evidence router may still require a returned compile proof package before a final live gate can pass, but the local hidden MetaEditor compile for this exact source is clean.
+The latest source update changed the mirrored source hash to `F254FDF07B932FD8009E1ABFD761D1C9195568596A559F0DCB73A8CD29157D8F`. Root and mirrored source hashes match. The source stays below the MT5 tester input-limit guard and adds default-off DGF no-cushion loss-block controls for research. The live-readiness compile-evidence router may still require a returned compile proof package before a final live gate can pass, but the local hidden MetaEditor compile for this exact source is clean.
 
 ## Current Research Best
 
-Current stability-best research profile:
+Current newest range-elite research leads:
 
-`Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
+- High-profit: `re_may140_late15_dgf_liq_reject1_cush50_dgflossblock`
+- Broad-window stability: `re_may140_late15_dgf_liq_reject1_cush35_dgflossblock`
 
-Most recent reproduced real-tick continuous result before the trade-environment guard source update:
+Most recent focused Model4 broad-window result on the current source:
 
 - Model: `4`
-- Period: `2024.01.01` to `2026.07.12`
-- Net: `+$1,195.69`
-- Total return from `$1,000`: `+119.57%`
-- CAGR: about `+36.51%/yr`
+- Windows: `2019`, `2021`, `2023`, `2024`, `2025`, `2026 YTD`
+- High-profit net: `+$2,800.21`
+- High-profit average annualized return: `52.09%/yr`
+- High-profit worst window: `-$7.36`
+- Stability net: `+$2,323.11`
+- Stability average annualized return: `39.02%/yr`
+- Stability worst window: `+$0.68`
+- Worst drawdown: about `20.8%`
 
-The historical `+$4,507.51` Model4 result remains stale until reproduced on the current source.
+Both profiles are research-only because drawdown remains high, trade counts are thin, and stress/broker/forward evidence is missing.
 
 ## Candidate Profiles
+
+Newest range-elite research aliases:
+
+- High-profit file: `outputs/CANDIDATE_RANGE_ELITE_HIGH_PROFIT_DGF_LOSSBLOCK_PROFILE.set`
+- High-profit SHA-256: `1C0CF498F243ED6002FB74BBE3EA0247348B40F410B12EA74CD4720B998A9543`
+- Stability file: `outputs/CANDIDATE_RANGE_ELITE_STABILITY_DGF_LOSSBLOCK_PROFILE.set`
+- Stability SHA-256: `306BB06F12768F7E9439827CC8C7125E7103BFF08742CD6B2B57EAD2C2C50B86`
+- Status: research-only; not live-ready
 
 Conservative trade-ready candidate:
 
@@ -90,6 +103,6 @@ An earlier 2026-07-14 source change also shortened six overlong FMLR input ident
 - `InpFMLRDispPBMinBreakBodyPercent`
 - `InpFMLROBRetestMinImpulseBodyPercent`
 
-The latest 2026-07-14 source change keeps the exposed MT5 tester input surface under the guard at `316`, adds the default-off `InpUseDiagnosticFallbackCushionRiskThrottle` controls, keeps the default-off `InpDiagnosticFallbackRejectLiquiditySweepSignal` controls, keeps the default-off `InpUseDiagnosticFallbackLateSessionGuard` controls, keeps the default-off `InpDiagnosticFallbackBlockLiquiditySweep` guard, and keeps the earlier default-off diagnostic-fallback spread guard, spread risk scaling, and performance risk scaling controls. Follow-up testing found `re_may140_late15_dgf_liq_reject1_cush50`, a safer range-elite risk shape at `+$2,770.74` with `20.84%` worst DD, but it still has a red 2019 window and is not trade-ready.
+The latest 2026-07-14 source change keeps the exposed MT5 tester input surface under the guard at `327`, adds the default-off `InpUseDiagnosticFallbackNoCushionLossBlock` controls, keeps the default-off `InpUseDiagnosticFallbackCushionRiskThrottle` controls, keeps the default-off `InpDiagnosticFallbackRejectLiquiditySweepSignal` controls, keeps the default-off `InpUseDiagnosticFallbackLateSessionGuard` controls, keeps the default-off `InpDiagnosticFallbackBlockLiquiditySweep` guard, and keeps the earlier default-off diagnostic-fallback spread guard, spread risk scaling, and performance risk scaling controls. Follow-up testing found `re_may140_late15_dgf_liq_reject1_cush50_dgflossblock`, a higher-profit range-elite research lead at `+$2,800.21` with worst window `-$7.36`, and `re_may140_late15_dgf_liq_reject1_cush35_dgflossblock`, an all-green broad-window stability lead at `+$2,323.11`. Both still have about `20.8%` worst DD and are not trade-ready.
 
-These were safety/readiness and research-infrastructure fixes plus a safer range-elite risk-shape probe, not a live/stability promotion. No backtest has made the `C23144DDE1F26C29135489FC9DF065FC5B5575C0B3F1B388BECC01E70E5965B4` source hash money-ready yet.
+These were safety/readiness and research-infrastructure fixes plus a safer range-elite risk-shape probe, not a live-money promotion. No backtest has made the `F254FDF07B932FD8009E1ABFD761D1C9195568596A559F0DCB73A8CD29157D8F` source hash money-ready yet.

@@ -258,6 +258,149 @@ $candidates = @(
       }
    },
    [pscustomobject]@{
+      Name = "re_may140_late15_dgf_liq_reject1_cush50_dgfperf35"
+      Thesis = "Throttle DGF to 50% risk until cushion, then cut DGF risk after any weak DGF performance sample."
+      Overrides = @{
+         InpMayRiskMultiplier = "1.40"
+         InpUseDiagnosticFallbackLateSessionGuard = "true"
+         InpDiagnosticFallbackLateSessionStartHour = "15"
+         InpDiagnosticFallbackLateSessionPureOnly = "true"
+         InpDiagnosticFallbackRejectLiquiditySweepSignal = "true"
+         InpDiagnosticFallbackLiquidityRejectMaxConfirmations = "1"
+         InpUseDiagnosticFallbackCushionRiskThrottle = "true"
+         InpDiagnosticFallbackCushionProfitPercent = "5.00"
+         InpDiagnosticFallbackNoCushionRiskMultiplier = "0.50"
+         InpUseDiagnosticFallbackPerformanceRiskScaling = "true"
+         InpDiagnosticFallbackPerformanceLookbackTrades = "3"
+         InpDiagnosticFallbackPerformanceMinTrades = "1"
+         InpDiagnosticFallbackWeakAverageR = "0.00"
+         InpDiagnosticFallbackStrongAverageR = "0.35"
+         InpMinDiagnosticFallbackPerformanceRiskMultiplier = "0.35"
+      }
+   },
+   [pscustomobject]@{
+      Name = "re_may140_late15_dgf_liq_reject1_cush50_dgflossblock"
+      Thesis = "Throttle DGF before cushion and block new DGF entries when recent no-cushion DGF average R is not positive."
+      Overrides = @{
+         InpMayRiskMultiplier = "1.40"
+         InpUseDiagnosticFallbackLateSessionGuard = "true"
+         InpDiagnosticFallbackLateSessionStartHour = "15"
+         InpDiagnosticFallbackLateSessionPureOnly = "true"
+         InpDiagnosticFallbackRejectLiquiditySweepSignal = "true"
+         InpDiagnosticFallbackLiquidityRejectMaxConfirmations = "1"
+         InpUseDiagnosticFallbackCushionRiskThrottle = "true"
+         InpDiagnosticFallbackCushionProfitPercent = "5.00"
+         InpDiagnosticFallbackNoCushionRiskMultiplier = "0.50"
+         InpUseDiagnosticFallbackNoCushionLossBlock = "true"
+         InpDiagnosticFallbackLossBlockCushionPercent = "5.00"
+         InpDiagnosticFallbackLossBlockLookbackTrades = "3"
+         InpDiagnosticFallbackLossBlockMinTrades = "1"
+         InpDiagnosticFallbackLossBlockMaxAverageR = "0.00"
+      }
+   },
+   [pscustomobject]@{
+      Name = "re_may140_late15_dgf_liq_reject1_cush50_dgflossblock_neg"
+      Thesis = "Only block no-cushion DGF after clearly negative recent DGF average R, preserving marginally positive sequences."
+      Overrides = @{
+         InpMayRiskMultiplier = "1.40"
+         InpUseDiagnosticFallbackLateSessionGuard = "true"
+         InpDiagnosticFallbackLateSessionStartHour = "15"
+         InpDiagnosticFallbackLateSessionPureOnly = "true"
+         InpDiagnosticFallbackRejectLiquiditySweepSignal = "true"
+         InpDiagnosticFallbackLiquidityRejectMaxConfirmations = "1"
+         InpUseDiagnosticFallbackCushionRiskThrottle = "true"
+         InpDiagnosticFallbackCushionProfitPercent = "5.00"
+         InpDiagnosticFallbackNoCushionRiskMultiplier = "0.50"
+         InpUseDiagnosticFallbackNoCushionLossBlock = "true"
+         InpDiagnosticFallbackLossBlockCushionPercent = "5.00"
+         InpDiagnosticFallbackLossBlockLookbackTrades = "3"
+         InpDiagnosticFallbackLossBlockMinTrades = "1"
+         InpDiagnosticFallbackLossBlockMaxAverageR = "-0.10"
+      }
+   },
+   [pscustomobject]@{
+      Name = "re_may140_late15_dgf_liq_reject1_cush35_dgflossblock"
+      Thesis = "More defensive initial DGF risk plus the no-cushion DGF loss block."
+      Overrides = @{
+         InpMayRiskMultiplier = "1.40"
+         InpUseDiagnosticFallbackLateSessionGuard = "true"
+         InpDiagnosticFallbackLateSessionStartHour = "15"
+         InpDiagnosticFallbackLateSessionPureOnly = "true"
+         InpDiagnosticFallbackRejectLiquiditySweepSignal = "true"
+         InpDiagnosticFallbackLiquidityRejectMaxConfirmations = "1"
+         InpUseDiagnosticFallbackCushionRiskThrottle = "true"
+         InpDiagnosticFallbackCushionProfitPercent = "5.00"
+         InpDiagnosticFallbackNoCushionRiskMultiplier = "0.35"
+         InpUseDiagnosticFallbackNoCushionLossBlock = "true"
+         InpDiagnosticFallbackLossBlockCushionPercent = "5.00"
+         InpDiagnosticFallbackLossBlockLookbackTrades = "3"
+         InpDiagnosticFallbackLossBlockMinTrades = "1"
+         InpDiagnosticFallbackLossBlockMaxAverageR = "0.00"
+      }
+   },
+   [pscustomobject]@{
+      Name = "re_may140_late15_dgf_liq_reject1_cush50_starterec35"
+      Thesis = "Throttle DGF before cushion and reduce all risk while equity is below starting balance."
+      Overrides = @{
+         InpMayRiskMultiplier = "1.40"
+         InpUseDiagnosticFallbackLateSessionGuard = "true"
+         InpDiagnosticFallbackLateSessionStartHour = "15"
+         InpDiagnosticFallbackLateSessionPureOnly = "true"
+         InpDiagnosticFallbackRejectLiquiditySweepSignal = "true"
+         InpDiagnosticFallbackLiquidityRejectMaxConfirmations = "1"
+         InpUseDiagnosticFallbackCushionRiskThrottle = "true"
+         InpDiagnosticFallbackCushionProfitPercent = "5.00"
+         InpDiagnosticFallbackNoCushionRiskMultiplier = "0.50"
+         InpUseStartingEquityRecoveryRiskScaling = "true"
+         InpStartingEquityRecoveryRiskStartDrawdownPercent = "0.10"
+         InpStartingEquityRecoveryRiskFullDrawdownPercent = "1.50"
+         InpMinStartingEquityRecoveryRiskMultiplier = "0.35"
+      }
+   },
+   [pscustomobject]@{
+      Name = "re_may140_late15_dgf_liq_reject1_cush50_recovery_perf"
+      Thesis = "Combine DGF cushion throttle, DGF performance risk scaling, and starting-equity recovery risk scaling."
+      Overrides = @{
+         InpMayRiskMultiplier = "1.40"
+         InpUseDiagnosticFallbackLateSessionGuard = "true"
+         InpDiagnosticFallbackLateSessionStartHour = "15"
+         InpDiagnosticFallbackLateSessionPureOnly = "true"
+         InpDiagnosticFallbackRejectLiquiditySweepSignal = "true"
+         InpDiagnosticFallbackLiquidityRejectMaxConfirmations = "1"
+         InpUseDiagnosticFallbackCushionRiskThrottle = "true"
+         InpDiagnosticFallbackCushionProfitPercent = "5.00"
+         InpDiagnosticFallbackNoCushionRiskMultiplier = "0.50"
+         InpUseDiagnosticFallbackPerformanceRiskScaling = "true"
+         InpDiagnosticFallbackPerformanceLookbackTrades = "3"
+         InpDiagnosticFallbackPerformanceMinTrades = "1"
+         InpDiagnosticFallbackWeakAverageR = "0.00"
+         InpDiagnosticFallbackStrongAverageR = "0.35"
+         InpMinDiagnosticFallbackPerformanceRiskMultiplier = "0.35"
+         InpUseStartingEquityRecoveryRiskScaling = "true"
+         InpStartingEquityRecoveryRiskStartDrawdownPercent = "0.10"
+         InpStartingEquityRecoveryRiskFullDrawdownPercent = "1.50"
+         InpMinStartingEquityRecoveryRiskMultiplier = "0.35"
+      }
+   },
+   [pscustomobject]@{
+      Name = "re_may140_late15_dgf_liq_reject1_cush50_dgfq_pa6"
+      Thesis = "Keep cushion throttle but require stronger price-action and smart-money evidence for DGF entries."
+      Overrides = @{
+         InpMayRiskMultiplier = "1.40"
+         InpUseDiagnosticFallbackLateSessionGuard = "true"
+         InpDiagnosticFallbackLateSessionStartHour = "15"
+         InpDiagnosticFallbackLateSessionPureOnly = "true"
+         InpDiagnosticFallbackRejectLiquiditySweepSignal = "true"
+         InpDiagnosticFallbackLiquidityRejectMaxConfirmations = "1"
+         InpUseDiagnosticFallbackCushionRiskThrottle = "true"
+         InpDiagnosticFallbackCushionProfitPercent = "5.00"
+         InpDiagnosticFallbackNoCushionRiskMultiplier = "0.50"
+         InpUseDiagnosticFallbackQualityGate = "true"
+         InpDiagnosticFallbackMinPriceActionScore = "6"
+         InpDiagnosticFallbackMinSmartMoneyScore = "4"
+      }
+   },
+   [pscustomobject]@{
       Name = "re_may140_late15_dgf_liq_reject1_cush35"
       Thesis = "Throttle DGF to 35% risk until the account has a 5% closed-profit cushion."
       Overrides = @{
