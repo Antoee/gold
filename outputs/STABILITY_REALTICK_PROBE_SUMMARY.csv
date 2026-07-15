@@ -1,0 +1,2 @@
+"Candidate","SourceType","Phase","Expected","ParsedReports","ParsedLogs","ParsedTotal","Missing","Unparsed","TotalNetProfit","WorstNetProfit","AverageAnnualizedReturnPercent","WorstAnnualizedReturnPercent","AverageCagrPercent","WorstCagrPercent","WorstDrawdownPercent","MinProfitFactor","TotalTrades"
+"sr_m4_sweep_off","broker_risk_sizing_probe","fast_model4","1","1","0","1","0","0","211.37","211.37","0.28","0.28","0.28","0.28","0.82","2.12","26"

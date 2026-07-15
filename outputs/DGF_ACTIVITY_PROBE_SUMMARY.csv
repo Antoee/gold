@@ -1,0 +1,6 @@
+"Candidate","SourceType","Phase","Expected","ParsedReports","ParsedLogs","ParsedTotal","Missing","Unparsed","TotalNetProfit","WorstNetProfit","AverageAnnualizedReturnPercent","WorstAnnualizedReturnPercent","AverageCagrPercent","WorstCagrPercent","WorstDrawdownPercent","MinProfitFactor","TotalTrades"
+"dfa_lb_on_throttle050","broker_risk_sizing_probe","fast_model1","9","9","0","9","0","0","6.89","-4.08","0.09","-0.41","0.09","-0.41","1.35","0","32"
+"dfa_lb_off_throttle025","broker_risk_sizing_probe","fast_model1","9","9","0","9","0","0","-2.55","-1.55","-0.02","-0.16","-0.02","-0.16","0.82","0","17"
+"dfa_lb_off_throttle050","broker_risk_sizing_probe","fast_model1","9","9","0","9","0","0","-10.26","-12.06","0","-0.75","0","-0.75","1.84","0","37"
+"dfa_lb_off_throttle075","broker_risk_sizing_probe","fast_model1","9","9","0","9","0","0","48.71","-5.96","0.53","-0.6","0.53","-0.6","2.61","0","140"
+"dfa_lb_off_fullrisk","broker_risk_sizing_probe","fast_model1","9","9","0","9","0","0","153.74","-14.04","1.11","-1.41","1.1","-1.41","3.66","0","219"

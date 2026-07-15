@@ -1,26 +1,24 @@
 # GitHub Status Dashboard
 
-Last updated: 2026-07-14 UTC after real-account safety-lock hardening, regenerated money-ready/conservative profiles, rebuilt validation packages, current-source money-ready audit refresh, local reproducibility-bundle rebuild, seven-artifact required-publication sync-package regeneration, required-publication upload-plan regeneration, first-pass hidden-runner plan generation, first-pass advance-wrapper generation, stricter first-pass efficiency-floor documentation, and hard-lock runner smoke testing.
+Last updated: 2026-07-14 UTC after broker-accurate XAUUSD risk sizing, `108` fast broad-window reports, and one continuous Model4 real-tick stability confirmation.
 
 ## Short Answer
 
-There is no newly validated best profile yet.
+There is still no money-ready profile.
 
-The current stability-best research profile is still:
+The current broker-accurate stability baseline is `sr_m4_sweep_off`, profile SHA-256 `4D0B808BE07BF6612C70F96E4287717F3C7A8370B9089B165D71A244C3EA8E89`. Continuous 2019-2026 Model4 real ticks on `$10,000`: `+$211.37`, `+2.11%` total, `0.28%/yr`, PF `2.12`, `26` trades, and `0.82%` drawdown. It is stable but not profitable enough for deployment.
 
-`Score7 Regime No-M1-Shock Dec-ISLP-Off + ISLP LowATR OrderFlow`
+The old high-profit headlines are superseded as live-readiness evidence because they predate broker-aware `OrderCalcProfit` position sizing.
 
-The newer conservative trade-ready profile and FMLR research lanes are prepared, but they are not proven better yet because the required MT5 reports and live-readiness evidence are still missing. The latest local change is a safety/readiness improvement, not a new profit result.
+## Superseded Historical Evidence
 
-## Current Best Evidence
-
-Return math assumes a `$1,000` starting balance over `2024.01.01` to `2026.07.12`, about `2.53` years.
+The table below is retained only as research history. It must not be compared directly with the current corrected baseline or used to support real-money trading.
 
 | Result | Type | Return Math | Status |
 | --- | --- | --- | --- |
-| `+$10,127.76` | Continuous Model1 | `+1012.78%` total, about `+159.47%/yr` CAGR | Best historical/current Model1 research result |
-| `+$4,507.51` | Continuous Model4 | `+450.75%` total, about `+96.43%/yr` CAGR | Historical/stale until reproduced on current source |
-| `+$1,195.69` | Continuous Model4 | `+119.57%` total, about `+36.51%/yr` CAGR | Most recent reproduced real-tick LowATR OrderFlow result before the `FF1BCDB0...` safety source update |
+| `+$10,127.76` | Continuous Model1 | `+1012.78%` total, about `+159.47%/yr` CAGR | Superseded pre-fix research result |
+| `+$4,507.51` | Continuous Model4 | `+450.75%` total, about `+96.43%/yr` CAGR | Superseded pre-fix research result |
+| `+$1,195.69` | Continuous Model4 | `+119.57%` total, about `+36.51%/yr` CAGR | Superseded pre-fix research result |
 | `+$7,469.00` | Sampled Model4 total | Not annualizable | Aggregate validation-window score, not a sequential account curve |
 
 ## Money-Ready Status

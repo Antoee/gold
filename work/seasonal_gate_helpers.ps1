@@ -100,7 +100,8 @@ function Write-SeasonalTesterConfig {
       [string]$From,
       [string]$To,
       $Inputs,
-      [int]$Model = 2
+      [int]$Model = 2,
+      [ValidateRange(100,100000000)][int]$Deposit = 1000
    )
    # MT5 command-line tester silently skips report export for absolute Report=
    # paths on this install. Use a plain filename, then the runner collects it
@@ -116,7 +117,7 @@ function Write-SeasonalTesterConfig {
       "FromDate=$From",
       "ToDate=$To",
       "ForwardMode=0",
-      "Deposit=1000",
+      "Deposit=$Deposit",
       "Currency=USD",
       "ProfitInPips=0",
       "Leverage=100",

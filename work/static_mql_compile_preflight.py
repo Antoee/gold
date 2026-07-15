@@ -170,6 +170,17 @@ def main() -> int:
     ]:
         audit.check(marker in text, f"required safety marker exists: {marker}")
 
+    for marker in [
+        "double RiskMoneyForOrder(const ENUM_ORDER_TYPE orderType,",
+        "if(!OrderCalcProfit(orderType,",
+        "riskManager.LotsForRisk(signal.bias, entry, stopDistance, riskMultiplier)",
+        "riskManager.ExposureAllows(signal.bias, entry, stopDistance, lots, exposureReason)",
+        "InpAllowStandaloneLiquiditySweepEntry",
+    ]:
+        audit.check(marker in text, f"broker-risk safety marker exists: {marker}")
+    audit.check("RiskMoneyForLots(" not in text,
+                "obsolete raw tick-value risk helper is absent")
+
     for name, expected in [
         ("InpUseRealAccountSafetyLock", "true"),
         ("InpAllowRealAccountTrading", "false"),

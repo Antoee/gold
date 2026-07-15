@@ -1208,6 +1208,7 @@ int             InpBreakoutRetestLookbackBars = 20;
 double          InpBreakoutRetestATR         = 0.25;
 double          InpBreakoutRetestCloseBufferPoints = 10.0;
 bool            InpUseLiquiditySweep         = true;
+input bool            InpAllowStandaloneLiquiditySweepEntry = true;
 int             InpSweepLookbackBars         = 10;
 bool            InpUseSweepRejection         = false;
 double          InpSweepRejectionMinWickPercent = 35.0;
@@ -2843,17 +2844,26 @@ private:
       return giveback >= allowedGiveback;
    }
 
-   double RiskMoneyForLots(const double stopDistance, const double lots)
+   double RiskMoneyForOrder(const ENUM_ORDER_TYPE orderType,
+                            const double entryPrice,
+                            const double stopPrice,
+                            const double lots)
    {
-      if(stopDistance <= 0.0 || lots <= 0.0)
+      if((orderType != ORDER_TYPE_BUY && orderType != ORDER_TYPE_SELL) ||
+         entryPrice <= 0.0 || stopPrice <= 0.0 || lots <= 0.0 ||
+         MathAbs(entryPrice - stopPrice) <= 0.0)
          return 0.0;
 
-      double tickValue = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE);
-      double tickSize = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
-      if(tickValue <= 0.0 || tickSize <= 0.0)
+      double stopProfit = 0.0;
+      if(!OrderCalcProfit(orderType,
+                          _Symbol,
+                          lots,
+                          entryPrice,
+                          stopPrice,
+                          stopProfit))
          return 0.0;
 
-      return (stopDistance / tickSize) * tickValue * lots;
+      return MathAbs(stopProfit);
    }
 
    double PositionRiskMoney(const ulong ticket, bool &unprotected)
@@ -2896,7 +2906,11 @@ private:
          return 0.0;
       }
 
-      return RiskMoneyForLots(stopDistance, volume);
+      ENUM_ORDER_TYPE orderType = (type == POSITION_TYPE_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+      double riskMoney = RiskMoneyForOrder(orderType, openPrice, sl, volume);
+      if(riskMoney <= 0.0)
+         unprotected = true;
+      return riskMoney;
    }
 
    double OpenRiskPercent(bool &hasUnprotectedPosition)
@@ -3025,7 +3039,8 @@ private:
          if(stopDistance <= 0.0)
             continue;
 
-         double riskMoney = RiskMoneyForLots(stopDistance, closeVolume);
+         ENUM_ORDER_TYPE orderType = (entryType == DEAL_TYPE_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+         double riskMoney = RiskMoneyForOrder(orderType, entryPrice, entryStop, closeVolume);
          if(riskMoney <= 0.0)
             continue;
 
@@ -3138,7 +3153,8 @@ private:
          if(stopDistance <= 0.0)
             continue;
 
-         double riskMoney = RiskMoneyForLots(stopDistance, closeVolume);
+         ENUM_ORDER_TYPE orderType = (entryType == DEAL_TYPE_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+         double riskMoney = RiskMoneyForOrder(orderType, entryPrice, entryStop, closeVolume);
          if(riskMoney <= 0.0)
             continue;
 
@@ -5150,14 +5166,18 @@ public:
       return NormalizeDouble(normalized, 2);
    }
 
-   double LotsForRisk(const double stopDistance, const double riskMultiplier)
+   double LotsForRisk(const ENUM_TRADE_BIAS bias,
+                      const double entryPrice,
+                      const double stopDistance,
+                      const double riskMultiplier)
    {
       RefreshConsecutiveLosses();
       double safeMultiplier = MathMax(0.0, riskMultiplier);
       double effectiveRiskPercent = EffectiveRiskPercent() * safeMultiplier;
       if(InpMaxEffectiveRiskPercent > 0.0)
          effectiveRiskPercent = MathMin(effectiveRiskPercent, MathMax(0.0, InpMaxEffectiveRiskPercent));
-      if(stopDistance <= 0 || effectiveRiskPercent <= 0)
+      if((bias != BIAS_BUY && bias != BIAS_SELL) ||
+         entryPrice <= 0.0 || stopDistance <= 0.0 || effectiveRiskPercent <= 0.0)
          return 0.0;
 
       double equity = AccountInfoDouble(ACCOUNT_EQUITY);
@@ -5176,19 +5196,21 @@ public:
          riskMoney = MathMin(riskMoney, maxRiskBeforeFloor);
       }
 
-      double tickValue = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE);
-      double tickSize = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
-      if(tickValue <= 0 || tickSize <= 0)
-         return 0.0;
-
-      double moneyPerLot = (stopDistance / tickSize) * tickValue;
+      ENUM_ORDER_TYPE orderType = (bias == BIAS_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+      double stopPrice = (bias == BIAS_BUY) ? entryPrice - stopDistance
+                                            : entryPrice + stopDistance;
+      double moneyPerLot = RiskMoneyForOrder(orderType, entryPrice, stopPrice, 1.0);
       if(moneyPerLot <= 0)
          return 0.0;
 
       return NormalizeLots(riskMoney / moneyPerLot);
    }
 
-   bool ExposureAllows(const double stopDistance, const double lots, string &reason)
+   bool ExposureAllows(const ENUM_TRADE_BIAS bias,
+                       const double entryPrice,
+                       const double stopDistance,
+                       const double lots,
+                       string &reason)
    {
       if(InpMaxOpenRiskPercent <= 0.0)
          return true;
@@ -5208,7 +5230,16 @@ public:
          return false;
       }
 
-      double addedRiskPercent = 100.0 * RiskMoneyForLots(stopDistance, lots) / equity;
+      ENUM_ORDER_TYPE orderType = (bias == BIAS_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+      double stopPrice = (bias == BIAS_BUY) ? entryPrice - stopDistance
+                                            : entryPrice + stopDistance;
+      double addedRiskMoney = RiskMoneyForOrder(orderType, entryPrice, stopPrice, lots);
+      if(addedRiskMoney <= 0.0)
+      {
+         reason = "open risk calculation";
+         return false;
+      }
+      double addedRiskPercent = 100.0 * addedRiskMoney / equity;
       double maxOpenRiskPercent = EffectiveMaxOpenRiskPercent();
       if(openRiskPercent + addedRiskPercent > maxOpenRiskPercent)
       {
@@ -5239,7 +5270,9 @@ public:
       return baseCap + progress * (maxCap - baseCap);
    }
 
-   bool ScaleInOpenProfitCoversRisk(const double stopDistance,
+   bool ScaleInOpenProfitCoversRisk(const ENUM_TRADE_BIAS bias,
+                                    const double entryPrice,
+                                    const double stopDistance,
                                     const double lots,
                                     string &reason)
    {
@@ -5247,7 +5280,10 @@ public:
       if(!InpWinnerScaleInRequireOpenProfitRiskCover)
          return true;
 
-      double addedRiskMoney = RiskMoneyForLots(stopDistance, lots);
+      ENUM_ORDER_TYPE orderType = (bias == BIAS_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+      double stopPrice = (bias == BIAS_BUY) ? entryPrice - stopDistance
+                                            : entryPrice + stopDistance;
+      double addedRiskMoney = RiskMoneyForOrder(orderType, entryPrice, stopPrice, lots);
       if(addedRiskMoney <= 0.0)
       {
          reason = "scale-in risk unavailable";
@@ -14879,7 +14915,9 @@ public:
       AddConfirmation(InpUseBOS && m_structure.BOS(bias, InpBOSLookbackBars), InpWeightBOS, "BOS;", signal.confirmations, signal.qualityScore, signal.reasons);
       AddConfirmation(InpUseDisplacementBOS && m_structure.DisplacementBOS(bias, InpDisplacementBOSLookbackBars, atr), InpWeightDisplacementBOS, "Displacement BOS;", signal.confirmations, signal.qualityScore, signal.reasons);
       AddConfirmation(InpUseBreakoutRetest && m_structure.BreakoutRetest(bias, InpBreakoutRetestLookbackBars, atr), InpWeightBreakoutRetest, "Breakout retest;", signal.confirmations, signal.qualityScore, signal.reasons);
-      AddConfirmation(InpUseLiquiditySweep && m_structure.LiquiditySweep(bias, InpSweepLookbackBars), InpWeightLiquiditySweep, "Liquidity sweep;", signal.confirmations, signal.qualityScore, signal.reasons);
+      bool liquiditySweepConfirmation = InpUseLiquiditySweep &&
+                                        m_structure.LiquiditySweep(bias, InpSweepLookbackBars);
+      AddConfirmation(liquiditySweepConfirmation, InpWeightLiquiditySweep, "Liquidity sweep;", signal.confirmations, signal.qualityScore, signal.reasons);
       AddConfirmation(InpUseSweepRejection && m_structure.SweepRejection(bias, InpSweepLookbackBars), InpWeightSweepRejection, "Sweep rejection;", signal.confirmations, signal.qualityScore, signal.reasons);
       AddConfirmation(InpUseCHoCH && m_structure.CHoCH(bias, InpCHoCHLookbackBars), InpWeightCHoCH, "CHoCH;", signal.confirmations, signal.qualityScore, signal.reasons);
       AddConfirmation(InpUseFairValueGap && m_structure.FairValueGap(bias, InpFVGLookbackBars, atr), InpWeightFairValueGap, "FVG;", signal.confirmations, signal.qualityScore, signal.reasons);
@@ -14978,6 +15016,15 @@ public:
                       signal.confirmations,
                       signal.qualityScore,
                       signal.reasons);
+
+      if(!InpAllowStandaloneLiquiditySweepEntry &&
+         liquiditySweepConfirmation &&
+         !diagnosticFallback &&
+         signal.confirmations <= MathMax(1, InpWeightLiquiditySweep))
+      {
+         signal.reasons += "Standalone liquidity sweep reject;";
+         return signal;
+      }
 
       bool flatMonthStaleEntryNudge = FlatMonthStaleEntryNudgeAllowed(powerTrendContinuation,
                                                                       breakoutContinuationQuality,
@@ -20602,7 +20649,7 @@ bool OpenSignal(const SSignal &signal)
       riskMultiplier *= winnerScaleInRiskMultiplier;
    riskMultiplier *= MathMax(0.0, signal.riskMultiplier);
    double tradeMarginRiskMultiplier = 1.0;
-   double lots = riskManager.LotsForRisk(stopDistance, riskMultiplier);
+   double lots = riskManager.LotsForRisk(signal.bias, entry, stopDistance, riskMultiplier);
    if(lots <= 0)
    {
       g_lastBlockReason = "lot sizing";
@@ -20614,7 +20661,7 @@ bool OpenSignal(const SSignal &signal)
       if(tradeMarginRiskMultiplier < 1.0)
       {
          riskMultiplier *= tradeMarginRiskMultiplier;
-         lots = riskManager.LotsForRisk(stopDistance, riskMultiplier);
+         lots = riskManager.LotsForRisk(signal.bias, entry, stopDistance, riskMultiplier);
          if(lots <= 0)
          {
             g_lastBlockReason = "lot sizing";
@@ -20635,14 +20682,18 @@ bool OpenSignal(const SSignal &signal)
 
    string scaleInCoverageReason = "";
    if(isScaleIn &&
-      !riskManager.ScaleInOpenProfitCoversRisk(stopDistance, lots, scaleInCoverageReason))
+      !riskManager.ScaleInOpenProfitCoversRisk(signal.bias,
+                                               entry,
+                                               stopDistance,
+                                               lots,
+                                               scaleInCoverageReason))
    {
       g_lastBlockReason = scaleInCoverageReason;
       return false;
    }
 
    string exposureReason = "";
-   if(!riskManager.ExposureAllows(stopDistance, lots, exposureReason))
+   if(!riskManager.ExposureAllows(signal.bias, entry, stopDistance, lots, exposureReason))
    {
       g_lastBlockReason = exposureReason;
       return false;

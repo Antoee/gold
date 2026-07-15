@@ -2,6 +2,35 @@
 
 Last updated: 2026-07-14.
 
+## Critical Current-Source Correction
+
+All profit results produced before source hash `3C738B730A47A089ECE11A53EC9E726DE2E64B63E53866B9731253C5035A114C` are superseded as live-readiness evidence. The former risk calculation did not match actual XAUUSD order P/L on the tested broker specification.
+
+The strongest corrected low-drawdown baseline is now:
+
+`sr_m4_sweep_off`
+
+Profile file:
+
+`outputs/CANDIDATE_BROKER_ACCURATE_STABILITY_BASELINE.set`
+
+SHA-256:
+
+`4D0B808BE07BF6612C70F96E4287717F3C7A8370B9089B165D71A244C3EA8E89`
+
+Continuous 2019-2026 Model4 real ticks on `$10,000`:
+
+- Net: `+$211.37`
+- Total return: `+2.11%`
+- Annualized return: `0.28%/yr`
+- CAGR: `0.28%`
+- Profit factor: `2.12`
+- Trades: `26`
+- Max equity drawdown: `0.82%`
+- Recovery factor: `2.51`
+
+Fast Model1 yearly validation had zero losing years. This is the current stability baseline only. It is not money-ready because growth and sample size are far too low. Sections below remain historical research context and must not be read as corrected current-source performance.
+
 ## 2026-07-14 Stability Lead Update
 
 The strongest new risk-first research lead is now:
