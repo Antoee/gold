@@ -243,6 +243,83 @@ $candidates = @(
       }
    },
    [pscustomobject]@{
+      Name = "re_may140_late15_dgf_liq_reject1_cush50"
+      Thesis = "Throttle DGF to 50% risk until the account has a 5% closed-profit cushion."
+      Overrides = @{
+         InpMayRiskMultiplier = "1.40"
+         InpUseDiagnosticFallbackLateSessionGuard = "true"
+         InpDiagnosticFallbackLateSessionStartHour = "15"
+         InpDiagnosticFallbackLateSessionPureOnly = "true"
+         InpDiagnosticFallbackRejectLiquiditySweepSignal = "true"
+         InpDiagnosticFallbackLiquidityRejectMaxConfirmations = "1"
+         InpUseDiagnosticFallbackCushionRiskThrottle = "true"
+         InpDiagnosticFallbackCushionProfitPercent = "5.00"
+         InpDiagnosticFallbackNoCushionRiskMultiplier = "0.50"
+      }
+   },
+   [pscustomobject]@{
+      Name = "re_may140_late15_dgf_liq_reject1_cush35"
+      Thesis = "Throttle DGF to 35% risk until the account has a 5% closed-profit cushion."
+      Overrides = @{
+         InpMayRiskMultiplier = "1.40"
+         InpUseDiagnosticFallbackLateSessionGuard = "true"
+         InpDiagnosticFallbackLateSessionStartHour = "15"
+         InpDiagnosticFallbackLateSessionPureOnly = "true"
+         InpDiagnosticFallbackRejectLiquiditySweepSignal = "true"
+         InpDiagnosticFallbackLiquidityRejectMaxConfirmations = "1"
+         InpUseDiagnosticFallbackCushionRiskThrottle = "true"
+         InpDiagnosticFallbackCushionProfitPercent = "5.00"
+         InpDiagnosticFallbackNoCushionRiskMultiplier = "0.35"
+      }
+   },
+   [pscustomobject]@{
+      Name = "re_may140_late15_dgf_liq_reject1_cush25"
+      Thesis = "Throttle DGF to 25% risk until the account has a 5% closed-profit cushion."
+      Overrides = @{
+         InpMayRiskMultiplier = "1.40"
+         InpUseDiagnosticFallbackLateSessionGuard = "true"
+         InpDiagnosticFallbackLateSessionStartHour = "15"
+         InpDiagnosticFallbackLateSessionPureOnly = "true"
+         InpDiagnosticFallbackRejectLiquiditySweepSignal = "true"
+         InpDiagnosticFallbackLiquidityRejectMaxConfirmations = "1"
+         InpUseDiagnosticFallbackCushionRiskThrottle = "true"
+         InpDiagnosticFallbackCushionProfitPercent = "5.00"
+         InpDiagnosticFallbackNoCushionRiskMultiplier = "0.25"
+      }
+   },
+   [pscustomobject]@{
+      Name = "re_may140_late15_dgf_liq_reject1_cush50_augoff"
+      Thesis = "Provisional summer-liquidity control: DGF cushion throttle plus August disabled."
+      Overrides = @{
+         InpMayRiskMultiplier = "1.40"
+         InpUseDiagnosticFallbackLateSessionGuard = "true"
+         InpDiagnosticFallbackLateSessionStartHour = "15"
+         InpDiagnosticFallbackLateSessionPureOnly = "true"
+         InpDiagnosticFallbackRejectLiquiditySweepSignal = "true"
+         InpDiagnosticFallbackLiquidityRejectMaxConfirmations = "1"
+         InpUseDiagnosticFallbackCushionRiskThrottle = "true"
+         InpDiagnosticFallbackCushionProfitPercent = "5.00"
+         InpDiagnosticFallbackNoCushionRiskMultiplier = "0.50"
+         InpTradeAugust = "false"
+      }
+   },
+   [pscustomobject]@{
+      Name = "re_may140_late15_dgf_liq_reject1_cush35_augoff"
+      Thesis = "More defensive DGF cushion throttle plus provisional August disable."
+      Overrides = @{
+         InpMayRiskMultiplier = "1.40"
+         InpUseDiagnosticFallbackLateSessionGuard = "true"
+         InpDiagnosticFallbackLateSessionStartHour = "15"
+         InpDiagnosticFallbackLateSessionPureOnly = "true"
+         InpDiagnosticFallbackRejectLiquiditySweepSignal = "true"
+         InpDiagnosticFallbackLiquidityRejectMaxConfirmations = "1"
+         InpUseDiagnosticFallbackCushionRiskThrottle = "true"
+         InpDiagnosticFallbackCushionProfitPercent = "5.00"
+         InpDiagnosticFallbackNoCushionRiskMultiplier = "0.35"
+         InpTradeAugust = "false"
+      }
+   },
+   [pscustomobject]@{
       Name = "re_dgf_late16_pure"
       Thesis = "Block pure diagnostic-fallback entries at or after hour 16 while keeping stronger confirmed setups."
       Overrides = @{

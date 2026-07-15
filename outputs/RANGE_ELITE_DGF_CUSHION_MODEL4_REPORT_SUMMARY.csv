@@ -1,0 +1,5 @@
+"Candidate","SourceType","Phase","Expected","ParsedReports","ParsedLogs","ParsedTotal","Missing","Unparsed","TotalNetProfit","WorstNetProfit","AverageAnnualizedReturnPercent","WorstAnnualizedReturnPercent","AverageCagrPercent","WorstCagrPercent","WorstDrawdownPercent","MinProfitFactor","TotalTrades"
+"re_may140_late15_dgf_liq_reject1","range_elite_risk_shape_probe","phase4_range_elite_risk_shape_model4","6","6","0","6","0","0","3218.26","-40.2","60.79","-4.03","63.96","-4.03","24.72","0","30"
+"re_may140_late15_dgf_liq_reject1_cush50","range_elite_risk_shape_probe","phase4_range_elite_risk_shape_model4","6","6","0","6","0","0","2770.74","-38.49","51.6","-3.86","53.43","-3.86","20.84","0","36"
+"re_may140_late15_dgf_liq_reject1_cush35","range_elite_risk_shape_probe","phase4_range_elite_risk_shape_model4","6","6","0","6","0","0","2294.11","-39.13","38.54","-3.93","38.56","-3.93","20.76","0.32","50"
+"re_may140_late15_dgf_liq_reject1_cush25","range_elite_risk_shape_probe","phase4_range_elite_risk_shape_model4","6","6","0","6","0","0","2196.77","-55.38","36.97","-5.56","36.99","-5.56","20.76","0.18","51"

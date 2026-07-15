@@ -1092,6 +1092,9 @@ bool            InpUseDiagnosticFallbackSpreadRiskScaling = false;
 double          InpDiagnosticFallbackSpreadRiskStartPoints = 25.0;
 double          InpDiagnosticFallbackSpreadRiskFullPoints = 45.0;
 double          InpDiagnosticFallbackMinSpreadRiskMultiplier = 0.50;
+input bool            InpUseDiagnosticFallbackCushionRiskThrottle = false;
+input double          InpDiagnosticFallbackCushionProfitPercent = 5.00;
+input double          InpDiagnosticFallbackNoCushionRiskMultiplier = 0.50;
 bool            InpUseM5TightLiquiditySecondaryLane = false;
 ENUM_TIMEFRAMES InpM5TightLiquidityTimeframe = PERIOD_M5;
 bool            InpAllowM5TightLiquidityOutsideMonthFilter = false;
@@ -17677,6 +17680,26 @@ double DiagnosticFallbackSpreadRiskMultiplier(const SSignal &signal)
    return 1.0 - progress * (1.0 - minMultiplier);
 }
 
+double DiagnosticFallbackCushionRiskMultiplier(const SSignal &signal)
+{
+   if(!InpUseDiagnosticFallbackCushionRiskThrottle || !signal.isDiagnosticFallback)
+      return 1.0;
+
+   double initialBalance = riskManager.InitialBalance();
+   if(initialBalance <= 0.0)
+      return 1.0;
+
+   double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+   if(balance <= 0.0)
+      return 1.0;
+
+   double closedProfitPercent = 100.0 * (balance - initialBalance) / initialBalance;
+   if(closedProfitPercent >= MathMax(0.0, InpDiagnosticFallbackCushionProfitPercent))
+      return 1.0;
+
+   return MathMax(0.0, MathMin(1.0, InpDiagnosticFallbackNoCushionRiskMultiplier));
+}
+
 double CurrentPeriodProfit(const ENUM_TIMEFRAMES period)
 {
    datetime start = iTime(_Symbol, period, 0);
@@ -20452,6 +20475,7 @@ bool OpenSignal(const SSignal &signal)
    double volatilityRiskMultiplier = VolatilityRiskMultiplier(signal.atr);
    double spreadRiskMultiplier = SpreadRiskMultiplier();
    double diagnosticFallbackSpreadRiskMultiplier = DiagnosticFallbackSpreadRiskMultiplier(signal);
+   double diagnosticFallbackCushionRiskMultiplier = DiagnosticFallbackCushionRiskMultiplier(signal);
    double diagnosticFallbackPerformanceRiskMultiplier =
       riskManager.DiagnosticFallbackPerformanceRiskMultiplier(signal.isDiagnosticFallback);
    double correlationRiskMultiplier = CorrelationRiskMultiplier(signal.bias);
@@ -20489,6 +20513,7 @@ bool OpenSignal(const SSignal &signal)
                            volatilityRiskMultiplier *
                            spreadRiskMultiplier *
                            diagnosticFallbackSpreadRiskMultiplier *
+                           diagnosticFallbackCushionRiskMultiplier *
                            diagnosticFallbackPerformanceRiskMultiplier *
                            correlationRiskMultiplier *
                            marketPhaseRiskMultiplier *
@@ -20643,6 +20668,8 @@ bool OpenSignal(const SSignal &signal)
          entryReason += "Spread risk x" + DoubleToString(spreadRiskMultiplier, 2) + ";";
       if(InpUseDiagnosticFallbackSpreadRiskScaling && signal.isDiagnosticFallback)
          entryReason += "DGF spread risk x" + DoubleToString(diagnosticFallbackSpreadRiskMultiplier, 2) + ";";
+      if(InpUseDiagnosticFallbackCushionRiskThrottle && signal.isDiagnosticFallback)
+         entryReason += "DGF cushion risk x" + DoubleToString(diagnosticFallbackCushionRiskMultiplier, 2) + ";";
       if(InpUseDiagnosticFallbackPerformanceRiskScaling && signal.isDiagnosticFallback)
          entryReason += "DGF perf risk x" + DoubleToString(diagnosticFallbackPerformanceRiskMultiplier, 2) + ";";
       if(InpUseCorrelationRiskScaling)

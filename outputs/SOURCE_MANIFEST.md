@@ -6,15 +6,15 @@ Generated from the local EA source without launching MT5.
 
 - File: `Professional_XAUUSD_EA.mq5`
 - Mirrored file: `outputs/Professional_XAUUSD_EA.mq5`
-- Lines: `19759`
-- Size: `944339` bytes
-- SHA-256: `69478904BB4073F48F8F963ED13D789BFE378456D4C054CAB16A8368F4065D92`
-- Exposed MT5 tester inputs: `313`
+- Lines: `19781`
+- Size: `945552` bytes
+- SHA-256: `C23144DDE1F26C29135489FC9DF065FC5B5575C0B3F1B388BECC01E70E5965B4`
+- Exposed MT5 tester inputs: `316`
 - Last verified locally: `2026-07-14`
 - Root/mirror sync: `PASS`
-- Current-source compile: `PASS` locally via `outputs/MT5_HIDDEN_COMPILE_DGF_LIQ_SIGNAL_REJECT.log`, `0 errors, 0 warnings`
+- Current-source compile: `PASS` locally via `outputs/MT5_HIDDEN_COMPILE_DGF_CUSHION_RISK.log`, `0 errors, 0 warnings`
 
-The latest source update changed the mirrored source hash to `69478904BB4073F48F8F963ED13D789BFE378456D4C054CAB16A8368F4065D92`. Root and mirrored source hashes match. The source now stays below the MT5 tester input-limit guard after demoting stale research controls from `input` variables to internal defaults, and adds default-off DGF-liquidity signal rejection controls for research. The live-readiness compile-evidence router may still require a returned compile proof package before a final live gate can pass, but the local hidden MetaEditor compile for this exact source is clean.
+The latest source update changed the mirrored source hash to `C23144DDE1F26C29135489FC9DF065FC5B5575C0B3F1B388BECC01E70E5965B4`. Root and mirrored source hashes match. The source now stays below the MT5 tester input-limit guard after demoting stale research controls from `input` variables to internal defaults, and adds default-off DGF cushion-risk throttle controls for research. The live-readiness compile-evidence router may still require a returned compile proof package before a final live gate can pass, but the local hidden MetaEditor compile for this exact source is clean.
 
 ## Current Research Best
 
@@ -90,6 +90,6 @@ An earlier 2026-07-14 source change also shortened six overlong FMLR input ident
 - `InpFMLRDispPBMinBreakBodyPercent`
 - `InpFMLROBRetestMinImpulseBodyPercent`
 
-The latest 2026-07-14 source change keeps the exposed MT5 tester input surface under the guard at `313`, adds the default-off `InpDiagnosticFallbackRejectLiquiditySweepSignal` controls, keeps the default-off `InpUseDiagnosticFallbackLateSessionGuard` controls, keeps the default-off `InpDiagnosticFallbackBlockLiquiditySweep` guard, and keeps the earlier default-off diagnostic-fallback spread guard, spread risk scaling, and performance risk scaling controls. Follow-up testing produced a better range-elite research shape, `re_may140_late15_dgf_liq_reject1`, at `+$3,218.26` across six Model4 broad windows, but it still had red 2019, 2021, and 2025 windows and `24.72%` worst DD, so it is not trade-ready and does not replace the stability lead.
+The latest 2026-07-14 source change keeps the exposed MT5 tester input surface under the guard at `316`, adds the default-off `InpUseDiagnosticFallbackCushionRiskThrottle` controls, keeps the default-off `InpDiagnosticFallbackRejectLiquiditySweepSignal` controls, keeps the default-off `InpUseDiagnosticFallbackLateSessionGuard` controls, keeps the default-off `InpDiagnosticFallbackBlockLiquiditySweep` guard, and keeps the earlier default-off diagnostic-fallback spread guard, spread risk scaling, and performance risk scaling controls. Follow-up testing found `re_may140_late15_dgf_liq_reject1_cush50`, a safer range-elite risk shape at `+$2,770.74` with `20.84%` worst DD, but it still has a red 2019 window and is not trade-ready.
 
-These were safety/readiness and research-infrastructure fixes plus a new range-elite research lead, not a live/stability promotion. No backtest has made the `69478904BB4073F48F8F963ED13D789BFE378456D4C054CAB16A8368F4065D92` source hash money-ready yet.
+These were safety/readiness and research-infrastructure fixes plus a safer range-elite risk-shape probe, not a live/stability promotion. No backtest has made the `C23144DDE1F26C29135489FC9DF065FC5B5575C0B3F1B388BECC01E70E5965B4` source hash money-ready yet.
