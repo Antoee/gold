@@ -6,46 +6,48 @@ Generated from the local EA source without launching MT5.
 
 - File: `Professional_XAUUSD_EA.mq5`
 - Mirrored file: `outputs/Professional_XAUUSD_EA.mq5`
-- Lines: `22195`
-- Size: `948230` bytes
-- SHA-256: `F254FDF07B932FD8009E1ABFD761D1C9195568596A559F0DCB73A8CD29157D8F`
-- Exposed MT5 tester inputs: `327`
+- Lines: `19843`
+- Size: `948690` bytes
+- SHA-256: `8D62D907EBF8295DAA44F85DECD0C86690CF4D9A3FE6B858DFD9223E7CF8DF7A`
+- Exposed MT5 tester inputs: `328`
 - Last verified locally: `2026-07-14`
 - Root/mirror sync: `PASS`
-- Current-source compile: `PASS` locally via `outputs/MT5_HIDDEN_COMPILE_DGF_LOSS_BLOCK.log`, `0 errors, 0 warnings`
+- Static preflight: `STATIC_MQL_COMPILE_PREFLIGHT_PASS checks=33 inputs=328`
+- Current-source compile: `PASS` locally via `outputs/MT5_HIDDEN_COMPILE_PEAK_TRAIL_UNBLOCK.log`, `0 errors, 0 warnings`
 
-The latest source update changed the mirrored source hash to `F254FDF07B932FD8009E1ABFD761D1C9195568596A559F0DCB73A8CD29157D8F`. Root and mirrored source hashes match. The source stays below the MT5 tester input-limit guard and adds default-off DGF no-cushion loss-block controls for research. The live-readiness compile-evidence router may still require a returned compile proof package before a final live gate can pass, but the local hidden MetaEditor compile for this exact source is clean.
+The latest source update changed the mirrored source hash to `8D62D907EBF8295DAA44F85DECD0C86690CF4D9A3FE6B858DFD9223E7CF8DF7A`. Root and mirrored source hashes match. The source stays below the MT5 tester input-limit guard and adds a default-off max-age limiter for the DGF no-cushion loss-block research control. The live-readiness compile-evidence router may still require a returned compile proof package before a final live gate can pass, but the local hidden MetaEditor compile for this exact source is clean.
 
 ## Current Research Best
 
-Current newest range-elite research leads:
+Current stability lead:
 
-- High-profit: `re_may140_late15_dgf_liq_reject1_cush50_dgflossblock`
-- Broad-window stability: `re_may140_late15_dgf_liq_reject1_cush35_dgflossblock`
+- `r10_pg40_atr085_adapt7`
+- Model4 yearly 2019-2026 YTD: `+$263.72`, one red year (`2020`, `-$22.92`), `7.09%` worst DD, `22` trades.
+- Status: research-only; low-drawdown/stability reference, not money-ready.
 
-Most recent focused Model4 broad-window result on the current source:
+Current DGF high-profit continuous research lead:
 
-- Model: `4`
-- Windows: `2019`, `2021`, `2023`, `2024`, `2025`, `2026 YTD`
-- High-profit net: `+$2,800.21`
-- High-profit average annualized return: `52.09%/yr`
-- High-profit worst window: `-$7.36`
-- Stability net: `+$2,323.11`
-- Stability average annualized return: `39.02%/yr`
-- Stability worst window: `+$0.68`
-- Worst drawdown: about `20.8%`
+- `lossblock_highprofit_peaktrail_off`
+- Model4 continuous 2019-2026: `+$1,915.83`, total return `+191.58%`, average annualized return `25.45%/yr`, CAGR `15.28%`, PF `1.72`, recovery `2.02`, `127` trades, `24.58%` max equity DD.
+- Status: high-profit research-only; not money-ready because drawdown is high and full yearly/monthly/quarterly/stress/broker/forward evidence is missing.
 
-Both profiles are research-only because drawdown remains high, trade counts are thin, and stress/broker/forward evidence is missing.
+The older DGF peak-trail-on loss-block aliases are superseded as sequential-account leads. Continuous 2019-2026 Model4 testing showed they stalled after only `3` trades, so their broad-window totals are restart-window comparison scores only.
 
 ## Candidate Profiles
 
-Newest range-elite research aliases:
+Newest DGF continuous high-profit alias:
+
+- File: `outputs/CANDIDATE_RANGE_ELITE_HIGHPROFIT_PEAKTRAIL_OFF_CONTINUOUS_PROFILE.set`
+- SHA-256: `0FBFA1F540422DF1B88A9410752E706B917F3111BFEF317F7EE9A03D7A4C2499`
+- Status: research-only; not live-ready
+
+Superseded DGF restart-window aliases:
 
 - High-profit file: `outputs/CANDIDATE_RANGE_ELITE_HIGH_PROFIT_DGF_LOSSBLOCK_PROFILE.set`
 - High-profit SHA-256: `1C0CF498F243ED6002FB74BBE3EA0247348B40F410B12EA74CD4720B998A9543`
 - Stability file: `outputs/CANDIDATE_RANGE_ELITE_STABILITY_DGF_LOSSBLOCK_PROFILE.set`
 - Stability SHA-256: `306BB06F12768F7E9439827CC8C7125E7103BFF08742CD6B2B57EAD2C2C50B86`
-- Status: research-only; not live-ready
+- Status: superseded as sequential-account leads; retained as restart-window research references
 
 Conservative trade-ready candidate:
 
@@ -103,6 +105,6 @@ An earlier 2026-07-14 source change also shortened six overlong FMLR input ident
 - `InpFMLRDispPBMinBreakBodyPercent`
 - `InpFMLROBRetestMinImpulseBodyPercent`
 
-The latest 2026-07-14 source change keeps the exposed MT5 tester input surface under the guard at `327`, adds the default-off `InpUseDiagnosticFallbackNoCushionLossBlock` controls, keeps the default-off `InpUseDiagnosticFallbackCushionRiskThrottle` controls, keeps the default-off `InpDiagnosticFallbackRejectLiquiditySweepSignal` controls, keeps the default-off `InpUseDiagnosticFallbackLateSessionGuard` controls, keeps the default-off `InpDiagnosticFallbackBlockLiquiditySweep` guard, and keeps the earlier default-off diagnostic-fallback spread guard, spread risk scaling, and performance risk scaling controls. Follow-up testing found `re_may140_late15_dgf_liq_reject1_cush50_dgflossblock`, a higher-profit range-elite research lead at `+$2,800.21` with worst window `-$7.36`, and `re_may140_late15_dgf_liq_reject1_cush35_dgflossblock`, an all-green broad-window stability lead at `+$2,323.11`. Both still have about `20.8%` worst DD and are not trade-ready.
+The latest 2026-07-14 source change keeps the exposed MT5 tester input surface under the guard at `328`, adds default-off `InpUseDiagnosticFallbackNoCushionLossBlock` controls plus `InpDiagnosticFallbackLossBlockMaxAgeDays`, keeps the default-off `InpUseDiagnosticFallbackCushionRiskThrottle` controls, keeps the default-off `InpDiagnosticFallbackRejectLiquiditySweepSignal` controls, keeps the default-off `InpUseDiagnosticFallbackLateSessionGuard` controls, keeps the default-off `InpDiagnosticFallbackBlockLiquiditySweep` guard, and keeps the earlier default-off diagnostic-fallback spread guard, spread risk scaling, and performance risk scaling controls. Follow-up testing found that the original DGF peak-trail-on loss-block profiles stalled on the continuous account path. The only profitable DGF continuous follow-up is `lossblock_highprofit_peaktrail_off` at `+$1,915.83`, PF `1.72`, `127` trades, and `24.58%` max equity DD. It is a high-profit research lead only and is not trade-ready.
 
-These were safety/readiness and research-infrastructure fixes plus a safer range-elite risk-shape probe, not a live-money promotion. No backtest has made the `F254FDF07B932FD8009E1ABFD761D1C9195568596A559F0DCB73A8CD29157D8F` source hash money-ready yet.
+These were safety/readiness and research-infrastructure fixes plus a continuous-account DGF follow-up, not a live-money promotion. No backtest has made the `8D62D907EBF8295DAA44F85DECD0C86690CF4D9A3FE6B858DFD9223E7CF8DF7A` source hash money-ready yet.

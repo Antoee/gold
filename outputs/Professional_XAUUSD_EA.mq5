@@ -692,6 +692,7 @@ input double          InpDiagnosticFallbackLossBlockCushionPercent = 5.00;
 input int             InpDiagnosticFallbackLossBlockLookbackTrades = 3;
 input int             InpDiagnosticFallbackLossBlockMinTrades = 1;
 input double          InpDiagnosticFallbackLossBlockMaxAverageR = 0.00;
+input int             InpDiagnosticFallbackLossBlockMaxAgeDays = 30;
 bool            InpUseHourPerformanceRiskScaling = false;
 int             InpHourPerformanceLookbackDays = 45;
 int             InpHourPerformanceMinTrades = 4;
@@ -3422,9 +3423,9 @@ public:
    bool DiagnosticFallbackRecentAverageR(const int lookbackTrades,
                                          const int minTrades,
                                          double &averageR,
-                                         int &sampleTrades)
+                                         int &sampleTrades,
+                                         datetime &latestCloseTime)
    {
-      datetime latestCloseTime = 0;
       return SetupLanePerformanceSampleWindow("DGF;",
                                              lookbackTrades,
                                              minTrades,
@@ -17739,10 +17740,17 @@ bool DiagnosticFallbackNoCushionLossBlockAllows(const SSignal &signal, string &r
 
    double averageR = 0.0;
    int sampleTrades = 0;
+   datetime latestCloseTime = 0;
    if(!riskManager.DiagnosticFallbackRecentAverageR(MathMax(1, InpDiagnosticFallbackLossBlockLookbackTrades),
                                                     MathMax(1, InpDiagnosticFallbackLossBlockMinTrades),
                                                     averageR,
-                                                    sampleTrades))
+                                                    sampleTrades,
+                                                    latestCloseTime))
+      return true;
+
+   int maxAgeDays = MathMax(0, InpDiagnosticFallbackLossBlockMaxAgeDays);
+   if(maxAgeDays > 0 && latestCloseTime > 0 &&
+      TimeCurrent() - latestCloseTime > maxAgeDays * 86400)
       return true;
 
    if(averageR > InpDiagnosticFallbackLossBlockMaxAverageR)
@@ -17750,6 +17758,7 @@ bool DiagnosticFallbackNoCushionLossBlockAllows(const SSignal &signal, string &r
 
    reason = "DGF no-cushion loss block avgR " + DoubleToString(averageR, 2) +
             " samples " + IntegerToString(sampleTrades) +
+            " ageDays " + IntegerToString(maxAgeDays) +
             " cushion " + DoubleToString(closedProfitPercent, 2) + "%";
    return false;
 }

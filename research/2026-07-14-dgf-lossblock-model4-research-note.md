@@ -1,6 +1,8 @@
 # 2026-07-14 DGF Loss-Block Research Note
 
-The no-cushion DGF loss block is the first range-elite follow-up today that survived a Model4 real-tick check with a meaningful stability improvement.
+The no-cushion DGF loss block improved restart-window Model4 real-tick comparisons, but a later continuous-account follow-up showed the original peak-trail-on profiles are not valid sequential-account leads.
+
+Latest follow-up: `outputs/PEAK_TRAIL_UNBLOCK_CONTINUOUS_MODEL4_DECISION.md`.
 
 ## What Improved
 
@@ -10,6 +12,9 @@ The no-cushion DGF loss block is the first range-elite follow-up today that surv
 
 ## Why It Is Not Trade Ready
 
+- Continuous 2019-2026 Model4 showed the original peak-trail-on high-profit and stability profiles stalled after only `3` trades.
+- The broad-window totals below are restart-window comparison scores, not achievable account-return claims.
+- The only profitable continuous DGF follow-up was `lossblock_highprofit_peaktrail_off`: `+$1,915.83`, PF `1.72`, `127` trades, `24.58%` max equity DD.
 - Worst drawdown is still about `20.8%`.
 - Trade counts are very small in several yearly windows.
 - The all-green variant has tiny margins in 2019, 2025, and 2026 YTD.

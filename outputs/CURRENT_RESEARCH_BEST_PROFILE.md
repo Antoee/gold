@@ -46,6 +46,42 @@ Decision:
 
 This is the current stability lead, but it is not money-ready. The blocker is the 2020 Model4 loss, which was one `Diagnostic trend fallback` sell trade on 2020-08-13 with ATR `3.82`, spread `30.0`, and profit `-$22.92`. The first diagnostic-quality follow-up did not solve it; the next branch should test a legitimate spread/volatility/risk-control guard rather than disabling a calendar year.
 
+## 2026-07-14 High-Profit Continuous DGF Lead
+
+The newest DGF continuous-account high-profit research lead is:
+
+`lossblock_highprofit_peaktrail_off`
+
+Profile file:
+
+`outputs/CANDIDATE_RANGE_ELITE_HIGHPROFIT_PEAKTRAIL_OFF_CONTINUOUS_PROFILE.set`
+
+SHA-256:
+
+`0FBFA1F540422DF1B88A9410752E706B917F3111BFEF317F7EE9A03D7A4C2499`
+
+Continuous 2019-2026 Model4 real-tick validation:
+
+- Net profit: `+$1,915.83`
+- Total return: `+191.58%`
+- Average annualized return: `25.45%/yr`
+- CAGR: `15.28%`
+- Profit factor: `1.72`
+- Recovery factor: `2.02`
+- Trades: `127`
+- Max equity DD: `24.58%`
+- Return/DD: `7.79`
+
+Decision:
+
+This is not the stability lead and not money-ready. It replaces the superseded DGF peak-trail-on restart-window leads as the newest DGF high-profit research reference because those original profiles stalled after only `3` trades on the continuous account path. The next useful work is reducing drawdown without reintroducing a permanent global account freeze.
+
+Evidence:
+
+- `outputs/PEAK_TRAIL_UNBLOCK_CONTINUOUS_MODEL4_DECISION.md`
+- `outputs/PEAK_TRAIL_UNBLOCK_CONTINUOUS_MODEL4_COMPARISON.csv`
+- `research/2026-07-14-peak-trail-unblock-continuous-note.md`
+
 ## 2026-07-14 DGF Risk Follow-Up
 
 No new best was promoted.

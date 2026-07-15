@@ -2,7 +2,13 @@
 
 Date: 2026-07-14
 
-Verdict: **NEW RESEARCH LEAD, NOT MONEY-READY**
+Verdict: **SUPERSEDED RESTART-WINDOW RESEARCH LEAD, NOT MONEY-READY**
+
+## 2026-07-14 Continuous-Account Addendum
+
+This decision has been superseded by `outputs/PEAK_TRAIL_UNBLOCK_CONTINUOUS_MODEL4_DECISION.md`.
+
+The broad-window totals below are still useful for comparing restart-window behavior, but they are not achievable sequential account-return claims. A continuous 2019-2026 Model4 follow-up showed the original peak-trail-on high-profit and stability profiles stalled after only `3` trades (`-$7.36` and `+$0.68`). The only profitable DGF follow-up was `lossblock_highprofit_peaktrail_off` at `+$1,915.83`, PF `1.72`, `127` trades, and `24.58%` max equity DD. That is a high-profit research lead only, not trade-ready.
 
 This run tested a default-off diagnostic-fallback entry gate. The gate blocks new DGF entries while the account has no closed-profit cushion if recent DGF performance is weak. This is not a month filter; it is a general capital-protection rule based on the strategy's own recent DGF results.
 
