@@ -17,12 +17,12 @@ Log-parsed rows are enough to reject bad fast screens, but exported full reports
 
 | Candidate | Source | Phase | Parsed Reports | Parsed Logs | Expected | Total Net | Worst Window | Avg Ann. Return % | Worst Ann. Return % | Worst DD % | Min PF | Trades |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `r10_a7_current` | r10_activity_probe | phase7_activity_probe_model1 | 5 | 0 | 5 | 171.05 | 9.25 | 4.42 | 0.93 | 7.08 | 0 | 21 |
-| `r10_a7_dfg_fmlr_blend` | r10_activity_probe | phase7_activity_probe_model1 | 5 | 0 | 5 | 170.37 | 9.25 | 4.41 | 0.93 | 6.18 | 0 | 21 |
-| `r10_a7_dfg_fmlr_tight` | r10_activity_probe | phase7_activity_probe_model1 | 5 | 0 | 5 | 170.37 | 9.25 | 4.41 | 0.93 | 6.18 | 0 | 21 |
-| `r10_a7_dfg_risk_25_45_50` | r10_activity_probe | phase7_activity_probe_model1 | 5 | 0 | 5 | 170.37 | 9.25 | 4.41 | 0.93 | 6.18 | 0 | 21 |
-| `r10_a7_fmlr_blend` | r10_activity_probe | phase7_activity_probe_model1 | 5 | 0 | 5 | 171.05 | 9.25 | 4.42 | 0.93 | 7.08 | 0 | 21 |
-| `r10_a7_fmlr_tight` | r10_activity_probe | phase7_activity_probe_model1 | 5 | 0 | 5 | 171.05 | 9.25 | 4.42 | 0.93 | 7.08 | 0 | 21 |
+| `r10_a7_current` | r10_activity_probe | phase7_activity_probe_model1 | 5 | 0 | 5 | 110.19 | -45.14 | 3.2 | -4.52 | 6.55 | 0 | 21 |
+| `r10_a7_dfg_fmlr_blend` | r10_activity_probe | phase7_activity_probe_model1 | 5 | 0 | 5 | 110.19 | -45.14 | 3.2 | -4.52 | 6.55 | 0 | 21 |
+| `r10_a7_dfg_fmlr_tight` | r10_activity_probe | phase7_activity_probe_model1 | 5 | 0 | 5 | 110.19 | -45.14 | 3.2 | -4.52 | 6.55 | 0 | 21 |
+| `r10_a7_dfg_risk_25_45_50` | r10_activity_probe | phase7_activity_probe_model1 | 5 | 0 | 5 | 110.19 | -45.14 | 3.2 | -4.52 | 6.55 | 0 | 21 |
+| `r10_a7_fmlr_blend` | r10_activity_probe | phase7_activity_probe_model1 | 5 | 0 | 5 | 110.19 | -45.14 | 3.2 | -4.52 | 6.55 | 0 | 21 |
+| `r10_a7_fmlr_tight` | r10_activity_probe | phase7_activity_probe_model1 | 5 | 0 | 5 | 110.19 | -45.14 | 3.2 | -4.52 | 6.55 | 0 | 21 |
 
 ## Missing Or Unparsed
 

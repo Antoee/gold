@@ -4,7 +4,7 @@ Offline audit only. This script does not launch MT5.
 
 - Overall: **PASS**
 - Checks passed: 44 / 44
-- Runner scripts checked: 58
+- Runner scripts checked: 59
 - MT5 processes running: 0
 - Unlock file present: False
 - Hidden desktop ack file present: False
@@ -52,7 +52,7 @@ Offline audit only. This script does not launch MT5.
 | Money-ready refresh | Money-ready refresh child steps run without windows | True | work\refresh_money_ready_status.ps1 | Money-ready refresh child PowerShell steps must use ProcessStartInfo with CreateNoWindow and write logs. |
 | Money-ready refresh | Money-ready refresh avoids direct visible child shells | True | work\refresh_money_ready_status.ps1 | Replace direct powershell child calls with Invoke-QuietPowerShell. |
 | Money-ready refresh | Money-ready refresh does not launch MT5 | True | work\refresh_money_ready_status.ps1 | Money-ready refresh must rebuild state only; it must not launch MT5, MetaEditor, or Strategy Tester. |
-| Runner scripts | All MT5 runner scripts source the launch guard | True | Runner scripts checked: 58; unguarded: 0 | Add . (Join-Path $PSScriptRoot "assert_mt5_launch_allowed.ps1") near the top of each runner. |
+| Runner scripts | All MT5 runner scripts source the launch guard | True | Runner scripts checked: 59; unguarded: 0 | Add . (Join-Path $PSScriptRoot "assert_mt5_launch_allowed.ps1") near the top of each runner. |
 | Runner scripts | No runner bypasses Start-MT5Hidden with raw terminal launch | True | Raw terminal launch matches: 0 | Route tester launches through Start-MT5Hidden and the guard. |
 | Watchdog | Watchdog script exists | True | work\mt5_focus_watchdog.ps1 | Restore work\mt5_focus_watchdog.ps1. |
 | Watchdog | Watchdog targets MT5 and MetaEditor | True | work\mt5_focus_watchdog.ps1 | Watchdog must stop terminal64, metatester64, and MetaEditor. |
@@ -102,6 +102,7 @@ Offline audit only. This script does not launch MT5.
 | `sweep_weak_half_fast.ps1` | True | True | False |
 | `test_adaptive_candidate_windows.ps1` | True | True | False |
 | `test_adaptive_candidate_windows_short.ps1` | True | True | False |
+| `test_mt5_report_export_smoke.ps1` | True | True | False |
 | `test_top_candidates_windows.ps1` | True | True | False |
 | `validate_adaptive_candidates_real_ticks.ps1` | True | True | False |
 | `validate_bos_sweep_splits_clean.ps1` | True | True | False |
