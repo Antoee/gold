@@ -45,6 +45,7 @@ The third lane adds `$32.29` (`+9.28%`) and four trades, but worsens drawdown an
 - Model1 neighboring Donchian allocations from `0.40x` through `0.60x` kept every broad era profitable. This is a plateau, not a one-value profit spike.
 - Restarted yearly Model4: 10 positive years, one flat/no-trade year, and one losing year. The only loss was 2017 at `-$3.29`; worst yearly drawdown was `0.59%`.
 - Five Model4 execution proxies all stayed profitable. The harshest high-commission proxy made `+$326.98`, PF `2.54`, with `0.83%` drawdown; the wide-spread and tight-slippage proxies made `+$342.84`, PF `2.60`, with `0.88%` drawdown. These are same-broker input proxies, not second-broker proof.
+- The first frozen post-`2026-07-12` checkpoint covered three unseen calendar days with `100%` real ticks and made no trades. It registers the forward boundary but supplies no performance evidence.
 - 10,000-trial realized-R stress: 5th-percentile net `+30.12R`, median `+37.27R`, and worst trial `+19.20R`.
 - The same stress still failed the strict `6R` drawdown cap (`6.56R`) and five-loss-streak cap (`7`). This blocks money-ready status.
 
