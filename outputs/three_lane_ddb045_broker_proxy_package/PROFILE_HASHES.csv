@@ -1,0 +1,6 @@
+"Profile","Snapshot","Sha256","BrokerProxy"
+"three_lane_ddb045_broker_proxy_base","profiles\three_lane_ddb045_broker_proxy_base.set","2E02246D24250D71DEC59A42AD1D7DE793614EBECEB309A879FE873D8F886312","Current safety-gated Three-Lane DDB 0.45 settings"
+"three_lane_ddb045_broker_proxy_wide_spread","profiles\three_lane_ddb045_broker_proxy_wide_spread.set","56DD1E7DA190DE70F276A151BCC0679A79F7FD9D410E2659197EC9ADE9159A34","Wider/less stable spread environment; stricter spread acceptance and RR"
+"three_lane_ddb045_broker_proxy_high_commission","profiles\three_lane_ddb045_broker_proxy_high_commission.set","4DC954B41CDCBC56774D074FE3FB545746F2014A3F9C135AD89A8DE29000C246","Commission-heavy XAUUSD account proxy"
+"three_lane_ddb045_broker_proxy_tight_slippage","profiles\three_lane_ddb045_broker_proxy_tight_slippage.set","DEF7DBC798063193AE92BBACFDE80D7C6E9606F78D1F1DB52AD956C5C029106A","Low slippage tolerance / strict execution proxy"
+"three_lane_ddb045_broker_proxy_margin_pressure","profiles\three_lane_ddb045_broker_proxy_margin_pressure.set","8929A63164F30E40DB418453151177BA9FB7ABF5AF28A70B6F0D75BB81D64962","Lower leverage / higher margin-pressure proxy"

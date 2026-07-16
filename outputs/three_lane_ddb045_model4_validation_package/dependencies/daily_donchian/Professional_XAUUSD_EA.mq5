@@ -898,11 +898,6 @@ double          InpHouseMoneyOpenRiskStartCushionPercent = 6.0;
 double          InpHouseMoneyOpenRiskFullCushionPercent = 18.0;
 double          InpHouseMoneyMaxOpenRiskPercent = 12.00;
 input bool InpBlockUnprotectedExposure  = true;
-input bool InpUseAccountWideExposureGuard = false;
-input double InpAccountWideMaxOpenRiskPercent = 3.00;
-input int InpAccountWideMaxPositions = 3;
-input bool InpAccountWideBlockUnprotectedExposure = true;
-input bool InpUseLaneSpecificMonthlyEntryCaps = false;
 input bool InpUseMarginGuard            = false;
 input double InpMinMarginLevelPercent     = 300.0;
 input double InpMaxTradeMarginFreePercent = 20.0;
@@ -1135,9 +1130,6 @@ bool            InpM5TightLiquidityOverrideRequireSameBias = true;
 input group "Daily Donchian Breakout Secondary Lane"
 input bool            InpUseDailyDonchianBreakoutLane = false;
 input bool            InpDailyDonchianStandaloneMode = false;
-input bool            InpDailyDonchianBypassPrimarySession = false;
-input bool            InpDailyDonchianUseIsolatedExecution = false;
-input bool            InpDailyDonchianUseTakeProfit = false;
 input ENUM_TIMEFRAMES InpDailyDonchianTimeframe = PERIOD_D1;
 input int             InpDailyDonchianLookbackBars = 20;
 input int             InpDailyDonchianTrendEMAPeriod = 100;
@@ -1473,39 +1465,6 @@ input bool            InpRangeReversionUseCustomEliteGate = true;
 input int             InpRangeReversionEliteMinConfirmations = 2;
 input int             InpRangeReversionEliteMinQualityScore = 6;
 int             InpRangeReversionEliteMinPriceActionScore = 0;
-input group "Independent Band/VWAP Reversion Research Lane"
-input bool            InpUseBandVWAPReversionLane = false;
-input bool            InpBandVWAPReversionBypassPrimarySession = false;
-input bool            InpBandVWAPReversionUseIsolatedExecution = false;
-input ENUM_TIMEFRAMES InpBandVWAPReversionTimeframe = PERIOD_H1;
-input int             InpBandVWAPReversionATRPeriod = 14;
-input int             InpBandVWAPReversionADXPeriod = 14;
-input int             InpBandVWAPReversionRSIPeriod = 14;
-input int             InpBandVWAPReversionBollingerPeriod = 20;
-input double          InpBandVWAPReversionBollingerDeviation = 2.0;
-input int             InpBandVWAPReversionVWAPLookbackBars = 48;
-input double          InpBandVWAPReversionRiskMultiplier = 0.20;
-input int             InpBandVWAPReversionMaxMonthlyEntries = 12;
-input int             InpBandVWAPReversionSpacingMinutes = 180;
-input double          InpBandVWAPReversionMaxADX = 24.0;
-input double          InpBandVWAPReversionBuyMaxRSI = 40.0;
-input double          InpBandVWAPReversionSellMinRSI = 60.0;
-input double          InpBandVWAPReversionMinBandPenetrationATR = 0.00;
-input double          InpBandVWAPReversionMinBandWidthATR = 1.20;
-input double          InpBandVWAPReversionMaxBandWidthATR = 4.00;
-input double          InpBandVWAPReversionMinWickPercent = 20.0;
-input double          InpBandVWAPReversionMinCloseLocation = 0.55;
-input bool            InpBandVWAPReversionRequireVWAP = true;
-input bool            InpBandVWAPReversionRequireVolumeExpansion = false;
-input int             InpBandVWAPReversionStopLookbackBars = 5;
-input double          InpBandVWAPReversionStopBufferATR = 0.10;
-input double          InpBandVWAPReversionStopBufferPoints = 20.0;
-input double          InpBandVWAPReversionMaxStopATR = 1.80;
-input double          InpBandVWAPReversionMinTargetATR = 0.45;
-input double          InpBandVWAPReversionMinRR = 1.20;
-input double          InpBandVWAPReversionMaxSpreadATRPercent = 18.0;
-input bool            InpBandVWAPReversionUseDIEdgeGate = false;
-input double          InpBandVWAPReversionMinDIEdge = -10.0;
 input bool            InpUseFlatMonthMicroReversionLane = false;
 input double          InpFlatMonthMicroReversionRiskMultiplier = 0.35;
 input int             InpFlatMonthMicroReversionMaxMonthlyEntries = 10;
@@ -2102,10 +2061,6 @@ private:
    int m_cci;
    int m_mfi;
    int m_obv;
-   int m_bandReversionAtr;
-   int m_bandReversionAdx;
-   int m_bandReversionRsi;
-   int m_bandReversionBands;
 
 public:
    bool Init()
@@ -2125,15 +2080,6 @@ public:
       m_cci = iCCI(_Symbol, InpSignalTimeframe, InpCCIPeriod, PRICE_TYPICAL);
       m_mfi = iMFI(_Symbol, InpSignalTimeframe, InpMFIPeriod, VOLUME_TICK);
       m_obv = iOBV(_Symbol, InpSignalTimeframe, VOLUME_TICK);
-      m_bandReversionAtr = iATR(_Symbol, InpBandVWAPReversionTimeframe,
-                               MathMax(1, InpBandVWAPReversionATRPeriod));
-      m_bandReversionAdx = iADX(_Symbol, InpBandVWAPReversionTimeframe,
-                               MathMax(1, InpBandVWAPReversionADXPeriod));
-      m_bandReversionRsi = iRSI(_Symbol, InpBandVWAPReversionTimeframe,
-                               MathMax(1, InpBandVWAPReversionRSIPeriod), PRICE_CLOSE);
-      m_bandReversionBands = iBands(_Symbol, InpBandVWAPReversionTimeframe,
-                                   MathMax(1, InpBandVWAPReversionBollingerPeriod), 0,
-                                   MathMax(0.1, InpBandVWAPReversionBollingerDeviation), PRICE_CLOSE);
 
       return HandlesReady();
    }
@@ -2155,10 +2101,6 @@ public:
       IndicatorRelease(m_cci);
       IndicatorRelease(m_mfi);
       IndicatorRelease(m_obv);
-      IndicatorRelease(m_bandReversionAtr);
-      IndicatorRelease(m_bandReversionAdx);
-      IndicatorRelease(m_bandReversionRsi);
-      IndicatorRelease(m_bandReversionBands);
    }
 
    bool HandlesReady()
@@ -2175,13 +2117,9 @@ public:
              m_macd != INVALID_HANDLE &&
              m_bands != INVALID_HANDLE &&
              m_stochastic != INVALID_HANDLE &&
-              m_cci != INVALID_HANDLE &&
-              m_mfi != INVALID_HANDLE &&
-              m_obv != INVALID_HANDLE &&
-              m_bandReversionAtr != INVALID_HANDLE &&
-              m_bandReversionAdx != INVALID_HANDLE &&
-              m_bandReversionRsi != INVALID_HANDLE &&
-              m_bandReversionBands != INVALID_HANDLE;
+             m_cci != INVALID_HANDLE &&
+             m_mfi != INVALID_HANDLE &&
+             m_obv != INVALID_HANDLE;
    }
 
    bool Value(const int handle, const int buffer, const int shift, double &value)
@@ -2215,14 +2153,6 @@ public:
    bool CCI(const int shift, double &value) { return Value(m_cci, 0, shift, value); }
    bool MFI(const int shift, double &value) { return Value(m_mfi, 0, shift, value); }
    bool OBV(const int shift, double &value) { return Value(m_obv, 0, shift, value); }
-   bool BandReversionATR(const int shift, double &value) { return Value(m_bandReversionAtr, 0, shift, value); }
-   bool BandReversionADX(const int shift, double &value) { return Value(m_bandReversionAdx, 0, shift, value); }
-   bool BandReversionPlusDI(const int shift, double &value) { return Value(m_bandReversionAdx, 1, shift, value); }
-   bool BandReversionMinusDI(const int shift, double &value) { return Value(m_bandReversionAdx, 2, shift, value); }
-   bool BandReversionRSI(const int shift, double &value) { return Value(m_bandReversionRsi, 0, shift, value); }
-   bool BandReversionMiddle(const int shift, double &value) { return Value(m_bandReversionBands, 0, shift, value); }
-   bool BandReversionUpper(const int shift, double &value) { return Value(m_bandReversionBands, 1, shift, value); }
-   bool BandReversionLower(const int shift, double &value) { return Value(m_bandReversionBands, 2, shift, value); }
 };
 
 CIndicators indicators;
@@ -2238,7 +2168,6 @@ struct SSignal
    double stopDistance;
    double takeProfitDistance;
    bool isRangeReversion;
-   bool isBandVWAPReversion;
    bool isBreakoutContinuation;
    bool isPowerTrendContinuation;
    bool isSessionImpulse;
@@ -2506,23 +2435,14 @@ private:
    }
 
 public:
-   bool TradingDayAllowed()
-   {
-      MqlDateTime dt;
-      TimeToStruct(TimeCurrent(), dt);
-      if(InpDisableSunday && dt.day_of_week == 0)
-         return false;
-      if(InpDisableFridayEvening && dt.day_of_week == 5 && dt.hour >= InpFridayCutoffHour)
-         return false;
-      return true;
-   }
-
    bool IsAllowed()
    {
       MqlDateTime dt;
       TimeToStruct(TimeCurrent(), dt);
 
-      if(!TradingDayAllowed())
+      if(InpDisableSunday && dt.day_of_week == 0)
+         return false;
+      if(InpDisableFridayEvening && dt.day_of_week == 5 && dt.hour >= InpFridayCutoffHour)
          return false;
 
       if(!InpUseSessionFilter)
@@ -2951,21 +2871,19 @@ private:
       return giveback >= allowedGiveback;
    }
 
-   double RiskMoneyForSymbolOrder(const string symbol,
-                                  const ENUM_ORDER_TYPE orderType,
-                                  const double entryPrice,
-                                  const double stopPrice,
-                                  const double lots)
+   double RiskMoneyForOrder(const ENUM_ORDER_TYPE orderType,
+                            const double entryPrice,
+                            const double stopPrice,
+                            const double lots)
    {
-      if(StringLen(symbol) <= 0 ||
-         (orderType != ORDER_TYPE_BUY && orderType != ORDER_TYPE_SELL) ||
+      if((orderType != ORDER_TYPE_BUY && orderType != ORDER_TYPE_SELL) ||
          entryPrice <= 0.0 || stopPrice <= 0.0 || lots <= 0.0 ||
          MathAbs(entryPrice - stopPrice) <= 0.0)
          return 0.0;
 
       double stopProfit = 0.0;
       if(!OrderCalcProfit(orderType,
-                          symbol,
+                          _Symbol,
                           lots,
                           entryPrice,
                           stopPrice,
@@ -2973,14 +2891,6 @@ private:
          return 0.0;
 
       return MathAbs(stopProfit);
-   }
-
-   double RiskMoneyForOrder(const ENUM_ORDER_TYPE orderType,
-                            const double entryPrice,
-                            const double stopPrice,
-                            const double lots)
-   {
-      return RiskMoneyForSymbolOrder(_Symbol, orderType, entryPrice, stopPrice, lots);
    }
 
    double PositionRiskMoney(const ulong ticket, bool &unprotected)
@@ -3043,73 +2953,6 @@ private:
          ulong ticket = PositionGetTicket(i);
          bool unprotected = false;
          riskMoney += PositionRiskMoney(ticket, unprotected);
-         if(unprotected)
-            hasUnprotectedPosition = true;
-      }
-
-      return 100.0 * riskMoney / equity;
-   }
-
-   double AccountPositionRiskMoney(const ulong ticket, bool &unprotected)
-   {
-      unprotected = false;
-      if(ticket == 0 || !PositionSelectByTicket(ticket))
-         return 0.0;
-
-      string symbol = PositionGetString(POSITION_SYMBOL);
-      double sl = PositionGetDouble(POSITION_SL);
-      double openPrice = PositionGetDouble(POSITION_PRICE_OPEN);
-      double volume = PositionGetDouble(POSITION_VOLUME);
-      long type = PositionGetInteger(POSITION_TYPE);
-      if(StringLen(symbol) <= 0 || sl <= 0.0 || openPrice <= 0.0 || volume <= 0.0)
-      {
-         unprotected = true;
-         return 0.0;
-      }
-
-      ENUM_ORDER_TYPE orderType;
-      if(type == POSITION_TYPE_BUY)
-      {
-         if(sl >= openPrice)
-            return 0.0;
-         orderType = ORDER_TYPE_BUY;
-      }
-      else if(type == POSITION_TYPE_SELL)
-      {
-         if(sl <= openPrice)
-            return 0.0;
-         orderType = ORDER_TYPE_SELL;
-      }
-      else
-      {
-         unprotected = true;
-         return 0.0;
-      }
-
-      double riskMoney = RiskMoneyForSymbolOrder(symbol, orderType, openPrice, sl, volume);
-      if(riskMoney <= 0.0)
-         unprotected = true;
-      return riskMoney;
-   }
-
-   double AccountWideOpenRiskPercent(bool &hasUnprotectedPosition,
-                                     int &positionCount)
-   {
-      hasUnprotectedPosition = false;
-      positionCount = 0;
-      double equity = AccountInfoDouble(ACCOUNT_EQUITY);
-      if(equity <= 0.0)
-         return -1.0;
-
-      double riskMoney = 0.0;
-      for(int i = PositionsTotal() - 1; i >= 0; i--)
-      {
-         ulong ticket = PositionGetTicket(i);
-         if(ticket == 0 || !PositionSelectByTicket(ticket))
-            continue;
-         positionCount++;
-         bool unprotected = false;
-         riskMoney += AccountPositionRiskMoney(ticket, unprotected);
          if(unprotected)
             hasUnprotectedPosition = true;
       }
@@ -5149,7 +4992,7 @@ public:
       return true;
    }
 
-   bool CanOpen(string &reason, const bool bypassStrategyLossState = false)
+   bool CanOpen(string &reason)
    {
       RefreshConsecutiveLosses();
 
@@ -5211,14 +5054,13 @@ public:
          return false;
       }
 
-      if(!bypassStrategyLossState && AbnormalLossStreakQuarantineActive())
+      if(AbnormalLossStreakQuarantineActive())
       {
          reason = "abnormal loss streak quarantine";
          return false;
       }
 
-      if(!bypassStrategyLossState &&
-         InpMaxConsecutiveLosses > 0 && m_consecutiveLosses >= InpMaxConsecutiveLosses)
+      if(InpMaxConsecutiveLosses > 0 && m_consecutiveLosses >= InpMaxConsecutiveLosses)
       {
          if(InpCooldownMinutesAfterLoss <= 0 || m_lastLossTime <= 0)
          {
@@ -5233,7 +5075,7 @@ public:
          }
       }
 
-      if(!bypassStrategyLossState && m_lastLossTime > 0 && InpCooldownMinutesAfterLoss > 0)
+      if(m_lastLossTime > 0 && InpCooldownMinutesAfterLoss > 0)
       {
          if(TimeCurrent() - m_lastLossTime < InpCooldownMinutesAfterLoss * 60)
          {
@@ -5242,13 +5084,13 @@ public:
          }
       }
 
-      if(!bypassStrategyLossState && RecentPerformancePauseActive())
+      if(RecentPerformancePauseActive())
       {
          reason = "recent performance pause";
          return false;
       }
 
-      if(!bypassStrategyLossState && RecentPerformanceRPauseActive())
+      if(RecentPerformanceRPauseActive())
       {
          reason = "recent average R pause";
          return false;
@@ -5419,66 +5261,6 @@ public:
                        const double lots,
                        string &reason)
    {
-      if(InpUseAccountWideExposureGuard)
-      {
-         bool hasAccountUnprotectedPosition = false;
-         int accountPositionCount = 0;
-         double accountOpenRiskPercent = AccountWideOpenRiskPercent(hasAccountUnprotectedPosition,
-                                                                    accountPositionCount);
-         if(accountOpenRiskPercent < 0.0)
-         {
-            reason = "account-wide equity unavailable";
-            return false;
-         }
-         if(hasAccountUnprotectedPosition && InpAccountWideBlockUnprotectedExposure)
-         {
-            reason = "account-wide unprotected exposure";
-            return false;
-         }
-         if(InpAccountWideMaxPositions <= 0)
-         {
-            reason = "account-wide position cap disabled";
-            return false;
-         }
-         if(accountPositionCount >= InpAccountWideMaxPositions)
-         {
-            reason = "account-wide position limit";
-            return false;
-         }
-
-         double accountRiskCap = MathMax(0.0, InpAccountWideMaxOpenRiskPercent);
-         if(accountRiskCap <= 0.0)
-         {
-            reason = "account-wide risk cap disabled";
-            return false;
-         }
-
-         double accountEquity = AccountInfoDouble(ACCOUNT_EQUITY);
-         if(accountEquity <= 0.0)
-         {
-            reason = "account-wide equity unavailable";
-            return false;
-         }
-         ENUM_ORDER_TYPE accountOrderType = (bias == BIAS_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
-         double accountStopPrice = (bias == BIAS_BUY) ? entryPrice - stopDistance
-                                                      : entryPrice + stopDistance;
-         double addedAccountRiskMoney = RiskMoneyForOrder(accountOrderType,
-                                                           entryPrice,
-                                                           accountStopPrice,
-                                                           lots);
-         if(addedAccountRiskMoney <= 0.0)
-         {
-            reason = "account-wide added risk calculation";
-            return false;
-         }
-         double addedAccountRiskPercent = 100.0 * addedAccountRiskMoney / accountEquity;
-         if(accountOpenRiskPercent + addedAccountRiskPercent > accountRiskCap)
-         {
-            reason = "account-wide open risk limit";
-            return false;
-         }
-      }
-
       if(InpMaxOpenRiskPercent <= 0.0)
          return true;
 
@@ -5588,38 +5370,22 @@ public:
 class CMarketStructure
 {
 public:
-   bool HighestHighForTimeframe(const ENUM_TIMEFRAMES timeframe,
-                                const int startShift,
-                                const int bars,
-                                double &price)
-   {
-      int index = iHighest(_Symbol, timeframe, MODE_HIGH, bars, startShift);
-      if(index < 0)
-         return false;
-      price = iHigh(_Symbol, timeframe, index);
-      return price > 0;
-   }
-
    bool HighestHigh(const int startShift, const int bars, double &price)
    {
-      return HighestHighForTimeframe(InpSignalTimeframe, startShift, bars, price);
-   }
-
-   bool LowestLowForTimeframe(const ENUM_TIMEFRAMES timeframe,
-                              const int startShift,
-                              const int bars,
-                              double &price)
-   {
-      int index = iLowest(_Symbol, timeframe, MODE_LOW, bars, startShift);
+      int index = iHighest(_Symbol, InpSignalTimeframe, MODE_HIGH, bars, startShift);
       if(index < 0)
          return false;
-      price = iLow(_Symbol, timeframe, index);
+      price = iHigh(_Symbol, InpSignalTimeframe, index);
       return price > 0;
    }
 
    bool LowestLow(const int startShift, const int bars, double &price)
    {
-      return LowestLowForTimeframe(InpSignalTimeframe, startShift, bars, price);
+      int index = iLowest(_Symbol, InpSignalTimeframe, MODE_LOW, bars, startShift);
+      if(index < 0)
+         return false;
+      price = iLow(_Symbol, InpSignalTimeframe, index);
+      return price > 0;
    }
 
    bool BOS(const ENUM_TRADE_BIAS bias, const int lookback)
@@ -6393,19 +6159,17 @@ public:
       return false;
    }
 
-   bool VWAPValueForTimeframe(const ENUM_TIMEFRAMES timeframe,
-                              const int lookback,
-                              double &vwap)
+   bool VWAPValue(const int lookback, double &vwap)
    {
       double weighted = 0;
       double volume = 0;
       int bars = MathMax(5, lookback);
       for(int shift = 1; shift <= bars; shift++)
       {
-         double high = iHigh(_Symbol, timeframe, shift);
-         double low = iLow(_Symbol, timeframe, shift);
-         double close = iClose(_Symbol, timeframe, shift);
-         long tickVolume = iVolume(_Symbol, timeframe, shift);
+         double high = iHigh(_Symbol, InpSignalTimeframe, shift);
+         double low = iLow(_Symbol, InpSignalTimeframe, shift);
+         double close = iClose(_Symbol, InpSignalTimeframe, shift);
+         long tickVolume = iVolume(_Symbol, InpSignalTimeframe, shift);
          if(high <= 0 || low <= 0 || close <= 0 || tickVolume <= 0)
             continue;
 
@@ -6419,11 +6183,6 @@ public:
 
       vwap = weighted / volume;
       return vwap > 0.0;
-   }
-
-   bool VWAPValue(const int lookback, double &vwap)
-   {
-      return VWAPValueForTimeframe(InpSignalTimeframe, lookback, vwap);
    }
 
    bool VWAPConfluence(const ENUM_TRADE_BIAS bias, const int lookback, const double atr)
@@ -6689,8 +6448,6 @@ public:
 
 CTickMicrostructure tickMicrostructure;
 
-datetime g_lastBandReversionBarTime = 0;
-
 class CEntryEngine
 {
 private:
@@ -6921,23 +6678,18 @@ private:
       return atrPast > 0 && atr1 >= atrPast * InpATRExpansionMultiplier;
    }
 
-   bool VolumeConfirmationForTimeframe(const ENUM_TIMEFRAMES timeframe)
+   bool VolumeConfirmation()
    {
-      long current = iVolume(_Symbol, timeframe, 1);
+      long current = iVolume(_Symbol, InpSignalTimeframe, 1);
       if(current <= 0)
          return false;
 
       double average = 0;
       for(int i = 2; i < 2 + InpVolumeLookbackBars; i++)
-         average += (double)iVolume(_Symbol, timeframe, i);
+         average += (double)iVolume(_Symbol, InpSignalTimeframe, i);
       average /= MathMax(1, InpVolumeLookbackBars);
 
       return current > average;
-   }
-
-   bool VolumeConfirmation()
-   {
-      return VolumeConfirmationForTimeframe(InpSignalTimeframe);
    }
 
    bool TickVolumeRegimeAllows()
@@ -14874,7 +14626,6 @@ public:
       signal.stopDistance = 0;
       signal.takeProfitDistance = 0;
       signal.isRangeReversion = false;
-      signal.isBandVWAPReversion = false;
       signal.isBreakoutContinuation = false;
       signal.rangeReversionStopPrice = 0.0;
       signal.rangeReversionTargetPrice = 0.0;
@@ -15619,243 +15370,6 @@ public:
          signal.reasons += "RR reject;";
       }
 
-      return signal;
-   }
-
-   SSignal BuildBandVWAPReversion()
-   {
-      SSignal signal;
-      signal.bias = BIAS_NONE;
-      signal.confirmations = 0;
-      signal.qualityScore = 0;
-      signal.priceActionScore = 0;
-      signal.reasons = "";
-      signal.atr = 0.0;
-      signal.stopDistance = 0.0;
-      signal.takeProfitDistance = 0.0;
-      signal.isRangeReversion = false;
-      signal.isBandVWAPReversion = false;
-      signal.isBreakoutContinuation = false;
-      signal.isPowerTrendContinuation = false;
-      signal.isSessionImpulse = false;
-      signal.isM5TightLiquidity = false;
-      signal.isDailyDonchianBreakout = false;
-      signal.isFlatMonthBreakoutProbe = false;
-      signal.isFlatMonthMicroReversion = false;
-      signal.isFlatMonthStructuralDisplacement = false;
-      signal.isFlatMonthLiquidityReclaim = false;
-      signal.isInSessionLiquidityPullback = false;
-      signal.isHighEfficiencyTrend = false;
-      signal.isDiagnosticFallback = false;
-      signal.useDirectStop = false;
-      signal.riskMultiplier = 1.0;
-      signal.rangeReversionStopPrice = 0.0;
-      signal.rangeReversionTargetPrice = 0.0;
-
-      if(!InpUseBandVWAPReversionLane)
-         return signal;
-      ENUM_TIMEFRAMES timeframe = InpBandVWAPReversionTimeframe;
-      datetime currentBandBarTime = iTime(_Symbol, timeframe, 0);
-      if(currentBandBarTime <= 0 || currentBandBarTime == g_lastBandReversionBarTime)
-         return signal;
-      g_lastBandReversionBarTime = currentBandBarTime;
-      int bandMonthlyEntries = InpUseLaneSpecificMonthlyEntryCaps
-                               ? SetupLaneEntryCount(PERIOD_MN1, "Band VWAP reversion;")
-                               : CurrentPeriodEntryCount(PERIOD_MN1);
-      if(InpBandVWAPReversionMaxMonthlyEntries > 0 &&
-         bandMonthlyEntries >= InpBandVWAPReversionMaxMonthlyEntries)
-         return signal;
-
-      datetime lastLaneEntry = LastSetupLaneEntryTime("Band VWAP reversion;");
-      int spacingMinutes = MathMax(0, InpBandVWAPReversionSpacingMinutes);
-      if(lastLaneEntry > 0 && spacingMinutes > 0 &&
-         TimeCurrent() - lastLaneEntry < spacingMinutes * 60)
-         return signal;
-
-      double atr = 0.0;
-      double adx = 0.0;
-      double rsi = 0.0;
-      double middle = 0.0;
-      double upper = 0.0;
-      double lower = 0.0;
-      if(!indicators.BandReversionATR(1, atr) || atr <= 0.0 ||
-         !indicators.BandReversionADX(1, adx) ||
-         !indicators.BandReversionRSI(1, rsi) ||
-         !indicators.BandReversionMiddle(1, middle) ||
-         !indicators.BandReversionUpper(1, upper) ||
-         !indicators.BandReversionLower(1, lower))
-         return signal;
-      if(adx > MathMax(0.0, InpBandVWAPReversionMaxADX))
-         return signal;
-
-      double bandWidthATR = (upper - lower) / atr;
-      if(bandWidthATR < MathMax(0.0, InpBandVWAPReversionMinBandWidthATR) ||
-         (InpBandVWAPReversionMaxBandWidthATR > 0.0 &&
-          bandWidthATR > InpBandVWAPReversionMaxBandWidthATR))
-         return signal;
-
-      double high1 = iHigh(_Symbol, timeframe, 1);
-      double low1 = iLow(_Symbol, timeframe, 1);
-      double open1 = iOpen(_Symbol, timeframe, 1);
-      double close1 = iClose(_Symbol, timeframe, 1);
-      double range1 = high1 - low1;
-      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
-         return signal;
-
-      double penetration = atr * MathMax(0.0, InpBandVWAPReversionMinBandPenetrationATR);
-      double closeLocation = (close1 - low1) / range1;
-      double upperWickPercent = 100.0 * (high1 - MathMax(open1, close1)) / range1;
-      double lowerWickPercent = 100.0 * (MathMin(open1, close1) - low1) / range1;
-      double minWick = MathMax(0.0, InpBandVWAPReversionMinWickPercent);
-      double minCloseLocation = MathMin(0.95, MathMax(0.50, InpBandVWAPReversionMinCloseLocation));
-
-      bool buyReentry = low1 <= lower - penetration &&
-                        close1 > lower && close1 > open1 &&
-                        lowerWickPercent >= minWick &&
-                        closeLocation >= minCloseLocation &&
-                        rsi <= MathMax(0.0, InpBandVWAPReversionBuyMaxRSI);
-      bool sellReentry = high1 >= upper + penetration &&
-                         close1 < upper && close1 < open1 &&
-                         upperWickPercent >= minWick &&
-                         closeLocation <= 1.0 - minCloseLocation &&
-                         rsi >= MathMin(100.0, InpBandVWAPReversionSellMinRSI);
-      if(buyReentry == sellReentry)
-         return signal;
-
-      ENUM_TRADE_BIAS bias = buyReentry ? BIAS_BUY : BIAS_SELL;
-      if(InpBandVWAPReversionRequireVolumeExpansion && !VolumeConfirmationForTimeframe(timeframe))
-         return signal;
-
-      double spreadATRPercent = 100.0 * CLogger::SpreadPoints() / (atr / _Point);
-      if(InpBandVWAPReversionMaxSpreadATRPercent > 0.0 &&
-         spreadATRPercent > InpBandVWAPReversionMaxSpreadATRPercent)
-         return signal;
-
-      double vwap = 0.0;
-      bool hasVwap = m_structure.VWAPValueForTimeframe(timeframe,
-                                                      InpBandVWAPReversionVWAPLookbackBars,
-                                                      vwap);
-      if(InpBandVWAPReversionRequireVWAP && !hasVwap)
-         return signal;
-
-      double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
-      double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
-      double entry = (bias == BIAS_BUY) ? ask : bid;
-      if(entry <= 0.0)
-         return signal;
-
-      double targetPrice = middle;
-      if(InpBandVWAPReversionRequireVWAP)
-         targetPrice = vwap;
-      else if(hasVwap &&
-              ((bias == BIAS_BUY && vwap > targetPrice) ||
-               (bias == BIAS_SELL && vwap < targetPrice)))
-         targetPrice = vwap;
-
-      if((bias == BIAS_BUY && targetPrice <= entry) ||
-         (bias == BIAS_SELL && targetPrice >= entry))
-         return signal;
-
-      int stopLookback = MathMax(2, InpBandVWAPReversionStopLookbackBars);
-      double structuralExtreme = 0.0;
-      double stopBuffer = atr * MathMax(0.0, InpBandVWAPReversionStopBufferATR) +
-                          _Point * MathMax(0.0, InpBandVWAPReversionStopBufferPoints);
-      double stopPrice = 0.0;
-      if(bias == BIAS_BUY)
-      {
-         if(!m_structure.LowestLowForTimeframe(timeframe, 1, stopLookback, structuralExtreme))
-            return signal;
-         stopPrice = structuralExtreme - stopBuffer;
-      }
-      else
-      {
-         if(!m_structure.HighestHighForTimeframe(timeframe, 1, stopLookback, structuralExtreme))
-            return signal;
-         stopPrice = structuralExtreme + stopBuffer;
-      }
-
-      double stopDistance = (bias == BIAS_BUY) ? entry - stopPrice : stopPrice - entry;
-      double targetDistance = (bias == BIAS_BUY) ? targetPrice - entry : entry - targetPrice;
-      if(stopDistance <= 0.0 || targetDistance <= 0.0)
-         return signal;
-      if(InpBandVWAPReversionMaxStopATR > 0.0 &&
-         stopDistance > atr * InpBandVWAPReversionMaxStopATR)
-         return signal;
-      if(targetDistance < atr * MathMax(0.0, InpBandVWAPReversionMinTargetATR))
-         return signal;
-      if(targetDistance / stopDistance < MathMax(0.0, InpBandVWAPReversionMinRR))
-         return signal;
-
-      // Feature diagnostics plus optional, independently controlled research gates.
-      double adxPast = 0.0;
-      double plusDI = 0.0;
-      double minusDI = 0.0;
-      double atrPast = 0.0;
-      double trendEMA = 0.0;
-      double trendEMAPast = 0.0;
-      double fastTrendEMA = 0.0;
-      double mtfEMA = 0.0;
-      indicators.BandReversionADX(6, adxPast);
-      indicators.BandReversionPlusDI(1, plusDI);
-      indicators.BandReversionMinusDI(1, minusDI);
-      indicators.BandReversionATR(6, atrPast);
-      indicators.TrendEMA(1, trendEMA);
-      indicators.TrendEMA(6, trendEMAPast);
-      indicators.FastTrendEMA(1, fastTrendEMA);
-      indicators.MTFEMA(1, mtfEMA);
-
-      double direction = (bias == BIAS_BUY) ? 1.0 : -1.0;
-      double diEdge = direction * (plusDI - minusDI);
-      double atrRatio = (atrPast > 0.0) ? atr / atrPast : 0.0;
-      double trendDistanceATR = (trendEMA > 0.0) ? direction * (close1 - trendEMA) / atr : 0.0;
-      double trendSlopeATR = (trendEMA > 0.0 && trendEMAPast > 0.0)
-                             ? direction * (trendEMA - trendEMAPast) / atr
-                             : 0.0;
-      double fastTrendDistanceATR = (fastTrendEMA > 0.0)
-                                    ? direction * (close1 - fastTrendEMA) / atr
-                                    : 0.0;
-      double mtfDistanceATR = (mtfEMA > 0.0) ? direction * (close1 - mtfEMA) / atr : 0.0;
-      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range1;
-      double directionalWickPercent = (bias == BIAS_BUY) ? lowerWickPercent : upperWickPercent;
-      double stopATR = stopDistance / atr;
-      double targetATR = targetDistance / atr;
-      double tradeRR = targetDistance / stopDistance;
-
-      if(InpBandVWAPReversionUseDIEdgeGate &&
-         diEdge < InpBandVWAPReversionMinDIEdge)
-         return signal;
-
-      signal.bias = bias;
-      signal.confirmations = 2;
-      signal.qualityScore = 7 + (InpBandVWAPReversionRequireVolumeExpansion ? 1 : 0);
-      signal.priceActionScore = 6;
-      signal.reasons = "Band VWAP reversion;";
-      signal.reasons += (bias == BIAS_BUY) ? "Lower-band reclaim;" : "Upper-band reclaim;";
-      signal.reasons += "RSI " + DoubleToString(rsi, 1) + ";";
-      signal.reasons += "Band width " + DoubleToString(bandWidthATR, 2) + " ATR;";
-      signal.reasons += "ADX " + DoubleToString(adx, 2) + ";";
-      signal.reasons += "ADX delta " + DoubleToString(adx - adxPast, 2) + ";";
-      signal.reasons += "DI edge " + DoubleToString(diEdge, 2) + ";";
-      signal.reasons += "ATR ratio " + DoubleToString(atrRatio, 3) + ";";
-      signal.reasons += "Trend dist ATR " + DoubleToString(trendDistanceATR, 3) + ";";
-      signal.reasons += "Trend slope ATR " + DoubleToString(trendSlopeATR, 3) + ";";
-      signal.reasons += "Fast trend dist ATR " + DoubleToString(fastTrendDistanceATR, 3) + ";";
-      signal.reasons += "MTF dist ATR " + DoubleToString(mtfDistanceATR, 3) + ";";
-      signal.reasons += "Body pct " + DoubleToString(bodyPercent, 1) + ";";
-      signal.reasons += "Wick pct " + DoubleToString(directionalWickPercent, 1) + ";";
-      signal.reasons += "Close loc " + DoubleToString(closeLocation, 3) + ";";
-      signal.reasons += "Stop ATR " + DoubleToString(stopATR, 3) + ";";
-      signal.reasons += "Target ATR " + DoubleToString(targetATR, 3) + ";";
-      signal.reasons += "Trade RR " + DoubleToString(tradeRR, 3) + ";";
-      signal.reasons += "Spread ATR pct " + DoubleToString(spreadATRPercent, 2) + ";";
-      signal.atr = atr;
-      signal.stopDistance = stopDistance;
-      signal.takeProfitDistance = targetDistance;
-      signal.isRangeReversion = true;
-      signal.isBandVWAPReversion = true;
-      signal.riskMultiplier = MathMin(1.0, MathMax(0.0, InpBandVWAPReversionRiskMultiplier));
-      signal.rangeReversionStopPrice = stopPrice;
-      signal.rangeReversionTargetPrice = targetPrice;
       return signal;
    }
 };
@@ -16830,10 +16344,6 @@ public:
          indicators.ATR(1, atr);
 
          string positionComment = PositionGetString(POSITION_COMMENT);
-         if(InpBandVWAPReversionUseIsolatedExecution &&
-            StringFind(positionComment, "Band VWAP reversion;") >= 0)
-            continue;
-
          bool dailyDonchianPosition = StringFind(positionComment, "DDB;") >= 0;
          if(dailyDonchianPosition)
          {
@@ -16849,9 +16359,6 @@ public:
                             PositionGetDouble(POSITION_PROFIT), dailyExitReason, atr);
                continue;
             }
-
-            if(InpDailyDonchianUseIsolatedExecution)
-               continue;
          }
 
          if(InpCloseOnOppositeSignal)
@@ -17628,7 +17135,6 @@ SSignal BuildM5TightLiquiditySecondarySignal(const ENUM_TRADE_BIAS primaryBias)
    signal.stopDistance = 0.0;
    signal.takeProfitDistance = 0.0;
    signal.isRangeReversion = false;
-   signal.isBandVWAPReversion = false;
    signal.isBreakoutContinuation = false;
    signal.isPowerTrendContinuation = false;
    signal.isSessionImpulse = false;
@@ -17761,7 +17267,6 @@ SSignal BuildDailyDonchianBreakoutSignal()
    signal.stopDistance = 0.0;
    signal.takeProfitDistance = 0.0;
    signal.isRangeReversion = false;
-   signal.isBandVWAPReversion = false;
    signal.isBreakoutContinuation = false;
    signal.isPowerTrendContinuation = false;
    signal.isSessionImpulse = false;
@@ -17781,11 +17286,8 @@ SSignal BuildDailyDonchianBreakoutSignal()
 
    if(!InpUseDailyDonchianBreakoutLane)
       return signal;
-   int dailyMonthlyEntries = InpUseLaneSpecificMonthlyEntryCaps
-                             ? SetupLaneEntryCount(PERIOD_MN1, "DDB;")
-                             : CurrentPeriodEntryCount(PERIOD_MN1);
    if(InpDailyDonchianMaxMonthlyEntries > 0 &&
-      dailyMonthlyEntries >= InpDailyDonchianMaxMonthlyEntries)
+      CurrentPeriodEntryCount(PERIOD_MN1) >= InpDailyDonchianMaxMonthlyEntries)
       return signal;
 
    int spacingMinutes = MathMax(0, InpDailyDonchianSpacingMinutes);
@@ -18607,35 +18109,6 @@ int CurrentPeriodEntryCount(const ENUM_TIMEFRAMES period)
          continue;
       if(HistoryDealGetInteger(ticket, DEAL_ENTRY) == DEAL_ENTRY_IN)
          count++;
-   }
-   return count;
-}
-
-int SetupLaneEntryCount(const ENUM_TIMEFRAMES period, const string laneNeedle)
-{
-   if(StringLen(laneNeedle) <= 0)
-      return 0;
-
-   datetime start = iTime(_Symbol, period, 0);
-   if(start <= 0 || !HistorySelect(start, TimeCurrent()))
-      return 0;
-
-   int count = 0;
-   int total = HistoryDealsTotal();
-   for(int i = 0; i < total; i++)
-   {
-      ulong ticket = HistoryDealGetTicket(i);
-      if(ticket == 0)
-         continue;
-      if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
-         continue;
-      if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
-         continue;
-      if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_IN)
-         continue;
-      if(StringFind(HistoryDealGetString(ticket, DEAL_COMMENT), laneNeedle) < 0)
-         continue;
-      count++;
    }
    return count;
 }
@@ -20867,216 +20340,6 @@ void RegisterInitialRiskForNewestPosition(const ENUM_TRADE_BIAS bias, const doub
    StoreInitialRisk(newestTicket, riskDistance);
 }
 
-bool OpenIsolatedBandVWAPReversionSignal(const SSignal &signal)
-{
-   if(signal.bias == BIAS_NONE || !signal.isBandVWAPReversion)
-      return false;
-
-   if(!SpreadRegimeAllows())
-   {
-      g_lastBlockReason = "band reversion spread regime";
-      return false;
-   }
-
-   string blockReason = "";
-   if(!riskManager.CanOpen(blockReason, true))
-   {
-      g_lastBlockReason = blockReason;
-      return false;
-   }
-   if((signal.bias == BIAS_BUY && !InpAllowBuy) ||
-      (signal.bias == BIAS_SELL && !InpAllowSell))
-   {
-      g_lastBlockReason = "band reversion direction disabled";
-      return false;
-   }
-
-   double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
-   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
-   double entry = (signal.bias == BIAS_BUY) ? ask : bid;
-   if(entry <= 0.0 || signal.rangeReversionStopPrice <= 0.0 ||
-      signal.rangeReversionTargetPrice <= 0.0)
-   {
-      g_lastBlockReason = "band reversion invalid prices";
-      return false;
-   }
-
-   double stopDistance = (signal.bias == BIAS_BUY)
-                         ? entry - signal.rangeReversionStopPrice
-                         : signal.rangeReversionStopPrice - entry;
-   double tpDistance = (signal.bias == BIAS_BUY)
-                       ? signal.rangeReversionTargetPrice - entry
-                       : entry - signal.rangeReversionTargetPrice;
-   double brokerMinimum = MinimumBrokerStopDistance();
-   stopDistance = MathMax(stopDistance, brokerMinimum);
-   tpDistance = MathMax(tpDistance, brokerMinimum);
-   if(stopDistance <= 0.0 || tpDistance <= 0.0 ||
-      tpDistance / stopDistance < MathMax(0.0, InpBandVWAPReversionMinRR))
-   {
-      g_lastBlockReason = "band reversion execution RR";
-      return false;
-   }
-
-   double riskMultiplier = MathMin(1.0, MathMax(0.0, signal.riskMultiplier));
-   double lots = riskManager.LotsForRisk(signal.bias, entry, stopDistance, riskMultiplier);
-   if(lots <= 0.0)
-   {
-      g_lastBlockReason = "band reversion lot sizing";
-      return false;
-   }
-
-   string exposureReason = "";
-   if(!riskManager.ExposureAllows(signal.bias, entry, stopDistance, lots, exposureReason))
-   {
-      g_lastBlockReason = exposureReason;
-      return false;
-   }
-   string costReason = "";
-   if(!TradingCostGuardAllows(stopDistance, lots, costReason))
-   {
-      g_lastBlockReason = costReason;
-      return false;
-   }
-   string marginReason = "";
-   if(!MarginGuardAllows(signal.bias, lots, entry, marginReason))
-   {
-      g_lastBlockReason = marginReason;
-      return false;
-   }
-
-   double sl = (signal.bias == BIAS_BUY) ? entry - stopDistance : entry + stopDistance;
-   double tp = (signal.bias == BIAS_BUY) ? entry + tpDistance : entry - tpDistance;
-   sl = NormalizeDouble(sl, _Digits);
-   tp = NormalizeDouble(tp, _Digits);
-
-   trade.SetExpertMagicNumber(InpMagicNumber);
-   trade.SetDeviationInPoints(InpDeviationPoints);
-   string tradeComment = CompactTradeComment(signal);
-   bool ok = (signal.bias == BIAS_BUY)
-             ? trade.Buy(lots, _Symbol, 0, sl, tp, tradeComment)
-             : trade.Sell(lots, _Symbol, 0, sl, tp, tradeComment);
-   if(ok)
-   {
-      RegisterInitialRiskForNewestPosition(signal.bias, stopDistance);
-      string biasText = (signal.bias == BIAS_BUY) ? "buy" : "sell";
-      string reason = signal.reasons + "Isolated H1 execution;Trade RR " +
-                      DoubleToString(tpDistance / stopDistance, 2) + ";";
-      logger.Write("entry", trade.ResultOrder(), biasText, lots, entry, sl, tp,
-                   tpDistance / stopDistance, 0.0, reason, signal.atr);
-      g_lastBlockReason = "entered " + biasText;
-   }
-   else
-   {
-      g_lastBlockReason = "trade failed: " + trade.ResultRetcodeDescription();
-      if(InpLogLevel >= LOG_ERRORS)
-         Print(g_lastBlockReason);
-   }
-   return ok;
-}
-
-bool OpenIsolatedDailyDonchianSignal(const SSignal &signal)
-{
-   if(signal.bias == BIAS_NONE || !signal.isDailyDonchianBreakout)
-      return false;
-
-   if(!SpreadRegimeAllows())
-   {
-      g_lastBlockReason = "daily Donchian spread regime";
-      return false;
-   }
-
-   string blockReason = "";
-   if(!riskManager.CanOpen(blockReason, true))
-   {
-      g_lastBlockReason = blockReason;
-      return false;
-   }
-   if((signal.bias == BIAS_BUY && !InpAllowBuy) ||
-      (signal.bias == BIAS_SELL && !InpAllowSell))
-   {
-      g_lastBlockReason = "daily Donchian direction disabled";
-      return false;
-   }
-
-   double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
-   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
-   double entry = (signal.bias == BIAS_BUY) ? ask : bid;
-   if(entry <= 0.0)
-   {
-      g_lastBlockReason = "daily Donchian invalid entry";
-      return false;
-   }
-
-   double brokerMinimum = MinimumBrokerStopDistance();
-   double stopDistance = MathMax(signal.stopDistance, brokerMinimum);
-   double tpDistance = MathMax(signal.takeProfitDistance, brokerMinimum);
-   if(stopDistance <= 0.0 || tpDistance <= 0.0 ||
-      tpDistance / stopDistance < MathMax(0.0, InpDailyDonchianMinRR))
-   {
-      g_lastBlockReason = "daily Donchian execution RR";
-      return false;
-   }
-
-   double riskMultiplier = MathMin(1.0, MathMax(0.0, signal.riskMultiplier));
-   double lots = riskManager.LotsForRisk(signal.bias, entry, stopDistance, riskMultiplier);
-   if(lots <= 0.0)
-   {
-      g_lastBlockReason = "daily Donchian lot sizing";
-      return false;
-   }
-
-   string exposureReason = "";
-   if(!riskManager.ExposureAllows(signal.bias, entry, stopDistance, lots, exposureReason))
-   {
-      g_lastBlockReason = exposureReason;
-      return false;
-   }
-   string costReason = "";
-   if(!TradingCostGuardAllows(stopDistance, lots, costReason))
-   {
-      g_lastBlockReason = costReason;
-      return false;
-   }
-   string marginReason = "";
-   if(!MarginGuardAllows(signal.bias, lots, entry, marginReason))
-   {
-      g_lastBlockReason = marginReason;
-      return false;
-   }
-
-   double sl = (signal.bias == BIAS_BUY) ? entry - stopDistance : entry + stopDistance;
-   double tp = 0.0;
-   if(InpDailyDonchianUseTakeProfit)
-      tp = (signal.bias == BIAS_BUY) ? entry + tpDistance : entry - tpDistance;
-   sl = NormalizeDouble(sl, _Digits);
-   if(tp > 0.0)
-      tp = NormalizeDouble(tp, _Digits);
-
-   trade.SetExpertMagicNumber(InpMagicNumber);
-   trade.SetDeviationInPoints(InpDeviationPoints);
-   string tradeComment = CompactTradeComment(signal);
-   bool ok = (signal.bias == BIAS_BUY)
-             ? trade.Buy(lots, _Symbol, 0, sl, tp, tradeComment)
-             : trade.Sell(lots, _Symbol, 0, sl, tp, tradeComment);
-   if(ok)
-   {
-      RegisterInitialRiskForNewestPosition(signal.bias, stopDistance);
-      string biasText = (signal.bias == BIAS_BUY) ? "buy" : "sell";
-      string reason = signal.reasons + "Isolated D1 execution;Trade RR " +
-                      DoubleToString(tpDistance / stopDistance, 2) + ";";
-      logger.Write("entry", trade.ResultOrder(), biasText, lots, entry, sl, tp,
-                   tpDistance / stopDistance, 0.0, reason, signal.atr);
-      g_lastBlockReason = "entered " + biasText;
-   }
-   else
-   {
-      g_lastBlockReason = "trade failed: " + trade.ResultRetcodeDescription();
-      if(InpLogLevel >= LOG_ERRORS)
-         Print(g_lastBlockReason);
-   }
-   return ok;
-}
-
 bool OpenSignal(const SSignal &signal)
 {
    if(signal.bias == BIAS_NONE)
@@ -22960,12 +22223,10 @@ bool TradeReadinessSafetyGateAllows()
                                  InpUseEliteContinuationUnlimitedRunner,
                                  "unlimited runner behavior enabled", violations);
    AppendTradeReadinessViolation(InpUseFlatMonthLiquidityReclaimLane ||
-                                  InpAllowFlatMonthLiquidityReclaimOutsideMonthFilter,
-                                  "experimental FMLR lane enabled", violations);
-   AppendTradeReadinessViolation(InpUseBandVWAPReversionLane,
-                                 "experimental band/VWAP reversion lane enabled", violations);
+                                 InpAllowFlatMonthLiquidityReclaimOutsideMonthFilter,
+                                 "experimental FMLR lane enabled", violations);
    AppendTradeReadinessViolation(InpUseTickSpeedImpulse,
-                                  "tick-speed impulse enabled", violations);
+                                 "tick-speed impulse enabled", violations);
 
    if(StringLen(violations) > 0)
    {
@@ -23052,7 +22313,6 @@ int OnInit()
    logger.Init();
    blockDiagnostics.Init();
    g_lastBarTime = iTime(_Symbol, InpSignalTimeframe, 0);
-   g_lastBandReversionBarTime = iTime(_Symbol, InpBandVWAPReversionTimeframe, 0);
    return INIT_SUCCEEDED;
 }
 
@@ -23112,39 +22372,20 @@ void OnTick()
    g_lastTrendReason = trendReason;
    g_lastTrendBias = trendBias;
 
-   bool primarySessionAllowed = sessionFilter.IsAllowed();
    SSignal signal = entryEngine.Build(trendBias);
    ApplySignalMode(signal);
    SSignal secondarySignal = BuildM5TightLiquiditySecondarySignal(trendBias);
-   SSignal bandReversionSignal = entryEngine.BuildBandVWAPReversion();
    SSignal dailyDonchianSignal = BuildDailyDonchianBreakoutSignal();
-   bool bandMayBypassPrimarySession = InpBandVWAPReversionBypassPrimarySession &&
-                                      sessionFilter.TradingDayAllowed();
-   bool dailyMayBypassPrimarySession = InpDailyDonchianBypassPrimarySession &&
-                                       sessionFilter.TradingDayAllowed();
-   bool dailyIndependentAttempt = InpUseDailyDonchianBreakoutLane &&
-                                  InpDailyDonchianUseIsolatedExecution &&
-                                  !InpDailyDonchianStandaloneMode;
    if(InpDailyDonchianStandaloneMode)
    {
       signal = dailyDonchianSignal;
    }
-   else if(!primarySessionAllowed)
-   {
-      if(!dailyIndependentAttempt &&
-         dailyMayBypassPrimarySession && dailyDonchianSignal.bias != BIAS_NONE)
-         signal = dailyDonchianSignal;
-      else if(bandMayBypassPrimarySession && bandReversionSignal.bias != BIAS_NONE)
-         signal = bandReversionSignal;
-   }
    else if(signal.bias == BIAS_NONE)
    {
-      if(!dailyIndependentAttempt && dailyDonchianSignal.bias != BIAS_NONE)
+      if(dailyDonchianSignal.bias != BIAS_NONE)
          signal = dailyDonchianSignal;
       else if(secondarySignal.bias != BIAS_NONE)
          signal = secondarySignal;
-      else if(bandReversionSignal.bias != BIAS_NONE)
-         signal = bandReversionSignal;
    }
    else if(InpM5TightLiquidityAllowPrimaryOverride &&
            secondarySignal.bias != BIAS_NONE &&
@@ -23188,13 +22429,7 @@ void OnTick()
 
    positionManager.Manage(signal.bias);
 
-   bool selectedSignalSessionAllowed = primarySessionAllowed ||
-                                        (signal.isBandVWAPReversion && bandMayBypassPrimarySession) ||
-                                        (signal.isDailyDonchianBreakout && dailyMayBypassPrimarySession);
-   bool dailyIndependentSessionAllowed = dailyIndependentAttempt &&
-                                         dailyDonchianSignal.bias != BIAS_NONE &&
-                                         (primarySessionAllowed || dailyMayBypassPrimarySession);
-   if(!selectedSignalSessionAllowed && !dailyIndependentSessionAllowed)
+   if(!sessionFilter.IsAllowed())
    {
       g_lastBlockReason = "session closed";
       blockDiagnostics.Write(g_lastBlockReason, trendBias, signal);
@@ -23221,33 +22456,17 @@ void OnTick()
       return;
    }
 
-   bool attemptedEntry = false;
-   bool openedPosition = false;
-   if(selectedSignalSessionAllowed && signal.bias != BIAS_NONE)
+   if(signal.bias != BIAS_NONE)
    {
-      attemptedEntry = true;
-      if(signal.isBandVWAPReversion && InpBandVWAPReversionUseIsolatedExecution)
-         openedPosition = OpenIsolatedBandVWAPReversionSignal(signal);
-      else if(signal.isDailyDonchianBreakout && InpDailyDonchianUseIsolatedExecution)
-         openedPosition = OpenIsolatedDailyDonchianSignal(signal);
-      else
-         openedPosition = OpenSignal(signal);
+      OpenSignal(signal);
       blockDiagnostics.Write(g_lastBlockReason, trendBias, signal);
    }
-
-   if(!openedPosition && dailyIndependentSessionAllowed)
-   {
-      attemptedEntry = true;
-      openedPosition = OpenIsolatedDailyDonchianSignal(dailyDonchianSignal);
-      blockDiagnostics.Write(g_lastBlockReason, trendBias, dailyDonchianSignal);
-   }
-
-   if(!attemptedEntry && signal.confirmations > 0)
+   else if(signal.confirmations > 0)
    {
       g_lastBlockReason = "confirmations " + (string)signal.confirmations + "/" + (string)ActiveConfirmationThreshold(trendBias);
       blockDiagnostics.Write(g_lastBlockReason, trendBias, signal);
    }
-   else if(!attemptedEntry)
+   else
    {
       g_lastBlockReason = "no setup";
       blockDiagnostics.Write(g_lastBlockReason, trendBias, signal);
