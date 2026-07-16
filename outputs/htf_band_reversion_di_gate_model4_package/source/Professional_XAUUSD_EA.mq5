@@ -1444,6 +1444,30 @@ input bool            InpRangeReversionUseCustomEliteGate = true;
 input int             InpRangeReversionEliteMinConfirmations = 2;
 input int             InpRangeReversionEliteMinQualityScore = 6;
 int             InpRangeReversionEliteMinPriceActionScore = 0;
+input group "Independent Band/VWAP Reversion Research Lane"
+input bool            InpUseBandVWAPReversionLane = false;
+input double          InpBandVWAPReversionRiskMultiplier = 0.20;
+input int             InpBandVWAPReversionMaxMonthlyEntries = 12;
+input int             InpBandVWAPReversionSpacingMinutes = 180;
+input double          InpBandVWAPReversionMaxADX = 24.0;
+input double          InpBandVWAPReversionBuyMaxRSI = 40.0;
+input double          InpBandVWAPReversionSellMinRSI = 60.0;
+input double          InpBandVWAPReversionMinBandPenetrationATR = 0.00;
+input double          InpBandVWAPReversionMinBandWidthATR = 1.20;
+input double          InpBandVWAPReversionMaxBandWidthATR = 4.00;
+input double          InpBandVWAPReversionMinWickPercent = 20.0;
+input double          InpBandVWAPReversionMinCloseLocation = 0.55;
+input bool            InpBandVWAPReversionRequireVWAP = true;
+input bool            InpBandVWAPReversionRequireVolumeExpansion = false;
+input int             InpBandVWAPReversionStopLookbackBars = 5;
+input double          InpBandVWAPReversionStopBufferATR = 0.10;
+input double          InpBandVWAPReversionStopBufferPoints = 20.0;
+input double          InpBandVWAPReversionMaxStopATR = 1.80;
+input double          InpBandVWAPReversionMinTargetATR = 0.45;
+input double          InpBandVWAPReversionMinRR = 1.20;
+input double          InpBandVWAPReversionMaxSpreadATRPercent = 18.0;
+input bool            InpBandVWAPReversionUseDIEdgeGate = false;
+input double          InpBandVWAPReversionMinDIEdge = -10.0;
 input bool            InpUseFlatMonthMicroReversionLane = false;
 input double          InpFlatMonthMicroReversionRiskMultiplier = 0.35;
 input int             InpFlatMonthMicroReversionMaxMonthlyEntries = 10;
@@ -15347,6 +15371,230 @@ public:
 
       return signal;
    }
+
+   SSignal BuildBandVWAPReversion()
+   {
+      SSignal signal;
+      signal.bias = BIAS_NONE;
+      signal.confirmations = 0;
+      signal.qualityScore = 0;
+      signal.priceActionScore = 0;
+      signal.reasons = "";
+      signal.atr = 0.0;
+      signal.stopDistance = 0.0;
+      signal.takeProfitDistance = 0.0;
+      signal.isRangeReversion = false;
+      signal.isBreakoutContinuation = false;
+      signal.isPowerTrendContinuation = false;
+      signal.isSessionImpulse = false;
+      signal.isM5TightLiquidity = false;
+      signal.isFlatMonthBreakoutProbe = false;
+      signal.isFlatMonthMicroReversion = false;
+      signal.isFlatMonthStructuralDisplacement = false;
+      signal.isFlatMonthLiquidityReclaim = false;
+      signal.isInSessionLiquidityPullback = false;
+      signal.isHighEfficiencyTrend = false;
+      signal.isDiagnosticFallback = false;
+      signal.useDirectStop = false;
+      signal.riskMultiplier = 1.0;
+      signal.rangeReversionStopPrice = 0.0;
+      signal.rangeReversionTargetPrice = 0.0;
+
+      if(!InpUseBandVWAPReversionLane)
+         return signal;
+      if(InpBandVWAPReversionMaxMonthlyEntries > 0 &&
+         CurrentPeriodEntryCount(PERIOD_MN1) >= InpBandVWAPReversionMaxMonthlyEntries)
+         return signal;
+
+      datetime lastLaneEntry = LastSetupLaneEntryTime("Band VWAP reversion;");
+      int spacingMinutes = MathMax(0, InpBandVWAPReversionSpacingMinutes);
+      if(lastLaneEntry > 0 && spacingMinutes > 0 &&
+         TimeCurrent() - lastLaneEntry < spacingMinutes * 60)
+         return signal;
+
+      double atr = 0.0;
+      double adx = 0.0;
+      double rsi = 0.0;
+      double middle = 0.0;
+      double upper = 0.0;
+      double lower = 0.0;
+      if(!indicators.ATR(1, atr) || atr <= 0.0 ||
+         !indicators.ADX(1, adx) ||
+         !indicators.RSI(1, rsi) ||
+         !indicators.BollingerMiddle(1, middle) ||
+         !indicators.BollingerUpper(1, upper) ||
+         !indicators.BollingerLower(1, lower))
+         return signal;
+      if(adx > MathMax(0.0, InpBandVWAPReversionMaxADX))
+         return signal;
+
+      double bandWidthATR = (upper - lower) / atr;
+      if(bandWidthATR < MathMax(0.0, InpBandVWAPReversionMinBandWidthATR) ||
+         (InpBandVWAPReversionMaxBandWidthATR > 0.0 &&
+          bandWidthATR > InpBandVWAPReversionMaxBandWidthATR))
+         return signal;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
+         return signal;
+
+      double penetration = atr * MathMax(0.0, InpBandVWAPReversionMinBandPenetrationATR);
+      double closeLocation = (close1 - low1) / range1;
+      double upperWickPercent = 100.0 * (high1 - MathMax(open1, close1)) / range1;
+      double lowerWickPercent = 100.0 * (MathMin(open1, close1) - low1) / range1;
+      double minWick = MathMax(0.0, InpBandVWAPReversionMinWickPercent);
+      double minCloseLocation = MathMin(0.95, MathMax(0.50, InpBandVWAPReversionMinCloseLocation));
+
+      bool buyReentry = low1 <= lower - penetration &&
+                        close1 > lower && close1 > open1 &&
+                        lowerWickPercent >= minWick &&
+                        closeLocation >= minCloseLocation &&
+                        rsi <= MathMax(0.0, InpBandVWAPReversionBuyMaxRSI);
+      bool sellReentry = high1 >= upper + penetration &&
+                         close1 < upper && close1 < open1 &&
+                         upperWickPercent >= minWick &&
+                         closeLocation <= 1.0 - minCloseLocation &&
+                         rsi >= MathMin(100.0, InpBandVWAPReversionSellMinRSI);
+      if(buyReentry == sellReentry)
+         return signal;
+
+      ENUM_TRADE_BIAS bias = buyReentry ? BIAS_BUY : BIAS_SELL;
+      if(InpBandVWAPReversionRequireVolumeExpansion && !VolumeConfirmation())
+         return signal;
+
+      double spreadATRPercent = 100.0 * CLogger::SpreadPoints() / (atr / _Point);
+      if(InpBandVWAPReversionMaxSpreadATRPercent > 0.0 &&
+         spreadATRPercent > InpBandVWAPReversionMaxSpreadATRPercent)
+         return signal;
+
+      double vwap = 0.0;
+      bool hasVwap = m_structure.VWAPValue(InpVWAPLookbackBars, vwap);
+      if(InpBandVWAPReversionRequireVWAP && !hasVwap)
+         return signal;
+
+      double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+      double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+      double entry = (bias == BIAS_BUY) ? ask : bid;
+      if(entry <= 0.0)
+         return signal;
+
+      double targetPrice = middle;
+      if(InpBandVWAPReversionRequireVWAP)
+         targetPrice = vwap;
+      else if(hasVwap &&
+              ((bias == BIAS_BUY && vwap > targetPrice) ||
+               (bias == BIAS_SELL && vwap < targetPrice)))
+         targetPrice = vwap;
+
+      if((bias == BIAS_BUY && targetPrice <= entry) ||
+         (bias == BIAS_SELL && targetPrice >= entry))
+         return signal;
+
+      int stopLookback = MathMax(2, InpBandVWAPReversionStopLookbackBars);
+      double structuralExtreme = 0.0;
+      double stopBuffer = atr * MathMax(0.0, InpBandVWAPReversionStopBufferATR) +
+                          _Point * MathMax(0.0, InpBandVWAPReversionStopBufferPoints);
+      double stopPrice = 0.0;
+      if(bias == BIAS_BUY)
+      {
+         if(!m_structure.LowestLow(1, stopLookback, structuralExtreme))
+            return signal;
+         stopPrice = structuralExtreme - stopBuffer;
+      }
+      else
+      {
+         if(!m_structure.HighestHigh(1, stopLookback, structuralExtreme))
+            return signal;
+         stopPrice = structuralExtreme + stopBuffer;
+      }
+
+      double stopDistance = (bias == BIAS_BUY) ? entry - stopPrice : stopPrice - entry;
+      double targetDistance = (bias == BIAS_BUY) ? targetPrice - entry : entry - targetPrice;
+      if(stopDistance <= 0.0 || targetDistance <= 0.0)
+         return signal;
+      if(InpBandVWAPReversionMaxStopATR > 0.0 &&
+         stopDistance > atr * InpBandVWAPReversionMaxStopATR)
+         return signal;
+      if(targetDistance < atr * MathMax(0.0, InpBandVWAPReversionMinTargetATR))
+         return signal;
+      if(targetDistance / stopDistance < MathMax(0.0, InpBandVWAPReversionMinRR))
+         return signal;
+
+      // Feature diagnostics plus optional, independently controlled research gates.
+      double adxPast = 0.0;
+      double plusDI = 0.0;
+      double minusDI = 0.0;
+      double atrPast = 0.0;
+      double trendEMA = 0.0;
+      double trendEMAPast = 0.0;
+      double fastTrendEMA = 0.0;
+      double mtfEMA = 0.0;
+      indicators.ADX(6, adxPast);
+      indicators.PlusDI(1, plusDI);
+      indicators.MinusDI(1, minusDI);
+      indicators.ATR(6, atrPast);
+      indicators.TrendEMA(1, trendEMA);
+      indicators.TrendEMA(6, trendEMAPast);
+      indicators.FastTrendEMA(1, fastTrendEMA);
+      indicators.MTFEMA(1, mtfEMA);
+
+      double direction = (bias == BIAS_BUY) ? 1.0 : -1.0;
+      double diEdge = direction * (plusDI - minusDI);
+      double atrRatio = (atrPast > 0.0) ? atr / atrPast : 0.0;
+      double trendDistanceATR = (trendEMA > 0.0) ? direction * (close1 - trendEMA) / atr : 0.0;
+      double trendSlopeATR = (trendEMA > 0.0 && trendEMAPast > 0.0)
+                             ? direction * (trendEMA - trendEMAPast) / atr
+                             : 0.0;
+      double fastTrendDistanceATR = (fastTrendEMA > 0.0)
+                                    ? direction * (close1 - fastTrendEMA) / atr
+                                    : 0.0;
+      double mtfDistanceATR = (mtfEMA > 0.0) ? direction * (close1 - mtfEMA) / atr : 0.0;
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range1;
+      double directionalWickPercent = (bias == BIAS_BUY) ? lowerWickPercent : upperWickPercent;
+      double stopATR = stopDistance / atr;
+      double targetATR = targetDistance / atr;
+      double tradeRR = targetDistance / stopDistance;
+
+      if(InpBandVWAPReversionUseDIEdgeGate &&
+         diEdge < InpBandVWAPReversionMinDIEdge)
+         return signal;
+
+      signal.bias = bias;
+      signal.confirmations = 2;
+      signal.qualityScore = 7 + (InpBandVWAPReversionRequireVolumeExpansion ? 1 : 0);
+      signal.priceActionScore = 6;
+      signal.reasons = "Band VWAP reversion;";
+      signal.reasons += (bias == BIAS_BUY) ? "Lower-band reclaim;" : "Upper-band reclaim;";
+      signal.reasons += "RSI " + DoubleToString(rsi, 1) + ";";
+      signal.reasons += "Band width " + DoubleToString(bandWidthATR, 2) + " ATR;";
+      signal.reasons += "ADX " + DoubleToString(adx, 2) + ";";
+      signal.reasons += "ADX delta " + DoubleToString(adx - adxPast, 2) + ";";
+      signal.reasons += "DI edge " + DoubleToString(diEdge, 2) + ";";
+      signal.reasons += "ATR ratio " + DoubleToString(atrRatio, 3) + ";";
+      signal.reasons += "Trend dist ATR " + DoubleToString(trendDistanceATR, 3) + ";";
+      signal.reasons += "Trend slope ATR " + DoubleToString(trendSlopeATR, 3) + ";";
+      signal.reasons += "Fast trend dist ATR " + DoubleToString(fastTrendDistanceATR, 3) + ";";
+      signal.reasons += "MTF dist ATR " + DoubleToString(mtfDistanceATR, 3) + ";";
+      signal.reasons += "Body pct " + DoubleToString(bodyPercent, 1) + ";";
+      signal.reasons += "Wick pct " + DoubleToString(directionalWickPercent, 1) + ";";
+      signal.reasons += "Close loc " + DoubleToString(closeLocation, 3) + ";";
+      signal.reasons += "Stop ATR " + DoubleToString(stopATR, 3) + ";";
+      signal.reasons += "Target ATR " + DoubleToString(targetATR, 3) + ";";
+      signal.reasons += "Trade RR " + DoubleToString(tradeRR, 3) + ";";
+      signal.reasons += "Spread ATR pct " + DoubleToString(spreadATRPercent, 2) + ";";
+      signal.atr = atr;
+      signal.stopDistance = stopDistance;
+      signal.takeProfitDistance = targetDistance;
+      signal.isRangeReversion = true;
+      signal.riskMultiplier = MathMin(1.0, MathMax(0.0, InpBandVWAPReversionRiskMultiplier));
+      signal.rangeReversionStopPrice = stopPrice;
+      signal.rangeReversionTargetPrice = targetPrice;
+      return signal;
+   }
 };
 
 class CPositionManager
@@ -21994,10 +22242,12 @@ bool TradeReadinessSafetyGateAllows()
                                  InpUseEliteContinuationUnlimitedRunner,
                                  "unlimited runner behavior enabled", violations);
    AppendTradeReadinessViolation(InpUseFlatMonthLiquidityReclaimLane ||
-                                 InpAllowFlatMonthLiquidityReclaimOutsideMonthFilter,
-                                 "experimental FMLR lane enabled", violations);
+                                  InpAllowFlatMonthLiquidityReclaimOutsideMonthFilter,
+                                  "experimental FMLR lane enabled", violations);
+   AppendTradeReadinessViolation(InpUseBandVWAPReversionLane,
+                                 "experimental band/VWAP reversion lane enabled", violations);
    AppendTradeReadinessViolation(InpUseTickSpeedImpulse,
-                                 "tick-speed impulse enabled", violations);
+                                  "tick-speed impulse enabled", violations);
 
    if(StringLen(violations) > 0)
    {
@@ -22146,10 +22396,13 @@ void OnTick()
    SSignal signal = entryEngine.Build(trendBias);
    ApplySignalMode(signal);
    SSignal secondarySignal = BuildM5TightLiquiditySecondarySignal(trendBias);
+   SSignal bandReversionSignal = entryEngine.BuildBandVWAPReversion();
    if(signal.bias == BIAS_NONE)
    {
       if(secondarySignal.bias != BIAS_NONE)
          signal = secondarySignal;
+      else if(bandReversionSignal.bias != BIAS_NONE)
+         signal = bandReversionSignal;
    }
    else if(InpM5TightLiquidityAllowPrimaryOverride &&
            secondarySignal.bias != BIAS_NONE &&

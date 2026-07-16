@@ -1,6 +1,117 @@
 # Current Research Best Profile
 
-Last updated: 2026-07-14.
+Last updated: 2026-07-16.
+
+## Authoritative Current-Source Candidate
+
+The best current-source risk-first candidate is:
+
+`outputs/CANDIDATE_MONEY_READY_PROFILE.set`
+
+Profile SHA-256:
+
+`D0459197F2A8CA1385F139694BD036AA9A3A596BB406F7D4474CDC8444605C79`
+
+Maintained source SHA-256:
+
+`A167CDB787E09F6E97B961D46963452527936434245FC42C7593E94EDF504622`
+
+| Test | Net | Total return | Annualized | CAGR | PF | Trades | Max equity DD | Recovery |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Model4 real ticks, 2019-2026 | `+$321.59` | `+3.22%` | `+0.43%/yr` | `+0.42%/yr` | `2.81` | `32` | `0.59%` | `5.32` |
+| Model1, 2019-2026 | `+$397.53` | `+3.98%` | `+0.53%/yr` | `+0.52%/yr` | `2.77` | `37` | `0.66%` | `5.72` |
+| Model1, 2024-2026 YTD | `+$79.21` | `+0.79%` | `+0.31%/yr` | `+0.31%/yr` | `1.64` | `12` | `0.68%` | `1.14` |
+
+This replaces the older labels below as the authoritative current-source status. It is a trade-readiness research candidate, not a money-ready bot or a live approval.
+
+The exact profile took zero trades in the continuous and yearly 2015-2018 Model1 diagnostics. Therefore, optimizing 2024-now cannot be expected to work automatically in the future. The strategy currently demonstrates recent-regime selectivity, not broad-regime adaptability.
+
+Standard and severe 10,000-trial realized-R Monte Carlo tests both failed the loss-streak gate with a 95th-percentile streak of seven losses. The severe test had a `+7.95R` 5th-percentile net, but its worst trial was `-0.16R`.
+
+An earlier independent M15 Bollinger/VWAP reversion lane was rejected: its best continuous Model1 row made `+$11.80`, PF `1.29`, on `28` trades and added no 2015-2018 activity. No new best was promoted, and the experimental code was removed from the maintained source.
+
+The later daily Donchian channel-exit lane was profitable in all three broad eras and reproduced on continuous Model4 at `+$438.43`, PF `1.41`, `51` trades, and `3.77%` drawdown. It was still rejected because 2019-2022 was nearly flat (`+$27.75`, PF `1.07`) and combining it with this candidate reduced Model1 continuous net to `+$255.38` while creating a `-$22.74` older-era loss. See `outputs/DAILY_DONCHIAN_BREAKOUT_DECISION.md`.
+
+A long-only follow-up improved the best broad Model1 row to `+$887.48`, PF `1.99`, and `3.64%` drawdown, with positive older, middle, and recent eras. Independent yearly validation then rejected the entire plateau: every tested 15-30 day shape had four or five losing active years, and every restarted-year aggregate score was negative. No new best was promoted. See `outputs/DAILY_DONCHIAN_LONG_ONLY_DECISION.md`.
+
+A later DGF weak-hour and minimum-ATR follow-up also failed promotion. All `99 / 99` Model1 reports parsed and showed a smooth fast-model plateau, but all higher-return candidates retained a losing 2019 in the `12 / 12` focused Model4 gate. The best real-tick row made `+$631.54`, PF `1.70`, at `1.19%` drawdown while losing `-$9.68` in 2019. The only positive-2019 variant reduced continuous net to `+$400.15` and PF to `1.55`. Source reproduction also traced an apparent missing-trade regression to an old profile value becoming active after its spread-floor constant was exposed as an input. No new best was promoted and the experimental entry code was removed. See `outputs/DGF_VOLATILITY_FLOOR_DECISION.md`.
+
+An exact realized-R portfolio screen then tested `900` blends of this maintained candidate, the 127-trade high-profit branch, and the broad-era daily Donchian branch. The strongest analytical near-miss reached `+$9,798.58`, `8.50%/yr`, `6.10%` CAGR, PF `2.185`, `210` trades, and a conservative `6.57%` risk-floor drawdown. It was not implemented because 2017 and 2019 remained red, `28` rolling 12-month windows were negative, and a `0.05R` cost stress produced three red years. Two targeted Donchian repair screens also failed. See `outputs/STRATEGY_PORTFOLIO_DECISION.md`.
+
+A later H1 Bollinger/VWAP reversion family produced the strongest independent broad-history component in the current cycle. Its ADX `22` leader made `+$440.63`, `+0.38%/yr`, PF `2.36`, on `41` continuous 2015-2026 Model4 trades with `1.10%` drawdown, while two neighboring real-tick profiles also stayed profitable. It remains unpromoted because yearly Model4 lost in 2016, 2020, and 2024 and left 2019 inactive. All `700` exact realized-R blends with the maintained, high-profit, and Donchian streams failed the zero-red base/stress gate. Frozen research profile: `outputs/CANDIDATE_HTF_BAND_REVERSION_RESEARCH_PROFILE.set`, SHA-256 `A93F9D52CE8E2D7BD5AD99DDD9E089859ED390B39E63C21CA639EC171966C64E`. See `outputs/HTF_BAND_REVERSION_DECISION.md`.
+
+A feature-diagnostic follow-up exactly reproduced that 41-trade stream, screened `86` date-independent one-factor gates, and predeclared a narrow DI-edge neighborhood. `DI >= -12` improved continuous Model4 to `+$478.86`, PF `2.77`, `36` trades, and `1.14%` drawdown; `DI >= -10` made `+$447.23`, PF `3.51`, `28` trades, and `1.06%` drawdown. Both still failed yearly Model4 with two losing active years and no 2016/2019 activity. Their separate `700`-row exact portfolio screens also returned zero eligible blends. This validates DI imbalance as a useful research feature but does not change the maintained best or live-readiness status. See `outputs/HTF_BAND_REVERSION_DI_GATE_DECISION.md`.
+
+See `outputs/MONEY_READY_BALANCED_DECISION.md` for the complete decision and evidence map.
+
+## Historical Recent-Regime Leader And Holdout Downgrade
+
+The section below is retained as research chronology. It does not override the current-source candidate above.
+
+The current-source risk-adjusted leader inside the 2019-2026 research period is:
+
+`soo_m4_911_loss14` / adaptive liquidity DGF `09:00-10:59`
+
+Maintained guarded profile file:
+
+`outputs/CANDIDATE_SESSION_ADAPTIVE_9_11_STABILITY_GUARDED_PROFILE.set`
+
+SHA-256:
+
+`F242B6D43FE9C79901B137F2358BF55197B9E7E3C784A18071FE8D34A6B903E6`
+
+Maintained source SHA-256:
+
+`62C2F0B2397AE9992CA2B156ED1A2AA45D0F874DD3803CEA9F74EB15882B3DDE`
+
+The original frozen evidence profile remains `outputs/CANDIDATE_SESSION_ADAPTIVE_9_11_STABILITY_PROFILE.set`, SHA-256 `40993406F0E615CC0F70012ED99253D08B5DA657C62A9ABA2BBD4CC99EF32115`.
+
+Continuous 2019-2026 Model4 result on `$10,000`:
+
+- Net: `+$667.94`
+- Total return: `+6.68%`
+- Annualized return: `0.89%/yr`
+- CAGR: `0.86%`
+- Profit factor: `3.63`
+- Trades: `40`
+- Max drawdown: `0.67%`
+- Recovery factor: `9.44`
+
+Frozen 2015-2018 holdout:
+
+- Model4 history quality: `0% real ticks`, so no valid older real-tick pass is available from this broker
+- Continuous net: `+$0.24`
+- Unique trades: `1`
+- 2015-2017 trades: `0`
+- Model1 diagnostic: identical activity and net
+
+Decision:
+
+This profile is no longer described as broadly stable. It remains the best risk-adjusted recent-regime benchmark, but it failed the older minimum-activity gate and is not money-ready. See `outputs/SESSION_OLDER_OOS_PROBE_DECISION.md`.
+
+A follow-up cost-efficient session-expansion strategy did add older activity, but every active 2015-2018 continuous variant lost money. The branch was rejected, its code was removed, and this frozen profile/source pair remains unchanged. See `outputs/SESSION_COST_EXPANSION_PROBE_DECISION.md`.
+
+A distinct independent range-liquidity sweep/reclaim strategy was also screened on 2015-2018. Its best-looking rows made only `+$5.58` on `3` total trades, just two trades beyond the frozen control over four years, while baseline variants were slightly negative. It was rejected as statistically inactive, its code was removed, and this frozen profile/source pair remains unchanged. See `outputs/INDEPENDENT_RANGE_CONTINUOUS_PROBE_DECISION.md`.
+
+An independent H1 EMA trend plus M15 pullback/reclaim strategy was then screened on 2015-2018. Baseline and neighboring variants lost; only an isolated strict row was positive at `+$7.71` on `8` trades while the looser `56`-trade row had PF `0.68`. It failed the activity and profitable-plateau gates, its code was removed, and this frozen profile/source pair remains unchanged. See `outputs/IHTP_CONTINUOUS_PROBE_DECISION.md`.
+
+The exact frozen profile now also has `8 / 8` annual Model4 reports from 2019 through 2026 YTD. 2019 was inactive; every active year from 2020 onward was profitable. The annual restart score is `+$650.08`, average annual return `+0.89%`, `40` trades, and `0.57%` worst yearly drawdown. This confirms recent-regime annual stability without changing the profile, but it does not repair older-regime inactivity or make the candidate money-ready. See `outputs/SESSION_ADAPTIVE_YEARLY_PROBE_DECISION.md`.
+
+Realized-R parsing covers all `40 / 40` continuous Model4 trades. Standard and severe 10,000-trial Monte Carlo stresses remained positive in every trial, but both failed the operational loss-streak gate with a 95th-percentile streak of seven losses. Economic stress evidence is encouraging; unattended live approval remains blocked pending forward/demo, second-broker, and live-policy proof. See `outputs/SESSION_ADAPTIVE_MONTE_CARLO_DECISION.md`.
+
+A dedicated abnormal-loss-streak quarantine now exists independently from the ordinary post-loss cooldown. The four-loss, 30-day guarded profile reproduced the default-off Model4 control exactly: `+$667.94`, PF `3.63`, `40` trades, and `0.67%` drawdown, with identical trade hashes. The feature passed `9 / 9` synthetic state cases. Because history never reached four consecutive losses, this proves non-interference rather than protective effectiveness. Forward/demo and second-broker proof remain mandatory. See `outputs/SESSION_ABNORMAL_QUARANTINE_PROBE_DECISION.md`.
+
+A trade-level diversification screen found near-zero correlation and only two overlapping positions between this candidate and an old high-profit trend-fallback branch. The combination still had a red 2019 and a six-loss streak, while the secondary profile contained explicit date/month fitting under an older source. It was rejected without a combined MT5 run. See `outputs/TRADE_LEVEL_DIVERSIFICATION_DECISION.md`.
+
+A standalone Asian-range sweep and London rejection lane then returned all `28 / 28` Model1 reports across older, middle, recent, and continuous windows. Every neighboring shape had a losing broad era, and none reached the continuous PF `1.20` gate. The experiment was rejected without Model4, its code was removed, and the maintained source/profile pair remains unchanged. See `outputs/INDEPENDENT_SESSION_STRUCTURE_PROBE_DECISION.md`.
+
+The old high-profit trend-fallback stream was then reconstructed without its March/May/August month selection, auxiliary lanes, or fitted exits. All `56 / 56` Model1 reports returned. The clean body-20 signal lost `-$1,463.76` on `1,466` trades; the best bounded body/payoff follow-up reached only `+$68.99`, PF `1.00`, with losing older and recent eras. It was rejected without Model4. The old high-profit profile is now explicitly classified as calendar-dependent historical research, not a deployable diversification candidate. See `outputs/DATE_INDEPENDENT_TREND_FALLBACK_DECISION.md`.
+
+A distinct higher-timeframe trend plus M15 Donchian-breakout lane was then tested in `32 / 32` Model1 reports. All eight neighboring variants lost over the continuous 2015-2026 path and in both older and middle eras. The least-negative continuous row lost `-$15.89`, PF `0.74`, and its recent-only gain was `+$3.20`; the largest recent gain was `+$7.09` on a row that lost in both prior eras. It was rejected without Model4, its code was removed, and the maintained source/profile pair remains unchanged. See `outputs/INDEPENDENT_HTF_TREND_BREAKOUT_DECISION.md`.
+
+Existing long-pause controls were then tested in `54 / 54` Model1 reports. A 30-day ordinary post-loss cooldown and a three-trade average-R pause both reduced profit without reducing drawdown; a 60-day cooldown created a red 2025. The experiment was rejected and exact source/profile behavior remains unchanged. See `outputs/SESSION_ABNORMAL_PAUSE_PROBE_DECISION.md`.
+
+The historical sections below are retained as research chronology. Their older labels do not override this current holdout classification.
 
 ## Critical Current-Source Correction
 
