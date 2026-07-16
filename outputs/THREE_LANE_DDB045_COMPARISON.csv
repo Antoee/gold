@@ -1,0 +1,5 @@
+candidate,window,tick_quality_percent,net_profit,total_return_percent,annualized_return_percent,cagr_percent,profit_factor,trades,max_drawdown_percent,recovery_factor,role
+three_lane_ddb045,continuous_2015_2026,65,526.20,5.26,0.46,0.45,3.26,51,0.77,6.54,provisional_broad_history_research_best
+three_lane_ddb045,continuous_2019_2026,99,380.23,3.80,0.51,0.50,2.80,46,0.78,4.73,higher_profit_forward_test_candidate
+two_lane_risk010,continuous_2019_2026,99,347.94,3.48,0.46,0.46,2.80,42,0.59,5.75,stability_benchmark
+
