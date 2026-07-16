@@ -6,6 +6,16 @@ This is not a martingale, grid, averaging-down, or recovery-system bot. Risk con
 
 ## Latest Status
 
+### Latest Research Update - 2026-07-16
+
+**No new best was promoted. The frozen three-lane `0.50%` profile remains the stability benchmark, and real-account trading remains disabled.**
+
+The high-profit DGF adverse-exit branch reached `+$15,023.66`, `+19.94%/yr`, PF `1.65`, and `14.77%` drawdown in continuous Model 1, but annual restarts exposed losses in 2021 (`-$752.15`, PF `0.42`), 2023 (`-$787.59`, PF `0.60`), and 2025 (`-$635.39`, PF `0.57`). Loss quarantine, hard liquidity isolation, and a frozen 220-row market-feature screen produced no survivor, so Model 4 was correctly skipped. See `outputs/DGF_ADVERSE_EXIT_RISK_DECISION.md`.
+
+The exact three-lane stability source was then tested at `0.50%`, `0.65%`, `0.80%`, and `1.00%` base risk. The `0.50%` control remained best at `+$545.91`, `+0.47%/yr`, PF `2.83`, `57` trades, `0.77%` drawdown, and `6.79` recovery in continuous 2015-2026 Model 1. Higher risk did not improve growth: `0.65%` was dominated, while `0.80%` and `1.00%` triggered the account profit-trail review lock and stopped after only 8-11 continuous trades. The safeguard was not weakened to manufacture a larger result. See `outputs/THREE_LANE_GROWTH_RISK_LADDER_DECISION.md`.
+
+This means the answer is still honest: the project has a low-drawdown research candidate, but not a high-return money-ready bot. The next evidence must come from frozen forward testing, more independent trades, and genuinely independent strategy activity rather than more fitting of the 2024-now period.
+
 ### Authoritative Current-Source Status - 2026-07-16
 
 **Verdict: research-only, not money-ready, and not approved for live trading.** Real-account trading remains hard-locked.

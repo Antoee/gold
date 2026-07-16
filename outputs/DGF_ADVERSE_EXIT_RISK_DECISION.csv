@@ -1,0 +1,6 @@
+Experiment,Candidate,Model,ContinuousNet,AnnualizedPercent,ProfitFactor,MaxDrawdownPercent,Trades,AnnualRedYears,Decision,Reason
+adverse_exit_low_risk,darm_r045_risk040,1,15023.66,19.94,1.65,14.77,154,3,REJECT,"2021, 2023, and 2025 lost money; max loss streak was 8"
+loss_quarantine,dlq_s3_h720,1,1147.59,1.52,1.19,21.17,89,1,REJECT,"Reduced streak but 2019-2022 was negative and PF/DD failed"
+loss_quarantine,dlq_s4_h720,1,12156.00,16.15,1.71,20.39,120,0,REJECT,"Loss streak reached 5 but broad drawdown exceeded 15%"
+liquidity_isolation,darm_liquidity_isolated,1,4992.07,,1.79,13.17,70,3,REJECT,"2019, 2021, and 2022 were negative; activity and profit collapsed"
+feature_gate_screen,220_one_feature_thresholds,offline,,,,,41,,REJECT,"Only one discovery gate qualified and it failed the frozen 2023-2025 holdout"

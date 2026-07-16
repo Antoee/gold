@@ -1,0 +1,5 @@
+Candidate,BaseRiskPercent,ContinuousNet,AnnualizedPercent,CAGRPercent,ProfitFactor,MaxDrawdownPercent,RecoveryFactor,Trades,WorstBroadEraNet,Decision
+three_lane_risk050,0.50,545.91,0.47,0.46,2.83,0.77,6.79,57,114.48,KEEP_STABILITY_CONTROL
+three_lane_risk065,0.65,488.96,0.42,0.41,2.18,0.79,5.95,61,144.64,REJECT_DOMINATED
+three_lane_risk080,0.80,229.61,0.20,0.20,5.37,1.03,2.15,8,180.30,REJECT_PROFIT_TRAIL_LOCK
+three_lane_risk100,1.00,252.72,0.22,0.22,3.54,1.08,2.25,11,207.20,REJECT_PROFIT_TRAIL_LOCK
