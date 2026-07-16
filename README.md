@@ -14,6 +14,8 @@ The high-profit DGF adverse-exit branch reached `+$15,023.66`, `+19.94%/yr`, PF 
 
 The exact three-lane stability source was then tested at `0.50%`, `0.65%`, `0.80%`, and `1.00%` base risk. The `0.50%` control remained best at `+$545.91`, `+0.47%/yr`, PF `2.83`, `57` trades, `0.77%` drawdown, and `6.79` recovery in continuous 2015-2026 Model 1. Higher risk did not improve growth: `0.65%` was dominated, while `0.80%` and `1.00%` triggered the account profit-trail review lock and stopped after only 8-11 continuous trades. The safeguard was not weakened to manufacture a larger result. See `outputs/THREE_LANE_GROWTH_RISK_LADDER_DECISION.md`.
 
+A standalone London/New York opening-range breakout strategy was also built and compiled cleanly, then screened without using 2021-2026. All six variants lost in the independent 2019-2020 discovery era, with PF from `0.33` to `0.74`; every continuous candidate also crossed the `5%` drawdown review lock. The entire branch was rejected before recent holdout or Model 4 testing. See `outputs/INDEPENDENT_ORB_DISCOVERY_DECISION.md`.
+
 This means the answer is still honest: the project has a low-drawdown research candidate, but not a high-return money-ready bot. The next evidence must come from frozen forward testing, more independent trades, and genuinely independent strategy activity rather than more fitting of the 2024-now period.
 
 ### Authoritative Current-Source Status - 2026-07-16
