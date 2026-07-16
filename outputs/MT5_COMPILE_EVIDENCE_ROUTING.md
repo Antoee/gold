@@ -3,24 +3,24 @@
 Generated offline. This does not launch MT5, MetaEditor, Git, or GitHub Actions.
 
 - Inbox: `outputs\returned_mt5_reports\compile_inbox`
-- Routed evidence files: `0`
-- Missing evidence files: `2`
+- Routed evidence files: `2`
+- Missing evidence files: `0`
 - Duplicate evidence files: `0`
 - Invalid evidence files: `0`
-- Imported compile status: `0`
+- Imported compile status: `1`
 - Import warnings: `0`
 - Import failures: `0`
-- Waiting rows: `1`
-- Stale existing compile status rows: `1`
-- Ready for live-readiness compile gate: `False`
+- Waiting rows: `0`
+- Stale existing compile status rows: `0`
+- Ready for live-readiness compile gate: `True`
 
-Compile evidence is not complete or not clean. Return one valid compile log and the exact compiled .mq5 source copy, then rerun this router.
+Compile evidence imported cleanly. Run work\refresh_money_ready_status.ps1 to refresh live-readiness.
 
 ## Routing Rows
 
 | Evidence | Status | Source | Destination | Accepted Names | Action |
 | --- | --- | --- | --- | --- | --- |
-| compile_log | MISSING_IN_INBOX |  | outputs\returned_mt5_reports\compile_evidence\MT5_COMPILE_CURRENT.log | MT5_COMPILE_CURRENT; compile_current_mt5; Professional_XAUUSD_EA_compile | Drop one MetaEditor compile log into the compile inbox. |
-| compiled_source | MISSING_IN_INBOX |  | outputs\returned_mt5_reports\compile_evidence\Professional_XAUUSD_EA_COMPILED.mq5 | Professional_XAUUSD_EA; MT5_COMPILE_SOURCE; Professional_XAUUSD_EA_COMPILED | Drop the exact .mq5 source copy that was compiled into the compile inbox. |
-| compile_import | WAITING_FOR_EVIDENCE |  | outputs\MT5_COMPILE_STATUS.csv | compile_log + compiled_source | Compile log and matching compiled source are required before importing compile status. |
-| existing_compile_status | STALE_FOR_CURRENT_SOURCE | outputs\MT5_COMPILE_STATUS.csv | outputs\MT5_COMPILE_STATUS.csv | current source hash | status=PASS; hashStatus=MATCH; statusSource=46770EACA60826F90E1E9A9B7425356F96F7C8F83CF8F8C1FBE271632866933E; statusExpected=46770EACA60826F90E1E9A9B7425356F96F7C8F83CF8F8C1FBE271632866933E; currentExpected=5D148DAE2335F9037BDED3C9A82BD916C1FCFB6F43EE2EC5EAAE7E67384ED412 |
+| compile_log | ROUTED | outputs\returned_mt5_reports\compile_inbox\MT5_COMPILE_CURRENT.log | outputs\returned_mt5_reports\compile_evidence\MT5_COMPILE_CURRENT.log | MT5_COMPILE_CURRENT; compile_current_mt5; Professional_XAUUSD_EA_compile | Copied compile log to canonical evidence path. |
+| compiled_source | ROUTED | outputs\returned_mt5_reports\compile_inbox\Professional_XAUUSD_EA_COMPILED.mq5 | outputs\returned_mt5_reports\compile_evidence\Professional_XAUUSD_EA_COMPILED.mq5 | Professional_XAUUSD_EA; MT5_COMPILE_SOURCE; Professional_XAUUSD_EA_COMPILED | Copied compiled source copy to canonical evidence path. |
+| compile_import | IMPORTED_PASS | outputs\returned_mt5_reports\compile_evidence\MT5_COMPILE_CURRENT.log | outputs\MT5_COMPILE_STATUS.csv | import_mt5_compile_log.ps1 | status=PASS; hashStatus=MATCH; errors=0; warnings=0; exitCode=0 |
+| existing_compile_status | CURRENT_SOURCE_STATUS | outputs\MT5_COMPILE_STATUS.csv | outputs\MT5_COMPILE_STATUS.csv | current source hash | status=PASS; sourceHash=A167CDB787E09F6E97B961D46963452527936434245FC42C7593E94EDF504622 |

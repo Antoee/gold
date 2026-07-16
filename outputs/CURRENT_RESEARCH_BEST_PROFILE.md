@@ -502,7 +502,7 @@ Status:
 - Money-ready decision gate: `outputs/MONEY_READY_VALIDATION_DECISION.md` is currently `PENDING` with `1` passing prep gate, `16` pending result gates, and `0` failures because `outputs/MONEY_READY_VALIDATION_RESULTS.csv` and `outputs/MONEY_READY_BROKER_PROXY_RESULTS.csv` have not been returned yet. The gate will fail automatically on red exact Model4 splits, red quarterly/monthly windows, stress losses, broker-proxy losses, drawdown above `10%`, weak PF/recovery, or too few continuous trades.
 - Conservative trade-ready Monte Carlo gate: `outputs/TRADE_READY_CONSERVATIVE_MONTE_CARLO.md` is prepared and currently `PENDING` with `1000` seeded trials, `0` returned trade-log files, `0` R trades, `3` pending gates, and `0` failures. It will stress returned conservative logs by shuffling trade order and applying slippage, delay, spread-shock, and missed-winner degradation.
 - Conservative trade-ready external evidence gates: `outputs/TRADE_READY_CONSERVATIVE_FORWARD_TEST.md` and `outputs/TRADE_READY_CONSERVATIVE_SECOND_BROKER_DECISION.md` are prepared and currently `PENDING` with `0` returned evidence rows. They evaluate returned CSV evidence only and do not launch MT5.
-- Conservative trade-ready live-readiness gate: `outputs/TRADE_READY_LIVE_READINESS_DECISION.md` is the final approval gate for the conservative candidate and is currently `PENDING` with `5` passing gates, `8` pending gates, and `0` failures. It does not unlock real-account trading; it requires current-source compile proof, full validation, trade quality, Monte Carlo, forward/demo, second-broker, safety, local reproducibility freeze, and GitHub/source-publication sync evidence. The publication sync evidence now lives in `outputs/GITHUB_PUBLICATION_SYNC.md` and is still `PENDING`.
+- Conservative trade-ready live-readiness gate: `outputs/TRADE_READY_LIVE_READINESS_DECISION.md` is the final approval gate for the conservative candidate and is currently `PENDING` with `7` passing gates, `7` pending gates, and `0` failures. Current-source compile and GitHub publication now pass for A167/D045. It does not unlock real-account trading; full conservative validation, efficiency, trade quality, Monte Carlo, forward/demo, second-broker, and remaining conservative-audit proof are still required.
 - Compact-source prep: `work/prepare_flat_month_liquidity_reclaim_compact_source.ps1`.
 - Source smoke: `PRICE_ACTION_STRATEGY_MODULES_SMOKE_PASS`.
 - Source/artifact sync smoke: `EA_SOURCE_ARTIFACT_SYNC_SMOKE_PASS`.
@@ -514,7 +514,7 @@ Status:
 - External evidence smoke: `TRADE_READY_EXTERNAL_EVIDENCE_SMOKE_PASS`.
 - Trade-ready live-readiness smoke: `TRADE_READY_LIVE_READINESS_SMOKE_PASS`.
 - Hidden-launcher lock smoke: `MT5_HIDDEN_LAUNCHER_LOCK_SMOKE_PASS`.
-- MT5 local safety audit: `PASS 39 / 39`.
+- MT5 local safety audit: `PASS 44 / 44`.
 - Compile/backtest: pending while `work/MT5_LOCAL_LAUNCH_DISABLED.lock` remains active.
 
 Research note:
