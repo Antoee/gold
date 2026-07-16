@@ -112,7 +112,10 @@ def main() -> int:
                 "money-ready scorecard verdict is explicit")
 
     publication_text = read_text(ROOT / "outputs" / "GITHUB_PUBLICATION_SYNC.md")
-    audit.check("GitHub Actions" in publication_text and "PENDING" in publication_text,
+    publication_verdicts = ("Overall: **PASS**", "Overall: **PENDING**", "Overall: **FAIL**")
+    audit.check(any(verdict in publication_text for verdict in publication_verdicts)
+                and "Generated offline without launching" in publication_text
+                and "GitHub Actions" in publication_text,
                 "GitHub publication sync status is explicit and offline")
 
     print()
