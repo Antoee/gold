@@ -39,7 +39,9 @@ On the high-quality matched window, the third lane adds `$32.29` (`+9.28%`) and 
 
 Neighboring Donchian allocations from `0.40x` through `0.60x` remained profitable in every broad Model1 era. Restarted yearly Model4 had 10 positive years, one flat/no-trade year, and one loss (`2017: -$3.29`), with `0.59%` worst yearly drawdown. The 10,000-trial realized-R stress stayed profitable even in its worst trial (`+19.20R`) but failed strict tail-risk gates at `6.56R` p95 drawdown and a seven-loss p95 streak.
 
-Exact decision and result files: `outputs/THREE_LANE_DDB045_DECISION.md`, `outputs/THREE_LANE_DDB045_COMPARISON.csv`, `outputs/THREE_LANE_DDB045_MODEL4_VALIDATION_RESULTS.csv`, `outputs/THREE_LANE_DDB045_YEARLY_MODEL4_RESULTS.csv`, and `outputs/THREE_LANE_DDB045_MONTE_CARLO.csv`.
+Same-broker execution sensitivity passed `5 / 5` Model4 proxies. The high-commission guard was the harshest at `+$326.98`, `+0.43%/yr`, PF `2.54`, and `0.83%` drawdown; wide-spread and tight-slippage proxies made `+$342.84`, PF `2.60`, with `0.88%` drawdown. This strengthens the candidate but does not close the actual second-broker gate.
+
+Exact decision and result files: `outputs/THREE_LANE_DDB045_DECISION.md`, `outputs/THREE_LANE_DDB045_BROKER_PROXY_DECISION.md`, `outputs/THREE_LANE_DDB045_COMPARISON.csv`, `outputs/THREE_LANE_DDB045_MODEL4_VALIDATION_RESULTS.csv`, `outputs/THREE_LANE_DDB045_YEARLY_MODEL4_RESULTS.csv`, and `outputs/THREE_LANE_DDB045_MONTE_CARLO.csv`.
 
 This is the best **current-source trade-readiness candidate**, not a new profit best. Its drawdown is low and every active Model4 year from 2020 through 2026 YTD was positive, but the evidence is much too sparse: only `32` real-tick trades in about 7.5 years, and 2025 made only `+$8.80` with PF `1.26`.
 

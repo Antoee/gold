@@ -1,6 +1,6 @@
 param(
    [string]$TwoLaneSourcePath = "work\Professional_XAUUSD_EA_TWO_LANE_ISOLATED.mq5",
-   [string]$DailyDonchianSourcePath = "outputs\daily_donchian_channel_exit_package\source\Professional_XAUUSD_EA.mq5",
+   [string]$DailyDonchianSourcePath = "outputs\three_lane_ddb045_model4_validation_package\dependencies\daily_donchian\Professional_XAUUSD_EA.mq5",
    [string]$ThreeLaneSourcePath = "work\Professional_XAUUSD_EA_THREE_LANE_ISOLATED.mq5"
 )
 
@@ -17,11 +17,15 @@ foreach($required in @($twoLane, $daily, $threeLane)) {
 
 $twoLaneHash = (Get-FileHash -LiteralPath $twoLane -Algorithm SHA256).Hash
 $dailyHash = (Get-FileHash -LiteralPath $daily -Algorithm SHA256).Hash
+$threeLaneHash = (Get-FileHash -LiteralPath $threeLane -Algorithm SHA256).Hash
 if($twoLaneHash -ne "007B8DCF4A9A66652B1F34A32893ECA676165B88239119270A9B4D138F184472") {
    throw "Frozen two-lane source changed: $twoLaneHash"
 }
 if($dailyHash -ne "D387779DC3BABD6A8294C46E5827D1029AA536EA29F91C06C357D66D2B098153") {
    throw "Frozen daily Donchian source changed: $dailyHash"
+}
+if($threeLaneHash -ne "45B3D0704CFAD1B30E1E5E4C7C7079B6188A674546F8F2EB70DC72BF1A97EF90") {
+   throw "Frozen three-lane source changed: $threeLaneHash"
 }
 
 $text = Get-Content -LiteralPath $threeLane -Raw
@@ -86,7 +90,7 @@ if($dailyExit -lt 0 -or $dailySkip -le $dailyExit) {
    Status = "PASS"
    TwoLaneSha256 = $twoLaneHash
    DailyDonchianSha256 = $dailyHash
-   ThreeLaneSha256 = (Get-FileHash -LiteralPath $threeLane -Algorithm SHA256).Hash
+   ThreeLaneSha256 = $threeLaneHash
    DailyFalseInitializations = $dailyFalseInitializations
    BandFalseInitializations = $bandFalseInitializations
 }
