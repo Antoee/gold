@@ -1,5 +1,6 @@
 param(
    [string]$ProfilePath,
+   [string]$SourcePath = "Professional_XAUUSD_EA.mq5",
    [string]$CandidateName,
    [string]$OutDir,
    [string]$OutQueueManifest,
@@ -9,6 +10,7 @@ param(
    [string]$To = "2026.07.12",
    [string]$Window = "continuous_2024_2026",
    [int]$Model = 1,
+   [ValidateRange(100,100000000)][int]$Deposit = 1000,
    [string]$StopRule = "Reject if the broad window is red, too sparse, or drawdown is unacceptable."
 )
 
@@ -63,8 +65,12 @@ if(!(Test-Path -LiteralPath $resolvedProfile)) {
    throw "Profile missing: $resolvedProfile"
 }
 
-$sourcePath = Join-Path $repo "Professional_XAUUSD_EA.mq5"
-$sourceHash = (Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash
+$resolvedSource = Resolve-RepoPath $SourcePath
+if(!(Test-Path -LiteralPath $resolvedSource)) {
+   throw "Source missing: $resolvedSource"
+}
+
+$sourceHash = (Get-FileHash -LiteralPath $resolvedSource -Algorithm SHA256).Hash
 $profileHash = (Get-FileHash -LiteralPath $resolvedProfile -Algorithm SHA256).Hash
 
 $packageDir = Resolve-RepoPath $OutDir
@@ -76,14 +82,14 @@ $sourceDir = Join-Path $packageDir "source"
 New-Item -ItemType Directory -Path $configDir, $profileDir, $reportDir, $sourceDir -Force | Out-Null
 
 $setFileName = "$CandidateName.set"
-Copy-Item -LiteralPath $sourcePath -Destination (Join-Path $sourceDir "Professional_XAUUSD_EA.mq5") -Force
+Copy-Item -LiteralPath $resolvedSource -Destination (Join-Path $sourceDir "Professional_XAUUSD_EA.mq5") -Force
 Copy-Item -LiteralPath $resolvedProfile -Destination (Join-Path $profileDir $setFileName) -Force
 
 $inputs = Import-SetInputs $resolvedProfile
 $configName = "001_{0}_{1}_m{2}.ini" -f $CandidateName, $Window, $Model
 $reportName = "{0}_{1}_m{2}" -f $CandidateName, $Window, $Model
 $configPath = Join-Path $configDir $configName
-Write-SeasonalTesterConfig -Path $configPath -ReportRoot $reportDir -ReportName $reportName -From $From -To $To -Inputs $inputs -Model $Model
+Write-SeasonalTesterConfig -Path $configPath -ReportRoot $reportDir -ReportName $reportName -From $From -To $To -Inputs $inputs -Model $Model -Deposit $Deposit
 
 $queue = @([pscustomobject]@{
    QueueRank = 1
@@ -97,6 +103,7 @@ $queue = @([pscustomobject]@{
    From = $From
    To = $To
    Model = $Model
+   Deposit = $Deposit
    Config = "configs\$configName"
    ExpectedReportName = $reportName
    ProfileSnapshot = "profiles\$setFileName"
@@ -111,6 +118,7 @@ $runRows = @([pscustomobject]@{
    PhaseLabel = "single profile Model$Model"
    Window = $Window
    Model = $Model
+   Deposit = $Deposit
    PackageConfig = "$OutDir\configs\$configName"
    SourceConfig = "$OutDir\configs\$configName"
    ExpectedReportName = $reportName
@@ -138,6 +146,8 @@ $md = @(
    "- From: ``$From``",
    "- To: ``$To``",
    "- Model: ``$Model``",
+   "- Initial deposit: ``$Deposit``",
+   "- Source path: ``$SourcePath``",
    "- Source hash: ``$sourceHash``",
    "- Profile hash: ``$profileHash``",
    "",
@@ -152,6 +162,7 @@ $md | Set-Content -LiteralPath $mdPath -Encoding ASCII
 [pscustomobject]@{
    SourceHash = $sourceHash
    ProfileHash = $profileHash
+   Deposit = $Deposit
    QueueManifest = $OutQueueManifest
    PackageManifest = $OutPackageManifest
    PackageDir = $OutDir
