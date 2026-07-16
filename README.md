@@ -21,6 +21,26 @@ This is not a martingale, grid, averaging-down, or recovery-system bot. Risk con
 | Model1, 2019-2026 | `+$397.53` | `+3.98%` | `+0.53%/yr` | `+0.52%/yr` | `2.77` | `37` | `0.66%` | `5.72` |
 | Model1, 2024-2026 YTD | `+$79.21` | `+0.79%` | `+0.31%/yr` | `+0.31%/yr` | `1.64` | `12` | `0.68%` | `1.14` |
 
+### New Provisional Three-Lane Research Best - 2026-07-16
+
+**Verdict: higher-profit demo forward-test candidate, not money-ready. The two-lane build remains the stability benchmark.** Maintained A167 and the real-account lock are unchanged.
+
+- Three-lane source SHA-256: `45B3D0704CFAD1B30E1E5E4C7C7079B6188A674546F8F2EB70DC72BF1A97EF90`
+- DDB 0.45 profile SHA-256: `2E02246D24250D71DEC59A42AD1D7DE793614EBECEB309A879FE873D8F886312`
+- Compile: `0 errors, 0 warnings`
+
+| Test | Tick quality | Net | Total return | Annualized | CAGR | PF | Trades | Max DD | Recovery |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Three-lane, 2015-2026 continuous | `65% real ticks` | `+$526.20` | `+5.26%` | `+0.46%/yr` | `+0.45%/yr` | `3.26` | `51` | `0.77%` | `6.54` |
+| Three-lane, 2019-2026 continuous | `99% real ticks` | `+$380.23` | `+3.80%` | `+0.51%/yr` | `+0.50%/yr` | `2.80` | `46` | `0.78%` | `4.73` |
+| Two-lane matched control, 2019-2026 | `99% real ticks` | `+$347.94` | `+3.48%` | `+0.46%/yr` | `+0.46%/yr` | `2.80` | `42` | `0.59%` | `5.75` |
+
+On the high-quality matched window, the third lane adds `$32.29` (`+9.28%`) and four trades, but drawdown rises and recovery falls. The older 2015-2018 window has `0% real ticks`, so the 11-year result is broad modeled-tick evidence, not an all-real-tick profit claim.
+
+Neighboring Donchian allocations from `0.40x` through `0.60x` remained profitable in every broad Model1 era. Restarted yearly Model4 had 10 positive years, one flat/no-trade year, and one loss (`2017: -$3.29`), with `0.59%` worst yearly drawdown. The 10,000-trial realized-R stress stayed profitable even in its worst trial (`+19.20R`) but failed strict tail-risk gates at `6.56R` p95 drawdown and a seven-loss p95 streak.
+
+Exact decision and result files: `outputs/THREE_LANE_DDB045_DECISION.md`, `outputs/THREE_LANE_DDB045_COMPARISON.csv`, `outputs/THREE_LANE_DDB045_MODEL4_VALIDATION_RESULTS.csv`, `outputs/THREE_LANE_DDB045_YEARLY_MODEL4_RESULTS.csv`, and `outputs/THREE_LANE_DDB045_MONTE_CARLO.csv`.
+
 This is the best **current-source trade-readiness candidate**, not a new profit best. Its drawdown is low and every active Model4 year from 2020 through 2026 YTD was positive, but the evidence is much too sparse: only `32` real-tick trades in about 7.5 years, and 2025 made only `+$8.80` with PF `1.26`.
 
 **Will fitting 2024-now work automatically in the future? No.** The exact profile took `0` trades in every 2015-2018 Model1 diagnostic window. That is a minimum-activity and regime-coverage failure. Recent data helps measure current behavior, but it cannot prove that the same rules will survive a future volatility, liquidity, spread, broker, or trend-regime change.
