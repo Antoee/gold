@@ -4,7 +4,7 @@ Offline audit only. This script does not launch MT5.
 
 - Overall: **PASS**
 - Checks passed: 44 / 44
-- Runner scripts checked: 59
+- Runner scripts checked: 2
 - MT5 processes running: 0
 - Unlock file present: False
 - Hidden desktop ack file present: False
@@ -52,7 +52,7 @@ Offline audit only. This script does not launch MT5.
 | Money-ready refresh | Money-ready refresh child steps run without windows | True | work\refresh_money_ready_status.ps1 | Money-ready refresh child PowerShell steps must use ProcessStartInfo with CreateNoWindow and write logs. |
 | Money-ready refresh | Money-ready refresh avoids direct visible child shells | True | work\refresh_money_ready_status.ps1 | Replace direct powershell child calls with Invoke-QuietPowerShell. |
 | Money-ready refresh | Money-ready refresh does not launch MT5 | True | work\refresh_money_ready_status.ps1 | Money-ready refresh must rebuild state only; it must not launch MT5, MetaEditor, or Strategy Tester. |
-| Runner scripts | All MT5 runner scripts source the launch guard | True | Runner scripts checked: 59; unguarded: 0 | Add . (Join-Path $PSScriptRoot "assert_mt5_launch_allowed.ps1") near the top of each runner. |
+| Runner scripts | All MT5 runner scripts source the launch guard | True | Runner scripts checked: 2; unguarded: 0 | Add . (Join-Path $PSScriptRoot "assert_mt5_launch_allowed.ps1") near the top of each runner. |
 | Runner scripts | No runner bypasses Start-MT5Hidden with raw terminal launch | True | Raw terminal launch matches: 0 | Route tester launches through Start-MT5Hidden and the guard. |
 | Watchdog | Watchdog script exists | True | work\mt5_focus_watchdog.ps1 | Restore work\mt5_focus_watchdog.ps1. |
 | Watchdog | Watchdog targets MT5 and MetaEditor | True | work\mt5_focus_watchdog.ps1 | Watchdog must stop terminal64, metatester64, and MetaEditor. |
@@ -60,68 +60,11 @@ Offline audit only. This script does not launch MT5.
 | Watchdog | Hidden watchdog starter exists | True | work\start_mt5_focus_watchdog_hidden.ps1 | Restore work\start_mt5_focus_watchdog_hidden.ps1. |
 | Watchdog | Hidden watchdog starter uses detached no-window launch | True | work\start_mt5_focus_watchdog_hidden.ps1 | Start the focus watchdog through detached hidden process creation, not a visible shell. |
 | Watchdog | Watchdog process state matches quiet shield mode | True | No running watchdog process detected by CIM; stop marker present: True | Use work\start_mt5_focus_watchdog_hidden.ps1 for an active hidden shield, or work\stop_mt5_focus_watchdog.ps1 for no resident helper. |
-| Handoff configs | Current handoff integrity has no failures | True | Rows: 20; failures: 0 | Rerun work\audit_handoff_config_integrity.ps1 and fix any failed handoff config. |
+| Handoff configs | Current handoff integrity has no failures | True | Rows: 24; failures: 0 | Rerun work\audit_handoff_config_integrity.ps1 and fix any failed handoff config. |
 
 ## Runner Script Coverage
 
 | File | Guard | Hidden Helper | Raw Terminal Start |
 |---|---|---|---|
-| `probe_2024_h1_real_ticks.ps1` | True | True | False |
-| `probe_2024_h1_real_ticks_v2.ps1` | True | True | False |
-| `probe_2025_h2_direction_real_ticks.ps1` | True | True | False |
-| `probe_bos_sweep_profit_extensions.ps1` | True | True | False |
-| `probe_bos_sweep_variants_clean.ps1` | True | True | False |
-| `probe_date_sell_block_real_ticks.ps1` | True | True | False |
-| `probe_directional_confirmations_real_ticks.ps1` | True | True | False |
-| `probe_equity_drawdown_guard_real_ticks.ps1` | True | True | False |
-| `probe_general_regime_stress_clean.ps1` | True | True | False |
-| `probe_losing_quarters_real_ticks.ps1` | True | True | False |
-| `probe_monthly_confirmation_filters.ps1` | True | True | False |
-| `probe_monthly_no_trail.ps1` | True | True | False |
-| `probe_monthly_regime_filters.ps1` | True | True | False |
-| `probe_mtf_slope_direction_no_date_real_ticks.ps1` | True | True | False |
-| `probe_mtf_slope_sell_block_real_ticks.ps1` | True | True | False |
-| `probe_risk16_neighborhood.ps1` | True | True | False |
-| `probe_robust_profile_variants_clean.ps1` | True | True | False |
-| `probe_signal_timeframes_no_date_real_ticks.ps1` | True | True | False |
-| `probe_sl18_profit_extensions.ps1` | True | True | False |
-| `resume_buy3_sell2_monthly.ps1` | True | True | False |
-| `run_adaptive_real_tick_windows.ps1` | True | True | False |
-| `run_external_mt5_validation_package_local.ps1` | True | True | False |
 | `run_first_pass_package_hidden.ps1` | True | True | False |
-| `run_full_real_tick_default.ps1` | True | True | False |
-| `run_monthly_real_ticks.ps1` | True | True | False |
-| `run_mt5_fast_windows.ps1` | True | True | False |
-| `run_quarterly_real_ticks.ps1` | True | True | False |
-| `run_real_tick_windows.ps1` | True | True | False |
-| `run_walk_forward_real_ticks.ps1` | True | True | False |
-| `sweep_2024_candidates.ps1` | True | True | False |
-| `sweep_2024_candidates_2.ps1` | True | True | False |
-| `sweep_2025_adaptive_candidates.ps1` | True | True | False |
-| `sweep_adaptive_thresholds.ps1` | True | True | False |
-| `sweep_weak_half_fast.ps1` | True | True | False |
-| `test_adaptive_candidate_windows.ps1` | True | True | False |
-| `test_adaptive_candidate_windows_short.ps1` | True | True | False |
 | `test_mt5_report_export_smoke.ps1` | True | True | False |
-| `test_top_candidates_windows.ps1` | True | True | False |
-| `validate_adaptive_candidates_real_ticks.ps1` | True | True | False |
-| `validate_bos_sweep_splits_clean.ps1` | True | True | False |
-| `validate_bos_sweep_windows_clean.ps1` | True | True | False |
-| `validate_conf3_standard_real_ticks.ps1` | True | True | False |
-| `validate_date_buy_block_standard_real_ticks.ps1` | True | True | False |
-| `validate_date_sell_block_standard_real_ticks.ps1` | True | True | False |
-| `validate_directional_candidate_quarters.ps1` | True | True | False |
-| `validate_directional_candidate_splits.ps1` | True | True | False |
-| `validate_equity_dd4_splits.ps1` | True | True | False |
-| `validate_h4_no_date_splits.ps1` | True | True | False |
-| `validate_momentum_sweep_monthly_clean.ps1` | True | True | False |
-| `validate_momentum_sweep_quarters_clean.ps1` | True | True | False |
-| `validate_momentum_sweep_splits_clean.ps1` | True | True | False |
-| `validate_no_be_strict_loss_walk_forward_real_ticks.ps1` | True | True | False |
-| `validate_no_be_strict_loss_yearly_full_real_ticks.ps1` | True | True | False |
-| `validate_no_be_walk_forward_real_ticks.ps1` | True | True | False |
-| `validate_no_date_buy_only_quarters.ps1` | True | True | False |
-| `validate_no_trail_quarters_clean.ps1` | True | True | False |
-| `validate_no_trail_splits.ps1` | True | True | False |
-| `validate_second_buy_block_standard_real_ticks.ps1` | True | True | False |
-| `validate_strict_loss_walk_forward_real_ticks.ps1` | True | True | False |
