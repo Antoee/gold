@@ -1,0 +1,5 @@
+"Candidate","SourceType","Phase","Expected","ParsedReports","ParsedLogs","ParsedTotal","Missing","Unparsed","TotalNetProfit","WorstNetProfit","AverageAnnualizedReturnPercent","WorstAnnualizedReturnPercent","AverageCagrPercent","WorstCagrPercent","WorstDrawdownPercent","MinProfitFactor","TotalTrades"
+"h4ct_trail_40_20_l20_a25","independent_h4_channel_trend","frozen_holdout_model1","9","9","0","9","0","0","71.85","0","0.04","0","0.04","0","0.16","0","3"
+"h4ct_trail_55_20_l20_a25","independent_h4_channel_trend","frozen_holdout_model1","9","9","0","9","0","0","80.52","0","0.05","0","0.05","0","0.16","0","3"
+"h4ct_trail_55_20_l20_a30","independent_h4_channel_trend","frozen_holdout_model1","9","9","0","9","0","0","71.01","0","0.04","0","0.04","0","0.19","0","3"
+"h4ct_trail_80_40_l20_a30","independent_h4_channel_trend","frozen_holdout_model1","9","9","0","9","0","0","71.01","0","0.04","0","0.04","0","0.19","0","3"
