@@ -43,6 +43,8 @@ The new H1 Bollinger/VWAP reversion lane is the strongest independent broad-hist
 
 The strongest three-stream analytical near-miss (`7.37%` CAGR, PF `2.303`, `5.98%` conservative risk-floor drawdown) is **not a combined MT5 result**. It sums separately tested high-profit, maintained, and H1-reversion trade streams. Those profiles differ in `194` input contracts, and the current open-risk guard is magic-number scoped, so the figure must not be treated as a deployable single bot or live account forecast. A shared account-wide risk governor and true interaction test are required before this portfolio can advance.
 
+The first guarded common-executable prototype was **rejected by matched source controls**. On the same `$10,000`, 2019-2026 Model1 test, the actual `8D62...` high-profit implementation made `+$30,050.33`, PF `1.95`, on `116` trades with `20.44%` drawdown; the proposed common source made only `+$211.03`, PF `1.12`, on `124` trades. The profile's older declared `F254...` source lost `-$1,647.34`, proving that its source label was stale and that these implementations are not behaviorally interchangeable. The historical high-profit and maintained profiles also collide on magic number `26070402`. No shared bot was promoted; the next attempt must guard each exact source independently, use unique magic numbers, and reproduce guard-off behavior before combined testing. See `outputs/PORTFOLIO_COMMON_EXECUTABLE_DECISION.md`.
+
 Current decision record: `outputs/MONEY_READY_BALANCED_DECISION.md`. Exact result tables: `outputs/MONEY_READY_BALANCED_REALTICK_RESULTS.csv`, `outputs/MONEY_READY_BALANCED_BROAD_RESULTS.csv`, and `outputs/MONEY_READY_BALANCED_YEARLY_REALTICK_RESULTS.csv`.
 
 ### Prior Research Chronology
