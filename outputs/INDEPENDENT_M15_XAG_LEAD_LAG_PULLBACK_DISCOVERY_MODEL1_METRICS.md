@@ -1,0 +1,39 @@
+# First-Pass Validation Log Metrics
+
+Generated from exported MT5 reports when present and hidden MT5 tester logs when no report was exported. No MT5 process was launched.
+
+- Queue manifest: `outputs\INDEPENDENT_M15_XAG_LEAD_LAG_PULLBACK_DISCOVERY_MODEL1_QUEUE.csv`
+- Hidden run CSV: `outputs\INDEPENDENT_M15_XAG_LEAD_LAG_PULLBACK_DISCOVERY_MODEL1_RUN.csv`
+- Log files scanned: `2`
+- Expected rows: `32`
+- Parsed exported reports: `32`
+- Parsed from tester log: `0`
+- Missing reports/results: `0`
+- Unparsed log rows: `0`
+
+Log-parsed rows are enough to reject bad fast screens, but exported full reports are still required before any candidate can be trusted for promotion.
+
+## Summary By Candidate
+
+| Candidate | Source | Phase | Parsed Reports | Parsed Logs | Expected | Total Net | Worst Window | Avg Ann. Return % | Worst Ann. Return % | Worst DD % | Min PF | Trades |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `xmll_base` | independent_m15_xag_lead_lag_pullback | discovery_model1 | 2 | 0 | 2 | -186.43 | -119.52 | -0.31 | -0.4 | 1.44 | 0.75 | 194 |
+| `xmll_gap020` | independent_m15_xag_lead_lag_pullback | discovery_model1 | 2 | 0 | 2 | -186.43 | -119.52 | -0.31 | -0.4 | 1.44 | 0.75 | 194 |
+| `xmll_gap050` | independent_m15_xag_lead_lag_pullback | discovery_model1 | 2 | 0 | 2 | -140.41 | -96.26 | -0.24 | -0.32 | 1.25 | 0.78 | 181 |
+| `xmll_lead12` | independent_m15_xag_lead_lag_pullback | discovery_model1 | 2 | 0 | 2 | -45.58 | -90.55 | -0.08 | -0.3 | 1.51 | 0.8 | 186 |
+| `xmll_lead16` | independent_m15_xag_lead_lag_pullback | discovery_model1 | 2 | 0 | 2 | -201.27 | -165.04 | -0.34 | -0.55 | 2.07 | 0.57 | 157 |
+| `xmll_lead4` | independent_m15_xag_lead_lag_pullback | discovery_model1 | 2 | 0 | 2 | 177.54 | 42.08 | 0.3 | 0.14 | 1.04 | 1.13 | 151 |
+| `xmll_no_range` | independent_m15_xag_lead_lag_pullback | discovery_model1 | 2 | 0 | 2 | -108.43 | -68.15 | -0.18 | -0.23 | 1.1 | 0.89 | 281 |
+| `xmll_no_slope` | independent_m15_xag_lead_lag_pullback | discovery_model1 | 2 | 0 | 2 | -148.23 | -159.87 | -0.25 | -0.53 | 1.67 | 0.71 | 224 |
+| `xmll_tol000` | independent_m15_xag_lead_lag_pullback | discovery_model1 | 2 | 0 | 2 | -157.51 | -90.54 | -0.26 | -0.3 | 1.31 | 0.79 | 181 |
+| `xmll_tol020` | independent_m15_xag_lead_lag_pullback | discovery_model1 | 2 | 0 | 2 | -171.63 | -90 | -0.29 | -0.3 | 1.37 | 0.83 | 222 |
+| `xmll_tp125` | independent_m15_xag_lead_lag_pullback | discovery_model1 | 2 | 0 | 2 | -185.37 | -124.88 | -0.31 | -0.42 | 1.56 | 0.73 | 194 |
+| `xmll_tp200` | independent_m15_xag_lead_lag_pullback | discovery_model1 | 2 | 0 | 2 | -112.88 | -61.72 | -0.19 | -0.21 | 1.39 | 0.87 | 194 |
+| `xmll_xag075` | independent_m15_xag_lead_lag_pullback | discovery_model1 | 2 | 0 | 2 | -301.33 | -199.97 | -0.5 | -0.67 | 2.37 | 0.68 | 248 |
+| `xmll_xag125` | independent_m15_xag_lead_lag_pullback | discovery_model1 | 2 | 0 | 2 | 14.29 | -32.76 | 0.02 | -0.11 | 1.23 | 0.9 | 134 |
+| `xmll_xaumax050` | independent_m15_xag_lead_lag_pullback | discovery_model1 | 2 | 0 | 2 | -131.48 | -100.7 | -0.22 | -0.34 | 1.18 | 0.7 | 121 |
+| `xmll_xaumax100` | independent_m15_xag_lead_lag_pullback | discovery_model1 | 2 | 0 | 2 | -159.44 | -80.41 | -0.26 | -0.27 | 1.77 | 0.87 | 255 |
+
+## Missing Or Unparsed
+
+All queued rows have report or log evidence.

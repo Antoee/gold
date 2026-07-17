@@ -1,0 +1,7 @@
+"Candidate","SourceType","Phase","Expected","ParsedReports","ParsedLogs","ParsedTotal","Missing","Unparsed","TotalNetProfit","WorstNetProfit","AverageAnnualizedReturnPercent","WorstAnnualizedReturnPercent","AverageCagrPercent","WorstCagrPercent","WorstDrawdownPercent","MinProfitFactor","TotalTrades"
+"xmll_lead2","independent_m15_xag_lead_lag_pullback","neighborhood_model1","2","2","0","2","0","0","-169.49","-87.77","-0.28","-0.29","-0.28","-0.29","1.36","0.69","117"
+"xmll_lead3","independent_m15_xag_lead_lag_pullback","neighborhood_model1","2","2","0","2","0","0","-45.42","-36.36","-0.08","-0.12","-0.08","-0.12","1.25","0.9","157"
+"xmll_lead4","independent_m15_xag_lead_lag_pullback","neighborhood_model1","2","2","0","2","0","0","177.54","42.08","0.3","0.14","0.3","0.14","1.04","1.13","151"
+"xmll_lead5","independent_m15_xag_lead_lag_pullback","neighborhood_model1","2","2","0","2","0","0","-59.3","-33.47","-0.1","-0.11","-0.1","-0.11","1.24","0.92","172"
+"xmll_lead6","independent_m15_xag_lead_lag_pullback","neighborhood_model1","2","2","0","2","0","0","-101.07","-61.94","-0.17","-0.21","-0.17","-0.21","1.69","0.85","189"
+"xmll_lead7","independent_m15_xag_lead_lag_pullback","neighborhood_model1","2","2","0","2","0","0","-43.64","-41.02","-0.08","-0.14","-0.08","-0.14","1.64","0.92","205"
