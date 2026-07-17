@@ -8,7 +8,7 @@ Research and validation repository for a risk-first MetaTrader 5 Expert Advisor 
 
 **Forward-test candidate only. Real-account trading remains disabled.**
 
-**2026-07-17 update: no new best was promoted. The first forward attachment remains invalid because the demo account has the wrong starting balance. The M15 dual-regime portfolio failed its recent holdout, and a bounded inverse-volatility risk fork of the current best portfolio has now also failed pre-2021 discovery.**
+**2026-07-17 update: no new best was promoted. The first forward attachment remains invalid because the demo account has the wrong starting balance. The M15 dual-regime portfolio failed its recent holdout; bounded inverse-volatility and lane-aware market-phase forks of the current best also failed pre-2021 discovery.**
 
 The candidate combines two date-independent H1 strategies:
 
@@ -37,6 +37,8 @@ The replacement-account activation gate is prepared but has not been executed. T
 The terminal process later stopped during an interrupted isolated-research run. Restarting the same session preserved every frozen identity and the zero-trade account, but the read-only sentinel could not refresh while terminal-level algorithmic trading remained disabled. Re-enabling that switch would also wake the candidate on the invalid account, so the terminal was stopped again and the safety lock was retained. The stale heartbeat and stopped terminal are explicit failures, not forward evidence; valid days remain `0`.
 
 ## Latest Research Screens
+
+A separate market-phase fork retained the exact released entries/exits and used only a completed-H1-bar efficiency ratio to reduce reversion risk in strongly directional phases and momentum risk in strongly ranging phases. It could never increase either lane's base risk or exceed the existing `0.75%` open-risk cap. The source compiled with `0 errors, 0 warnings`; `24 / 24` pre-2021 Model 1 reports passed source identity. The best 12-bar variant improved continuous net to `+$747.49` (`+7.47%` total, `+1.21%/yr` CAGR), PF to `1.48`, and drawdown to `2.58%`, versus the fixed control's `+$694.13`, PF `1.42`, and `2.77%` drawdown. It nevertheless lost `-$61.36` at PF `0.90` in the protected 2019-2020 era, and every neighboring setting also left that era negative. The family was rejected before 2021+ holdout and Model 4. See the [frozen contract](outputs/MARKET_PHASE_PORTFOLIO_DISCOVERY_CONTRACT.md) and [decision](outputs/MARKET_PHASE_PORTFOLIO_DISCOVERY_DECISION.md).
 
 A separate adaptive-volatility fork retained the exact released Band/VWAP-reversion and E20 momentum entries/exits while multiplying requested risk by a closed-H1-bar ATR/price ratio bounded to `0.75x-1.25x`. Maximum requested lane risk still fit the existing `0.75%` open-risk cap, and all real-account, drawdown, daily-loss, broker-sizing, and minimum-lot safeguards remained unchanged. The source compiled with `0 errors, 0 warnings`; `24 / 24` pre-2021 Model 1 reports passed source identity. Every adaptive profile lost in 2019-2020. The highest-net row made `+$715.75` (`+7.16%` total, `+1.16%/yr` CAGR), PF `1.38`, and `3.40%` drawdown, but lost `-$131.67` in the later era and improved net only `3.1%` over the fixed-risk control while worsening drawdown. The fixed control made `+$694.13`, PF `1.42`, and `2.77%` drawdown, with materially better return/drawdown efficiency. The fork was rejected before holdout and Model 4. See the [frozen contract](outputs/ADAPTIVE_VOLATILITY_PORTFOLIO_DISCOVERY_CONTRACT.md) and [decision](outputs/ADAPTIVE_VOLATILITY_PORTFOLIO_DISCOVERY_DECISION.md).
 
@@ -138,6 +140,8 @@ No backtest can make an EA work forever without monitoring. The future process i
 - [`outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md`](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md): disabled-trading account-switch and clock-start gate
 - [`outputs/ADAPTIVE_VOLATILITY_PORTFOLIO_DISCOVERY_DECISION.md`](outputs/ADAPTIVE_VOLATILITY_PORTFOLIO_DISCOVERY_DECISION.md): fixed-control comparison and pre-holdout rejection of bounded inverse-volatility sizing
 - [`outputs/ADAPTIVE_VOLATILITY_PORTFOLIO_DISCOVERY_CONTRACT.md`](outputs/ADAPTIVE_VOLATILITY_PORTFOLIO_DISCOVERY_CONTRACT.md): preregistered source identity and control-relative gate
+- [`outputs/MARKET_PHASE_PORTFOLIO_DISCOVERY_DECISION.md`](outputs/MARKET_PHASE_PORTFOLIO_DISCOVERY_DECISION.md): fixed-control comparison and pre-holdout rejection of lane-aware phase sizing
+- [`outputs/MARKET_PHASE_PORTFOLIO_DISCOVERY_CONTRACT.md`](outputs/MARKET_PHASE_PORTFOLIO_DISCOVERY_CONTRACT.md): preregistered source identity and broad-era repair gate
 - [`outputs/INDEPENDENT_M15_DUAL_REGIME_PORTFOLIO_HOLDOUT_DECISION.md`](outputs/INDEPENDENT_M15_DUAL_REGIME_PORTFOLIO_HOLDOUT_DECISION.md): untouched 2021-2026 YTD rejection for the combined M15 portfolio
 - [`outputs/INDEPENDENT_M15_DUAL_REGIME_PORTFOLIO_DISCOVERY_DECISION.md`](outputs/INDEPENDENT_M15_DUAL_REGIME_PORTFOLIO_DISCOVERY_DECISION.md): pre-2021 discovery pass and frozen survivor table
 - [`outputs/INDEPENDENT_M15_VOLUME_CLIMAX_REVERSAL_ACTIVITY_DISCOVERY_DECISION.md`](outputs/INDEPENDENT_M15_VOLUME_CLIMAX_REVERSAL_ACTIVITY_DISCOVERY_DECISION.md): final pre-holdout activity rejection for the exact-source M15 volume-climax family
