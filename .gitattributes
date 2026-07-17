@@ -6,3 +6,8 @@ work/Professional_XAUUSD_Transferable_Portfolio.mq5 -text -diff
 release/transferable-portfolio-v0.1/Professional_XAUUSD_Transferable_Portfolio.mq5 -text -diff
 work/Professional_XAUUSD_Forward_Sentinel.mq5 -text
 outputs/TRANSFERABLE_FORWARD_SENTINEL_PROFILE.set -text
+work/Independent_XAUUSD_M15_Trend_Pullback.mq5 -text -diff whitespace=cr-at-eol
+outputs/independent_m15_trend_pullback_discovery_model1_package/source/Professional_XAUUSD_EA.mq5 -text -diff whitespace=cr-at-eol
+outputs/independent_m15_trend_pullback_discovery_model1_package/profiles/*.set -text whitespace=cr-at-eol
+outputs/independent_m15_trend_pullback_discovery_model1_package/configs/*.ini -text whitespace=cr-at-eol
+outputs/INDEPENDENT_M15_TREND_PULLBACK_DISCOVERY_MODEL1_RESULTS.csv -text whitespace=cr-at-eol

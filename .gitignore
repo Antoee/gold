@@ -20,6 +20,14 @@ archive/generated_artifacts_*/
 # MT5 report export staging folders.
 **/reports_here/
 
+# Multi-gigabyte isolated MT5 runtimes and disposable worker scratch.
+work/mt5_portable_research*/
+work/M15TPB_RAW_*
+
+# Language/tool caches.
+**/__pycache__/
+*.pyc
+
 # Windows metadata
 Thumbs.db
 desktop.ini
