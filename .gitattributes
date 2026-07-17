@@ -25,3 +25,12 @@ outputs/independent_m15_volatility_squeeze_activity_discovery_model1_package/sou
 outputs/independent_m15_volatility_squeeze_activity_discovery_model1_package/profiles/*.set -text whitespace=cr-at-eol
 outputs/independent_m15_volatility_squeeze_activity_discovery_model1_package/configs/*.ini -text whitespace=cr-at-eol
 outputs/INDEPENDENT_M15_VOLATILITY_SQUEEZE_ACTIVITY_DISCOVERY_MODEL1_RESULTS.csv -text whitespace=cr-at-eol
+work/Independent_XAUUSD_M15_Volume_Climax_Reversal.mq5 -text -diff whitespace=cr-at-eol
+outputs/independent_m15_volume_climax_reversal_discovery_model1_package/source/Professional_XAUUSD_EA.mq5 -text -diff whitespace=cr-at-eol
+outputs/independent_m15_volume_climax_reversal_discovery_model1_package/profiles/*.set -text whitespace=cr-at-eol
+outputs/independent_m15_volume_climax_reversal_discovery_model1_package/configs/*.ini -text whitespace=cr-at-eol
+outputs/INDEPENDENT_M15_VOLUME_CLIMAX_REVERSAL_DISCOVERY_MODEL1_RESULTS.csv -text whitespace=cr-at-eol
+outputs/independent_m15_volume_climax_reversal_activity_discovery_model1_package/source/Professional_XAUUSD_EA.mq5 -text -diff whitespace=cr-at-eol
+outputs/independent_m15_volume_climax_reversal_activity_discovery_model1_package/profiles/*.set -text whitespace=cr-at-eol
+outputs/independent_m15_volume_climax_reversal_activity_discovery_model1_package/configs/*.ini -text whitespace=cr-at-eol
+outputs/INDEPENDENT_M15_VOLUME_CLIMAX_REVERSAL_ACTIVITY_DISCOVERY_MODEL1_RESULTS.csv -text whitespace=cr-at-eol

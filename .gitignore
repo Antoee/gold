@@ -28,6 +28,10 @@ work/M15SQ_RAW_*
 work/M15SQA_RAW_*
 outputs/M15SQ_RAW_*
 outputs/M15SQA_RAW_*
+work/M15VCR_RAW_*
+work/M15VCRA_RAW_*
+outputs/M15VCR_RAW_*
+outputs/M15VCRA_RAW_*
 
 # Language/tool caches.
 **/__pycache__/

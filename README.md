@@ -8,7 +8,7 @@ Research and validation repository for a risk-first MetaTrader 5 Expert Advisor 
 
 **Forward-test candidate only. Real-account trading remains disabled.**
 
-**2026-07-17 update: no new best was promoted. The first forward attachment was invalidated before its first trade because the demo account had the wrong starting balance; independent M15 trend-pullback, M30 compression-expansion, and M15 volatility-squeeze families all failed discovery.**
+**2026-07-17 update: no new best was promoted. The first forward attachment was invalidated before its first trade because the demo account had the wrong starting balance; independent M15 trend-pullback, M30 compression-expansion, M15 volatility-squeeze, and M15 volume-climax/VWAP-reversion families all failed discovery.**
 
 The candidate combines two date-independent H1 strategies:
 
@@ -37,6 +37,8 @@ The replacement-account activation gate is prepared but has not been executed. T
 The terminal process later stopped during an interrupted isolated-research run. Restarting the same session preserved every frozen identity and the zero-trade account, but the read-only sentinel could not refresh while terminal-level algorithmic trading remained disabled. Re-enabling that switch would also wake the candidate on the invalid account, so the terminal was stopped again and the safety lock was retained. The stale heartbeat and stopped terminal are explicit failures, not forward evidence; valid days remain `0`.
 
 ## Latest Research Screens
+
+An independent M15 volume-climax reversal EA was implemented around tick-volume expansion, ATR-sized rejection candles, fresh local extremes, the day anchored VWAP, and H1 range-phase filtering. It compiled with `0 errors, 0 warnings`, uses broker-native `OrderCalcProfit` sizing at `0.10%` risk, never forces minimum lot, and caps stop-price distance at `$6`. The initial exact-source Model 1 screen parsed `45 / 45` reports on 2015-2020 only. Its strongest 1.30x-volume row made `+$107.17`, PF `1.27`, with both eras positive and `0.95%` drawdown, but only 84 trades against the frozen 120-trade floor. One separately named final activity screen parsed another `45 / 45` unchanged-source reports. Its highest-activity near miss made `+$112.20`, PF `1.20`, and `0.91%` drawdown on 117 trades, but missed the activity floor, had only PF `1.06` in 2015-2018, and lacked a passing neighbor. The family was closed with no 2021-2026 holdout or Model 4 exposure. See the [base decision](outputs/INDEPENDENT_M15_VOLUME_CLIMAX_REVERSAL_DISCOVERY_DECISION.md) and [activity decision](outputs/INDEPENDENT_M15_VOLUME_CLIMAX_REVERSAL_ACTIVITY_DISCOVERY_DECISION.md).
 
 An independent M15 Bollinger/Keltner volatility-squeeze continuation EA was implemented and compiled with `0 errors, 0 warnings`. Its first exact-source Model 1 screen parsed `45 / 45` reports on 2015-2020 only. Ten of 15 profiles were profitable in both eras; the strongest 8-bar breakout made `+$177.89`, PF `1.44`, and `0.48%` drawdown, but placed only 88 trades against the frozen 120-trade floor. A separately named final activity screen kept the source unchanged and tested 4/6/8/10-bar breakouts plus squeeze, expansion, trend, and session neighbors. Profiles reaching 137-168 trades fell below PF `1.20` or lost the older era, while the robust 8-bar row remained at 88 trades. Both screens were rejected before any 2021-2026 holdout or Model 4 data was opened. See the [base decision](outputs/INDEPENDENT_M15_VOLATILITY_SQUEEZE_DISCOVERY_DECISION.md) and [activity decision](outputs/INDEPENDENT_M15_VOLATILITY_SQUEEZE_ACTIVITY_DISCOVERY_DECISION.md).
 
@@ -130,6 +132,8 @@ No backtest can make an EA work forever without monitoring. The future process i
 - [`outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md`](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md): current frozen forward-demo progress and integrity gates
 - [`outputs/TRANSFERABLE_FORWARD_SENTINEL_REGISTRATION.json`](outputs/TRANSFERABLE_FORWARD_SENTINEL_REGISTRATION.json): read-only operational/account contract monitor identity
 - [`outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md`](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md): disabled-trading account-switch and clock-start gate
+- [`outputs/INDEPENDENT_M15_VOLUME_CLIMAX_REVERSAL_ACTIVITY_DISCOVERY_DECISION.md`](outputs/INDEPENDENT_M15_VOLUME_CLIMAX_REVERSAL_ACTIVITY_DISCOVERY_DECISION.md): final pre-holdout activity rejection for the exact-source M15 volume-climax family
+- [`outputs/INDEPENDENT_M15_VOLUME_CLIMAX_REVERSAL_DISCOVERY_DECISION.md`](outputs/INDEPENDENT_M15_VOLUME_CLIMAX_REVERSAL_DISCOVERY_DECISION.md): initial M15 volume-climax/VWAP-reversion discovery rejection and full table
 - [`outputs/INDEPENDENT_M15_VOLATILITY_SQUEEZE_ACTIVITY_DISCOVERY_DECISION.md`](outputs/INDEPENDENT_M15_VOLATILITY_SQUEEZE_ACTIVITY_DISCOVERY_DECISION.md): final pre-holdout activity rejection for the exact-source M15 squeeze family
 - [`outputs/INDEPENDENT_M15_VOLATILITY_SQUEEZE_DISCOVERY_DECISION.md`](outputs/INDEPENDENT_M15_VOLATILITY_SQUEEZE_DISCOVERY_DECISION.md): initial independent M15 squeeze discovery rejection and full table
 - [`outputs/INDEPENDENT_M30_COMPRESSION_EXPANSION_DISCOVERY_DECISION.md`](outputs/INDEPENDENT_M30_COMPRESSION_EXPANSION_DISCOVERY_DECISION.md): exact-source independent M30 rejection and discovery table
