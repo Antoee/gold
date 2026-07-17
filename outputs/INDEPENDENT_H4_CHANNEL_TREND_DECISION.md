@@ -37,9 +37,19 @@ All `36 / 36` full Model 1 reports completed. Every candidate failed the predecl
 
 There were zero trades in 2021, 2022, 2024, 2025, and 2026 YTD. The only holdout trade occurred in 2023. A one-trade result cannot establish profitability, profit factor, regime coverage, or future reliability. The required continuous holdout minimum was 40 trades.
 
-## Sizing Diagnosis
+## Broker-Native Sizing Diagnosis
 
-The EA deliberately returns zero volume when the risk-sized order is below the broker's `0.01`-lot minimum. At `0.10%` risk on `$10,000`, the risk budget is only `$10`. A wide two-ATR H4 gold stop can require more than `$10` of loss capacity even at `0.01` lot as price and volatility rise. This is the leading source-level explanation for the recent activity collapse; the current reports do not contain reject-reason counters, so it is classified as a diagnosis rather than a measured trade count by rejection reason.
+The EA deliberately returns zero volume when the risk-sized order is below the broker's `0.01`-lot minimum. At `0.10%` risk on `$10,000`, the risk budget is only `$10`.
+
+A subsequent no-trading diagnostic reproduced the 40, 55, and 80-bar breakout signals and called the broker's own `OrderCalcProfit` function for each two-ATR stop. It confirmed that this risk/account contract is structurally infeasible for the strategy:
+
+| Lookback | All eligible signals | Feasible at `$10,000 / 0.10%` | 2021+ signals | 2021+ feasible | Latest required equity min / median / p95 |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 40 | `970` | `19.69%` | `477` | `0.42%` | `$64,280 / $87,310 / $137,848` in 2026 |
+| 55 | `815` | `19.63%` | `394` | `0.76%` | `$19,770 / $39,630 / $73,921.50` in 2025 |
+| 80 | `687` | `18.49%` | `348` | `0.86%` | `$64,280 / $87,310 / $123,672` in 2026 |
+
+The diagnostic had zero `OrderCalcProfit` failures and placed zero orders. It measures sizing feasibility only; it does not reopen the consumed holdout or promote strategy performance.
 
 That behavior is correct. Forcing `0.01` lot would exceed the declared risk budget and would make the backtest look active by weakening risk management. Raising risk or capital after inspecting holdout activity would also create a new, holdout-informed experiment rather than rescue the frozen result.
 
@@ -60,4 +70,5 @@ The frozen three-lane profile remains the project benchmark. Its post-2026-07-12
 - `outputs/INDEPENDENT_H4_CHANNEL_TREND_TRAIL_DISCOVERY_MODEL1_RESULTS.csv`
 - `outputs/INDEPENDENT_H4_CHANNEL_TREND_HOLDOUT_MODEL1_RESULTS.csv`
 - `outputs/INDEPENDENT_H4_CHANNEL_TREND_DECISION.csv`
-
+- `outputs/XAUUSD_H4_CHANNEL_CAPITAL_FEASIBILITY.csv`
+- `outputs/XAUUSD_H4_CHANNEL_CAPITAL_FEASIBILITY_GATE.md`
