@@ -1,0 +1,4 @@
+"Candidate","Pre2015_2018Net","Pre2019_2020Net","PreContinuousPF","PreTrades","Holdout2021_2022Net","Holdout2021_2022PF","Holdout2021_2022Trades","Holdout2023_2026Net","Holdout2023_2026PF","Holdout2023_2026Trades","HoldoutContinuousNet","HoldoutContinuousCagrPercent","HoldoutContinuousPF","HoldoutContinuousTrades","HoldoutContinuousMaxDrawdownPercent","HoldoutContinuousRecoveryFactor","LaneGatePass","Decision"
+"fbt_b16_fixed_r200","65.89","29.31","1.45","54","21.65","1.22","25","-11.77","0.9","23","9.88","0.02","1.05","48","1","0.0986","False","REJECTED_BROAD_HOLDOUT"
+"m15sq_break8","98.71","81.19","1.44","88","-2.6","0.99","41","45.44","1.16","60","42.84","0.08","1.09","101","0.84","0.5117","False","REJECTED_BROAD_HOLDOUT"
+"m15vcr_vol130","73.23","35.37","1.27","84","-14.76","0.93","40","-57.78","0.7","38","-72.54","-0.13","0.82","78","1.18","-0.6137","False","REJECTED_BROAD_HOLDOUT"
