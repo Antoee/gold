@@ -1,0 +1,5 @@
+"Candidate","Discovery2015To2020Net","Discovery2015To2020PF","Holdout2021To2023Net","Holdout2021To2023PF","Holdout2024To2026Net","Holdout2024To2026PF","Holdout2021To2026Net","Holdout2021To2026PF","HoldoutTrades","HoldoutDrawdownPercent","Full2015To2026Net","Full2015To2026PF","Full2015To2026CAGRPercent","Full2015To2026DrawdownPercent","GatePass","Decision"
+"mtsm_m126_e20_r200","335.18","1.5","-74.79","0.8","116.71","2.2","41.92","1.09","122","1.27","377.1","1.33","0.32","1.22","False","REJECT_BEFORE_MODEL4"
+"mtsm_m126_e10_r200","402.59","1.26","-158.3","0.81","135.47","1.57","-22.83","0.98","278","2.32","374.71","1.14","0.32","2.26","False","REJECT_BEFORE_MODEL4"
+"mtsm_m126_e10_r250","381.39","1.25","-126.84","0.85","111.8","1.47","-15.04","0.99","276","2.33","360.93","1.14","0.31","2.16","False","REJECT_BEFORE_MODEL4"
+"mtsm_m126_e10_r150","314.47","1.2","-206.87","0.76","103.27","1.45","-96.85","0.91","277","2.69","183.6","1.07","0.16","3.04","False","REJECT_BEFORE_MODEL4"
