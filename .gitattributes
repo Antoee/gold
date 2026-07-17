@@ -43,3 +43,8 @@ outputs/independent_m15_volume_climax_reversal_activity_discovery_model1_package
 outputs/independent_m15_volume_climax_reversal_activity_discovery_model1_package/profiles/*.set -text whitespace=cr-at-eol
 outputs/independent_m15_volume_climax_reversal_activity_discovery_model1_package/configs/*.ini -text whitespace=cr-at-eol
 outputs/INDEPENDENT_M15_VOLUME_CLIMAX_REVERSAL_ACTIVITY_DISCOVERY_MODEL1_RESULTS.csv -text whitespace=cr-at-eol
+work/Independent_XAUUSD_M15_Daily_VWAP_Continuation.mq5 -text -diff whitespace=cr-at-eol
+outputs/independent_m15_daily_vwap_continuation_discovery_model1_package/source/Professional_XAUUSD_EA.mq5 -text -diff whitespace=cr-at-eol
+outputs/independent_m15_daily_vwap_continuation_discovery_model1_package/profiles/*.set -text whitespace=cr-at-eol
+outputs/independent_m15_daily_vwap_continuation_discovery_model1_package/configs/*.ini -text whitespace=cr-at-eol
+outputs/INDEPENDENT_M15_DAILY_VWAP_CONTINUATION_DISCOVERY_MODEL1_RESULTS.csv -text whitespace=cr-at-eol
