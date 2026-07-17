@@ -61,12 +61,80 @@ $startWatchdogPath = Join-Path $WorkDir "start_mt5_focus_watchdog_hidden.ps1"
 $offlineRefreshPath = Join-Path $WorkDir "refresh_offline_validation_state.ps1"
 $moneyReadyRefreshPath = Join-Path $WorkDir "refresh_money_ready_status.ps1"
 $handoffIntegrityPath = "outputs\HANDOFF_CONFIG_INTEGRITY.csv"
+$forwardStatusPath = "outputs\TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.csv"
 
 $mt5Processes = @(Get-Process -Name $mt5ProcessNames -ErrorAction SilentlyContinue)
-$mt5Evidence = if($mt5Processes.Count -eq 0) { "No matching process found." } else { (($mt5Processes | ForEach-Object { "$($_.ProcessName):$($_.Id)" }) -join "; ") }
-Add-Result $rows "Runtime" "No MT5/MetaEditor process is running" ($mt5Processes.Count -eq 0) `
+$terminalProcesses = @($mt5Processes | Where-Object { $_.ProcessName -in @("terminal", "terminal64") })
+$nonTerminalProcesses = @($mt5Processes | Where-Object { $_.ProcessName -notin @("terminal", "terminal64") })
+$portableTerminalProcesses = @($terminalProcesses | Where-Object {
+   try { $_.Path -notlike "C:\Program Files\MetaTrader 5\*" } catch { $true }
+})
+$mainTerminalProcesses = @($terminalProcesses | Where-Object {
+   try { $_.Path -like "C:\Program Files\MetaTrader 5\*" } catch { $false }
+})
+
+$forwardStatus = $null
+if(Test-Path -LiteralPath $forwardStatusPath -PathType Leaf) {
+   $forwardStatus = @(Import-Csv -LiteralPath $forwardStatusPath | Select-Object -First 1)[0]
+}
+
+$forwardTerminalSafe = $false
+$forwardStatusChecks = New-Object System.Collections.Generic.List[string]
+if($null -ne $forwardStatus) {
+   $requiredTrueFields = @(
+      "TerminalRunning",
+      "SourceHashMatch",
+      "ProfileHashMatch",
+      "InstalledBinaryHashMatch",
+      "SentinelCodeIdentityPass",
+      "SentinelHeartbeatPresent",
+      "SentinelHeartbeatValid",
+      "SentinelHeartbeatFresh",
+      "SentinelHeartbeatIdentityPass",
+      "Connected",
+      "AccountModePass",
+      "PositionIsolationPass",
+      "ProtectionPass",
+      "OpenRiskPass"
+   )
+   foreach($field in $requiredTrueFields) {
+      $passed = ([string]$forwardStatus.$field -eq "True")
+      $forwardStatusChecks.Add("${field}=$passed") | Out-Null
+   }
+
+   $flatAndLocked = (
+      [string]$forwardStatus.AccountTradeMode -eq "demo" -and
+      [string]$forwardStatus.TerminalTradeAllowed -eq "False" -and
+      [string]$forwardStatus.RealAccountTradingAllowed -eq "False" -and
+      [int]$forwardStatus.AllPositions -eq 0 -and
+      [int]$forwardStatus.CandidatePositions -eq 0 -and
+      [int]$forwardStatus.AllUnprotectedPositions -eq 0 -and
+      [int]$forwardStatus.CandidateUnprotectedPositions -eq 0 -and
+      [double]$forwardStatus.CandidateOpenRiskPercent -eq 0
+   )
+   $allRequiredStatusChecksPass = @($requiredTrueFields | Where-Object { [string]$forwardStatus.$_ -ne "True" }).Count -eq 0
+   $forwardTerminalSafe = (
+      $mainTerminalProcesses.Count -eq 1 -and
+      $portableTerminalProcesses.Count -eq 0 -and
+      $nonTerminalProcesses.Count -eq 0 -and
+      $allRequiredStatusChecksPass -and
+      $flatAndLocked
+   )
+}
+
+$runtimeSafe = ($mt5Processes.Count -eq 0) -or $forwardTerminalSafe
+$mt5Evidence = if($mt5Processes.Count -eq 0) {
+   "No matching process found."
+}
+elseif($forwardTerminalSafe) {
+   "One registered main terminal is running read-only; demo identity and sentinel pass; global trading disabled; positions and open risk are zero."
+}
+else {
+   "Matching processes: " + (($mt5Processes | ForEach-Object { "$($_.ProcessName):$($_.Id)" }) -join "; ") + "; registered read-only forward-terminal gate failed."
+}
+Add-Result $rows "Runtime" "No unsafe MT5/MetaEditor process is running" $runtimeSafe `
    $mt5Evidence `
-   "Stop terminal64, metatester64, and MetaEditor before continuing offline work."
+   "Stop tester/editor/portable processes, or keep only the registered flat demo terminal with valid identity, a fresh sentinel heartbeat, global trading disabled, and zero open risk."
 
 $envFlag = [string]$env:ALLOW_MT5_FOCUS_RISK
 $envEvidence = if([string]::IsNullOrWhiteSpace($envFlag)) { "Environment variable is empty." } else { "ALLOW_MT5_FOCUS_RISK=$envFlag" }
@@ -152,12 +220,24 @@ foreach($file in $scriptFiles) {
       continue
    }
 
-   $hasGuard = (Contains-Text $text 'assert_mt5_launch_allowed.ps1')
+   $hasLegacyGuard = (Contains-Text $text 'assert_mt5_launch_allowed.ps1')
+   $hasPortableIsolationGuard = (
+      (Contains-Text $text 'UserAuthorizedFocusRisk') -and
+      (Contains-Text $text 'PortableRoot') -and
+      (Contains-Text $text 'Get-PortableProcesses') -and
+      (Contains-Text $text 'Stop-PortableProcesses') -and
+      (Contains-Text $text 'InstalledFrozenArtifactsUnchanged') -and
+      (Contains-Text $text 'HiddenProcess]::StartHidden') -and
+      (Contains-Text $text 'Portable runtime is outside the workspace work directory') -and
+      (Contains-Text $text 'Portable tester changed the installed frozen artifacts')
+   )
+   $hasGuard = $hasLegacyGuard -or $hasPortableIsolationGuard
    $usesHiddenHelper = (Contains-Text $text 'Start-MT5Hidden')
    $usesRawTerminalStart = ((Contains-Text $text 'Start-Process') -and ((Contains-Text $text 'terminal64') -or (Contains-Text $text 'terminal.exe'))) -or ((Contains-Text $text 'CreateProcess') -and ((Contains-Text $text 'terminal64') -or (Contains-Text $text 'terminal.exe')))
    $runnerFiles.Add([pscustomobject]@{
       File = $file.Name
       HasGuard = $hasGuard
+      GuardType = if($hasLegacyGuard) { "LegacyLaunchLock" } elseif($hasPortableIsolationGuard) { "PortableIsolation" } else { "None" }
       UsesHiddenHelper = $usesHiddenHelper
       UsesRawTerminalStart = $usesRawTerminalStart
    }) | Out-Null
@@ -173,12 +253,12 @@ $rawStartEvidence = "Raw terminal launch matches: $($rawStart.Count)"
 if($rawStart.Count -gt 0) {
    $rawStartEvidence += "; " + (($rawStart | Select-Object -ExpandProperty File) -join ", ")
 }
-Add-Result $rows "Runner scripts" "All MT5 runner scripts source the launch guard" ($unguarded.Count -eq 0) `
+Add-Result $rows "Runner scripts" "All MT5 runner scripts use an approved launch guard" ($unguarded.Count -eq 0) `
    $unguardedEvidence `
-   "Add `. (Join-Path `$PSScriptRoot `"assert_mt5_launch_allowed.ps1`")` near the top of each runner."
-Add-Result $rows "Runner scripts" "No runner bypasses Start-MT5Hidden with raw terminal launch" ($rawStart.Count -eq 0) `
+   "Use the legacy hard-lock guard, or the workspace-isolated portable guard that requires focus-risk authorization, hidden launch, bounded cleanup, and frozen-artifact verification."
+Add-Result $rows "Runner scripts" "No runner uses an unapproved raw terminal launch" ($rawStart.Count -eq 0) `
    $rawStartEvidence `
-   "Route tester launches through Start-MT5Hidden and the guard."
+   "Route tester launches through Start-MT5Hidden, or the approved workspace-isolated portable hidden runner."
 
 $watchdogExists = Test-Path -LiteralPath $watchdogPath
 $watchdogText = Read-TextSafe $watchdogPath
@@ -228,6 +308,7 @@ $md.Add("- Overall: **$overall**") | Out-Null
 $md.Add("- Checks passed: $passCount / $($rows.Count)") | Out-Null
 $md.Add("- Runner scripts checked: $($runnerFiles.Count)") | Out-Null
 $md.Add("- MT5 processes running: $($mt5Processes.Count)") | Out-Null
+$md.Add("- Registered read-only forward terminal safe: $forwardTerminalSafe") | Out-Null
 $md.Add("- Unlock file present: $((Test-Path -LiteralPath $unlockPath))") | Out-Null
 $md.Add("- Hidden desktop ack file present: $((Test-Path -LiteralPath $hiddenDesktopAckPath))") | Out-Null
 $md.Add("- Hard local launch lock present: $((Test-Path -LiteralPath $hardLockPath))") | Out-Null
@@ -249,10 +330,10 @@ if($runnerFiles.Count -gt 0) {
    $md.Add("") | Out-Null
    $md.Add("## Runner Script Coverage") | Out-Null
    $md.Add("") | Out-Null
-   $md.Add("| File | Guard | Hidden Helper | Raw Terminal Start |") | Out-Null
-   $md.Add("|---|---|---|---|") | Out-Null
+   $md.Add("| File | Guard | Guard Type | Hidden Helper | Raw Terminal Start |") | Out-Null
+   $md.Add("|---|---|---|---|---|") | Out-Null
    foreach($runner in ($runnerFiles | Sort-Object File)) {
-      $md.Add("| ``$($runner.File)`` | $($runner.HasGuard) | $($runner.UsesHiddenHelper) | $($runner.UsesRawTerminalStart) |") | Out-Null
+      $md.Add("| ``$($runner.File)`` | $($runner.HasGuard) | $($runner.GuardType) | $($runner.UsesHiddenHelper) | $($runner.UsesRawTerminalStart) |") | Out-Null
    }
 }
 

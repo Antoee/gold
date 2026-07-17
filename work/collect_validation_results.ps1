@@ -19,6 +19,7 @@ function Convert-ToNumber {
    $clean = $clean -replace '<[^>]+>', ''
    $clean = [System.Net.WebUtility]::HtmlDecode($clean)
    $clean = $clean -replace '[,$%]', ''
+   $clean = $clean -replace '(?<=\d)[\s\u00A0\u202F]+(?=\d{3}(?:\D|$))', ''
    $clean = $clean -replace '\s+', ' '
    $clean = $clean.Trim()
    $match = [regex]::Match($clean, '[-+]?\d+(?:\.\d+)?')
@@ -51,9 +52,10 @@ function Read-Metric {
 
    foreach($label in $Labels) {
       $escaped = [regex]::Escape($label)
+      $number = '[-+]?\d+(?:(?:[,\s\u00A0\u202F]\d{3})+)?(?:\.\d+)?%?'
       $patterns = @(
-         "$escaped\s*[:\t ]+\s*([-+]?\d[\d,]*(?:\.\d+)?%?)",
-         "$escaped.*?([-+]?\d[\d,]*(?:\.\d+)?%?)"
+         "$escaped\s*[:\t ]+\s*($number)",
+         "$escaped.*?($number)"
       )
 
       foreach($pattern in $patterns) {
@@ -65,6 +67,30 @@ function Read-Metric {
       }
    }
 
+   return $null
+}
+
+function Read-ConsecutiveLossCount {
+   param([string]$Text)
+
+   $countFirst = Read-Metric -Text $Text -Labels @(
+      "Maximum consecutive losses ($)",
+      "Maximum consecutive losses",
+      "Maximal consecutive losses",
+      "Max consecutive losses",
+      "Consecutive Losses"
+   )
+   if($null -ne $countFirst) { return [Math]::Abs([double]$countFirst) }
+
+   foreach($label in @("Maximal consecutive loss (count)", "Maximal consecutive losses (count)")) {
+      $escaped = [regex]::Escape($label)
+      $match = [regex]::Match(
+         $Text,
+         "$escaped.*?[-+]?\d[\d,]*(?:\.\d+)?\s*\(\s*(\d+)\s*\)",
+         [System.Text.RegularExpressions.RegexOptions]::IgnoreCase
+      )
+      if($match.Success) { return [double]$match.Groups[1].Value }
+   }
    return $null
 }
 
@@ -245,6 +271,10 @@ function Read-ValidationReport {
    $expectedReportName = Get-RowValue -Row $ManifestRow -Name "ExpectedReportName"
    $initialDeposit = 1000.0
    $manifestInitialDeposit = Get-RowValue -Row $ManifestRow -Name "InitialDeposit"
+   if([string]::IsNullOrWhiteSpace([string]$manifestInitialDeposit)) {
+      $manifestInitialDeposit = Get-RowValue -Row $ManifestRow -Name "Deposit"
+   }
+   $initialDepositFromManifest = $false
    if(![string]::IsNullOrWhiteSpace([string]$manifestInitialDeposit)) {
       $parsedInitialDeposit = 0.0
       if([double]::TryParse(([string]$manifestInitialDeposit).Trim(),
@@ -252,6 +282,7 @@ function Read-ValidationReport {
                             [Globalization.CultureInfo]::InvariantCulture,
                             [ref]$parsedInitialDeposit) -and $parsedInitialDeposit -gt 0.0) {
          $initialDeposit = $parsedInitialDeposit
+         $initialDepositFromManifest = $true
       }
    }
    $calendarDays = Get-CalendarDays -From $from -To $to
@@ -292,6 +323,12 @@ function Read-ValidationReport {
    }
 
    $text = Normalize-ReportText -Path $Path
+   if(!$initialDepositFromManifest) {
+      $reportInitialDeposit = Read-Metric -Text $text -Labels @("Initial Deposit", "Starting Deposit")
+      if($null -ne $reportInitialDeposit -and [double]$reportInitialDeposit -gt 0.0) {
+         $initialDeposit = [double]$reportInitialDeposit
+      }
+   }
    $netProfit = Read-Metric -Text $text -Labels @("Total Net Profit", "Net Profit")
    $balance = Read-Metric -Text $text -Labels @("Final Balance", "Balance Final")
    $profitFactor = Read-Metric -Text $text -Labels @("Profit Factor")
@@ -299,7 +336,7 @@ function Read-ValidationReport {
    $sharpeRatio = Read-Metric -Text $text -Labels @("Sharpe Ratio", "Sharpe")
    $winRatePercent = Read-MetricPercent -Text $text -Labels @("Profit Trades", "Profitable Trades", "Winning Trades")
    $totalTrades = Read-Metric -Text $text -Labels @("Total Trades")
-   $maxConsecutiveLosses = Read-Metric -Text $text -Labels @("Maximal consecutive losses", "Maximum consecutive losses", "Max consecutive losses", "Consecutive Losses")
+   $maxConsecutiveLosses = Read-ConsecutiveLossCount -Text $text
    $balanceDrawdown = Read-Metric -Text $text -Labels @("Balance Drawdown Maximal", "Maximal balance drawdown")
    $equityDrawdown = Read-Metric -Text $text -Labels @("Equity Drawdown Maximal", "Maximal equity drawdown")
    $drawdownPercent = Read-MetricPercent -Text $text -Labels @("Equity Drawdown Maximal", "Balance Drawdown Maximal", "Maximal equity drawdown", "Maximal balance drawdown", "Maximal drawdown")

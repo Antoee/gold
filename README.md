@@ -8,7 +8,7 @@ Research and validation repository for a risk-first MetaTrader 5 Expert Advisor 
 
 **Forward-test candidate only. Real-account trading remains disabled.**
 
-**2026-07-17 update: no new best was promoted. The first forward attachment was invalidated before its first trade because the demo account had the wrong starting balance.**
+**2026-07-17 update: no new best was promoted. The first forward attachment was invalidated before its first trade because the demo account had the wrong starting balance, and a new independent M15 trend-pullback family failed discovery.**
 
 The candidate combines two date-independent H1 strategies:
 
@@ -32,9 +32,13 @@ No trades occurred, so no evidence was lost. The forward clock will restart only
 
 The forward profile keeps the same trading and risk inputs as the released base profile. Only evidence logging, dashboard visibility, and the frozen run label differ. The sentinel cannot trade and publishes no account identifier. See the [registration](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_REGISTRATION.json), [profile](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_PROFILE.set), [sentinel registration](outputs/TRANSFERABLE_FORWARD_SENTINEL_REGISTRATION.json), and [monitor package](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_PACKAGE.md).
 
-The replacement-account activation gate is prepared but has not been executed. It requires algorithmic trading to be disabled before the account switch, then proves exact `$10,000` balance/equity, demo hedging mode, frozen candidate/sentinel identities, zero positions, zero open risk, and empty dedicated logs before it can write a new registration timestamp. A separate verification is required after trading is re-enabled. Creating the new virtual account still awaits explicit acceptance of MetaQuotes' terms. See the [activation procedure](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md).
+The replacement-account activation gate is prepared but has not been executed. Terminal-level and sentinel-chart algorithmic trading are now disabled, the account-creation dialog was canceled without accepting terms, and no registration timestamp was changed. The disabled-trading check passes; the gate still refuses registration because starting balance and equity are `$100,000` instead of the frozen `$10,000`. It also preserves the demo hedging, identity, flat-account, zero-risk, and empty-log requirements. A separate verification is required after trading is re-enabled. Creating the new virtual account still awaits explicit acceptance of MetaQuotes' terms. See the [activation procedure](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md).
 
-## Latest Research Screen
+## Latest Research Screens
+
+An independent M15 trend-pullback family was screened on Model 1 using only 2015-2020 discovery data. It combined H1 EMA 50/200 alignment and slope, bounded H1 ADX, a prior M15 impulse, an EMA pullback, OHLC rejection-body/wick/close-location tests, optional tick volume, a swing-structure stop, and `0.10%` risk. All `30 / 30` reports parsed, but every one of the ten variants lost money in both the 2019-2020 era and the continuous 2015-2020 window. Continuous PF ranged from `0.22` to `0.52`; even the most selective variant lost `-$49.02` with only 19 trades. The family was rejected before any 2021-2026 holdout or Model 4 data was opened. See [the decision](outputs/INDEPENDENT_M15_TREND_PULLBACK_DISCOVERY_DECISION.md).
+
+This screen also validated a faster local workflow: four isolated portable workers produced 30 reports in roughly two minutes, while preserving the main forward terminal and its installed frozen source/binary after every run. The multi-gigabyte terminal copies and raw reports remain local; only the source, exact profiles/configs, parsed metrics, hashes, safety-guarded runners, and decision are published. The shared report parser now correctly handles MT5 grouped deposits such as `10 000.00`, with a regression test.
 
 The preregistered all-Model4 three-lane screen also produced **no new best**. Adding the daily Donchian stream to the same `0.45%` reversion and `0.15%` momentum allocation raised simulated net from `$2,289.01` to `$2,400.22` (`+4.86%`) and slightly reduced risk-floor drawdown from `3.62%` to `3.56%`, but PF fell from `1.605` to `1.582`. The center missed its frozen `5%` improvement threshold, only `1 / 3` Donchian-weight neighbors passed, and only `3 / 7` structural neighbors passed. It was rejected without implementation or post-result tuning. See [the decision](outputs/CLEAN_MODEL4_THREE_LANE_PORTFOLIO_DECISION.md).
 
@@ -116,6 +120,7 @@ No backtest can make an EA work forever without monitoring. The future process i
 - [`outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md`](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md): current frozen forward-demo progress and integrity gates
 - [`outputs/TRANSFERABLE_FORWARD_SENTINEL_REGISTRATION.json`](outputs/TRANSFERABLE_FORWARD_SENTINEL_REGISTRATION.json): read-only operational/account contract monitor identity
 - [`outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md`](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md): disabled-trading account-switch and clock-start gate
+- [`outputs/INDEPENDENT_M15_TREND_PULLBACK_DISCOVERY_DECISION.md`](outputs/INDEPENDENT_M15_TREND_PULLBACK_DISCOVERY_DECISION.md): latest independent strategy-family rejection and full discovery table
 - [`outputs/CLEAN_MODEL4_THREE_LANE_PORTFOLIO_DECISION.md`](outputs/CLEAN_MODEL4_THREE_LANE_PORTFOLIO_DECISION.md): latest rejected diversification screen
 - [`research`](research): dated research notes and rejected strategy branches
 - [`outputs`](outputs): historical generated evidence
