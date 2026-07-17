@@ -1,0 +1,6 @@
+"Candidate","SourceType","Phase","Expected","ParsedReports","ParsedLogs","ParsedTotal","Missing","Unparsed","TotalNetProfit","WorstNetProfit","AverageAnnualizedReturnPercent","WorstAnnualizedReturnPercent","AverageCagrPercent","WorstCagrPercent","WorstDrawdownPercent","MinProfitFactor","TotalTrades"
+"ri2_control","reversion_independent_v2","corrected_discovery_model1","9","9","0","9","0","0","700.07","-3.29","0.33","-0.03","0.33","-0.03","0.77","0","45"
+"ri2_m12_r30","reversion_independent_v2","corrected_discovery_model1","9","9","0","9","0","0","707.15","-17.15","0.33","-0.17","0.33","-0.17","0.72","0","63"
+"ri2_m12_r40","reversion_independent_v2","corrected_discovery_model1","9","9","0","9","0","0","693.31","-24.42","0.31","-0.25","0.31","-0.25","0.78","0","65"
+"ri2_m10_r30","reversion_independent_v2","corrected_discovery_model1","9","9","0","9","0","0","747.14","-17.15","0.35","-0.17","0.35","-0.17","0.72","0","59"
+"ri2_m10_r40","reversion_independent_v2","corrected_discovery_model1","9","9","0","9","0","0","736.12","-24.42","0.34","-0.25","0.34","-0.25","0.78","0","59"
