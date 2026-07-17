@@ -1,0 +1,39 @@
+# First-Pass Validation Log Metrics
+
+Generated from exported MT5 reports when present and hidden MT5 tester logs when no report was exported. No MT5 process was launched.
+
+- Queue manifest: `outputs\INDEPENDENT_M15_XAG_SYNCHRONIZED_CONTINUATION_DISCOVERY_MODEL1_QUEUE.csv`
+- Hidden run CSV: `outputs\INDEPENDENT_M15_XAG_SYNCHRONIZED_CONTINUATION_DISCOVERY_MODEL1_RUN.csv`
+- Log files scanned: `2`
+- Expected rows: `32`
+- Parsed exported reports: `32`
+- Parsed from tester log: `0`
+- Missing reports/results: `0`
+- Unparsed log rows: `0`
+
+Log-parsed rows are enough to reject bad fast screens, but exported full reports are still required before any candidate can be trusted for promotion.
+
+## Summary By Candidate
+
+| Candidate | Source | Phase | Parsed Reports | Parsed Logs | Expected | Total Net | Worst Window | Avg Ann. Return % | Worst Ann. Return % | Worst DD % | Min PF | Trades |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `xmsc_base` | independent_m15_xag_synchronized_continuation | discovery_model1 | 2 | 0 | 2 | -414.26 | -231.39 | -0.69 | -0.77 | 3.18 | 0.72 | 353 |
+| `xmsc_breakout12` | independent_m15_xag_synchronized_continuation | discovery_model1 | 2 | 0 | 2 | -336.5 | -270.27 | -0.56 | -0.9 | 2.96 | 0.73 | 496 |
+| `xmsc_breakout16` | independent_m15_xag_synchronized_continuation | discovery_model1 | 2 | 0 | 2 | -292.4 | -226.69 | -0.49 | -0.76 | 2.37 | 0.73 | 441 |
+| `xmsc_breakout28` | independent_m15_xag_synchronized_continuation | discovery_model1 | 2 | 0 | 2 | -319.86 | -213.77 | -0.53 | -0.71 | 3 | 0.75 | 290 |
+| `xmsc_breakout40` | independent_m15_xag_synchronized_continuation | discovery_model1 | 2 | 0 | 2 | -320.7 | -212.4 | -0.53 | -0.71 | 2.76 | 0.71 | 237 |
+| `xmsc_buffer000` | independent_m15_xag_synchronized_continuation | discovery_model1 | 2 | 0 | 2 | -356.39 | -179.9 | -0.6 | -0.6 | 2.86 | 0.76 | 407 |
+| `xmsc_buffer010` | independent_m15_xag_synchronized_continuation | discovery_model1 | 2 | 0 | 2 | -320.35 | -194.47 | -0.54 | -0.65 | 2.82 | 0.77 | 316 |
+| `xmsc_corr020` | independent_m15_xag_synchronized_continuation | discovery_model1 | 2 | 0 | 2 | -393.44 | -244.54 | -0.66 | -0.82 | 3.31 | 0.76 | 359 |
+| `xmsc_corr050` | independent_m15_xag_synchronized_continuation | discovery_model1 | 2 | 0 | 2 | -411.73 | -220.33 | -0.68 | -0.73 | 3.06 | 0.69 | 339 |
+| `xmsc_move025` | independent_m15_xag_synchronized_continuation | discovery_model1 | 2 | 0 | 2 | -460.63 | -254.15 | -0.77 | -0.85 | 3.4 | 0.69 | 362 |
+| `xmsc_move075` | independent_m15_xag_synchronized_continuation | discovery_model1 | 2 | 0 | 2 | -366.01 | -206.16 | -0.61 | -0.69 | 2.96 | 0.74 | 340 |
+| `xmsc_move24` | independent_m15_xag_synchronized_continuation | discovery_model1 | 2 | 0 | 2 | -257.45 | -136.94 | -0.43 | -0.46 | 2.41 | 0.78 | 325 |
+| `xmsc_move32` | independent_m15_xag_synchronized_continuation | discovery_model1 | 2 | 0 | 2 | -331.66 | -172.95 | -0.55 | -0.58 | 2.6 | 0.67 | 303 |
+| `xmsc_move8` | independent_m15_xag_synchronized_continuation | discovery_model1 | 2 | 0 | 2 | -411.15 | -218.81 | -0.68 | -0.73 | 2.85 | 0.57 | 289 |
+| `xmsc_tp125` | independent_m15_xag_synchronized_continuation | discovery_model1 | 2 | 0 | 2 | -430.3 | -275.81 | -0.72 | -0.92 | 3.34 | 0.72 | 353 |
+| `xmsc_tp200` | independent_m15_xag_synchronized_continuation | discovery_model1 | 2 | 0 | 2 | -364.4 | -202.37 | -0.61 | -0.68 | 3.24 | 0.75 | 353 |
+
+## Missing Or Unparsed
+
+All queued rows have report or log evidence.
