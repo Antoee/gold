@@ -1,7 +1,8 @@
 param(
    [string]$ResultsPath = "outputs\INDEPENDENT_M15_DUAL_REGIME_PORTFOLIO_HOLDOUT_MODEL1_RESULTS.csv",
    [string]$SummaryPath = "outputs\INDEPENDENT_M15_DUAL_REGIME_PORTFOLIO_HOLDOUT_MODEL1_SUMMARY.csv",
-   [string]$DecisionPath = "outputs\INDEPENDENT_M15_DUAL_REGIME_PORTFOLIO_HOLDOUT_DECISION.csv"
+   [string]$DecisionPath = "outputs\INDEPENDENT_M15_DUAL_REGIME_PORTFOLIO_HOLDOUT_DECISION.csv",
+   [string]$SourcePath = "work\Independent_XAUUSD_M15_Dual_Regime_Portfolio.mq5"
 )
 
 Set-StrictMode -Version Latest
@@ -15,6 +16,8 @@ if($results.Count -ne 36) { throw "Expected 36 final reports." }
 if(@($results.Candidate | Sort-Object -Unique).Count -ne 12) { throw "Expected 12 candidates." }
 if(@($results | Where-Object Status -ne "PARSED").Count -ne 0) { throw "A final report is unparsed." }
 if(@($results | Where-Object ReportSourceIdentityPass -ne "True").Count -ne 0) { throw "A final report failed source identity." }
+$sourceHash = (Get-FileHash -LiteralPath (Resolve-RepoPath $SourcePath) -Algorithm SHA256).Hash
+if(@($results.SourceSha256 | Sort-Object -Unique).Count -ne 1 -or $results[0].SourceSha256 -ne $sourceHash) { throw "Checked-out source hash differs from the tested result identity." }
 if(@($results | Where-Object { $_.Window -notin @("holdout_2021_2023","recent_2024_2026ytd","continuous_2021_2026ytd") }).Count -ne 0) { throw "Unexpected holdout window." }
 if($decisionRows.Count -ne 1) { throw "Expected one decision row." }
 $decision = $decisionRows[0]
@@ -24,4 +27,4 @@ if($decision.Status -ne $expectedStatus -or [int]$decision.HoldoutEligible -ne $
 if($decision.HoldoutOpened -ne "True" -or $decision.Model4Opened -ne "False") { throw "Holdout/model4 state is inconsistent." }
 $hash = (Get-FileHash -LiteralPath (Resolve-RepoPath $ResultsPath) -Algorithm SHA256).Hash
 if($decision.ResultsSha256 -ne $hash) { throw "Decision/results identity mismatch." }
-[pscustomobject]@{ Status="PASS"; Decision=$decision.Status; Reports=36; Candidates=12; IdentityPasses=36; HoldoutEligible=$eligible.Count; HoldoutOpened=$true; Model4Opened=$false; ResultsSha256=$hash }
+[pscustomobject]@{ Status="PASS"; Decision=$decision.Status; Reports=36; Candidates=12; IdentityPasses=36; HoldoutEligible=$eligible.Count; HoldoutOpened=$true; Model4Opened=$false; SourceSha256=$sourceHash; ResultsSha256=$hash }
