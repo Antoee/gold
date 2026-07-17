@@ -6,9 +6,11 @@ This is not a martingale, grid, averaging-down, or recovery-system bot. Risk con
 
 ## Latest Status
 
-### Latest Research Update - 2026-07-16
+### Latest Research Update - 2026-07-17
 
 **No new best was promoted. The frozen three-lane `0.50%` profile remains the stability benchmark, and real-account trading remains disabled.**
+
+The H4 channel-trend capital-feasibility follow-up also produced **no new best**. Raising requested risk from `0.10%` to the project's existing `0.50%` per-trade cap restored activity, but every one of four previously frozen channel/trailing shapes lost the complete 2021-2026 validation era: `-$473.37` to `-$501.70`, `-0.87%/yr` to `-0.93%/yr` CAGR, and PF only `0.20-0.47`. Positive 2015-2026 headlines of `+$1,341.97` to `+$1,850.19` (`+1.10%/yr` to `+1.48%/yr` CAGR) were carried by strong pre-2021 discovery performance and therefore were rejected rather than advertised as future-ready. All `12 / 12` reports parsed, Model4 was skipped, and exact frozen MT5 source/binary hashes were restored. See `outputs/H4_CHANNEL_CAPITAL_FEASIBLE_DECISION.md`.
 
 The high-profit DGF adverse-exit branch reached `+$15,023.66`, `+19.94%/yr`, PF `1.65`, and `14.77%` drawdown in continuous Model 1, but annual restarts exposed losses in 2021 (`-$752.15`, PF `0.42`), 2023 (`-$787.59`, PF `0.60`), and 2025 (`-$635.39`, PF `0.57`). Loss quarantine, hard liquidity isolation, and a frozen 220-row market-feature screen produced no survivor, so Model 4 was correctly skipped. See `outputs/DGF_ADVERSE_EXIT_RISK_DECISION.md`.
 
