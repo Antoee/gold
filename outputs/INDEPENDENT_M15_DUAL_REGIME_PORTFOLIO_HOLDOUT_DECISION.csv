@@ -1,0 +1,2 @@
+"Status","Candidates","ReportsParsed","ReportsIdentityPassed","ReproducedIdentityRetries","ActiveProfiles","NumericPasses","HoldoutEligible","HoldoutOpened","Model4Opened","SourceSha256","ResultsSha256"
+"REJECTED_IN_HOLDOUT","12","36","36","1","12","0","0","True","False","DEA3B16FB2D14E4A1253B422CCE80AEC4CB49DCF03067EDBCE96008F694FA5E1","B24AA460E92EC7D40278AA27CC09DB2E158D38FC34C80C61C6351114006D9B67"
