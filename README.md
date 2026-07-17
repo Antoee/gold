@@ -32,6 +32,8 @@ No trades occurred, so no evidence was lost. The forward clock will restart only
 
 The forward profile keeps the same trading and risk inputs as the released base profile. Only evidence logging, dashboard visibility, and the frozen run label differ. The sentinel cannot trade and publishes no account identifier. See the [registration](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_REGISTRATION.json), [profile](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_PROFILE.set), [sentinel registration](outputs/TRANSFERABLE_FORWARD_SENTINEL_REGISTRATION.json), and [monitor package](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_PACKAGE.md).
 
+The replacement-account activation gate is prepared but has not been executed. It requires algorithmic trading to be disabled before the account switch, then proves exact `$10,000` balance/equity, demo hedging mode, frozen candidate/sentinel identities, zero positions, zero open risk, and empty dedicated logs before it can write a new registration timestamp. A separate verification is required after trading is re-enabled. Creating the new virtual account still awaits explicit acceptance of MetaQuotes' terms. See the [activation procedure](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md).
+
 ## Latest Research Screen
 
 The preregistered all-Model4 three-lane screen also produced **no new best**. Adding the daily Donchian stream to the same `0.45%` reversion and `0.15%` momentum allocation raised simulated net from `$2,289.01` to `$2,400.22` (`+4.86%`) and slightly reduced risk-floor drawdown from `3.62%` to `3.56%`, but PF fell from `1.605` to `1.582`. The center missed its frozen `5%` improvement threshold, only `1 / 3` Donchian-weight neighbors passed, and only `3 / 7` structural neighbors passed. It was rejected without implementation or post-result tuning. See [the decision](outputs/CLEAN_MODEL4_THREE_LANE_PORTFOLIO_DECISION.md).
@@ -113,6 +115,7 @@ No backtest can make an EA work forever without monitoring. The future process i
 - [`release/transferable-portfolio-v0.1`](release/transferable-portfolio-v0.1/README.md): current source, profile, reports, ledgers, stress results, and SHA-256 manifest
 - [`outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md`](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md): current frozen forward-demo progress and integrity gates
 - [`outputs/TRANSFERABLE_FORWARD_SENTINEL_REGISTRATION.json`](outputs/TRANSFERABLE_FORWARD_SENTINEL_REGISTRATION.json): read-only operational/account contract monitor identity
+- [`outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md`](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md): disabled-trading account-switch and clock-start gate
 - [`outputs/CLEAN_MODEL4_THREE_LANE_PORTFOLIO_DECISION.md`](outputs/CLEAN_MODEL4_THREE_LANE_PORTFOLIO_DECISION.md): latest rejected diversification screen
 - [`research`](research): dated research notes and rejected strategy branches
 - [`outputs`](outputs): historical generated evidence
