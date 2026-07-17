@@ -1,0 +1,6 @@
+Scenario,AdversePointsPerSide,RoundTripCommissionPerLot,Trades,TotalVolumeLots,ExtraCost,NetProfit,TotalReturnPercent,CagrPercent,ProfitFactor,MaxClosedDrawdownMoney,MaxClosedDrawdownPercent,RedYears,Older2015To2018,Middle2019To2022,Recent2023To2026,AllBroadErasPositive,RobustnessGate
+base_real_ticks,0.0,0.0,362,12.01,0.0,1615.36,16.154,1.306,1.584,273.89,2.505,2,806.1,317.11,492.15,True,PASS
+modest_extra_cost,5.0,3.5,362,12.01,162.13,1453.23,14.532,1.183,1.509,286.04,2.639,2,725.77,265.81,461.64,True,PASS
+moderate_extra_cost,10.0,7.0,362,12.01,324.27,1291.09,12.911,1.058,1.439,298.19,2.776,3,645.45,214.51,431.13,True,PASS
+severe_extra_cost,20.0,10.0,362,12.01,600.5,1014.86,10.149,0.841,1.327,324.78,3.069,4,508.6,127.11,379.15,True,PASS
+extreme_extra_cost,30.0,14.0,362,12.01,888.74,726.62,7.266,0.61,1.222,383.58,3.671,4,365.8,35.91,324.91,True,PASS
