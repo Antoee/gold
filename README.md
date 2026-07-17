@@ -22,6 +22,8 @@ A lower-timeframe M30 structure-stop channel family then solved the activity and
 
 A distinct M15 BOS/displacement/FVG-retest family was then screened entirely on 2015-2020 discovery data and also **did not produce a new best**. All `30 / 30` reports completed. Every one of the ten neighboring variants lost in both 2015-2018 and 2019-2020; continuous results ranged from `-$477.65` to `-$507.19`, PF `0.24-0.59`, with `102-196` trades, and all reached approximately the `5%` drawdown review lock. The family was rejected before opening 2021-2026 or spending time on Model 4, so the future boundary remains untouched. See `outputs/INDEPENDENT_M15_FVG_RETEST_DECISION.md`.
 
+Independent scheduling for the existing H1 Band/VWAP reversion lane was tested next and also **did not produce a new best**. All `45 / 45` Model 1 discovery reports completed using only 2015-2020. The exact control made `+$252.65`, PF `4.76`, on `15` trades with `0.77%` drawdown. The best candidate headline rose to `+$286.76`, but neither disjoint broad era improved, PF fell to `3.43`, drawdown rose to `1.09%`, and the active losing years 2017 and 2019 became worse. All four independent-scheduling variants were rejected before recent implementation validation or Model 4; the switch remains default off and the frozen three-lane best is unchanged. See `outputs/REVERSION_INDEPENDENT_DISCOVERY_DECISION.md`.
+
 This means the answer is still honest: the project has a low-drawdown research candidate, but not a high-return money-ready bot. The next evidence must come from frozen forward testing, more independent trades, and genuinely independent strategy activity rather than more fitting of the 2024-now period.
 
 ### Authoritative Current-Source Status - 2026-07-16
