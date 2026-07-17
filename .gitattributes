@@ -52,3 +52,8 @@ outputs/transferable_portfolio_growth_discovery_model1_package/source/Profession
 outputs/transferable_portfolio_growth_discovery_model1_package/profiles/*.set -text whitespace=cr-at-eol
 outputs/transferable_portfolio_growth_discovery_model1_package/configs/*.ini -text whitespace=cr-at-eol
 outputs/TRANSFERABLE_PORTFOLIO_GROWTH_DISCOVERY_MODEL1_RESULTS.csv -text whitespace=cr-at-eol
+outputs/low_activity_diversifier_holdout_model1_package/*/source/Professional_XAUUSD_EA.mq5 -text -diff whitespace=cr-at-eol
+outputs/low_activity_diversifier_holdout_model1_package/*/profiles/*.set -text whitespace=cr-at-eol
+outputs/low_activity_diversifier_holdout_model1_package/*/configs/*.ini -text whitespace=cr-at-eol
+outputs/LOW_ACTIVITY_DIVERSIFIER_HOLDOUT_MODEL1_RESULTS.csv -text whitespace=cr-at-eol
+work/Independent_XAUUSD_M15_Failed_Breakout_Trap.mq5 -text -diff whitespace=cr-at-eol
