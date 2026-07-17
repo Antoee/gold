@@ -18,6 +18,18 @@ The candidate combines two date-independent H1 strategies:
 
 Exact tested files and evidence are in [`release/transferable-portfolio-v0.1`](release/transferable-portfolio-v0.1/README.md).
 
+## Frozen Forward Demo
+
+The unchanged candidate was attached to a MetaQuotes demo hedging account on 2026-07-17, after the historical research cutoff. This is the first genuinely unseen observation period for this version.
+
+| Status | Calendar days | Closed trades | Net | Integrity |
+|---|---:|---:|---:|---|
+| [PENDING](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md) | 0.00 / 90 | 0 / 30 | $0.00 | PASS |
+
+No performance decision is allowed until **both** 90 calendar days and 30 trades have closed. A first-stage pass requires positive net profit, profit factor at least `1.10`, closed-trade drawdown no more than `5.00%`, and no more than 12 consecutive losses. Even a pass authorizes only a second-broker demo test, not real-money trading.
+
+The forward profile keeps the same trading and risk inputs as the released base profile. Only evidence logging, dashboard visibility, and the frozen run label differ. The account identifier is intentionally excluded. See the [registration](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_REGISTRATION.json), [profile](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_PROFILE.set), and [monitor package](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_PACKAGE.md).
+
 ## Continuous Result
 
 MT5 Strategy Tester, XAUUSD, Model 4 real ticks, $10,000 initial balance, 2015-01-01 through 2026-07-16:
@@ -28,7 +40,7 @@ MT5 Strategy Tester, XAUUSD, Model 4 real ticks, $10,000 initial balance, 2015-0
 
 Model 1 produced `+$1,616.49`, PF `1.58`, 370 trades, and `3.24%` drawdown. Every combined Model 1 and Model 4 lane entry and exit exactly matches its independently tested source strategy.
 
-This is the current balanced candidate, not the largest raw historical headline. Earlier `+$10,127.76` and other high-profit figures came from experimental Model 1 profiles with weaker transfer evidence and are not live candidates.
+This is the current balanced candidate, not the largest raw historical headline. Earlier `+$10,127.76` and other high-profit figures came from experimental Model 1 profiles with weaker transfer evidence and are not live candidates. The 2015-2026 history selected this candidate; it cannot prove that the same behavior will continue in future market regimes.
 
 ## Annual Returns
 
@@ -93,6 +105,7 @@ No backtest can make an EA work forever without monitoring. The future process i
 ## Repository Map
 
 - [`release/transferable-portfolio-v0.1`](release/transferable-portfolio-v0.1/README.md): current source, profile, reports, ledgers, stress results, and SHA-256 manifest
+- [`outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md`](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md): current frozen forward-demo progress and integrity gates
 - [`research`](research): dated research notes and rejected strategy branches
 - [`outputs`](outputs): historical generated evidence
 - [`work`](work): local validation and analysis tooling
