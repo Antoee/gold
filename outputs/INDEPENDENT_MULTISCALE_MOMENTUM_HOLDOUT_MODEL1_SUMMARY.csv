@@ -1,0 +1,5 @@
+"Candidate","SourceType","Phase","Expected","ParsedReports","ParsedLogs","ParsedTotal","Missing","Unparsed","TotalNetProfit","WorstNetProfit","AverageAnnualizedReturnPercent","WorstAnnualizedReturnPercent","AverageCagrPercent","WorstCagrPercent","WorstDrawdownPercent","MinProfitFactor","TotalTrades"
+"mtsm_m126_e10_r200","independent_multiscale_momentum","frozen_holdout_model1","4","4","0","4","0","0","329.05","-158.3","0.07","-0.53","0.07","-0.53","2.32","0.81","1271"
+"mtsm_m126_e20_r200","independent_multiscale_momentum","frozen_holdout_model1","4","4","0","4","0","0","460.94","-74.79","0.16","-0.25","0.15","-0.25","1.27","0.8","564"
+"mtsm_m126_e10_r150","independent_multiscale_momentum","frozen_holdout_model1","4","4","0","4","0","0","-16.85","-206.87","-0.07","-0.69","-0.08","-0.7","3.04","0.76","1280"
+"mtsm_m126_e10_r250","independent_multiscale_momentum","frozen_holdout_model1","4","4","0","4","0","0","330.85","-126.84","0.08","-0.42","0.07","-0.43","2.33","0.85","1256"
