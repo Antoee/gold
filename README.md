@@ -8,7 +8,7 @@ Research and validation repository for a risk-first MetaTrader 5 Expert Advisor 
 
 **Forward-test candidate only. Real-account trading remains disabled.**
 
-**2026-07-17 update: no new best was promoted. The first forward attachment was invalidated before its first trade because the demo account had the wrong starting balance, and a new independent M15 trend-pullback family failed discovery.**
+**2026-07-17 update: no new best was promoted. The first forward attachment was invalidated before its first trade because the demo account had the wrong starting balance, and new independent M15 trend-pullback and M30 compression-expansion families failed discovery.**
 
 The candidate combines two date-independent H1 strategies:
 
@@ -35,6 +35,10 @@ The forward profile keeps the same trading and risk inputs as the released base 
 The replacement-account activation gate is prepared but has not been executed. Terminal-level and sentinel-chart algorithmic trading are now disabled, the account-creation dialog was canceled without accepting terms, and no registration timestamp was changed. The disabled-trading check passes; the gate still refuses registration because starting balance and equity are `$100,000` instead of the frozen `$10,000`. It also preserves the demo hedging, identity, flat-account, zero-risk, and empty-log requirements. A separate verification is required after trading is re-enabled. Creating the new virtual account still awaits explicit acceptance of MetaQuotes' terms. See the [activation procedure](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md).
 
 ## Latest Research Screens
+
+An independent M30 compression-expansion family was screened on Model 1 using only 2015-2020 discovery data. The source combines a closed-candle compression box and breakout, OHLC expansion/body/close-location tests, optional tick volume, H1 EMA trend and ADX filters, a structure stop capped at `$8`, broker-native risk sizing, and `0.10%` requested risk. All `45 / 45` reports passed the exact embedded source-identity check. The best continuous variant made `+$48.17`, PF `3.59`, and `0.22%` drawdown, but produced only 7 trades against the frozen 100-trade floor. The only other active variant made `+$9.05` continuously but lost `-$9.43` in 2015-2018; the other 13 variants made no trades. With zero eligible profiles, the family was rejected before any 2021-2026 holdout or Model 4 data was opened. See [the decision](outputs/INDEPENDENT_M30_COMPRESSION_EXPANSION_DISCOVERY_DECISION.md).
+
+This screen exposed and fixed a tester-integrity flaw: portable workers could reuse an executable from the previous package. The first M30 batch was therefore quarantined and excluded completely. Every worker now installs and compiles the package's exact source inside its own portable runtime, caches the source/binary identity, and rejects cached or fresh reports unless the embedded evidence source hash matches. The correct-source rerun reproduced all 45 reports and the rejection above; the safety fix is retained even though the strategy failed.
 
 An independent M15 trend-pullback family was screened on Model 1 using only 2015-2020 discovery data. It combined H1 EMA 50/200 alignment and slope, bounded H1 ADX, a prior M15 impulse, an EMA pullback, OHLC rejection-body/wick/close-location tests, optional tick volume, a swing-structure stop, and `0.10%` risk. All `30 / 30` reports parsed, but every one of the ten variants lost money in both the 2019-2020 era and the continuous 2015-2020 window. Continuous PF ranged from `0.22` to `0.52`; even the most selective variant lost `-$49.02` with only 19 trades. The family was rejected before any 2021-2026 holdout or Model 4 data was opened. See [the decision](outputs/INDEPENDENT_M15_TREND_PULLBACK_DISCOVERY_DECISION.md).
 
@@ -122,6 +126,7 @@ No backtest can make an EA work forever without monitoring. The future process i
 - [`outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md`](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md): current frozen forward-demo progress and integrity gates
 - [`outputs/TRANSFERABLE_FORWARD_SENTINEL_REGISTRATION.json`](outputs/TRANSFERABLE_FORWARD_SENTINEL_REGISTRATION.json): read-only operational/account contract monitor identity
 - [`outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md`](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md): disabled-trading account-switch and clock-start gate
+- [`outputs/INDEPENDENT_M30_COMPRESSION_EXPANSION_DISCOVERY_DECISION.md`](outputs/INDEPENDENT_M30_COMPRESSION_EXPANSION_DISCOVERY_DECISION.md): exact-source independent M30 rejection and discovery table
 - [`outputs/INDEPENDENT_M15_TREND_PULLBACK_DISCOVERY_DECISION.md`](outputs/INDEPENDENT_M15_TREND_PULLBACK_DISCOVERY_DECISION.md): latest independent strategy-family rejection and full discovery table
 - [`outputs/CLEAN_MODEL4_THREE_LANE_PORTFOLIO_DECISION.md`](outputs/CLEAN_MODEL4_THREE_LANE_PORTFOLIO_DECISION.md): latest rejected diversification screen
 - [`research`](research): dated research notes and rejected strategy branches

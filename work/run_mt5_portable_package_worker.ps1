@@ -27,6 +27,18 @@ function Resolve-RepoPath([string]$Path) {
    return Join-Path $repo $Path
 }
 
+function Get-PackageSourceHash([string]$ConfigPath) {
+   $packageRoot = Split-Path -Parent (Split-Path -Parent $ConfigPath)
+   $source = Join-Path $packageRoot "source\Professional_XAUUSD_EA.mq5"
+   if(!(Test-Path -LiteralPath $source -PathType Leaf)) { throw "Package source is missing: $source" }
+   return (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash.ToUpperInvariant()
+}
+
+function Test-ReportSourceIdentity([string]$Path, [string]$ExpectedHash) {
+   if(!(Test-Path -LiteralPath $Path -PathType Leaf)) { return $false }
+   return (Get-Content -LiteralPath $Path -Raw).IndexOf($ExpectedHash, [StringComparison]::OrdinalIgnoreCase) -ge 0
+}
+
 $rows = [System.Collections.Generic.List[object]]::new()
 $items = @(Import-Csv -LiteralPath $manifest | Where-Object {
    (([int]$_.QueueRank - 1) % $WorkerCount) -eq ($WorkerIndex - 1)
@@ -34,13 +46,19 @@ $items = @(Import-Csv -LiteralPath $manifest | Where-Object {
 
 foreach($item in $items) {
    $config = Resolve-RepoPath ([string]$item.PackageConfig)
+   $expectedSourceHash = Get-PackageSourceHash $config
    $destinationBase = Resolve-RepoPath ([string]$item.ReportDestination)
    $existing = @('.htm','.html','.xml') | ForEach-Object { $destinationBase + $_ } |
       Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
+   if($existing -and !(Test-ReportSourceIdentity $existing $expectedSourceHash)) {
+      $existing = $null
+   }
    $started = (Get-Date).ToString("s")
    $status = ""
    $reportPath = ""
    $evidence = ""
+   $portableBinaryHash = ""
+   $portableExpertRecompiled = $false
    if($existing) {
       $status = "REPORT_FOUND"
       $reportPath = $existing
@@ -51,6 +69,14 @@ foreach($item in $items) {
          $run = & $runner -PortableRoot $portable -ConfigPath $config -UserAuthorizedFocusRisk `
             -MaxCpuPercent $MaxCpuPercent -TimeoutMinutes $TimeoutMinutesPerConfig
          $sourceReport = [string]$run.Report
+         if([string]$run.PackageSourceSha256 -ne $expectedSourceHash) {
+            throw "Portable runner package-source identity mismatch."
+         }
+         if(!(Test-ReportSourceIdentity $sourceReport $expectedSourceHash)) {
+            throw "Portable report does not embed the expected package-source identity."
+         }
+         $portableBinaryHash = [string]$run.PortableBinarySha256
+         $portableExpertRecompiled = [bool]$run.PortableExpertRecompiled
          $extension = [IO.Path]::GetExtension($sourceReport)
          $target = $destinationBase + $extension
          $parent = Split-Path -Parent $target
@@ -73,6 +99,9 @@ foreach($item in $items) {
       Status = $status
       ReportPath = $reportPath
       Evidence = $evidence
+      PackageSourceSha256 = $expectedSourceHash
+      PortableBinarySha256 = $portableBinaryHash
+      PortableExpertRecompiled = $portableExpertRecompiled
       Started = $started
       Finished = (Get-Date).ToString("s")
    }) | Out-Null
