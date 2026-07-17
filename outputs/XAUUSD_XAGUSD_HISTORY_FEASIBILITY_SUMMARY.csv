@@ -1,0 +1,3 @@
+"Candidate","SourceType","Phase","Expected","ParsedReports","ParsedLogs","ParsedTotal","Missing","Unparsed","TotalNetProfit","WorstNetProfit","AverageAnnualizedReturnPercent","WorstAnnualizedReturnPercent","AverageCagrPercent","WorstCagrPercent","WorstDrawdownPercent","MinProfitFactor","TotalTrades"
+"xau_xag_history_older_2015_2018","xau_xag_history_feasibility","history_feasibility_diagnostic","1","1","0","1","0","0","0","0","0","0","0","0","0","0","0"
+"xau_xag_history_discovery_2019_2020","xau_xag_history_feasibility","history_feasibility_diagnostic","1","1","0","1","0","0","0","0","0","0","0","0","0","0","0"
