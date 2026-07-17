@@ -1,0 +1,2 @@
+"Status","Candidates","ReportsParsed","ReportsIdentityPassed","ReproducedIdentityRetries","BasicPasses","ControlRelativePasses","DiscoveryEligible","HoldoutOpened","Model4Opened","SourceSha256","ResultsSha256"
+"REJECTED_IN_DISCOVERY","8","24","24","3","0","1","0","False","False","78F43A8281B213FBE82AF592F9876FBC4545BAA1DA62D61565CA0AA56375E8BF","901670C5478670E43FE769305F08A81495CAA33DDE88793D5C74509AE376FA57"
