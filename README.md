@@ -8,7 +8,7 @@ Research and validation repository for a risk-first MetaTrader 5 Expert Advisor 
 
 **Forward-test candidate only. Real-account trading remains disabled.**
 
-**2026-07-17 update: no new best was promoted. The first forward attachment was invalidated before its first trade because the demo account had the wrong starting balance, and new independent M15 trend-pullback and M30 compression-expansion families failed discovery.**
+**2026-07-17 update: no new best was promoted. The first forward attachment was invalidated before its first trade because the demo account had the wrong starting balance; independent M15 trend-pullback, M30 compression-expansion, and M15 volatility-squeeze families all failed discovery.**
 
 The candidate combines two date-independent H1 strategies:
 
@@ -26,7 +26,7 @@ The unchanged candidate was attached to a MetaQuotes demo hedging account on 202
 
 | Status | Calendar days | Closed trades | Net | Integrity |
 |---|---:|---:|---:|---|
-| [FAIL: capital mismatch](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md) | Not started / 90 | 0 / 30 | $0.00 | Code/log identity PASS; account contract FAIL |
+| [FAIL: invalid account and stopped monitor](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md) | Not started / 90 | 0 / 30 | $0.00 | Code/log identity PASS; account, terminal, and heartbeat FAIL |
 
 No trades occurred, so no evidence was lost. The forward clock will restart only after the same frozen candidate is attached to a correctly capitalized `$10,000` demo hedging account. No performance decision is allowed until **both** 90 valid calendar days and 30 trades have closed. A first-stage pass requires positive net profit, profit factor at least `1.10`, closed-trade drawdown no more than `5.00%`, and no more than 12 consecutive losses. Even a pass authorizes only a second-broker demo test, not real-money trading.
 
@@ -34,7 +34,11 @@ The forward profile keeps the same trading and risk inputs as the released base 
 
 The replacement-account activation gate is prepared but has not been executed. Terminal-level and sentinel-chart algorithmic trading are now disabled, the account-creation dialog was canceled without accepting terms, and no registration timestamp was changed. The disabled-trading check passes; the gate still refuses registration because starting balance and equity are `$100,000` instead of the frozen `$10,000`. It also preserves the demo hedging, identity, flat-account, zero-risk, and empty-log requirements. A separate verification is required after trading is re-enabled. Creating the new virtual account still awaits explicit acceptance of MetaQuotes' terms. See the [activation procedure](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md).
 
+The terminal process later stopped during an interrupted isolated-research run. Restarting the same session preserved every frozen identity and the zero-trade account, but the read-only sentinel could not refresh while terminal-level algorithmic trading remained disabled. Re-enabling that switch would also wake the candidate on the invalid account, so the terminal was stopped again and the safety lock was retained. The stale heartbeat and stopped terminal are explicit failures, not forward evidence; valid days remain `0`.
+
 ## Latest Research Screens
+
+An independent M15 Bollinger/Keltner volatility-squeeze continuation EA was implemented and compiled with `0 errors, 0 warnings`. Its first exact-source Model 1 screen parsed `45 / 45` reports on 2015-2020 only. Ten of 15 profiles were profitable in both eras; the strongest 8-bar breakout made `+$177.89`, PF `1.44`, and `0.48%` drawdown, but placed only 88 trades against the frozen 120-trade floor. A separately named final activity screen kept the source unchanged and tested 4/6/8/10-bar breakouts plus squeeze, expansion, trend, and session neighbors. Profiles reaching 137-168 trades fell below PF `1.20` or lost the older era, while the robust 8-bar row remained at 88 trades. Both screens were rejected before any 2021-2026 holdout or Model 4 data was opened. See the [base decision](outputs/INDEPENDENT_M15_VOLATILITY_SQUEEZE_DISCOVERY_DECISION.md) and [activity decision](outputs/INDEPENDENT_M15_VOLATILITY_SQUEEZE_ACTIVITY_DISCOVERY_DECISION.md).
 
 An independent M30 compression-expansion family was screened on Model 1 using only 2015-2020 discovery data. The source combines a closed-candle compression box and breakout, OHLC expansion/body/close-location tests, optional tick volume, H1 EMA trend and ADX filters, a structure stop capped at `$8`, broker-native risk sizing, and `0.10%` requested risk. All `45 / 45` reports passed the exact embedded source-identity check. The best continuous variant made `+$48.17`, PF `3.59`, and `0.22%` drawdown, but produced only 7 trades against the frozen 100-trade floor. The only other active variant made `+$9.05` continuously but lost `-$9.43` in 2015-2018; the other 13 variants made no trades. With zero eligible profiles, the family was rejected before any 2021-2026 holdout or Model 4 data was opened. See [the decision](outputs/INDEPENDENT_M30_COMPRESSION_EXPANSION_DISCOVERY_DECISION.md).
 
@@ -126,6 +130,8 @@ No backtest can make an EA work forever without monitoring. The future process i
 - [`outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md`](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md): current frozen forward-demo progress and integrity gates
 - [`outputs/TRANSFERABLE_FORWARD_SENTINEL_REGISTRATION.json`](outputs/TRANSFERABLE_FORWARD_SENTINEL_REGISTRATION.json): read-only operational/account contract monitor identity
 - [`outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md`](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md): disabled-trading account-switch and clock-start gate
+- [`outputs/INDEPENDENT_M15_VOLATILITY_SQUEEZE_ACTIVITY_DISCOVERY_DECISION.md`](outputs/INDEPENDENT_M15_VOLATILITY_SQUEEZE_ACTIVITY_DISCOVERY_DECISION.md): final pre-holdout activity rejection for the exact-source M15 squeeze family
+- [`outputs/INDEPENDENT_M15_VOLATILITY_SQUEEZE_DISCOVERY_DECISION.md`](outputs/INDEPENDENT_M15_VOLATILITY_SQUEEZE_DISCOVERY_DECISION.md): initial independent M15 squeeze discovery rejection and full table
 - [`outputs/INDEPENDENT_M30_COMPRESSION_EXPANSION_DISCOVERY_DECISION.md`](outputs/INDEPENDENT_M30_COMPRESSION_EXPANSION_DISCOVERY_DECISION.md): exact-source independent M30 rejection and discovery table
 - [`outputs/INDEPENDENT_M15_TREND_PULLBACK_DISCOVERY_DECISION.md`](outputs/INDEPENDENT_M15_TREND_PULLBACK_DISCOVERY_DECISION.md): latest independent strategy-family rejection and full discovery table
 - [`outputs/CLEAN_MODEL4_THREE_LANE_PORTFOLIO_DECISION.md`](outputs/CLEAN_MODEL4_THREE_LANE_PORTFOLIO_DECISION.md): latest rejected diversification screen

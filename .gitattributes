@@ -16,3 +16,12 @@ outputs/independent_m30_compression_expansion_discovery_model1_package/source/Pr
 outputs/independent_m30_compression_expansion_discovery_model1_package/profiles/*.set -text whitespace=cr-at-eol
 outputs/independent_m30_compression_expansion_discovery_model1_package/configs/*.ini -text whitespace=cr-at-eol
 outputs/INDEPENDENT_M30_COMPRESSION_EXPANSION_DISCOVERY_MODEL1_RESULTS.csv -text whitespace=cr-at-eol
+work/Independent_XAUUSD_M15_Volatility_Squeeze.mq5 -text -diff whitespace=cr-at-eol
+outputs/independent_m15_volatility_squeeze_discovery_model1_package/source/Professional_XAUUSD_EA.mq5 -text -diff whitespace=cr-at-eol
+outputs/independent_m15_volatility_squeeze_discovery_model1_package/profiles/*.set -text whitespace=cr-at-eol
+outputs/independent_m15_volatility_squeeze_discovery_model1_package/configs/*.ini -text whitespace=cr-at-eol
+outputs/INDEPENDENT_M15_VOLATILITY_SQUEEZE_DISCOVERY_MODEL1_RESULTS.csv -text whitespace=cr-at-eol
+outputs/independent_m15_volatility_squeeze_activity_discovery_model1_package/source/Professional_XAUUSD_EA.mq5 -text -diff whitespace=cr-at-eol
+outputs/independent_m15_volatility_squeeze_activity_discovery_model1_package/profiles/*.set -text whitespace=cr-at-eol
+outputs/independent_m15_volatility_squeeze_activity_discovery_model1_package/configs/*.ini -text whitespace=cr-at-eol
+outputs/INDEPENDENT_M15_VOLATILITY_SQUEEZE_ACTIVITY_DISCOVERY_MODEL1_RESULTS.csv -text whitespace=cr-at-eol
