@@ -20,6 +20,8 @@ A broker-accurate H4 Donchian channel-trend strategy then produced a genuine 201
 
 A lower-timeframe M30 structure-stop channel family then solved the activity and minimum-lot problem, but **did not produce a new best**. Six neighboring profiles were positive in both 2015-2018 and 2019-2020 discovery; the lead made `+$547.52`, PF `1.49`, on `239` trades with `2.34%` drawdown. Four profiles were frozen before opening 2021-2026. All four failed: continuous holdout results ranged from `-$64.28` to `-$217.49`, PF `0.81-0.92`, with `197-276` trades, and every profile lost across 2021-2023. The family was active, so this is an expectancy/generalization failure rather than missing trades. Model 4 and holdout retuning were correctly skipped. See `outputs/INDEPENDENT_M30_STRUCTURE_CHANNEL_DECISION.md`.
 
+A distinct M15 BOS/displacement/FVG-retest family was then screened entirely on 2015-2020 discovery data and also **did not produce a new best**. All `30 / 30` reports completed. Every one of the ten neighboring variants lost in both 2015-2018 and 2019-2020; continuous results ranged from `-$477.65` to `-$507.19`, PF `0.24-0.59`, with `102-196` trades, and all reached approximately the `5%` drawdown review lock. The family was rejected before opening 2021-2026 or spending time on Model 4, so the future boundary remains untouched. See `outputs/INDEPENDENT_M15_FVG_RETEST_DECISION.md`.
+
 This means the answer is still honest: the project has a low-drawdown research candidate, but not a high-return money-ready bot. The next evidence must come from frozen forward testing, more independent trades, and genuinely independent strategy activity rather than more fitting of the 2024-now period.
 
 ### Authoritative Current-Source Status - 2026-07-16
