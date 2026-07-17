@@ -28,6 +28,8 @@ Trade-level review then found that the first implementation's two-position limit
 
 A standalone M15 previous-day high/low liquidity-sweep reversal was tested next and also **did not produce a new best**. All `30 / 30` Model 1 reports parsed for ten date-independent variants using only 2015-2020 discovery data. Every configuration lost money in the separate 2015-2018 era. The least-bad continuous row, tick-volume confirmation at `1.05`, made only `+$37.06`, PF `1.15`, on `46` trades with `1.11%` drawdown while still losing `-$37.94` in 2015-2018. It failed the disjoint-era, PF, and activity gates, so 2021-2026 and Model 4 remained closed. See `outputs/INDEPENDENT_M15_PREVDAY_SWEEP_DISCOVERY_DECISION.md`.
 
+A separate H1 previous-week high/low break-and-retest continuation family was then built and tested, with one position-management correction that preserves the existing take profit when improving a protective stop. The source compiled with `0 errors, 0 warnings`, all `42 / 42` Model 1 reports parsed, and all `77` source inputs matched every generated profile. It still **did not produce a new best**: every one of fourteen variants lost in 2015-2018 and every continuous 2015-2020 row was negative. The least-bad row, minimum ADX `18`, lost `-$24.15`, PF `0.81`, on only `24` trades. Recent data and Model 4 remained closed. See `outputs/INDEPENDENT_H1_PREVWEEK_BREAK_RETEST_DISCOVERY_DECISION.md`.
+
 This means the answer is still honest: the project has a low-drawdown research candidate, but not a high-return money-ready bot. The next evidence must come from frozen forward testing, more independent trades, and genuinely independent strategy activity rather than more fitting of the 2024-now period.
 
 ### Authoritative Current-Source Status - 2026-07-16
