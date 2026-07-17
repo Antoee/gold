@@ -1,0 +1,4 @@
+"Candidate","SourceType","Phase","Expected","ParsedReports","ParsedLogs","ParsedTotal","Missing","Unparsed","TotalNetProfit","WorstNetProfit","AverageAnnualizedReturnPercent","WorstAnnualizedReturnPercent","AverageCagrPercent","WorstCagrPercent","WorstDrawdownPercent","MinProfitFactor","TotalTrades"
+"h4ct_capital_l40","capital_feasibility_probe","capital_feasibility_diagnostic","1","1","0","1","0","0","0","0","0","0","0","0","0","0","0"
+"h4ct_capital_l55","capital_feasibility_probe","capital_feasibility_diagnostic","1","1","0","1","0","0","0","0","0","0","0","0","0","0","0"
+"h4ct_capital_l80","capital_feasibility_probe","capital_feasibility_diagnostic","1","1","0","1","0","0","0","0","0","0","0","0","0","0","0"
