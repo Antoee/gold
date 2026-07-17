@@ -1,16 +1,28 @@
 ﻿# Transferable Portfolio Forward Demo Status
 
-- **Status:** `PENDING`
-- **Updated:** `2026-07-17 04:08:46 -05:00`
+- **Status:** `FAIL`
+- **Updated:** `2026-07-17 04:48:52 -05:00`
 - **Registered:** `2026-07-17T03:57:19-05:00`
-- **Decision:** Keep the profile frozen. No performance conclusion is allowed before both the time and trade-count gates are met.
-- **Safety:** Demo hedging account only; real-account trading remains disabled. The account identifier is not published.
+- **Decision:** The live demo balance does not match the frozen starting-capital contract. This sample is invalid; move the unchanged candidate to a correctly capitalized demo before any trades occur.
+- **Safety:** Demo hedging account only; real-account trading remains disabled. The read-only sentinel cannot trade, and the account identifier is not published by either registration or heartbeat.
+
+## Account Contract
+
+| Metric | Current | Required | Status |
+|---|---:|---:|---|
+| Trade mode | demo | demo | PASS |
+| Margin mode | hedging | hedging | PASS |
+| Balance | $100000.00 | $10000.00 +/- $1.00 | FAIL |
+| Equity | $100000.00 | information only | - |
+| All / candidate positions | 0 / 0 | equal | PASS |
+| All / candidate unprotected | 0 / 0 | 0 / 0 | PASS |
+| Candidate open risk | 0.0000% | <= 0.75% | PASS |
 
 ## Progress
 
 | Metric | Current | Required |
 |---|---:|---:|
-| Calendar days | 0.01 | 90 |
+| Calendar days | 0.04 | 90 |
 | Closed trades | 0 | 30 |
 | Entry events | 0 | information only |
 | Net profit | $0.00 | > $0 after sample completes |
@@ -26,9 +38,13 @@
 | Gate | Status | Evidence |
 |---|---|---|
 | Frozen source, profile, and installed binary hashes | PASS | source=True; profile=True; binary=True |
+| Read-only sentinel code identity | PASS | source=True; profile=True; binary=True |
+| Sentinel heartbeat freshness and identity | PASS | present=True; valid=True; fresh=True; age=55.0s; identity=True |
+| Demo account and capital contract | FAIL | mode=demo/hedging; actual=$100000.00; expected=$10000.00 |
+| Connection and trading permissions | PASS | connected=True; terminal=True; account=True; expert=True; MQL=True |
 | MT5 process running | PASS | process count=1 |
 | Dedicated evidence logs and identity | PASS | RV=True; MO=True; foreign rows=0; invalid rows=0 |
-| Minimum observation sample | PENDING | days=0.01/90; trades=0/30 |
+| Minimum observation sample | PENDING | days=0.04/90; trades=0/30 |
 | Preregistered performance gates | PENDING | evaluated only after both sample requirements pass |
 
 ## Lane Activity

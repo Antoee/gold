@@ -2,3 +2,5 @@
 # include intentional mixed line endings from the source-composition process.
 work/Professional_XAUUSD_EA_THREE_LANE_ISOLATED.mq5 -text -diff
 outputs/three_lane_ddb045_model4_validation_package/dependencies/daily_donchian/Professional_XAUUSD_EA.mq5 -text -diff
+work/Professional_XAUUSD_Transferable_Portfolio.mq5 -text -diff
+release/transferable-portfolio-v0.1/Professional_XAUUSD_Transferable_Portfolio.mq5 -text -diff

@@ -8,6 +8,8 @@ Research and validation repository for a risk-first MetaTrader 5 Expert Advisor 
 
 **Forward-test candidate only. Real-account trading remains disabled.**
 
+**2026-07-17 update: no new best was promoted. The first forward attachment was invalidated before its first trade because the demo account had the wrong starting balance.**
+
 The candidate combines two date-independent H1 strategies:
 
 - Band/VWAP mean reversion at `0.45%` requested risk
@@ -20,15 +22,19 @@ Exact tested files and evidence are in [`release/transferable-portfolio-v0.1`](r
 
 ## Frozen Forward Demo
 
-The unchanged candidate was attached to a MetaQuotes demo hedging account on 2026-07-17, after the historical research cutoff. This is the first genuinely unseen observation period for this version.
+The unchanged candidate was attached to a MetaQuotes demo hedging account on 2026-07-17, after the historical research cutoff. A new read-only sentinel then measured a `$100,000` balance while the frozen registration requires `$10,000`. Because lot caps make that difference alter effective risk, this attachment cannot count as forward evidence.
 
 | Status | Calendar days | Closed trades | Net | Integrity |
 |---|---:|---:|---:|---|
-| [PENDING](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md) | 0.00 / 90 | 0 / 30 | $0.00 | PASS |
+| [FAIL: capital mismatch](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md) | Not started / 90 | 0 / 30 | $0.00 | Code/log identity PASS; account contract FAIL |
 
-No performance decision is allowed until **both** 90 calendar days and 30 trades have closed. A first-stage pass requires positive net profit, profit factor at least `1.10`, closed-trade drawdown no more than `5.00%`, and no more than 12 consecutive losses. Even a pass authorizes only a second-broker demo test, not real-money trading.
+No trades occurred, so no evidence was lost. The forward clock will restart only after the same frozen candidate is attached to a correctly capitalized `$10,000` demo hedging account. No performance decision is allowed until **both** 90 valid calendar days and 30 trades have closed. A first-stage pass requires positive net profit, profit factor at least `1.10`, closed-trade drawdown no more than `5.00%`, and no more than 12 consecutive losses. Even a pass authorizes only a second-broker demo test, not real-money trading.
 
-The forward profile keeps the same trading and risk inputs as the released base profile. Only evidence logging, dashboard visibility, and the frozen run label differ. The account identifier is intentionally excluded. See the [registration](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_REGISTRATION.json), [profile](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_PROFILE.set), and [monitor package](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_PACKAGE.md).
+The forward profile keeps the same trading and risk inputs as the released base profile. Only evidence logging, dashboard visibility, and the frozen run label differ. The sentinel cannot trade and publishes no account identifier. See the [registration](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_REGISTRATION.json), [profile](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_PROFILE.set), [sentinel registration](outputs/TRANSFERABLE_FORWARD_SENTINEL_REGISTRATION.json), and [monitor package](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_PACKAGE.md).
+
+## Latest Research Screen
+
+The preregistered all-Model4 three-lane screen also produced **no new best**. Adding the daily Donchian stream to the same `0.45%` reversion and `0.15%` momentum allocation raised simulated net from `$2,289.01` to `$2,400.22` (`+4.86%`) and slightly reduced risk-floor drawdown from `3.62%` to `3.56%`, but PF fell from `1.605` to `1.582`. The center missed its frozen `5%` improvement threshold, only `1 / 3` Donchian-weight neighbors passed, and only `3 / 7` structural neighbors passed. It was rejected without implementation or post-result tuning. See [the decision](outputs/CLEAN_MODEL4_THREE_LANE_PORTFOLIO_DECISION.md).
 
 ## Continuous Result
 
@@ -91,11 +97,11 @@ These checks reduce start-date dependence. They do not prove future profitabilit
 | Model 4 trade ledger | `2F7A8A8854F8F33325498AE0F194202E7BB15F28F2644FC4F9B08DE8B740413B` |
 | Continuous Model 4 report | `2354EAD1526FA308211BF9E09167200BFC87313F3575E995A6D2C5B2A116BFFE` |
 
-The source compiles with `0 errors, 0 warnings`. The profile keeps `InpAllowRealAccountTrading=false` and the real-account safety lock enabled.
+The source compiles with `0 errors, 0 warnings`. Both published source snapshots are now byte-preserved and independently hash to the manifest's `5BAD...` identity instead of relying on platform line-ending conversion. The profile keeps `InpAllowRealAccountTrading=false` and the real-account safety lock enabled.
 
 ## What Remains
 
-1. Demo/forward test for at least 90 calendar days and until at least 30 trades close.
+1. Provision a `$10,000` demo hedging account, re-register the unchanged candidate, then collect at least 90 calendar days and 30 closed trades.
 2. Reproduce the frozen profile on a second broker's XAUUSD specification.
 3. Review forward slippage, missed trades, disconnect handling, and the loss-streak warning.
 4. Keep live trading disabled until a manual review accepts all remaining evidence.
@@ -106,6 +112,8 @@ No backtest can make an EA work forever without monitoring. The future process i
 
 - [`release/transferable-portfolio-v0.1`](release/transferable-portfolio-v0.1/README.md): current source, profile, reports, ledgers, stress results, and SHA-256 manifest
 - [`outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md`](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md): current frozen forward-demo progress and integrity gates
+- [`outputs/TRANSFERABLE_FORWARD_SENTINEL_REGISTRATION.json`](outputs/TRANSFERABLE_FORWARD_SENTINEL_REGISTRATION.json): read-only operational/account contract monitor identity
+- [`outputs/CLEAN_MODEL4_THREE_LANE_PORTFOLIO_DECISION.md`](outputs/CLEAN_MODEL4_THREE_LANE_PORTFOLIO_DECISION.md): latest rejected diversification screen
 - [`research`](research): dated research notes and rejected strategy branches
 - [`outputs`](outputs): historical generated evidence
 - [`work`](work): local validation and analysis tooling

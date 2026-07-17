@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "registeredAtLocal": "2026-07-17T04:29:58-05:00",
+  "attachedChart": "EURUSD,H1",
+  "sourcePath": "work/Professional_XAUUSD_Forward_Sentinel.mq5",
+  "sourceSha256": "C3B0D78718C0878570C79EA75FA4EAFCC7E1601F571F48FC7BA7F3FF49AA622E",
+  "profilePath": "outputs/TRANSFERABLE_FORWARD_SENTINEL_PROFILE.set",
+  "profileSha256": "61040DA00393FE54E565D44C3DF55D8DBFADEECB14E8D97A3FD8B641C8DC336F",
+  "installedBinarySha256": "0258F219B2D8CD54AD3A1AA85977326A7FF07AD652672FE96F927EEA0B75B82C",
+  "heartbeatFile": "TRANSFERABLE_FORWARD_SENTINEL.csv",
+  "maximumHeartbeatAgeSeconds": 180,
+  "runLabel": "frozen_forward_20260717",
+  "candidateSourceSha256": "5BADDE1BC7C1E8020E64F00793058AD5C6174370A866F5D3002FA1FA12248FC3",
+  "candidateProfileSha256": "CB1A4A78834C9780267F9EA06DB24E656FFAE87DC466D4442926F55562F3321D",
+  "expectedSymbol": "XAUUSD",
+  "accountIdentifierPublished": false,
+  "nonTrading": true,
+  "notes": "Read-only monitor on an auxiliary chart. Contains no order-send, close, or modify path and excludes ACCOUNT_LOGIN from its heartbeat."
+}
