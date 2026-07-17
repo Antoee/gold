@@ -8,7 +8,7 @@ Research and validation repository for a risk-first MetaTrader 5 Expert Advisor 
 
 **Forward-test candidate only. Real-account trading remains disabled.**
 
-**2026-07-17 update: no new best was promoted. The first forward attachment remains invalid because the demo account has the wrong starting balance. The M15 dual-regime portfolio failed its recent holdout; bounded inverse-volatility and lane-aware market-phase forks of the current best also failed pre-2021 discovery.**
+**2026-07-17 update: no new best was promoted. The first forward attachment remains invalid because the demo account has the wrong starting balance. The M15 dual-regime portfolio failed its recent holdout; bounded inverse-volatility, lane-aware market-phase, and no-follow-through exit forks also failed pre-2021 discovery.**
 
 The candidate combines two date-independent H1 strategies:
 
@@ -37,6 +37,8 @@ The replacement-account activation gate is prepared but has not been executed. T
 The terminal process later stopped during an interrupted isolated-research run. Restarting the same session preserved every frozen identity and the zero-trade account, but the read-only sentinel could not refresh while terminal-level algorithmic trading remained disabled. Re-enabling that switch would also wake the candidate on the invalid account, so the terminal was stopped again and the safety lock was retained. The stale heartbeat and stopped terminal are explicit failures, not forward evidence; valid days remain `0`.
 
 ## Latest Research Screens
+
+A separate early-failure fork retained the released entries, initial stops, targets, and risk, then allowed closed-H1-bar exits when a position had not made configured R progress after 2-6 bars. It could only close risk, never widen a stop or add size. The source compiled with `0 errors, 0 warnings`; `24 / 24` pre-2021 Model 1 reports passed source identity. The relaxed `-0.25R` profile improved continuous net to `+$801.22` (`+8.01%` total, `+1.29%/yr` CAGR), PF to `1.54`, and drawdown to `2.30%`, versus the fixed control's `+$694.13`, PF `1.42`, and `2.77%` drawdown. Reversion-only early exits reduced the protected 2019-2020 loss to `-$31.65`, but no profile made that era profitable; the highest-net row still lost `-$59.20` there at PF `0.90`. All profiles were rejected before 2021+ holdout and Model 4. See the [frozen contract](outputs/EARLY_FAILURE_PORTFOLIO_DISCOVERY_CONTRACT.md) and [decision](outputs/EARLY_FAILURE_PORTFOLIO_DISCOVERY_DECISION.md).
 
 A separate market-phase fork retained the exact released entries/exits and used only a completed-H1-bar efficiency ratio to reduce reversion risk in strongly directional phases and momentum risk in strongly ranging phases. It could never increase either lane's base risk or exceed the existing `0.75%` open-risk cap. The source compiled with `0 errors, 0 warnings`; `24 / 24` pre-2021 Model 1 reports passed source identity. The best 12-bar variant improved continuous net to `+$747.49` (`+7.47%` total, `+1.21%/yr` CAGR), PF to `1.48`, and drawdown to `2.58%`, versus the fixed control's `+$694.13`, PF `1.42`, and `2.77%` drawdown. It nevertheless lost `-$61.36` at PF `0.90` in the protected 2019-2020 era, and every neighboring setting also left that era negative. The family was rejected before 2021+ holdout and Model 4. See the [frozen contract](outputs/MARKET_PHASE_PORTFOLIO_DISCOVERY_CONTRACT.md) and [decision](outputs/MARKET_PHASE_PORTFOLIO_DISCOVERY_DECISION.md).
 
@@ -142,6 +144,8 @@ No backtest can make an EA work forever without monitoring. The future process i
 - [`outputs/ADAPTIVE_VOLATILITY_PORTFOLIO_DISCOVERY_CONTRACT.md`](outputs/ADAPTIVE_VOLATILITY_PORTFOLIO_DISCOVERY_CONTRACT.md): preregistered source identity and control-relative gate
 - [`outputs/MARKET_PHASE_PORTFOLIO_DISCOVERY_DECISION.md`](outputs/MARKET_PHASE_PORTFOLIO_DISCOVERY_DECISION.md): fixed-control comparison and pre-holdout rejection of lane-aware phase sizing
 - [`outputs/MARKET_PHASE_PORTFOLIO_DISCOVERY_CONTRACT.md`](outputs/MARKET_PHASE_PORTFOLIO_DISCOVERY_CONTRACT.md): preregistered source identity and broad-era repair gate
+- [`outputs/EARLY_FAILURE_PORTFOLIO_DISCOVERY_DECISION.md`](outputs/EARLY_FAILURE_PORTFOLIO_DISCOVERY_DECISION.md): fixed-control comparison and pre-holdout rejection of no-follow-through exits
+- [`outputs/EARLY_FAILURE_PORTFOLIO_DISCOVERY_CONTRACT.md`](outputs/EARLY_FAILURE_PORTFOLIO_DISCOVERY_CONTRACT.md): preregistered source identity and exit-behavior gate
 - [`outputs/INDEPENDENT_M15_DUAL_REGIME_PORTFOLIO_HOLDOUT_DECISION.md`](outputs/INDEPENDENT_M15_DUAL_REGIME_PORTFOLIO_HOLDOUT_DECISION.md): untouched 2021-2026 YTD rejection for the combined M15 portfolio
 - [`outputs/INDEPENDENT_M15_DUAL_REGIME_PORTFOLIO_DISCOVERY_DECISION.md`](outputs/INDEPENDENT_M15_DUAL_REGIME_PORTFOLIO_DISCOVERY_DECISION.md): pre-2021 discovery pass and frozen survivor table
 - [`outputs/INDEPENDENT_M15_VOLUME_CLIMAX_REVERSAL_ACTIVITY_DISCOVERY_DECISION.md`](outputs/INDEPENDENT_M15_VOLUME_CLIMAX_REVERSAL_ACTIVITY_DISCOVERY_DECISION.md): final pre-holdout activity rejection for the exact-source M15 volume-climax family
