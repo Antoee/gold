@@ -23,6 +23,7 @@ archive/generated_artifacts_*/
 # Multi-gigabyte isolated MT5 runtimes and disposable worker scratch.
 work/mt5_portable_research*/
 work/M15TPB_RAW_*
+work/M30CE_RAW_*
 
 # Language/tool caches.
 **/__pycache__/

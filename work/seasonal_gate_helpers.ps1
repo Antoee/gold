@@ -101,7 +101,8 @@ function Write-SeasonalTesterConfig {
       [string]$To,
       $Inputs,
       [int]$Model = 2,
-      [ValidateRange(100,100000000)][int]$Deposit = 1000
+      [ValidateRange(100,100000000)][int]$Deposit = 1000,
+      [ValidateRange(1,49153)][int]$Period = 15
    )
    # MT5 command-line tester silently skips report export for absolute Report=
    # paths on this install. Use a plain filename, then the runner collects it
@@ -111,7 +112,7 @@ function Write-SeasonalTesterConfig {
       "[Tester]",
       "Expert=Professional_XAUUSD_EA.ex5",
       "Symbol=XAUUSD",
-      "Period=15",
+      "Period=$Period",
       "Optimization=0",
       "Model=$Model",
       "FromDate=$From",

@@ -11,3 +11,8 @@ outputs/independent_m15_trend_pullback_discovery_model1_package/source/Professio
 outputs/independent_m15_trend_pullback_discovery_model1_package/profiles/*.set -text whitespace=cr-at-eol
 outputs/independent_m15_trend_pullback_discovery_model1_package/configs/*.ini -text whitespace=cr-at-eol
 outputs/INDEPENDENT_M15_TREND_PULLBACK_DISCOVERY_MODEL1_RESULTS.csv -text whitespace=cr-at-eol
+work/Independent_XAUUSD_M30_Compression_Expansion.mq5 -text -diff whitespace=cr-at-eol
+outputs/independent_m30_compression_expansion_discovery_model1_package/source/Professional_XAUUSD_EA.mq5 -text -diff whitespace=cr-at-eol
+outputs/independent_m30_compression_expansion_discovery_model1_package/profiles/*.set -text whitespace=cr-at-eol
+outputs/independent_m30_compression_expansion_discovery_model1_package/configs/*.ini -text whitespace=cr-at-eol
+outputs/INDEPENDENT_M30_COMPRESSION_EXPANSION_DISCOVERY_MODEL1_RESULTS.csv -text whitespace=cr-at-eol
