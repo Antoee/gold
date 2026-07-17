@@ -31,6 +31,8 @@ work/Professional_XAUUSD_Adaptive_Volatility_Portfolio.mq5 -text -diff whitespac
 outputs/ADAPTIVE_VOLATILITY_PORTFOLIO_DISCOVERY_MODEL1_RESULTS.csv -text whitespace=cr-at-eol
 work/Professional_XAUUSD_Market_Phase_Portfolio.mq5 -text -diff whitespace=cr-at-eol
 outputs/MARKET_PHASE_PORTFOLIO_DISCOVERY_MODEL1_RESULTS.csv -text whitespace=cr-at-eol
+work/Professional_XAUUSD_Early_Failure_Portfolio.mq5 -text -diff whitespace=cr-at-eol
+outputs/EARLY_FAILURE_PORTFOLIO_DISCOVERY_MODEL1_RESULTS.csv -text whitespace=cr-at-eol
 outputs/independent_m15_volume_climax_reversal_discovery_model1_package/source/Professional_XAUUSD_EA.mq5 -text -diff whitespace=cr-at-eol
 outputs/independent_m15_volume_climax_reversal_discovery_model1_package/profiles/*.set -text whitespace=cr-at-eol
 outputs/independent_m15_volume_climax_reversal_discovery_model1_package/configs/*.ini -text whitespace=cr-at-eol
