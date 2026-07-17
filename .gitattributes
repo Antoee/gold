@@ -48,3 +48,7 @@ outputs/independent_m15_daily_vwap_continuation_discovery_model1_package/source/
 outputs/independent_m15_daily_vwap_continuation_discovery_model1_package/profiles/*.set -text whitespace=cr-at-eol
 outputs/independent_m15_daily_vwap_continuation_discovery_model1_package/configs/*.ini -text whitespace=cr-at-eol
 outputs/INDEPENDENT_M15_DAILY_VWAP_CONTINUATION_DISCOVERY_MODEL1_RESULTS.csv -text whitespace=cr-at-eol
+outputs/transferable_portfolio_growth_discovery_model1_package/source/Professional_XAUUSD_EA.mq5 -text -diff
+outputs/transferable_portfolio_growth_discovery_model1_package/profiles/*.set -text whitespace=cr-at-eol
+outputs/transferable_portfolio_growth_discovery_model1_package/configs/*.ini -text whitespace=cr-at-eol
+outputs/TRANSFERABLE_PORTFOLIO_GROWTH_DISCOVERY_MODEL1_RESULTS.csv -text whitespace=cr-at-eol

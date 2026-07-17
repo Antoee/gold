@@ -1,0 +1,8 @@
+"Candidate","Control","RVRiskPercent","MORiskPercent","OlderNetProfit","MiddleNetProfit","RecentNetProfit","ContinuousNetProfit","ImprovementVsControlPercent","ContinuousCagrPercent","ContinuousProfitFactor","ContinuousTrades","ContinuousMaxDrawdownPercent","ContinuousRecoveryFactor","NumericPass","AdjacentPass","PassingNeighbors","Decision"
+"tpg_rv045_mo015_control","True","0.45","0.15","814.7","239.64","553.67","1616.49","0","1.31","1.58","370","3.24","4.5567","False","False","","CONTROL"
+"tpg_rv050_mo010","False","0.50","0.10","635.91","283.82","512.56","1439.86","-10.927","1.17","1.68","370","3.88","3.4451","False","False","","REJECT_BEFORE_MODEL4"
+"tpg_rv050_mo015","False","0.50","0.15","810.14","242.85","570.88","1576.21","-2.492","1.28","1.55","370","3.86","3.7267","False","False","","REJECT_BEFORE_MODEL4"
+"tpg_rv055_mo010","False","0.55","0.10","635.91","270.94","541.89","1589.29","-1.683","1.29","1.74","370","4.15","3.5567","False","False","","REJECT_BEFORE_MODEL4"
+"tpg_rv055_mo015","False","0.55","0.15","810.14","248.31","592.59","1710.85","5.837","1.38","1.59","370","4.26","3.6662","False","False","","REJECT_BEFORE_MODEL4"
+"tpg_rv060_mo010","False","0.60","0.10","635.91","247.03","687.15","1563.85","-3.256","1.27","1.72","370","4.43","3.2825","False","False","","REJECT_BEFORE_MODEL4"
+"tpg_rv060_mo015","False","0.60","0.15","810.14","223.21","737.85","1686.58","4.336","1.36","1.57","370","4.56","3.3685","False","False","","REJECT_BEFORE_MODEL4"
