@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
    [string]$RegistrationPath = "",
+   [string]$SentinelRegistrationPath = "",
    [string]$StatusCsvPath = "",
    [string]$StatusMarkdownPath = ""
 )
@@ -11,6 +12,9 @@ $ErrorActionPreference = "Stop"
 $workspaceRoot = Split-Path -Parent $PSScriptRoot
 if([string]::IsNullOrWhiteSpace($RegistrationPath)) {
    $RegistrationPath = Join-Path $workspaceRoot "outputs\TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_REGISTRATION.json"
+}
+if([string]::IsNullOrWhiteSpace($SentinelRegistrationPath)) {
+   $SentinelRegistrationPath = Join-Path $workspaceRoot "outputs\TRANSFERABLE_FORWARD_SENTINEL_REGISTRATION.json"
 }
 if([string]::IsNullOrWhiteSpace($StatusCsvPath)) {
    $StatusCsvPath = Join-Path $workspaceRoot "outputs\TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.csv"
@@ -119,22 +123,117 @@ function Parse-EvidenceFile {
    }
 }
 
+function Parse-SentinelHeartbeat {
+   param([Parameter(Mandatory=$true)][string]$Path)
+
+   if(!(Test-Path -LiteralPath $Path -PathType Leaf)) {
+      return [pscustomobject]@{ Exists=$false; Valid=$false; Length=0; LastWriteTime=$null; Row=$null; Error="missing" }
+   }
+
+   $item = Get-Item -LiteralPath $Path
+   try {
+      $rows = @(Import-Csv -LiteralPath $Path -Delimiter "`t")
+      if($rows.Count -ne 1) {
+         return [pscustomobject]@{ Exists=$true; Valid=$false; Length=$item.Length; LastWriteTime=$item.LastWriteTime; Row=$null; Error="expected one heartbeat row" }
+      }
+      $row = $rows[0]
+      $required = @(
+         "local_time", "server_time", "run_label", "source_sha256", "profile_sha256",
+         "account_trade_mode", "margin_mode", "connected", "terminal_trade_allowed",
+         "account_trade_allowed", "account_expert_allowed", "mql_trade_allowed",
+         "expected_symbol", "balance", "equity", "all_positions", "candidate_positions",
+         "all_unprotected_positions", "candidate_unprotected_positions",
+         "candidate_open_risk_percent"
+      )
+      foreach($name in $required) {
+         if($row.PSObject.Properties.Name -notcontains $name) {
+            return [pscustomobject]@{ Exists=$true; Valid=$false; Length=$item.Length; LastWriteTime=$item.LastWriteTime; Row=$null; Error="missing field $name" }
+         }
+      }
+
+      $localTime = [datetime]::MinValue
+      if(![datetime]::TryParseExact($row.local_time, "yyyy.MM.dd HH:mm:ss",
+            [System.Globalization.CultureInfo]::InvariantCulture,
+            [System.Globalization.DateTimeStyles]::AssumeLocal, [ref]$localTime)) {
+         return [pscustomobject]@{ Exists=$true; Valid=$false; Length=$item.Length; LastWriteTime=$item.LastWriteTime; Row=$null; Error="invalid local_time" }
+      }
+      $balance = 0.0
+      $equity = 0.0
+      $openRisk = 0.0
+      $allPositions = 0
+      $candidatePositions = 0
+      $allUnprotected = 0
+      $candidateUnprotected = 0
+      $culture = [System.Globalization.CultureInfo]::InvariantCulture
+      $numberStyle = [System.Globalization.NumberStyles]::Float
+      $integerStyle = [System.Globalization.NumberStyles]::Integer
+      $numericPass = [double]::TryParse($row.balance, $numberStyle, $culture, [ref]$balance) -and
+                     [double]::TryParse($row.equity, $numberStyle, $culture, [ref]$equity) -and
+                     [double]::TryParse($row.candidate_open_risk_percent, $numberStyle, $culture, [ref]$openRisk) -and
+                     [int]::TryParse($row.all_positions, $integerStyle, $culture, [ref]$allPositions) -and
+                     [int]::TryParse($row.candidate_positions, $integerStyle, $culture, [ref]$candidatePositions) -and
+                     [int]::TryParse($row.all_unprotected_positions, $integerStyle, $culture, [ref]$allUnprotected) -and
+                     [int]::TryParse($row.candidate_unprotected_positions, $integerStyle, $culture, [ref]$candidateUnprotected)
+      if(!$numericPass) {
+         return [pscustomobject]@{ Exists=$true; Valid=$false; Length=$item.Length; LastWriteTime=$item.LastWriteTime; Row=$null; Error="invalid numeric field" }
+      }
+
+      $typed = [pscustomobject]@{
+         LocalTime = $localTime
+         ServerTime = $row.server_time
+         RunLabel = $row.run_label
+         SourceHash = $row.source_sha256.ToUpperInvariant()
+         ProfileHash = $row.profile_sha256.ToUpperInvariant()
+         AccountTradeMode = $row.account_trade_mode
+         MarginMode = $row.margin_mode
+         Connected = $row.connected -eq "true"
+         TerminalTradeAllowed = $row.terminal_trade_allowed -eq "true"
+         AccountTradeAllowed = $row.account_trade_allowed -eq "true"
+         AccountExpertAllowed = $row.account_expert_allowed -eq "true"
+         MqlTradeAllowed = $row.mql_trade_allowed -eq "true"
+         ExpectedSymbol = $row.expected_symbol
+         Balance = $balance
+         Equity = $equity
+         AllPositions = $allPositions
+         CandidatePositions = $candidatePositions
+         AllUnprotectedPositions = $allUnprotected
+         CandidateUnprotectedPositions = $candidateUnprotected
+         CandidateOpenRiskPercent = $openRisk
+      }
+      return [pscustomobject]@{ Exists=$true; Valid=$true; Length=$item.Length; LastWriteTime=$item.LastWriteTime; Row=$typed; Error="" }
+   }
+   catch {
+      return [pscustomobject]@{ Exists=$true; Valid=$false; Length=$item.Length; LastWriteTime=$item.LastWriteTime; Row=$null; Error=$_.Exception.Message }
+   }
+}
+
 if(!(Test-Path -LiteralPath $RegistrationPath -PathType Leaf)) {
    throw "Forward registration is missing: $RegistrationPath"
 }
+if(!(Test-Path -LiteralPath $SentinelRegistrationPath -PathType Leaf)) {
+   throw "Sentinel registration is missing: $SentinelRegistrationPath"
+}
 
 $registration = Get-Content -Raw -LiteralPath $RegistrationPath | ConvertFrom-Json
+$sentinelRegistration = Get-Content -Raw -LiteralPath $SentinelRegistrationPath | ConvertFrom-Json
 $sourcePath = Resolve-WorkspacePath -Path $registration.sourcePath
 $profilePath = Resolve-WorkspacePath -Path $registration.profilePath
+$sentinelSourcePath = Resolve-WorkspacePath -Path $sentinelRegistration.sourcePath
+$sentinelProfilePath = Resolve-WorkspacePath -Path $sentinelRegistration.profilePath
 $terminalRoot = Join-Path $env:APPDATA "MetaQuotes\Terminal"
 $commonFilesRoot = Join-Path $terminalRoot "Common\Files"
 $rvLogPath = Join-Path $commonFilesRoot $registration.reversionLogFile
 $moLogPath = Join-Path $commonFilesRoot $registration.momentumLogFile
+$sentinelHeartbeatPath = Join-Path $commonFilesRoot $sentinelRegistration.heartbeatFile
 
 $sourceHash = Get-Sha256 -Path $sourcePath
 $profileHash = Get-Sha256 -Path $profilePath
 $sourceHashMatch = $sourceHash -eq $registration.sourceSha256
 $profileHashMatch = $profileHash -eq $registration.profileSha256
+$sentinelSourceHash = Get-Sha256 -Path $sentinelSourcePath
+$sentinelProfileHash = Get-Sha256 -Path $sentinelProfilePath
+$sentinelSourceHashMatch = $sentinelSourceHash -eq $sentinelRegistration.sourceSha256
+$sentinelProfileHashMatch = $sentinelProfileHash -eq $sentinelRegistration.profileSha256
 
 $installedBinaryMatches = [System.Collections.Generic.List[string]]::new()
 if(Test-Path -LiteralPath $terminalRoot -PathType Container) {
@@ -145,6 +244,16 @@ if(Test-Path -LiteralPath $terminalRoot -PathType Container) {
    }
 }
 $binaryHashMatch = $installedBinaryMatches.Count -gt 0
+$installedSentinelBinaryMatches = [System.Collections.Generic.List[string]]::new()
+if(Test-Path -LiteralPath $terminalRoot -PathType Container) {
+   foreach($binary in @(Get-ChildItem -LiteralPath $terminalRoot -Recurse -File -Filter "Professional_XAUUSD_Forward_Sentinel.ex5" -ErrorAction SilentlyContinue)) {
+      if((Get-Sha256 -Path $binary.FullName) -eq $sentinelRegistration.installedBinarySha256) {
+         [void]$installedSentinelBinaryMatches.Add($binary.FullName)
+      }
+   }
+}
+$sentinelBinaryHashMatch = $installedSentinelBinaryMatches.Count -gt 0
+$sentinelHeartbeat = Parse-SentinelHeartbeat -Path $sentinelHeartbeatPath
 
 $rvEvidence = Parse-EvidenceFile -Path $rvLogPath -Lane "reversion" -ExpectedProfile "tlp_rv_m12" `
    -ExpectedSourceHash $registration.sourceSha256 -ExpectedRunLabel $registration.runLabel
@@ -194,13 +303,84 @@ $calendarDays = [math]::Max(0.0, ([datetimeoffset]$now - $registeredAt).TotalDay
 $minimumDaysMet = $calendarDays -ge [double]$registration.minimumCalendarDays
 $minimumTradesMet = $exits.Count -ge [int]$registration.minimumClosedTrades
 $sampleComplete = $minimumDaysMet -and $minimumTradesMet
-$identityPass = $sourceHashMatch -and $profileHashMatch -and $binaryHashMatch
+$candidateIdentityPass = $sourceHashMatch -and $profileHashMatch -and $binaryHashMatch
+$sentinelRegistrationIdentityPass =
+   $sentinelRegistration.candidateSourceSha256 -eq $registration.sourceSha256 -and
+   $sentinelRegistration.candidateProfileSha256 -eq $registration.profileSha256 -and
+   $sentinelRegistration.runLabel -eq $registration.runLabel -and
+   $sentinelRegistration.expectedSymbol -eq $registration.symbol
+$sentinelCodeIdentityPass = $sentinelSourceHashMatch -and $sentinelProfileHashMatch -and `
+   $sentinelBinaryHashMatch -and $sentinelRegistrationIdentityPass
+$identityPass = $candidateIdentityPass -and $sentinelCodeIdentityPass
 $evidenceFilesPass = $rvEvidence.Exists -and $moEvidence.Exists
 $foreignRows = $rvEvidence.ForeignRows + $moEvidence.ForeignRows
 $invalidRows = $rvEvidence.InvalidRows + $moEvidence.InvalidRows
 $evidenceIdentityPass = $foreignRows -eq 0
 $terminalProcesses = @(Get-Process -Name "terminal64" -ErrorAction SilentlyContinue)
 $terminalRunning = $terminalProcesses.Count -gt 0
+
+$sentinelHeartbeatValid = $sentinelHeartbeat.Valid
+$sentinelHeartbeatFresh = $false
+$sentinelHeartbeatAgeSeconds = -1.0
+$sentinelHeartbeatIdentityPass = $false
+$accountTradeMode = "unknown"
+$marginMode = "unknown"
+$connected = $false
+$terminalTradeAllowed = $false
+$accountTradeAllowed = $false
+$accountExpertAllowed = $false
+$mqlTradeAllowed = $false
+$actualBalance = [double]::NaN
+$actualEquity = [double]::NaN
+$allPositions = -1
+$candidatePositions = -1
+$allUnprotectedPositions = -1
+$candidateUnprotectedPositions = -1
+$candidateOpenRiskPercent = [double]::NaN
+$expectedBalance = [double]$registration.startingBalance + $netProfit
+$accountModePass = $false
+$balanceContractPass = $false
+$positionIsolationPass = $false
+$protectionPass = $false
+$openRiskPass = $false
+$operationalPass = $false
+$accountContractPass = $false
+
+if($sentinelHeartbeatValid) {
+   $heartbeatRow = $sentinelHeartbeat.Row
+   $sentinelHeartbeatAgeSeconds = [math]::Max(0.0, ($now - $heartbeatRow.LocalTime).TotalSeconds)
+   $sentinelHeartbeatFresh = $sentinelHeartbeatAgeSeconds -le [double]$sentinelRegistration.maximumHeartbeatAgeSeconds
+   $sentinelHeartbeatIdentityPass =
+      $heartbeatRow.RunLabel -eq $sentinelRegistration.runLabel -and
+      $heartbeatRow.SourceHash -eq $sentinelRegistration.candidateSourceSha256 -and
+      $heartbeatRow.ProfileHash -eq $sentinelRegistration.candidateProfileSha256 -and
+      $heartbeatRow.ExpectedSymbol -eq $sentinelRegistration.expectedSymbol
+
+   $accountTradeMode = $heartbeatRow.AccountTradeMode
+   $marginMode = $heartbeatRow.MarginMode
+   $connected = $heartbeatRow.Connected
+   $terminalTradeAllowed = $heartbeatRow.TerminalTradeAllowed
+   $accountTradeAllowed = $heartbeatRow.AccountTradeAllowed
+   $accountExpertAllowed = $heartbeatRow.AccountExpertAllowed
+   $mqlTradeAllowed = $heartbeatRow.MqlTradeAllowed
+   $actualBalance = $heartbeatRow.Balance
+   $actualEquity = $heartbeatRow.Equity
+   $allPositions = $heartbeatRow.AllPositions
+   $candidatePositions = $heartbeatRow.CandidatePositions
+   $allUnprotectedPositions = $heartbeatRow.AllUnprotectedPositions
+   $candidateUnprotectedPositions = $heartbeatRow.CandidateUnprotectedPositions
+   $candidateOpenRiskPercent = $heartbeatRow.CandidateOpenRiskPercent
+
+   $accountModePass = $accountTradeMode -eq "demo" -and $marginMode -eq "hedging"
+   $balanceContractPass = [math]::Abs($actualBalance - $expectedBalance) -le 1.0
+   $positionIsolationPass = $allPositions -eq $candidatePositions
+   $protectionPass = $allUnprotectedPositions -eq 0 -and $candidateUnprotectedPositions -eq 0
+   $openRiskPass = $candidateOpenRiskPercent -le ([double]$registration.maximumPortfolioOpenRiskPercent + 0.000001)
+   $operationalPass = $connected -and $terminalTradeAllowed -and $accountTradeAllowed -and `
+      $accountExpertAllowed -and $mqlTradeAllowed
+   $accountContractPass = $accountModePass -and $balanceContractPass -and `
+      $positionIsolationPass -and $protectionPass -and $openRiskPass
+}
 
 $profitGatePass = $netProfit -gt 0.0
 $profitFactorGatePass = $profitFactor -ge [double]$registration.minimumProfitFactor
@@ -209,11 +389,24 @@ $lossStreakGatePass = $maximumLossStreak -le [int]$registration.maximumConsecuti
 
 if(!$identityPass -or !$evidenceFilesPass -or !$evidenceIdentityPass) {
    $status = "FAIL"
-   $decision = "Freeze identity or evidence integrity failed. Stop the monitor and inspect before continuing."
+   $decision = "Frozen candidate, sentinel, or evidence identity failed. Stop the monitor and inspect before continuing."
 }
-elseif(!$terminalRunning) {
+elseif($sentinelHeartbeatValid -and !$sentinelHeartbeatIdentityPass) {
+   $status = "FAIL"
+   $decision = "The sentinel heartbeat does not belong to the frozen forward run. Stop and restore the registered monitor identity."
+}
+elseif($sentinelHeartbeatValid -and !$accountContractPass) {
+   $status = "FAIL"
+   if(!$balanceContractPass) {
+      $decision = "The live demo balance does not match the frozen starting-capital contract. This sample is invalid; move the unchanged candidate to a correctly capitalized demo before any trades occur."
+   }
+   else {
+      $decision = "The demo account mode, position isolation, stop protection, or open-risk contract failed. This sample is invalid until the frozen safety conditions are restored."
+   }
+}
+elseif(!$terminalRunning -or !$sentinelHeartbeatValid -or !$sentinelHeartbeatFresh -or !$operationalPass) {
    $status = "ATTENTION"
-   $decision = "The frozen evidence is intact, but MT5 is not running. Restart the same demo monitor without changing the profile."
+   $decision = "The frozen evidence is intact, but MT5 or its read-only sentinel is not currently healthy. Restore the same registered monitor without changing the profile."
 }
 elseif(!$sampleComplete) {
    $status = "PENDING"
@@ -258,6 +451,38 @@ $statusRow = [pscustomobject]@{
    SourceHashMatch = $sourceHashMatch
    ProfileHashMatch = $profileHashMatch
    InstalledBinaryHashMatch = $binaryHashMatch
+   SentinelSourceHashMatch = $sentinelSourceHashMatch
+   SentinelProfileHashMatch = $sentinelProfileHashMatch
+   SentinelInstalledBinaryHashMatch = $sentinelBinaryHashMatch
+   SentinelCodeIdentityPass = $sentinelCodeIdentityPass
+   SentinelHeartbeatPresent = $sentinelHeartbeat.Exists
+   SentinelHeartbeatValid = $sentinelHeartbeatValid
+   SentinelHeartbeatFresh = $sentinelHeartbeatFresh
+   SentinelHeartbeatAgeSeconds = [math]::Round($sentinelHeartbeatAgeSeconds, 1)
+   SentinelHeartbeatIdentityPass = $sentinelHeartbeatIdentityPass
+   AccountTradeMode = $accountTradeMode
+   MarginMode = $marginMode
+   Connected = $connected
+   TerminalTradeAllowed = $terminalTradeAllowed
+   AccountTradeAllowed = $accountTradeAllowed
+   AccountExpertAllowed = $accountExpertAllowed
+   MqlTradeAllowed = $mqlTradeAllowed
+   ActualBalance = if([double]::IsNaN($actualBalance)) { "" } else { [math]::Round($actualBalance, 2) }
+   ActualEquity = if([double]::IsNaN($actualEquity)) { "" } else { [math]::Round($actualEquity, 2) }
+   ExpectedBalance = [math]::Round($expectedBalance, 2)
+   AccountModePass = $accountModePass
+   BalanceContractPass = $balanceContractPass
+   AllPositions = $allPositions
+   CandidatePositions = $candidatePositions
+   AllUnprotectedPositions = $allUnprotectedPositions
+   CandidateUnprotectedPositions = $candidateUnprotectedPositions
+   CandidateOpenRiskPercent = if([double]::IsNaN($candidateOpenRiskPercent)) { "" } else { [math]::Round($candidateOpenRiskPercent, 4) }
+   MaximumPortfolioOpenRiskPercent = [double]$registration.maximumPortfolioOpenRiskPercent
+   PositionIsolationPass = $positionIsolationPass
+   ProtectionPass = $protectionPass
+   OpenRiskPass = $openRiskPass
+   AccountContractPass = $accountContractPass
+   OperationalPass = $operationalPass
    ReversionLogPresent = $rvEvidence.Exists
    MomentumLogPresent = $moEvidence.Exists
    LastEventLocal = $lastEventText
@@ -269,6 +494,9 @@ $statusRow | Export-Csv -LiteralPath $StatusCsvPath -NoTypeInformation -Encoding
 $identityStatus = if($identityPass) { "PASS" } else { "FAIL" }
 $terminalStatus = if($terminalRunning) { "PASS" } else { "ATTENTION" }
 $evidenceStatus = if($evidenceFilesPass -and $evidenceIdentityPass) { "PASS" } else { "FAIL" }
+$heartbeatStatus = if(!$sentinelHeartbeatValid -or !$sentinelHeartbeatFresh) { "ATTENTION" } elseif($sentinelHeartbeatIdentityPass) { "PASS" } else { "FAIL" }
+$accountStatus = if($accountContractPass) { "PASS" } else { "FAIL" }
+$operationalStatus = if($operationalPass) { "PASS" } else { "ATTENTION" }
 $sampleStatus = if($sampleComplete) { "PASS" } else { "PENDING" }
 $performanceStatus = if(!$sampleComplete) { "PENDING" } elseif($profitGatePass -and $profitFactorGatePass -and $drawdownGatePass -and $lossStreakGatePass) { "PASS" } else { "FAIL" }
 
@@ -279,7 +507,19 @@ $markdown += "- **Status:** ``$status``"
 $markdown += "- **Updated:** ``$updatedText``"
 $markdown += "- **Registered:** ``$($registration.registeredAtLocal)``"
 $markdown += "- **Decision:** $decision"
-$markdown += "- **Safety:** Demo hedging account only; real-account trading remains disabled. The account identifier is not published."
+$markdown += "- **Safety:** Demo hedging account only; real-account trading remains disabled. The read-only sentinel cannot trade, and the account identifier is not published by either registration or heartbeat."
+$markdown += ""
+$markdown += "## Account Contract"
+$markdown += ""
+$markdown += "| Metric | Current | Required | Status |"
+$markdown += "|---|---:|---:|---|"
+$markdown += "| Trade mode | $accountTradeMode | demo | $(if($accountModePass) { 'PASS' } else { 'FAIL' }) |"
+$markdown += "| Margin mode | $marginMode | hedging | $(if($accountModePass) { 'PASS' } else { 'FAIL' }) |"
+$markdown += "| Balance | $(if([double]::IsNaN($actualBalance)) { 'unavailable' } else { '$' + (Format-Number -Value $actualBalance -Digits 2) }) | `$$((Format-Number -Value $expectedBalance -Digits 2)) +/- `$1.00 | $(if($balanceContractPass) { 'PASS' } else { 'FAIL' }) |"
+$markdown += "| Equity | $(if([double]::IsNaN($actualEquity)) { 'unavailable' } else { '$' + (Format-Number -Value $actualEquity -Digits 2) }) | information only | - |"
+$markdown += "| All / candidate positions | $allPositions / $candidatePositions | equal | $(if($positionIsolationPass) { 'PASS' } else { 'FAIL' }) |"
+$markdown += "| All / candidate unprotected | $allUnprotectedPositions / $candidateUnprotectedPositions | 0 / 0 | $(if($protectionPass) { 'PASS' } else { 'FAIL' }) |"
+$markdown += "| Candidate open risk | $(if([double]::IsNaN($candidateOpenRiskPercent)) { 'unavailable' } else { Format-Percent -Value $candidateOpenRiskPercent -Digits 4 }) | <= $(Format-Percent -Value ([double]$registration.maximumPortfolioOpenRiskPercent) -Digits 2) | $(if($openRiskPass) { 'PASS' } else { 'FAIL' }) |"
 $markdown += ""
 $markdown += "## Progress"
 $markdown += ""
@@ -301,6 +541,10 @@ $markdown += ""
 $markdown += "| Gate | Status | Evidence |"
 $markdown += "|---|---|---|"
 $markdown += "| Frozen source, profile, and installed binary hashes | $identityStatus | source=$sourceHashMatch; profile=$profileHashMatch; binary=$binaryHashMatch |"
+$markdown += "| Read-only sentinel code identity | $(if($sentinelCodeIdentityPass) { 'PASS' } else { 'FAIL' }) | source=$sentinelSourceHashMatch; profile=$sentinelProfileHashMatch; binary=$sentinelBinaryHashMatch |"
+$markdown += "| Sentinel heartbeat freshness and identity | $heartbeatStatus | present=$($sentinelHeartbeat.Exists); valid=$sentinelHeartbeatValid; fresh=$sentinelHeartbeatFresh; age=$(Format-Number -Value $sentinelHeartbeatAgeSeconds -Digits 1)s; identity=$sentinelHeartbeatIdentityPass |"
+$markdown += "| Demo account and capital contract | $accountStatus | mode=$accountTradeMode/$marginMode; actual=$(if([double]::IsNaN($actualBalance)) { 'unavailable' } else { '$' + (Format-Number -Value $actualBalance -Digits 2) }); expected=`$$((Format-Number -Value $expectedBalance -Digits 2)) |"
+$markdown += "| Connection and trading permissions | $operationalStatus | connected=$connected; terminal=$terminalTradeAllowed; account=$accountTradeAllowed; expert=$accountExpertAllowed; MQL=$mqlTradeAllowed |"
 $markdown += "| MT5 process running | $terminalStatus | process count=$($terminalProcesses.Count) |"
 $markdown += "| Dedicated evidence logs and identity | $evidenceStatus | RV=$($rvEvidence.Exists); MO=$($moEvidence.Exists); foreign rows=$foreignRows; invalid rows=$invalidRows |"
 $markdown += "| Minimum observation sample | $sampleStatus | days=$(Format-Number -Value $calendarDays -Digits 2)/$($registration.minimumCalendarDays); trades=$($exits.Count)/$($registration.minimumClosedTrades) |"
@@ -323,3 +567,5 @@ Write-Output "NET_PROFIT=$(Format-Number -Value $netProfit -Digits 2)"
 Write-Output "TERMINAL_RUNNING=$terminalRunning"
 Write-Output "IDENTITY_PASS=$identityPass"
 Write-Output "EVIDENCE_PASS=$($evidenceFilesPass -and $evidenceIdentityPass)"
+Write-Output "SENTINEL_HEARTBEAT_PASS=$($sentinelHeartbeatValid -and $sentinelHeartbeatFresh -and $sentinelHeartbeatIdentityPass)"
+Write-Output "ACCOUNT_CONTRACT_PASS=$accountContractPass"

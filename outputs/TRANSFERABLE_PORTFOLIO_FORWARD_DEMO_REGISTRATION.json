@@ -23,6 +23,7 @@
   "minimumProfitFactor": 1.1,
   "maximumClosedTradeDrawdownPercent": 5.0,
   "maximumConsecutiveLosses": 12,
+  "maximumPortfolioOpenRiskPercent": 0.75,
   "realAccountTradingAllowed": false,
   "notes": "Frozen before forward observation. Trading and risk fields match the validated base profile; only evidence logging, dashboard visibility, and the run label differ. The account number is intentionally excluded."
 }
