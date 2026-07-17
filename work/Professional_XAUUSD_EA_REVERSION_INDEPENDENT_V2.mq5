@@ -1,0 +1,23361 @@
+//+------------------------------------------------------------------+
+//| Professional XAUUSD Expert Advisor                               |
+//| Modular research EA for MT5 Strategy Tester iteration             |
+//| No martingale, grid, averaging down, or recovery systems           |
+//+------------------------------------------------------------------+
+#property strict
+#property version   "1.00"
+#property description "Professional-grade modular XAUUSD EA for robust backtesting and optimization."
+
+#include <Trade/Trade.mqh>
+
+enum ENUM_TRADE_BIAS
+{
+   BIAS_NONE = 0,
+   BIAS_BUY  = 1,
+   BIAS_SELL = -1
+};
+
+enum ENUM_LOG_LEVEL
+{
+   LOG_OFF    = 0,
+   LOG_ERRORS = 1,
+   LOG_TRADES = 2,
+   LOG_VERBOSE= 3
+};
+
+enum ENUM_TESTER_FITNESS_MODE
+{
+   FITNESS_NET_PROFIT = 0,
+   FITNESS_ROBUST_PROFIT = 1,
+   FITNESS_RECOVERY_SHARPE = 2,
+   FITNESS_PROTECTED_GROWTH = 3,
+   FITNESS_PROFIT_RECOVERY_FLOOR = 4,
+   FITNESS_MAX_PROFIT_PROTECTED = 5
+};
+
+enum ENUM_CORRELATION_CONFIRMATION_MODE
+{
+   CORRELATION_SAME_DIRECTION = 0,
+   CORRELATION_INVERSE_DIRECTION = 1
+};
+
+enum ENUM_PREVIOUS_DAY_RANGE_MODE
+{
+   PREV_DAY_RANGE_HALF_BIAS = 0,
+   PREV_DAY_RANGE_BREAKOUT = 1
+};
+
+//--- General
+input group "General"
+input string          InpAllowedSymbol             = "XAUUSD";
+input bool            InpUseSymbolSafetyLock       = true;
+input ENUM_TIMEFRAMES InpSignalTimeframe           = PERIOD_M15;
+input long            InpMagicNumber               = 26070401;
+input bool            InpTradeOnlyNewBar           = true;
+input bool            InpManageOnlyNewBar          = true;
+input bool            InpAllowBuy                  = true;
+input bool            InpAllowSell                 = true;
+input bool            InpUseDateBuyBlock           = false;
+input datetime        InpBuyBlockStart             = D'2024.01.01 00:00';
+input datetime        InpBuyBlockEnd               = D'2024.06.30 23:59';
+bool            InpUseDateBuyBlock2          = false;
+datetime        InpBuyBlock2Start            = D'2025.07.01 00:00';
+datetime        InpBuyBlock2End              = D'2025.12.31 23:59';
+input bool            InpUseDateSellBlock          = false;
+input datetime        InpSellBlockStart            = D'2025.07.01 00:00';
+input datetime        InpSellBlockEnd              = D'2025.12.31 23:59';
+bool            InpUseMTFSlopeSellBlock      = false;
+int             InpSellBlockSlopeLookback    = 50;
+double          InpSellBlockMinUpSlopePts    = 500.0;
+bool            InpUseMTFSlopeDirectionFilter = false;
+int             InpDirectionSlopeLookback    = 50;
+double          InpBuyMinMTFSlopePts         = 0.0;
+double          InpSellMaxMTFSlopePts        = 0.0;
+bool            InpReverseSignals            = false;
+input bool InpUseAdaptiveReverse        = false;
+int             InpAdaptiveSlopeLookbackBars = 50;
+double          InpAdaptiveSlopeThresholdPts = 500.0;
+bool                  InpUseAdaptiveReverseWhipsawGuard = true;
+bool                  InpAdaptiveReverseBlockOriginalOnGuard = false;
+double                InpAdaptiveReverseMinADX     = 18.0;
+bool                  InpAdaptiveReverseRequireStructure = true;
+bool                  InpAdaptiveReverseRequireSweepReject = false;
+bool                  InpUseAdaptiveReverseLossCooldown = true;
+int                   InpAdaptiveReverseLossLookbackTrades = 6;
+int                   InpAdaptiveReverseLossThreshold = 2;
+int                   InpAdaptiveReverseLossCooldownMinutes = 360;
+int                   InpAdaptiveReverseLossMinQualityScore = 12;
+bool                  InpUseAdaptiveReverseRecentFlipCooldown = true;
+int                   InpAdaptiveReverseRecentFlipCooldownMinutes = 180;
+int                   InpAdaptiveReverseRecentFlipMinQualityScore = 13;
+bool                  InpUseAdaptiveReversePostStopLockout = true;
+int                   InpAdaptiveReversePostStopLockoutMinutes = 240;
+int                   InpAdaptiveReversePostStopMinQualityScore = 14;
+bool                  InpAdaptiveReversePostStopMatchDirection = true;
+bool                  InpAdaptiveReverseBlockRangePhase = true;
+bool                  InpAdaptiveReverseRequireTrendPhase = true;
+int                   InpAdaptiveReversePhaseBypassQualityScore = 16;
+bool                  InpUseAdaptiveReverseLiquidityTrapGuard = true;
+int                   InpAdaptiveReverseTrapLookbackBars = 24;
+double                InpAdaptiveReverseTrapMaxDistanceATR = 0.80;
+int                   InpAdaptiveReverseTrapBypassQualityScore = 16;
+bool                  InpAdaptiveReverseTrapUseEqualLevels = true;
+bool                  InpAdaptiveReverseTrapUsePreviousDay = true;
+bool                  InpAdaptiveReverseTrapUsePreviousWeek = false;
+bool                  InpUseAdaptiveReverseLiquidityClearance = true;
+int                   InpAdaptiveReverseClearanceLookbackBars = 36;
+double                InpAdaptiveReverseMinLiquidityClearanceATR = 1.15;
+int                   InpAdaptiveReverseClearanceBypassQualityScore = 17;
+bool                  InpUseAdaptiveReverseFollowThroughClose = true;
+int                   InpAdaptiveReverseFollowThroughLookbackBars = 10;
+double                InpAdaptiveReverseFollowThroughBufferATR = 0.10;
+double                InpAdaptiveReverseFollowThroughBufferPoints = 20.0;
+int                   InpAdaptiveReverseFollowThroughBypassQualityScore = 16;
+bool                  InpUseAdaptiveReverseDeferredConfirmation = true;
+int                   InpAdaptiveReverseDeferredBreakLookbackBars = 12;
+double                InpAdaptiveReverseDeferredBreakBufferATR = 0.10;
+double                InpAdaptiveReverseDeferredBreakBufferPoints = 20.0;
+double                InpAdaptiveReverseDeferredMaxRetestATR = 0.65;
+double                InpAdaptiveReverseDeferredMinBreakBodyPercent = 45.0;
+int                   InpAdaptiveReverseDeferredBypassQualityScore = 18;
+input int InpMaxSimultaneousPositions  = 1;
+input int InpMaxTradesPerDay           = 4;
+input int InpMinMinutesBetweenTrades   = 30;
+input bool            InpAllowFlatMonthProbesOutsideMonthFilter = false;
+bool            InpAllowFlatMonthMomentumOutsideMonthFilter = false;
+bool            InpUseFlatMonthProbeMonthFilter = false;
+bool            InpFlatProbeTradeJanuary     = true;
+bool            InpFlatProbeTradeFebruary    = true;
+bool            InpFlatProbeTradeMarch       = true;
+bool            InpFlatProbeTradeApril       = true;
+bool            InpFlatProbeTradeMay         = true;
+bool            InpFlatProbeTradeJune        = true;
+bool            InpFlatProbeTradeJuly        = true;
+bool            InpFlatProbeTradeAugust      = true;
+bool            InpFlatProbeTradeSeptember   = true;
+bool            InpFlatProbeTradeOctober     = true;
+bool            InpFlatProbeTradeNovember    = true;
+bool            InpFlatProbeTradeDecember    = true;
+input bool            InpUseFlatMonthOpportunityMode = false;
+input bool            InpFlatMonthOpportunityOnlyOutsideMonthFilter = false;
+input bool            InpAllowFlatMonthOpportunityOutsideMonthFilter = false;
+input int             InpFlatMonthOpportunityBypassMinQualityScore = 12;
+input int             InpFlatMonthOpportunityBypassMinPriceActionScore = 8;
+input bool            InpFlatMonthOpportunityBypassRequireLiquidSession = true;
+bool            InpAllowFlatMonthStructuralDisplacementOutsideMonthFilter = false;
+int             InpFlatMonthStructuralDisplacementBypassMinQualityScore = 8;
+int             InpFlatMonthStructuralDisplacementBypassMinPriceActionScore = 0;
+bool            InpFlatMonthStructuralDisplacementBypassRequireLiquidSession = true;
+input bool InpAllowFlatMonthLiquidityReclaimOutsideMonthFilter = false;
+int             InpFlatMonthLiquidityReclaimBypassMinQualityScore = 7;
+int             InpFlatMonthLiquidityReclaimBypassMinPriceActionScore = 0;
+bool            InpFlatMonthLiquidityReclaimBypassRequireLiquidSession = true;
+bool            InpAllowInSessionLiquidityPullbackOutsideMonthFilter = false;
+input double          InpFlatMonthTargetPercent    = 2.00;
+input int             InpFlatMonthMinDayOfMonth    = 5;
+input int             InpFlatMonthMaxEntryCount    = 8;
+input double          InpFlatMonthMaxProfitPercent = 0.75;
+int             InpFlatMonthEntryScoreDiscount = 1;
+double          InpFlatMonthRRDiscount       = 0.10;
+double          InpFlatMonthRiskMultiplier   = 1.15;
+input bool            InpFlatMonthRequireNoMonthlyLoss = true;
+input bool InpUseFlatMonthCatchUpRiskRamp = false;
+double          InpFlatMonthCatchUpStartGapPercent = 0.35;
+double          InpFlatMonthCatchUpFullGapPercent = 1.50;
+double          InpFlatMonthCatchUpMaxRiskMultiplier = 1.45;
+bool            InpFlatMonthCatchUpRequiresProtectedFloor = true;
+bool            InpFlatMonthCatchUpRiskRequiresLiquidSession = true;
+bool            InpUseFlatMonthCatchUpEntryRelaxation = false;
+int             InpFlatMonthCatchUpEntryScoreDiscount = 1;
+double          InpFlatMonthCatchUpRRDiscount = 0.05;
+bool            InpFlatMonthCatchUpRelaxBreakout = true;
+bool            InpFlatMonthCatchUpRelaxRangeReversion = true;
+bool            InpFlatMonthCatchUpRequireLiquidSession = true;
+bool            InpUseFlatMonthCatchUpStandaloneRelaxation = false;
+int             InpFlatMonthCatchUpStandaloneScoreDiscount = 1;
+double          InpFlatMonthCatchUpStandaloneMinProgress = 0.35;
+bool            InpFlatMonthCatchUpStandaloneRequireLiquidSession = true;
+input bool InpUseFlatMonthLateCatchUp = false;
+int             InpFlatMonthLateCatchUpMinDay = 18;
+int             InpFlatMonthLateCatchUpMaxMonthlyEntries = 12;
+double          InpFlatMonthLateCatchUpMinProgress = 0.35;
+int             InpFlatMonthLateCatchUpEntryScoreDiscount = 1;
+double          InpFlatMonthLateCatchUpRRDiscount = 0.05;
+double          InpFlatMonthLateCatchUpRiskMultiplier = 1.20;
+bool            InpFlatMonthLateCatchUpRequireLiquidSession = true;
+bool            InpUseFlatMonthProbeMode     = false;
+int             InpFlatMonthProbeMaxEntryCount = 4;
+int             InpFlatMonthProbeScoreDiscount = 1;
+double          InpFlatMonthProbeRRDiscount  = 0.05;
+double          InpFlatMonthProbeRiskMultiplier = 0.45;
+bool            InpFlatMonthProbeRangeOnly   = false;
+bool            InpFlatMonthProbeAllowBreakoutContinuation = false;
+double          InpFlatMonthProbeBreakoutRiskMultiplier = 0.35;
+int             InpFlatMonthProbeBreakoutMinQualityScore = 8;
+bool            InpUseFlatMonthProbeQualityRiskRamp = false;
+int             InpFlatMonthProbeQualityRiskFullScore = 13;
+double          InpFlatMonthProbeMaxRiskMultiplier = 0.85;
+bool            InpFlatMonthProbeQualityRampRequireProtectedFloor = true;
+bool            InpUseFlatMonthProbeQualityCapBypass = false;
+int             InpFlatMonthProbeCapBypassMinQualityScore = 12;
+int             InpFlatMonthProbeCapBypassMaxMonthlyEntries = 8;
+bool            InpFlatMonthProbeCapBypassRequireProtectedFloor = true;
+bool            InpFlatMonthProbeCapBypassRequireLiquidSession = true;
+input bool            InpUseFlatMonthProbeLaneSpacing = true;
+int             InpFlatMonthProbeLaneSpacingMinutes = 45;
+bool            InpUseFlatMonthStaleEntryNudge = false;
+int             InpFlatMonthStaleEntryMinHours = 36;
+int             InpFlatMonthStaleEntryMaxMonthlyEntries = 6;
+int             InpFlatMonthStaleEntryConfirmationDiscount = 1;
+bool            InpFlatMonthStaleEntryRequireLiquidSession = true;
+bool            InpFlatMonthStaleAllowPowerTrend = true;
+bool            InpFlatMonthStaleAllowBreakout = true;
+bool            InpFlatMonthStaleAllowSessionImpulse = true;
+bool            InpFlatMonthStaleAllowRangeReversion = true;
+bool            InpUseFlatMonthMissedMoveWakeUp = false;
+int             InpFlatMonthMissedMoveMinHours = 24;
+int             InpFlatMonthMissedMoveMaxMonthlyEntries = 10;
+double          InpFlatMonthMissedMoveMinATR = 1.20;
+int             InpFlatMonthMissedMoveScoreDiscount = 1;
+double          InpFlatMonthMissedMoveRRDiscount = 0.05;
+bool            InpFlatMonthMissedMoveRequireLiquidSession = true;
+bool            InpFlatMonthMissedMoveAllowBreakout = true;
+bool            InpFlatMonthMissedMoveAllowSessionImpulse = true;
+bool            InpFlatMonthMissedMoveAllowPowerTrend = true;
+input bool InpUseFlatMonthMissedMoveTPExpansion = false;
+int             InpFlatMonthMissedMoveTPMinQualityScore = 11;
+int             InpFlatMonthMissedMoveTPMinPriceActionScore = 10;
+double          InpFlatMonthMissedMoveTPMultiplier = 1.25;
+bool            InpFlatMonthMissedMoveTPRequireTrailing = true;
+bool            InpUseFlatMonthEliteFallback = false;
+int             InpFlatMonthEliteFallbackMinHours = 48;
+int             InpFlatMonthEliteFallbackMaxMonthlyEntries = 6;
+int             InpFlatMonthEliteFallbackMaxConfirmationShortfall = 1;
+int             InpFlatMonthEliteFallbackMinQualityScore = 12;
+int             InpFlatMonthEliteFallbackMinPriceActionScore = 8;
+bool            InpFlatMonthEliteFallbackRequireLiquidSession = true;
+bool            InpUseFlatMonthBreakoutProbe = false;
+int             InpFlatMonthBreakoutProbeMinHours = 36;
+int             InpFlatMonthBreakoutProbeMaxMonthlyEntries = 8;
+int             InpFlatMonthBreakoutProbeMinScore = 7;
+double          InpFlatMonthBreakoutProbeRiskMultiplier = 0.45;
+bool            InpFlatMonthBreakoutProbeRequireLiquidSession = true;
+bool            InpFlatMonthBreakoutProbeRequireADX = true;
+double          InpFlatMonthBreakoutProbeMinADX = 20.0;
+double          InpFlatMonthBreakoutProbeMaxADX = 34.0;
+bool            InpFlatMonthBreakoutProbeRequireExecution = true;
+bool            InpFlatMonthBreakoutProbeRequireRangeExpansion = false;
+bool            InpFlatMonthBreakoutProbeAllowDonchian = true;
+bool            InpFlatMonthBreakoutProbeAllowDisplacementBOS = true;
+bool            InpFlatMonthBreakoutProbeAllowOpeningRange = true;
+double          InpFlatMonthBreakoutProbeMinRangeATR = 0.45;
+double          InpFlatMonthBreakoutProbeMaxOppositeWickPercent = 38.0;
+bool            InpFlatMonthBreakoutProbeUseStructuralStop = true;
+int             InpFlatMonthBreakoutProbeStopLookbackBars = 12;
+double          InpFlatMonthBreakoutProbeStopBufferATR = 0.12;
+double          InpFlatMonthBreakoutProbeStopBufferPoints = 25.0;
+double          InpFlatMonthBreakoutProbeMinStopATR = 0.35;
+double          InpFlatMonthBreakoutProbeMaxStopATR = 2.40;
+double          InpFlatMonthBreakoutProbeTakeProfitATR = 1.25;
+double          InpFlatMonthBreakoutProbeMinRR = 0.90;
+input bool            InpUseFlatMonthStructuralDisplacementLane = false;
+input double          InpFlatMonthStructuralDisplacementRiskMultiplier = 0.25;
+input int             InpFlatMonthStructuralDisplacementMaxMonthlyEntries = 4;
+input int             InpFlatMonthStructuralDisplacementSpacingMinutes = 360;
+input int             InpFlatMonthStructuralDisplacementMinScore = 8;
+input bool            InpFlatMonthStructuralDisplacementRequireLiquidSession = true;
+input bool            InpFlatMonthStructuralDisplacementRequireADX = true;
+input double          InpFlatMonthStructuralDisplacementMinADX = 18.0;
+input double          InpFlatMonthStructuralDisplacementMaxADX = 34.0;
+input double          InpFlatMonthStructuralDisplacementMinRangeATR = 0.75;
+input double          InpFlatMonthStructuralDisplacementMinBodyPercent = 52.0;
+input double          InpFlatMonthStructuralDisplacementMaxOppositeWickPercent = 30.0;
+input int             InpFlatMonthStructuralDisplacementLookbackBars = 24;
+input bool            InpFlatMonthStructuralDisplacementRequireSweepOrRetest = true;
+input bool            InpFlatMonthStructuralDisplacementRequireOrderFlow = true;
+input double          InpFlatMonthStructuralDisplacementStopBufferATR = 0.16;
+input double          InpFlatMonthStructuralDisplacementStopBufferPoints = 35.0;
+input double          InpFlatMonthStructuralDisplacementTakeProfitATR = 1.35;
+input double          InpFlatMonthStructuralDisplacementMinRR = 0.95;
+input bool            InpFlatMonthStructuralDisplacementRequireForwardClearance = true;
+input double          InpFlatMonthStructuralDisplacementMinClearanceATR = 1.05;
+input bool            InpFlatMonthStructuralDisplacementUseEqualLevels = true;
+input bool            InpFlatMonthStructuralDisplacementUsePreviousDay = true;
+input bool            InpFlatMonthStructuralDisplacementUsePreviousWeek = false;
+bool            InpUseFlatMonthStructuralDisplacementEfficiencyRelaxation = false;
+int             InpFlatMonthStructuralDisplacementRelaxAfterHours = 48;
+double          InpFlatMonthStructuralDisplacementRelaxMinCatchUpProgress = 0.20;
+double          InpFlatMonthStructuralDisplacementRelaxMinRangeATR = 0.55;
+double          InpFlatMonthStructuralDisplacementRelaxMinBodyPercent = 45.0;
+double          InpFlatMonthStructuralDisplacementRelaxMaxOppositeWickPercent = 38.0;
+int             InpFlatMonthStructuralDisplacementRelaxMinScore = 7;
+bool            InpFlatMonthStructuralDisplacementRelaxRequireSweepOrOrderFlow = true;
+input bool InpUseFlatMonthLiquidityReclaimLane = false;
+double          InpFlatMonthLiquidityReclaimRiskMultiplier = 0.20;
+int             InpFlatMonthLiquidityReclaimMaxMonthlyEntries = 4;
+int             InpFlatMonthLiquidityReclaimSpacingMinutes = 360;
+int             InpFlatMonthLiquidityReclaimMinScore = 6;
+bool            InpFlatMonthLiquidityReclaimRequireLiquidSession = true;
+bool            InpFlatMonthLiquidityReclaimRequireOrderFlow = true;
+bool            InpFlatMonthLiquidityReclaimUseImbalanceRetest = false;
+bool            InpFlatMonthLiquidityReclaimRequireImbalanceRetest = false;
+bool            InpFlatMonthLiquidityReclaimAllowImbalanceInsteadOfOrderFlow = false;
+bool            InpFlatMonthLiquidityReclaimUseImbalanceContinuation = false;
+bool            InpFlatMonthLiquidityReclaimRequireImbalanceContinuation = false;
+int             InpFlatMonthLiquidityReclaimImbalanceLookbackBars = 18;
+bool            InpFlatMonthLiquidityReclaimRequireVWAPReclaim = false;
+double          InpFlatMonthLiquidityReclaimMaxVWAPDistanceATR = 1.25;
+int             InpFlatMonthLiquidityReclaimLookbackBars = 18;
+double          InpFlatMonthLiquidityReclaimMinWickPercent = 32.0;
+double          InpFlatMonthLiquidityReclaimMinCloseLocation = 0.58;
+double          InpFlatMonthLiquidityReclaimStopBufferATR = 0.14;
+double          InpFlatMonthLiquidityReclaimStopBufferPoints = 30.0;
+double          InpFlatMonthLiquidityReclaimTakeProfitATR = 1.20;
+double          InpFlatMonthLiquidityReclaimMinRR = 0.90;
+bool            InpFlatMonthLiquidityReclaimUseEqualLevels = true;
+bool            InpFlatMonthLiquidityReclaimUsePreviousDay = true;
+bool            InpFlatMonthLiquidityReclaimUsePreviousWeek = false;
+bool            InpFlatMonthLiquidityReclaimUseLiquidityTarget = false;
+bool            InpFlatMonthLiquidityReclaimTargetUseEqualLevels = true;
+bool            InpFlatMonthLiquidityReclaimTargetUsePreviousDay = true;
+bool            InpFlatMonthLiquidityReclaimTargetUsePreviousWeek = false;
+bool            InpFlatMonthLiquidityReclaimTargetUseSessionRange = false;
+int             InpFlatMonthLiquidityReclaimTargetSessionLookbackHours = 8;
+bool            InpFlatMonthLiquidityReclaimTargetUseAsianRange = false;
+bool            InpFlatMonthLiquidityReclaimTargetUseSwingLevels = false;
+int             InpFlatMonthLiquidityReclaimSwingLookbackBars = 48;
+int             InpFlatMonthLiquidityReclaimSwingLeftBars = 2;
+int             InpFlatMonthLiquidityReclaimSwingRightBars = 2;
+bool            InpFlatMonthLiquidityReclaimRequireForwardClearance = false;
+double          InpFlatMonthLiquidityReclaimMinClearanceATR = 0.90;
+double          InpFlatMonthLiquidityReclaimMinTargetATR = 0.80;
+double          InpFlatMonthLiquidityReclaimMaxTargetATR = 2.40;
+bool            InpFlatMonthLiquidityReclaimUseRunnerTargetStretch = false;
+double          InpFlatMonthLiquidityReclaimRunnerTargetMultiplier = 1.25;
+bool            InpFlatMonthLiquidityReclaimAllowRecentRetest = false;
+int             InpFlatMonthLiquidityReclaimRetestLookbackBars = 5;
+double          InpFlatMonthLiquidityReclaimRetestToleranceATR = 0.18;
+double          InpFlatMonthLiquidityReclaimRetestTolerancePoints = 40.0;
+double          InpFlatMonthLiquidityReclaimRetestMinBodyPercent = 20.0;
+bool            InpFlatMonthLiquidityReclaimUseShelfRetest = false;
+bool            InpFlatMonthLiquidityReclaimRequireShelfRetest = false;
+int             InpFlatMonthLiquidityReclaimShelfRetestLookbackBars = 8;
+double          InpFlatMonthLiquidityReclaimShelfRetestToleranceATR = 0.14;
+double          InpFlatMonthLiquidityReclaimShelfRetestTolerancePoints = 35.0;
+double          InpFlatMonthLiquidityReclaimShelfRetestMinBodyPercent = 22.0;
+double          InpFlatMonthLiquidityReclaimShelfRetestMinCloseLocation = 0.56;
+bool            InpFlatMonthLiquidityReclaimUseContinuationRetest = false;
+bool            InpFlatMonthLiquidityReclaimRequireContinuationRetest = false;
+int             InpFlatMonthLiquidityReclaimContinuationLookbackBars = 8;
+double          InpFlatMonthLiquidityReclaimContinuationMaxPullbackATR = 0.65;
+double          InpFlatMonthLiquidityReclaimContinuationMinBodyPercent = 24.0;
+bool            InpFlatMonthLiquidityReclaimContinuationRequireEMAHold = false;
+bool            InpFlatMonthLiquidityReclaimContinuationRequireVWAPHold = false;
+bool            InpFlatMonthLiquidityReclaimUseCompressionBreakout = false;
+bool            InpFlatMonthLiquidityReclaimRequireCompressionBreakout = false;
+int             InpFlatMonthLiquidityReclaimCompressionLookbackBars = 14;
+double          InpFlatMonthLiquidityReclaimCompressionMaxRangeATR = 1.05;
+double          InpFlatMonthLiquidityReclaimCompressionBreakBufferPoints = 15.0;
+double          InpFlatMonthLiquidityReclaimCompressionMinBodyPercent = 40.0;
+double          InpFlatMonthLiquidityReclaimCompressionMinCloseLocation = 0.62;
+double          InpFlatMonthLiquidityReclaimCompressionMinBreakRangeATR = 0.45;
+bool            InpFlatMonthLiquidityReclaimUseBreakoutRetest = false;
+bool            InpFlatMonthLiquidityReclaimRequireBreakoutRetest = false;
+int             InpFlatMonthLiquidityReclaimBreakoutRetestLookbackBars = 6;
+double          InpFlatMonthLiquidityReclaimBreakoutRetestToleranceATR = 0.18;
+double          InpFlatMonthLiquidityReclaimBreakoutRetestTolerancePoints = 45.0;
+double          InpFlatMonthLiquidityReclaimBreakoutRetestMaxRetestATR = 0.75;
+double          InpFlatMonthLiquidityReclaimBreakoutRetestMinCloseLocation = 0.56;
+double          InpFlatMonthLiquidityReclaimBreakoutRetestMinVolumeRatio = 0.00;
+bool            InpFlatMonthLiquidityReclaimUseFailedBreakoutTrap = false;
+bool            InpFlatMonthLiquidityReclaimRequireFailedBreakoutTrap = false;
+int             InpFlatMonthLiquidityReclaimFailedBreakoutLookbackBars = 6;
+double          InpFlatMonthLiquidityReclaimFailedBreakoutMaxBoxRangeATR = 1.35;
+double          InpFlatMonthLiquidityReclaimFailedBreakoutMinReclaimRatio = 0.22;
+double          InpFlatMonthLiquidityReclaimFailedBreakoutMinVolumeRatio = 0.00;
+bool            InpFlatMonthLiquidityReclaimUseSessionRangeBreakout = false;
+bool            InpFlatMonthLiquidityReclaimRequireSessionRangeBreakout = false;
+bool            InpFlatMonthLiquidityReclaimSessionBreakoutUseAsianRange = true;
+bool            InpFlatMonthLiquidityReclaimSessionBreakoutUseRollingRange = true;
+int             InpFlatMonthLiquidityReclaimSessionBreakoutLookbackHours = 6;
+double          InpFlatMonthLiquidityReclaimSessionBreakoutMaxRangeATR = 1.25;
+double          InpFlatMonthLiquidityReclaimSessionBreakoutBufferPoints = 20.0;
+double          InpFlatMonthLiquidityReclaimSessionBreakoutMinBodyPercent = 38.0;
+double          InpFlatMonthLiquidityReclaimSessionBreakoutMinCloseLocation = 0.62;
+double          InpFlatMonthLiquidityReclaimSessionBreakoutMinBreakRangeATR = 0.45;
+bool            InpFlatMonthLiquidityReclaimUseOpeningRangeReclaim = false;
+bool            InpFlatMonthLiquidityReclaimRequireOpeningRangeReclaim = false;
+int             InpFlatMonthLiquidityReclaimOpeningRangeStartHour = 7;
+int             InpFlatMonthLiquidityReclaimOpeningRangeStartMinute = 0;
+int             InpFlatMonthLiquidityReclaimOpeningRangeMinutes = 60;
+int             InpFlatMonthLiquidityReclaimOpeningRangeMaxBarsAfter = 20;
+double          InpFlatMonthLiquidityReclaimOpeningRangeMaxRangeATR = 1.50;
+double          InpFlatMonthLiquidityReclaimOpeningRangeBreakBufferPoints = 18.0;
+double          InpFlatMonthLiquidityReclaimOpeningRangeMinReclaimATR = 0.04;
+double          InpFlatMonthLiquidityReclaimOpeningRangeMinBodyPercent = 24.0;
+double          InpFlatMonthLiquidityReclaimOpeningRangeMinCloseLocation = 0.56;
+bool            InpFlatMonthLiquidityReclaimOpeningRangeUseRangeTarget = true;
+double          InpFlatMonthLiquidityReclaimOpeningRangeMinTargetATR = 0.70;
+double          InpFlatMonthLiquidityReclaimOpeningRangeMaxTargetATR = 2.30;
+bool            InpFlatMonthLiquidityReclaimUseVWAPDeviationReclaim = false;
+bool            InpFlatMonthLiquidityReclaimRequireVWAPDeviationReclaim = false;
+int             InpFlatMonthLiquidityReclaimVWAPDeviationLookbackBars = 36;
+int             InpFlatMonthLiquidityReclaimVWAPDeviationStopLookbackBars = 8;
+double          InpFlatMonthLiquidityReclaimVWAPDeviationMinATR = 0.65;
+double          InpFlatMonthLiquidityReclaimVWAPDeviationMaxATR = 2.20;
+double          InpFlatMonthLiquidityReclaimVWAPDeviationMinBodyPercent = 22.0;
+double          InpFlatMonthLiquidityReclaimVWAPDeviationMinCloseLocation = 0.55;
+bool            InpFlatMonthLiquidityReclaimVWAPDeviationUseVWAPTarget = true;
+double          InpFlatMonthLiquidityReclaimVWAPDeviationMinTargetATR = 0.45;
+double          InpFlatMonthLiquidityReclaimVWAPDeviationMaxTargetATR = 1.80;
+bool            InpFlatMonthLiquidityReclaimUseRangeFailureReclaim = false;
+bool            InpFlatMonthLiquidityReclaimRequireRangeFailureReclaim = false;
+bool            InpFlatMonthLiquidityReclaimRangeFailureUseAsianRange = true;
+bool            InpFlatMonthLiquidityReclaimRangeFailureUseRollingRange = true;
+int             InpFlatMonthLiquidityReclaimRangeFailureLookbackHours = 6;
+double          InpFlatMonthLiquidityReclaimRangeFailureMaxRangeATR = 1.60;
+double          InpFlatMonthLiquidityReclaimRangeFailureBreakBufferPoints = 18.0;
+double          InpFlatMonthLiquidityReclaimRangeFailureMinBodyPercent = 28.0;
+double          InpFlatMonthLiquidityReclaimRangeFailureMinCloseLocation = 0.58;
+double          InpFlatMonthLiquidityReclaimRangeFailureMinReclaimPercent = 0.18;
+bool            InpFlatMonthLiquidityReclaimRangeFailureUseRangeTarget = true;
+double          InpFlatMonthLiquidityReclaimRangeFailureMinTargetATR = 0.70;
+double          InpFlatMonthLiquidityReclaimRangeFailureMaxTargetATR = 2.20;
+bool            InpFlatMonthLiquidityReclaimUseHTFLiquidityReclaim = false;
+bool            InpFlatMonthLiquidityReclaimRequireHTFLiquidityReclaim = false;
+bool            InpFlatMonthLiquidityReclaimHTFUsePreviousDay = true;
+bool            InpFlatMonthLiquidityReclaimHTFUsePreviousWeek = false;
+bool            InpFlatMonthLiquidityReclaimHTFUsePreviousMonth = false;
+double          InpFlatMonthLiquidityReclaimHTFBreakBufferPoints = 20.0;
+double          InpFlatMonthLiquidityReclaimHTFMinReclaimATR = 0.05;
+double          InpFlatMonthLiquidityReclaimHTFMinBodyPercent = 26.0;
+double          InpFlatMonthLiquidityReclaimHTFMinCloseLocation = 0.56;
+double          InpFlatMonthLiquidityReclaimHTFMaxLevelDistanceATR = 1.80;
+bool            InpFlatMonthLiquidityReclaimHTFUseOppositeTarget = true;
+double          InpFlatMonthLiquidityReclaimHTFMinTargetATR = 0.75;
+double          InpFlatMonthLiquidityReclaimHTFMaxTargetATR = 2.60;
+bool            InpFlatMonthLiquidityReclaimUseSweepDisplacementBOS = false;
+bool            InpFlatMonthLiquidityReclaimRequireSweepDisplacementBOS = false;
+int             InpFlatMonthLiquidityReclaimSweepBOSLookbackBars = 18;
+int             InpFlatMonthLiquidityReclaimSweepBOSMaxSweepAgeBars = 3;
+double          InpFlatMonthLiquidityReclaimSweepBOSBreakBufferPoints = 12.0;
+double          InpFlatMonthLiquidityReclaimSweepBOSMinRangeATR = 0.55;
+double          InpFlatMonthLiquidityReclaimSweepBOSMinBodyPercent = 42.0;
+double          InpFlatMonthLiquidityReclaimSweepBOSMinCloseLocation = 0.62;
+bool            InpFlatMonthLiquidityReclaimSweepBOSRequireVolumeExpansion = true;
+int             InpFlatMonthLiquidityReclaimSweepBOSVolumeLookbackBars = 18;
+double          InpFlatMonthLiquidityReclaimSweepBOSMinVolumeRatio = 1.15;
+bool            InpFlatMonthLiquidityReclaimUseDisplacementPullback = false;
+bool            InpFlatMonthLiquidityReclaimRequireDisplacementPullback = false;
+int             InpFlatMonthLiquidityReclaimDisplacementPullbackLookbackBars = 6;
+int             InpFMLRDispPBBreakLookbackBars = 18;
+double          InpFMLRDispPBBreakBufferPoints = 12.0;
+double          InpFlatMonthLiquidityReclaimDisplacementPullbackToleranceATR = 0.20;
+double          InpFlatMonthLiquidityReclaimDisplacementPullbackTolerancePoints = 45.0;
+double          InpFlatMonthLiquidityReclaimDisplacementPullbackMaxPullbackATR = 0.70;
+double          InpFlatMonthLiquidityReclaimDisplacementPullbackMinBodyPercent = 24.0;
+double          InpFMLRDispPBMinCloseLocation = 0.58;
+double          InpFMLRDispPBMinBreakRangeATR = 0.60;
+double          InpFMLRDispPBMinBreakBodyPercent = 44.0;
+bool            InpFlatMonthLiquidityReclaimUseEngulfingReclaim = false;
+bool            InpFlatMonthLiquidityReclaimRequireEngulfingReclaim = false;
+int             InpFlatMonthLiquidityReclaimEngulfingLookbackBars = 16;
+double          InpFlatMonthLiquidityReclaimEngulfingBreakBufferPoints = 8.0;
+double          InpFlatMonthLiquidityReclaimEngulfingMaxSweepATR = 0.85;
+double          InpFlatMonthLiquidityReclaimEngulfingMinBodyPercent = 38.0;
+double          InpFlatMonthLiquidityReclaimEngulfingMinEngulfRatio = 0.90;
+double          InpFlatMonthLiquidityReclaimEngulfingMinCloseLocation = 0.58;
+bool            InpFlatMonthLiquidityReclaimUseTickPressureReclaim = false;
+bool            InpFlatMonthLiquidityReclaimRequireTickPressureReclaim = false;
+int             InpFlatMonthLiquidityReclaimTickPressureLookbackBars = 8;
+int             InpFlatMonthLiquidityReclaimTickPressureMinAlignedBars = 5;
+double          InpFlatMonthLiquidityReclaimTickPressureBreakBufferPoints = 8.0;
+double          InpFlatMonthLiquidityReclaimTickPressureMaxSweepATR = 0.90;
+double          InpFlatMonthLiquidityReclaimTickPressureMinBodyPercent = 24.0;
+double          InpFlatMonthLiquidityReclaimTickPressureMinCloseLocation = 0.56;
+double          InpFlatMonthLiquidityReclaimTickPressureMinDeltaRatio = 0.22;
+double          InpFlatMonthLiquidityReclaimTickPressureMinVolumeRatio = 1.10;
+bool            InpFlatMonthLiquidityReclaimUseFvgRetest = false;
+bool            InpFlatMonthLiquidityReclaimRequireFvgRetest = false;
+int             InpFlatMonthLiquidityReclaimFvgRetestLookbackBars = 10;
+int             InpFlatMonthLiquidityReclaimFvgRetestBreakLookbackBars = 16;
+double          InpFlatMonthLiquidityReclaimFvgRetestBreakBufferPoints = 12.0;
+double          InpFlatMonthLiquidityReclaimFvgRetestMinGapATR = 0.08;
+double          InpFlatMonthLiquidityReclaimFvgRetestToleranceATR = 0.16;
+double          InpFlatMonthLiquidityReclaimFvgRetestTolerancePoints = 40.0;
+double          InpFlatMonthLiquidityReclaimFvgRetestMaxRetestATR = 0.75;
+double          InpFlatMonthLiquidityReclaimFvgRetestMinImpulseRangeATR = 0.50;
+double          InpFlatMonthLiquidityReclaimFvgRetestMinImpulseBodyPercent = 38.0;
+double          InpFlatMonthLiquidityReclaimFvgRetestMinCloseLocation = 0.56;
+bool            InpFlatMonthLiquidityReclaimUseOrderBlockRetest = false;
+bool            InpFlatMonthLiquidityReclaimRequireOrderBlockRetest = false;
+int             InpFlatMonthLiquidityReclaimOrderBlockRetestLookbackBars = 10;
+int             InpFlatMonthLiquidityReclaimOrderBlockRetestBreakLookbackBars = 18;
+double          InpFlatMonthLiquidityReclaimOrderBlockRetestBreakBufferPoints = 12.0;
+double          InpFlatMonthLiquidityReclaimOrderBlockRetestToleranceATR = 0.18;
+double          InpFlatMonthLiquidityReclaimOrderBlockRetestTolerancePoints = 45.0;
+double          InpFlatMonthLiquidityReclaimOrderBlockRetestMaxBlockATR = 0.80;
+double          InpFlatMonthLiquidityReclaimOrderBlockRetestMaxRetestATR = 0.75;
+double          InpFlatMonthLiquidityReclaimOrderBlockRetestMinImpulseRangeATR = 0.55;
+double          InpFMLROBRetestMinImpulseBodyPercent = 42.0;
+double          InpFlatMonthLiquidityReclaimOrderBlockRetestMinCloseLocation = 0.58;
+bool            InpFlatMonthLiquidityReclaimUseChochRetest = false;
+bool            InpFlatMonthLiquidityReclaimRequireChochRetest = false;
+int             InpFlatMonthLiquidityReclaimChochRetestLookbackBars = 10;
+int             InpFlatMonthLiquidityReclaimChochRetestBreakLookbackBars = 14;
+double          InpFlatMonthLiquidityReclaimChochRetestBreakBufferPoints = 12.0;
+double          InpFlatMonthLiquidityReclaimChochRetestToleranceATR = 0.18;
+double          InpFlatMonthLiquidityReclaimChochRetestTolerancePoints = 45.0;
+double          InpFlatMonthLiquidityReclaimChochRetestMaxRetestATR = 0.70;
+double          InpFlatMonthLiquidityReclaimChochRetestMinBreakRangeATR = 0.45;
+double          InpFlatMonthLiquidityReclaimChochRetestMinBreakBodyPercent = 35.0;
+double          InpFlatMonthLiquidityReclaimChochRetestMinCloseLocation = 0.56;
+bool            InpFlatMonthLiquidityReclaimUsePhaseGate = false;
+bool            InpFlatMonthLiquidityReclaimAllowTrendPhase = true;
+bool            InpFlatMonthLiquidityReclaimAllowRangePhase = true;
+bool            InpFlatMonthLiquidityReclaimAllowTransitionPhase = true;
+bool            InpFlatMonthLiquidityReclaimTrendRequireEMASlope = true;
+int             InpFlatMonthLiquidityReclaimPhaseLookbackBars = 18;
+double          InpFlatMonthLiquidityReclaimTrendMinADX = 21.0;
+double          InpFlatMonthLiquidityReclaimRangeMaxADX = 18.0;
+double          InpFlatMonthLiquidityReclaimTrendMinSlopePoints = 25.0;
+double          InpFlatMonthLiquidityReclaimRangeMaxNetMoveATR = 1.15;
+double          InpFlatMonthLiquidityReclaimRangeMinAlternationPercent = 45.0;
+bool            InpFlatMonthLiquidityReclaimUseStopClusterBuffer = false;
+int             InpFlatMonthLiquidityReclaimStopClusterMinTouches = 3;
+double          InpFlatMonthLiquidityReclaimStopClusterProximityATR = 0.20;
+double          InpFlatMonthLiquidityReclaimStopClusterProximityPoints = 50.0;
+double          InpFlatMonthLiquidityReclaimStopClusterExtraBufferATR = 0.10;
+double          InpFlatMonthLiquidityReclaimStopClusterExtraBufferPoints = 30.0;
+bool            InpFlatMonthLiquidityReclaimUseStopPocketShift = false;
+int             InpFlatMonthLiquidityReclaimStopPocketLookbackBars = 24;
+double          InpFlatMonthLiquidityReclaimStopPocketProximityATR = 0.18;
+double          InpFlatMonthLiquidityReclaimStopPocketProximityPoints = 45.0;
+double          InpFlatMonthLiquidityReclaimStopPocketBufferATR = 0.22;
+double          InpFlatMonthLiquidityReclaimStopPocketBufferPoints = 55.0;
+bool            InpFlatMonthLiquidityReclaimUseStructureTrail = false;
+double          InpFlatMonthLiquidityReclaimStructureTrailStartR = 0.85;
+bool            InpCloseOnOppositeSignal     = false;
+input bool InpUseWinnerScaleIn          = false;
+double          InpWinnerScaleInMinProfitR   = 0.80;
+bool            InpWinnerScaleInRequireProtectedStop = true;
+double          InpWinnerScaleInMinLockedR   = 0.00;
+bool            InpWinnerScaleInRequireTrendRegime = false;
+bool            InpWinnerScaleInRequirePowerTrendContinuation = false;
+bool            InpWinnerScaleInAllowSessionImpulse = false;
+bool            InpWinnerScaleInAllowFlatMonthLiquidityReclaim = false;
+int             InpWinnerScaleInMinQualityScore = 8;
+int             InpWinnerScaleInMinPriceActionScore = 0;
+double          InpWinnerScaleInRiskMultiplier = 0.50;
+input bool InpUseHouseMoneyScaleInRiskRamp = false;
+double          InpHouseMoneyScaleInRiskStartCushionPercent = 6.0;
+double          InpHouseMoneyScaleInRiskFullCushionPercent = 18.0;
+double          InpMaxHouseMoneyScaleInRiskMultiplier = 0.85;
+int             InpWinnerScaleInMinMinutesSincePosition = 30;
+bool            InpWinnerScaleInRequireEquityAboveStarting = false;
+bool            InpWinnerScaleInBlockOnProfitGivebackQuality = false;
+bool            InpWinnerScaleInRequireOpenProfitRiskCover = false;
+double          InpWinnerScaleInOpenProfitRiskCoverage = 1.25;
+
+//--- Risk
+input group "Risk Management"
+input bool            InpUseTradeReadinessSafetyGate = false;
+input bool            InpUseRealAccountSafetyLock = true;
+input bool            InpAllowRealAccountTrading = false;
+input string          InpRealAccountApprovalCode = "";
+input string          InpRealAccountApprovalProfileId = "";
+input string          InpRealAccountApprovalSourceHash = "";
+input double InpTradeReadyMaxRiskPercent = 0.75;
+input double InpTradeReadyMaxOpenRiskPercent = 1.00;
+input double InpTradeReadyMaxPositionLots = 0.10;
+input int InpTradeReadyMaxSimultaneousPositions = 1;
+input double InpTradeReadyMaxDailyLossPercent = 1.00;
+input double InpTradeReadyMaxWeeklyLossPercent = 2.50;
+input double InpTradeReadyMaxMonthlyLossPercent = 5.00;
+input double InpTradeReadyMaxEquityDrawdownPercent = 10.00;
+input double InpTradeReadyMaxSpreadPoints = 250.0;
+input double InpTradeReadyMaxSpreadATRPercent = 12.0;
+input double InpTradeReadyMaxDeviationPoints = 30.0;
+input bool            InpUseTradeEnvironmentGuard = false;
+input int InpTradeEnvMinSignalBars = 300;
+input int InpTradeEnvMaxQuoteAgeSeconds = 30;
+input double InpTradeEnvMaxStopsLevelPoints = 250.0;
+input double InpTradeEnvMaxFreezeLevelPoints = 250.0;
+input bool InpTradeEnvRequireTickValue = true;
+input double          InpRiskPercent               = 1.60;
+input double          InpMaxEffectiveRiskPercent   = 0.00;
+input bool            InpUseMonthRiskMultipliers   = false;
+double          InpJanuaryRiskMultiplier     = 1.00;
+double          InpFebruaryRiskMultiplier    = 1.00;
+input double          InpMarchRiskMultiplier       = 1.00;
+double          InpAprilRiskMultiplier       = 1.00;
+input double          InpMayRiskMultiplier         = 1.00;
+double          InpJuneRiskMultiplier        = 1.00;
+double          InpJulyRiskMultiplier        = 1.00;
+input double          InpAugustRiskMultiplier      = 1.00;
+double          InpSeptemberRiskMultiplier   = 1.00;
+double          InpOctoberRiskMultiplier     = 1.00;
+double          InpNovemberRiskMultiplier    = 1.00;
+double          InpDecemberRiskMultiplier    = 1.00;
+bool            InpUseStartingEquityProtection = false;
+double          InpStartingEquityBufferPercent = 0.00;
+input bool InpUseProfitOnlyRiskBoost    = false;
+double          InpProfitBoostStartPercent   = 1.00;
+double          InpProfitBoostFullPercent    = 10.00;
+double          InpMaxProfitBoostMultiplier  = 3.00;
+bool            InpGrowthBoostRequiresClosedProfit = false;
+input bool InpUseClosedProfitOpportunityRiskBoost = false;
+double          InpClosedProfitOpportunityStartPercent = 2.00;
+double          InpClosedProfitOpportunityFullPercent = 8.00;
+double          InpMaxClosedProfitOpportunityRiskMultiplier = 1.35;
+bool            InpClosedProfitOpportunityRequiresProtectedFloor = true;
+input bool InpUseHouseMoneyAccelerationGate = false;
+double          InpHouseMoneyMinClosedProfitPercent = 1.00;
+double          InpHouseMoneyMinProtectedCushionPercent = 3.00;
+double          InpHouseMoneyMaxRealizedGivebackPercent = 25.0;
+double          InpHouseMoneyMaxEquityPeakGivebackPercent = 25.0;
+bool            InpHouseMoneyRequireEquityAboveStarting = true;
+bool            InpUseEliteContinuationRiskAcceleration = false;
+int             InpEliteContinuationMinQualityScore = 14;
+int             InpEliteContinuationMinPriceActionScore = 16;
+double          InpEliteContinuationStartCushionPercent = 8.0;
+double          InpEliteContinuationFullCushionPercent = 20.0;
+double          InpEliteContinuationMaxRiskMultiplier = 1.60;
+bool            InpEliteContinuationRequireLiquidSession = true;
+bool            InpEliteContinuationRequireClosedProfit = true;
+bool            InpEliteContinuationAllowBreakout = true;
+bool            InpEliteContinuationAllowPowerTrend = true;
+bool            InpEliteContinuationAllowSessionImpulse = true;
+bool            InpUseEquityProfitLock       = false;
+double          InpEquityProfitLockStartPercent = 2.00;
+double          InpEquityProfitLockPercent   = 50.0;
+input bool            InpUseEquityProfitPeakTrail  = false;
+input double          InpEquityProfitPeakTrailMinProfitPercent = 3.00;
+input double          InpEquityProfitPeakTrailGivebackPercent = 30.0;
+bool            InpUseBalanceProfitLock      = false;
+double          InpBalanceProfitLockStartPercent = 2.00;
+double          InpBalanceProfitLockPercent  = 50.0;
+input bool InpUseLossStreakRiskReduction = true;
+input int InpLossStreakRiskReductionStart = 1;
+input double InpLossStreakRiskReductionFactor = 0.50;
+input double InpMinReducedRiskPercent     = 0.25;
+input bool InpUseDrawdownRiskReduction  = true;
+input double InpDrawdownRiskReductionStartPercent = 2.0;
+input double InpDrawdownRiskReductionFullPercent = 8.0;
+input double InpDrawdownRiskReductionMaxFactor = 0.50;
+input bool            InpUseStartingEquityRecoveryRiskScaling = false;
+input double          InpStartingEquityRecoveryRiskStartDrawdownPercent = 0.25;
+input double          InpStartingEquityRecoveryRiskFullDrawdownPercent = 3.00;
+input double          InpMinStartingEquityRecoveryRiskMultiplier = 0.35;
+bool            InpUseRecentPerformanceRiskThrottle = false;
+int             InpRecentPerformanceLookbackTrades = 5;
+double          InpRecentPerformanceMinNetPercent = 0.00;
+double          InpRecentPerformanceRiskFactor = 0.50;
+bool            InpUseRecentPerformanceTradePause = false;
+int             InpRecentPerformancePauseLookbackTrades = 5;
+double          InpRecentPerformancePauseMaxNetPercent = 0.00;
+int             InpRecentPerformancePauseMinutes = 180;
+bool            InpUseRecentPerformanceQualityGate = false;
+int             InpRecentPerformanceQualityLookbackTrades = 5;
+double          InpRecentPerformanceQualityMaxNetPercent = -0.20;
+int             InpRecentPerformanceMinQualityScore = 10;
+bool            InpUseRecentPerformanceRQualityGate = false;
+int             InpRecentPerformanceRLookbackTrades = 5;
+double          InpRecentPerformanceMaxAverageR = -0.15;
+int             InpRecentPerformanceRMinQualityScore = 11;
+bool            InpUseRecentPerformanceRTradePause = false;
+int             InpRecentPerformanceRPauseLookbackTrades = 5;
+double          InpRecentPerformancePauseMaxAverageR = -0.25;
+int             InpRecentPerformanceRPauseMinutes = 240;
+bool            InpUseRecentPerformanceRRiskScaling = false;
+int             InpRecentPerformanceRRiskLookbackTrades = 5;
+double          InpRecentPerformanceRRiskStartAverageR = 0.00;
+double          InpRecentPerformanceRRiskFullAverageR = -0.50;
+double          InpMinRecentPerformanceRRiskMultiplier = 0.50;
+bool            InpUseSetupLanePerformanceRiskScaling = false;
+int             InpSetupLanePerformanceLookbackTrades = 6;
+int             InpSetupLanePerformanceMinTrades = 3;
+double          InpSetupLaneWeakAverageR = -0.15;
+double          InpSetupLaneStrongAverageR = 0.45;
+double          InpMinSetupLaneRiskMultiplier = 0.55;
+double          InpMaxSetupLaneRiskMultiplier = 1.20;
+bool            InpSetupLaneBoostRequiresClosedProfit = true;
+input bool            InpUseDiagnosticFallbackPerformanceRiskScaling = false;
+input int             InpDiagnosticFallbackPerformanceLookbackTrades = 4;
+input int             InpDiagnosticFallbackPerformanceMinTrades = 2;
+input double          InpDiagnosticFallbackWeakAverageR = -0.10;
+input double          InpDiagnosticFallbackStrongAverageR = 0.25;
+input double          InpMinDiagnosticFallbackPerformanceRiskMultiplier = 0.50;
+input bool            InpUseDiagnosticFallbackNoCushionLossBlock = false;
+input double          InpDiagnosticFallbackLossBlockCushionPercent = 5.00;
+input int             InpDiagnosticFallbackLossBlockLookbackTrades = 3;
+input int             InpDiagnosticFallbackLossBlockMinTrades = 1;
+input double          InpDiagnosticFallbackLossBlockMaxAverageR = 0.00;
+input int             InpDiagnosticFallbackLossBlockMaxAgeDays = 30;
+bool            InpUseHourPerformanceRiskScaling = false;
+int             InpHourPerformanceLookbackDays = 45;
+int             InpHourPerformanceMinTrades = 4;
+double          InpHourPerformanceWeakNetPercent = -0.10;
+double          InpHourPerformanceStrongNetPercent = 0.25;
+double          InpMinHourPerformanceRiskMultiplier = 0.50;
+double          InpMaxHourPerformanceRiskMultiplier = 1.25;
+bool            InpHourPerformanceBoostRequiresClosedProfit = true;
+bool            InpUseHourPerformanceQualityGate = false;
+int             InpHourPerformanceMinQualityScore = 12;
+bool            InpUseDirectionalHourPerformanceRiskScaling = false;
+int             InpDirectionalHourPerformanceLookbackDays = 60;
+int             InpDirectionalHourPerformanceMinTrades = 3;
+double          InpDirectionalHourPerformanceWeakNetPercent = -0.10;
+double          InpDirectionalHourPerformanceStrongNetPercent = 0.25;
+double          InpMinDirectionalHourPerformanceRiskMultiplier = 0.50;
+double          InpMaxDirectionalHourPerformanceRiskMultiplier = 1.20;
+bool            InpDirectionalHourPerformanceBoostRequiresClosedProfit = true;
+bool            InpUseDirectionalHourPerformanceQualityGate = false;
+int             InpDirectionalHourPerformanceMinQualityScore = 13;
+input bool InpUseHotStreakRiskBoost    = false;
+int             InpHotStreakLookbackTrades  = 4;
+double          InpHotStreakStartAverageR   = 0.35;
+double          InpHotStreakFullAverageR    = 1.00;
+double          InpMaxHotStreakRiskMultiplier = 1.75;
+bool            InpHotStreakRequiresEquityProfit = true;
+input bool InpUseRecentProfitFactorRiskBoost = false;
+int             InpRecentProfitFactorLookbackTrades = 8;
+double          InpRecentProfitFactorStart = 1.25;
+double          InpRecentProfitFactorFull = 2.00;
+double          InpMaxRecentProfitFactorRiskMultiplier = 1.35;
+bool            InpRecentProfitFactorRequiresClosedProfit = true;
+bool            InpRecentProfitFactorRequiresEquityProfit = true;
+bool            InpUseDirectionalLossCooldown = false;
+int             InpDirectionalLossLookbackTrades = 4;
+int             InpDirectionalLossThreshold  = 2;
+int             InpDirectionalLossCooldownMinutes = 240;
+bool            InpUseDirectionalLossQualityGate = false;
+int             InpDirectionalLossQualityLookbackTrades = 4;
+int             InpDirectionalLossQualityThreshold = 2;
+int             InpDirectionalLossMinQualityScore = 9;
+bool            InpUseDirectionalLossRiskScaling = false;
+int             InpDirectionalLossRiskLookbackTrades = 4;
+int             InpDirectionalLossRiskThreshold = 2;
+double          InpDirectionalLossRiskMultiplier = 0.50;
+bool            InpUseQualityRiskScaling     = false;
+int             InpQualityRiskMinScore       = 5;
+int             InpQualityRiskFullScore      = 10;
+double          InpMinQualityRiskMultiplier  = 0.50;
+double          InpMaxQualityRiskMultiplier  = 1.00;
+bool            InpUsePriceActionRiskScaling = false;
+int             InpPriceActionRiskMinScore   = 9;
+int             InpPriceActionRiskFullScore  = 16;
+double          InpMinPriceActionRiskMultiplier = 0.50;
+double          InpMaxPriceActionRiskMultiplier = 1.00;
+bool            InpEliteSetupRiskRequiresEquityProfit = true;
+input bool            InpUseMediocreSetupRiskThrottle = false;
+int             InpMediocreSetupMinQualityScore = 10;
+int             InpMediocreSetupMinPriceActionScore = 12;
+input double          InpMediocreSetupRiskMultiplier = 0.50;
+bool            InpMediocreSetupBypassWithHouseMoney = true;
+bool            InpUseVolatilityRiskScaling  = false;
+int             InpVolatilityRiskLookbackBars = 24;
+double          InpVolatilityRiskStartRatio  = 1.25;
+double          InpVolatilityRiskFullRatio   = 1.80;
+double          InpMinVolatilityRiskMultiplier = 0.50;
+input bool InpUseDrawdownQualityGate    = false;
+input double InpDrawdownQualityStartPercent = 2.0;
+input double InpDrawdownQualityFullPercent = 8.0;
+input int InpDrawdownQualityMinScore   = 7;
+input int InpDrawdownQualityMaxScore   = 12;
+bool            InpUseStartingEquityRecoveryQualityGate = false;
+double          InpStartingEquityRecoveryStartDrawdownPercent = 0.25;
+double          InpStartingEquityRecoveryFullDrawdownPercent = 3.00;
+int             InpStartingEquityRecoveryMinQualityScore = 12;
+int             InpStartingEquityRecoveryMaxQualityScore = 18;
+bool            InpUseProtectedFloorRiskScaling = false;
+double          InpProtectedFloorRiskStartPercent = 4.0;
+double          InpMinProtectedFloorRiskMultiplier = 0.25;
+bool            InpUseProtectedFloorCushionRiskCap = false;
+double          InpMaxProtectedFloorCushionRiskPercent = 35.0;
+bool            InpUseProtectedFloorQualityGate = false;
+double          InpProtectedFloorQualityStartPercent = 2.0;
+int             InpProtectedFloorMinQualityScore = 12;
+bool            InpUseRealizedProfitGivebackQualityGate = false;
+double          InpRealizedProfitGivebackStartPercent = 25.0;
+double          InpRealizedProfitGivebackFullPercent = 60.0;
+int             InpRealizedProfitGivebackMinQualityScore = 12;
+int             InpRealizedProfitGivebackMaxQualityScore = 16;
+bool            InpUseEquityPeakGivebackQualityGate = false;
+double          InpEquityPeakGivebackMinPeakProfitPercent = 2.00;
+double          InpEquityPeakGivebackStartPercent = 25.0;
+double          InpEquityPeakGivebackFullPercent = 60.0;
+int             InpEquityPeakGivebackMinQualityScore = 12;
+int             InpEquityPeakGivebackMaxQualityScore = 16;
+input bool InpUseProtectedCushionRiskBoost = false;
+double          InpProtectedCushionBoostStartPercent = 6.0;
+double          InpProtectedCushionBoostFullPercent = 18.0;
+double          InpMaxProtectedCushionBoostMultiplier = 1.50;
+input double InpMaxDailyLossPercent       = 1.00;
+input bool            InpUseDailyLossRiskScaling   = false;
+input double          InpDailyLossRiskStartFraction = 0.35;
+input double          InpMinDailyLossRiskMultiplier = 0.50;
+input bool InpUseDailyProfitLock        = true;
+input double InpDailyProfitLockPercent    = 1.50;
+bool            InpUseDailyProfitRiskScaling = false;
+double          InpDailyProfitRiskStartFraction = 0.50;
+double          InpMinDailyProfitRiskMultiplier = 0.50;
+bool            InpUseDailyProfitOpportunityRiskBoost = false;
+double          InpDailyProfitOpportunityStartFraction = 0.25;
+double          InpDailyProfitOpportunityFullFraction = 0.75;
+double          InpMaxDailyProfitOpportunityRiskMultiplier = 1.50;
+bool            InpDailyProfitOpportunityRequiresProtection = true;
+input bool InpUseDailyEquityTrailGuard  = false;
+input double InpDailyEquityTrailGivebackPercent = 40.0;
+input double InpDailyEquityTrailMinProfitPercent = 0.50;
+input bool InpUseWeeklyProfitLock       = false;
+input double InpWeeklyProfitLockPercent   = 3.00;
+bool            InpUseWeeklyProfitRiskScaling = false;
+double          InpWeeklyProfitRiskStartFraction = 0.50;
+double          InpMinWeeklyProfitRiskMultiplier = 0.50;
+input bool InpUseMonthlyProfitLock      = false;
+input double InpMonthlyProfitLockPercent  = 6.00;
+bool            InpUseMonthlyProfitRiskScaling = false;
+double          InpMonthlyProfitRiskStartFraction = 0.50;
+double          InpMinMonthlyProfitRiskMultiplier = 0.50;
+input double InpMaxWeeklyLossPercent      = 2.50;
+input bool            InpUseWeeklyLossRiskScaling  = false;
+input double          InpWeeklyLossRiskStartFraction = 0.35;
+input double          InpMinWeeklyLossRiskMultiplier = 0.50;
+input double InpMaxMonthlyLossPercent     = 4.00;
+input bool            InpUseMonthlyLossRiskScaling = false;
+input double          InpMonthlyLossRiskStartFraction = 0.35;
+input double          InpMinMonthlyLossRiskMultiplier = 0.50;
+input double          InpMaxEquityDrawdownPercent  = 0.00;
+input bool InpClosePositionsOnRiskLimit = false;
+input bool InpUseProfitGivebackGuard    = false;
+input double InpDailyProfitGivebackPercent = 35.0;
+input double InpWeeklyProfitGivebackPercent = 35.0;
+input double InpMonthlyProfitGivebackPercent = 35.0;
+double          InpMinProfitToProtectPercent = 0.50;
+bool            InpUseOpenBasketProfitTrail  = false;
+double          InpOpenBasketTrailMinProfitPercent = 0.75;
+double          InpOpenBasketTrailGivebackPercent = 35.0;
+int             InpOpenBasketTrailMinPositions = 1;
+bool            InpUseOpenBasketPartialHarvest = false;
+double          InpOpenBasketHarvestMinProfitPercent = 0.75;
+double          InpOpenBasketHarvestClosePercent = 25.0;
+int             InpOpenBasketHarvestMinPositions = 1;
+bool            InpOpenBasketHarvestMoveStop = true;
+double          InpOpenBasketHarvestStopLockR = 0.10;
+bool            InpUseOpenProfitAddOnQualityGate = false;
+double          InpOpenProfitAddOnMinProfitPercent = 0.50;
+int             InpOpenProfitAddOnMinPositions = 1;
+int             InpOpenProfitAddOnMinQualityScore = 13;
+int             InpOpenProfitAddOnMinPriceActionScore = 15;
+input int InpMaxDailyLossCount         = 2;
+input int InpMaxWeeklyLossCount        = 5;
+input int InpMaxMonthlyLossCount       = 10;
+input int InpMaxConsecutiveLosses      = 4;
+input int InpCooldownMinutesAfterLoss  = 60;
+input bool      InpUseAbnormalLossStreakQuarantine = false;
+input int       InpAbnormalLossStreakThreshold = 4;
+input int       InpAbnormalLossStreakQuarantineHours = 720;
+input double InpMaxSpreadPoints           = 350;
+input double InpMaxSpreadATRPercent       = 18.0;
+input bool            InpUseMonthSpreadCaps        = false;
+double          InpJanuaryMaxSpreadPoints    = 0.0;
+double          InpFebruaryMaxSpreadPoints   = 0.0;
+double          InpMarchMaxSpreadPoints      = 0.0;
+double          InpAprilMaxSpreadPoints      = 0.0;
+input double          InpMayMaxSpreadPoints        = 0.0;
+double          InpJuneMaxSpreadPoints       = 0.0;
+double          InpJulyMaxSpreadPoints       = 0.0;
+double          InpAugustMaxSpreadPoints     = 0.0;
+double          InpSeptemberMaxSpreadPoints  = 0.0;
+double          InpOctoberMaxSpreadPoints    = 0.0;
+double          InpNovemberMaxSpreadPoints   = 0.0;
+double          InpDecemberMaxSpreadPoints   = 0.0;
+input bool            InpUseSpreadRegimeGuard      = false;
+input int InpSpreadRegimeLookbackBars  = 24;
+input double          InpMaxSpreadRegimeRatio      = 2.00;
+input double InpMinSpreadRegimePoints     = 50.0;
+input bool            InpUseM1SpreadShockGuard     = false;
+input int InpM1SpreadShockLookbackBars = 30;
+input double          InpM1SpreadShockMaxRatio     = 2.50;
+input double InpM1SpreadShockMinPoints    = 60.0;
+input bool InpUseSpreadRiskScaling      = false;
+input double InpSpreadRiskStartPoints     = 120.0;
+input double InpMinSpreadRiskMultiplier   = 0.60;
+input int InpDeviationPoints           = 40;
+double          InpMinRiskReward             = 1.50;
+input bool            InpUseSpreadAdjustedRRFilter = false;
+input double InpMinSpreadAdjustedRR       = 1.20;
+input bool InpUseTradingCostGuard       = false;
+double          InpEstimatedRoundTurnCommissionPerLot = 0.00;
+input double InpMaxTradingCostRiskPercent = 12.0;
+input double          InpMaxPositionLots           = 10.0;
+input bool InpAllowMinLotRiskOverflow   = false;
+input double InpMaxOpenRiskPercent        = 0.00;
+input bool InpUseHouseMoneyOpenRiskExpansion = false;
+double          InpHouseMoneyOpenRiskStartCushionPercent = 6.0;
+double          InpHouseMoneyOpenRiskFullCushionPercent = 18.0;
+double          InpHouseMoneyMaxOpenRiskPercent = 12.00;
+input bool InpBlockUnprotectedExposure  = true;
+input bool InpUseAccountWideExposureGuard = false;
+input double InpAccountWideMaxOpenRiskPercent = 3.00;
+input int InpAccountWideMaxPositions = 3;
+input bool InpAccountWideBlockUnprotectedExposure = true;
+input bool InpUseLaneSpecificMonthlyEntryCaps = false;
+input bool InpUseMarginGuard            = false;
+input double InpMinMarginLevelPercent     = 300.0;
+input double InpMaxTradeMarginFreePercent = 20.0;
+input bool InpUseMarginAwareLotCap      = false;
+input bool InpUseMarginPressureRiskScaling = false;
+input double InpMarginPressureStartLevelPercent = 600.0;
+input double InpMinMarginPressureRiskMultiplier = 0.50;
+input bool InpUseTradeMarginRiskScaling = false;
+input double InpTradeMarginRiskStartFraction = 0.50;
+input double InpMinTradeMarginRiskMultiplier = 0.50;
+
+//--- Stops and targets
+input group "Stops and Targets"
+int             InpATRPeriod                 = 14;
+input double          InpStopATRMultiplier         = 1.80;
+input double          InpTakeProfitATRMultiplier   = 3.50;
+input bool InpUseQualityTakeProfitScaling = false;
+int             InpQualityTPMinScore         = 7;
+int             InpQualityTPFullScore        = 12;
+double          InpMinQualityTPMultiplier    = 0.85;
+double          InpMaxQualityTPMultiplier    = 1.35;
+bool            InpUseQualityTPMonthFilter   = false;
+bool            InpQualityTPTradeJanuary     = true;
+bool            InpQualityTPTradeFebruary    = true;
+bool            InpQualityTPTradeMarch       = true;
+bool            InpQualityTPTradeApril       = true;
+bool            InpQualityTPTradeMay         = true;
+bool            InpQualityTPTradeJune        = true;
+bool            InpQualityTPTradeJuly        = true;
+bool            InpQualityTPTradeAugust      = true;
+bool            InpQualityTPTradeSeptember   = true;
+bool            InpQualityTPTradeOctober     = true;
+bool            InpQualityTPTradeNovember    = true;
+bool            InpQualityTPTradeDecember    = true;
+input bool InpUseRunnerTakeProfitExpansion = false;
+int             InpRunnerMinQualityScore     = 12;
+int             InpRunnerMinPriceActionScore = 14;
+double          InpRunnerTakeProfitMultiplier = 1.75;
+bool            InpRunnerRequireTrailing     = true;
+bool            InpUseTrendRegimeTakeProfitExpansion = false;
+int             InpTrendRegimeTPMinQualityScore = 12;
+int             InpTrendRegimeTPMinPriceActionScore = 14;
+double          InpTrendRegimeTPMultiplier   = 1.50;
+bool            InpTrendRegimeTPRequireTrailing = true;
+bool            InpTrendRegimeTPRequiresEquityProfit = true;
+input bool InpUseFlatMonthCatchUpTakeProfitExpansion = false;
+int             InpFlatMonthCatchUpTPMinQualityScore = 12;
+int             InpFlatMonthCatchUpTPMinPriceActionScore = 14;
+double          InpFlatMonthCatchUpTPMultiplier = 1.35;
+bool            InpFlatMonthCatchUpTPRequireLiquidSession = true;
+bool            InpFlatMonthCatchUpTPRequireTrailing = true;
+input bool InpUseProtectedCushionTakeProfitExpansion = false;
+int             InpProtectedCushionTPMinQualityScore = 12;
+int             InpProtectedCushionTPMinPriceActionScore = 14;
+double          InpProtectedCushionTPStartPercent = 6.0;
+double          InpProtectedCushionTPFullPercent = 18.0;
+double          InpProtectedCushionTPMultiplier = 1.50;
+bool            InpProtectedCushionTPRequireTrailing = true;
+bool            InpUseDirectionalHourTakeProfitExpansion = false;
+int             InpDirectionalHourTPMinQualityScore = 13;
+int             InpDirectionalHourTPMinPriceActionScore = 15;
+double          InpDirectionalHourTPMinNetPercent = 0.25;
+double          InpDirectionalHourTPMultiplier = 1.35;
+bool            InpDirectionalHourTPRequireTrailing = true;
+bool            InpDirectionalHourTPRequiresClosedProfit = true;
+input bool InpUseClosedProfitTakeProfitExpansion = false;
+int             InpClosedProfitTPMinQualityScore = 13;
+int             InpClosedProfitTPMinPriceActionScore = 15;
+double          InpClosedProfitTPStartPercent = 2.00;
+double          InpClosedProfitTPFullPercent = 8.00;
+double          InpClosedProfitTPMultiplier = 1.35;
+bool            InpClosedProfitTPRequireTrailing = true;
+bool            InpClosedProfitTPRequiresProtectedFloor = true;
+input bool InpUseEliteConfluenceTakeProfitExpansion = false;
+int             InpEliteConfluenceTPMinQualityScore = 15;
+int             InpEliteConfluenceTPMinPriceActionScore = 18;
+double          InpEliteConfluenceTPMultiplier = 1.40;
+bool            InpEliteConfluenceTPRequireTrailing = true;
+bool            InpEliteConfluenceTPRequiresHouseMoney = true;
+input bool InpUseProtectedCushionUnlimitedRunner = false;
+int             InpProtectedRunnerMinQualityScore = 14;
+int             InpProtectedRunnerMinPriceActionScore = 16;
+double          InpProtectedRunnerMinCushionPercent = 12.0;
+bool            InpProtectedRunnerRequireTrendRegime = true;
+bool            InpProtectedRunnerRequireTrailing = true;
+bool            InpProtectedRunnerRequireProfitLock = true;
+input bool InpUseEliteContinuationUnlimitedRunner = false;
+int             InpEliteContinuationRunnerMinQualityScore = 15;
+int             InpEliteContinuationRunnerMinPriceActionScore = 18;
+double          InpEliteContinuationRunnerMinCushionPercent = 10.0;
+bool            InpEliteContinuationRunnerRequireRiskAcceleration = true;
+bool            InpEliteContinuationRunnerRequireTrailing = true;
+bool            InpEliteContinuationRunnerRequireProfitLock = true;
+input bool InpUseTakeProfit             = true;
+input bool InpUseStructureStop          = true;
+int             InpStructureLookbackBars     = 12;
+input bool InpUseConfirmedSwingPivotStop = false;
+int             InpSwingPivotStopLookbackBars = 24;
+int             InpSwingPivotStopLeftBars    = 2;
+int             InpSwingPivotStopRightBars   = 2;
+double          InpSwingPivotStopBufferATR   = 0.10;
+double          InpSwingPivotStopBufferPoints = 25.0;
+double          InpSwingPivotStopMinATR      = 0.65;
+double          InpSwingPivotStopMaxATR      = 2.40;
+bool            InpSwingPivotStopTightenOnly = true;
+input bool            InpUseLiquidityAwareStructureStop = false;
+input int             InpLiquidityStopLookbackBars = 18;
+input double          InpLiquidityStopBufferATR    = 0.18;
+input double          InpLiquidityStopBufferPoints = 35.0;
+input bool            InpLiquidityStopUseEqualLevels = true;
+input bool            InpLiquidityStopUseLastSweep = true;
+input bool InpLiquidityStopUsePreviousDay = false;
+input bool InpLiquidityStopUsePreviousWeek = false;
+input bool InpLiquidityStopUsePreviousMonth = false;
+input bool            InpLiquidityStopAllowWiderMaxATR = true;
+input double          InpLiquidityStopMaxATRMultiplier = 5.00;
+input bool InpUseLiquidityClusterStopExtension = false;
+int             InpLiquidityClusterMinTouches = 3;
+double          InpLiquidityClusterProximityATR = 0.22;
+double          InpLiquidityClusterProximityPoints = 60.0;
+double          InpLiquidityClusterExtraBufferATR = 0.12;
+double          InpLiquidityClusterExtraBufferPoints = 35.0;
+input bool InpUseLiquidityPocketStopShift = false;
+int             InpLiquidityPocketLookbackBars = 24;
+double          InpLiquidityPocketProximityATR = 0.18;
+double          InpLiquidityPocketProximityPoints = 45.0;
+double          InpLiquidityPocketBufferATR = 0.22;
+double          InpLiquidityPocketBufferPoints = 55.0;
+input bool            InpUseLiquidityStopConflictGuard = false;
+input int             InpLiquidityStopConflictLookbackBars = 24;
+input int             InpLiquidityStopConflictMinTouches = 3;
+input double          InpLiquidityStopConflictProximityATR = 0.16;
+input double          InpLiquidityStopConflictProximityPoints = 45.0;
+input int             InpLiquidityStopConflictBypassQualityScore = 15;
+input bool            InpUseLiquidityStopConflictMonthFilter = false;
+input bool            InpLiquidityStopConflictTradeJanuary = true;
+input bool            InpLiquidityStopConflictTradeFebruary = true;
+input bool            InpLiquidityStopConflictTradeMarch = true;
+input bool            InpLiquidityStopConflictTradeApril = true;
+input bool            InpLiquidityStopConflictTradeMay = true;
+input bool            InpLiquidityStopConflictTradeJune = true;
+input bool            InpLiquidityStopConflictTradeJuly = true;
+input bool            InpLiquidityStopConflictTradeAugust = true;
+input bool            InpLiquidityStopConflictTradeSeptember = true;
+input bool            InpLiquidityStopConflictTradeOctober = true;
+input bool            InpLiquidityStopConflictTradeNovember = true;
+input bool            InpLiquidityStopConflictTradeDecember = true;
+double          InpMaxStopATRMultiplier      = 3.00;
+
+//--- Trend filters
+input group "Trend Filters"
+input bool            InpUseEMA200Trend            = true;
+int             InpTrendEMAPeriod            = 200;
+input bool            InpUseEMA100Trend            = false;
+int             InpFastTrendEMAPeriod        = 100;
+input bool            InpUseEMASlope               = true;
+int             InpSlopeLookbackBars         = 5;
+double          InpMinSlopePoints            = 25;
+input bool            InpUseMTFTrend               = true;
+ENUM_TIMEFRAMES InpMTFTrendTimeframe         = PERIOD_H1;
+int             InpMTFEMAPeriod              = 200;
+bool            InpUseMTFTrendQualityGuard   = false;
+int             InpMTFQualitySlopeLookback   = 20;
+double          InpMTFQualityMinSlopePoints  = 50.0;
+double          InpMTFQualityMaxDistanceATR  = 3.00;
+input bool            InpUseADXFilter              = true;
+int             InpADXPeriod                 = 14;
+double          InpMinADX                    = 18.0;
+input bool            InpUseATRVolatilityFilter    = true;
+double          InpMinATRPoints              = 80;
+double          InpMaxATRPoints              = 900;
+
+//--- Entry engine
+input group "Entry Engine"
+input int             InpMinimumConfirmations      = 2;
+bool            InpUseDirectionalConfirmations = false;
+int             InpBuyMinimumConfirmations   = 2;
+int             InpSellMinimumConfirmations  = 2;
+input bool            InpUseWeightedEntryScore     = false;
+int             InpMinimumEntryScore         = 5;
+input bool            InpUseDiagnosticTrendFallbackEntry = false;
+input double          InpDiagnosticFallbackMinBodyPercent = 20.0;
+input bool            InpDiagnosticFallbackUseCandleBias = false;
+bool            InpDiagnosticFallbackDebug = false;
+input bool            InpUseDiagnosticFallbackQualityGate = false;
+input int             InpDiagnosticFallbackMinPriceActionScore = 4;
+input int             InpDiagnosticFallbackMinSmartMoneyScore = 3;
+input bool            InpDiagnosticFallbackRequireStructure = false;
+input bool            InpDiagnosticFallbackRequireLiquidity = false;
+input bool            InpDiagnosticFallbackRequireExecution = true;
+input bool            InpDiagnosticFallbackBlockLiquiditySweep = false;
+input bool            InpDiagnosticFallbackRejectLiquiditySweepSignal = false;
+input int             InpDiagnosticFallbackLiquidityRejectMaxConfirmations = 1;
+input bool            InpUseDiagnosticFallbackLateSessionGuard = false;
+input int             InpDiagnosticFallbackLateSessionStartHour = 16;
+input bool            InpDiagnosticFallbackLateSessionPureOnly = true;
+bool            InpUseDiagnosticFallbackSpreadGuard = false;
+double          InpDiagnosticFallbackMaxSpreadPoints = 0.0;
+double          InpDiagnosticFallbackMaxSpreadATRPercent = 0.0;
+bool            InpUseDiagnosticFallbackSpreadRiskScaling = false;
+double          InpDiagnosticFallbackSpreadRiskStartPoints = 25.0;
+double          InpDiagnosticFallbackSpreadRiskFullPoints = 45.0;
+double          InpDiagnosticFallbackMinSpreadRiskMultiplier = 0.50;
+input bool            InpUseDiagnosticFallbackCushionRiskThrottle = false;
+input double          InpDiagnosticFallbackCushionProfitPercent = 5.00;
+input double          InpDiagnosticFallbackNoCushionRiskMultiplier = 0.50;
+bool            InpUseM5TightLiquiditySecondaryLane = false;
+ENUM_TIMEFRAMES InpM5TightLiquidityTimeframe = PERIOD_M5;
+bool            InpAllowM5TightLiquidityOutsideMonthFilter = false;
+double          InpM5TightLiquidityRiskMultiplier = 1.50;
+int             InpM5TightLiquidityMaxMonthlyEntries = 8;
+double          InpM5TightLiquidityMinADX = 22.0;
+int             InpM5TightLiquidityADXStrengthLookback = 4;
+double          InpM5TightLiquidityADXMinIncrease = 1.0;
+int             InpM5TightLiquidityTrendEMAPeriod = 200;
+int             InpM5TightLiquidityTrendSlopeLookback = 8;
+double          InpM5TightLiquidityMinSlopePoints = 20.0;
+int             InpM5TightLiquidityBOSLookbackBars = 20;
+int             InpM5TightLiquiditySweepLookbackBars = 10;
+int             InpM5TightLiquidityStopLookbackBars = 10;
+double          InpM5TightLiquidityStopBufferATR = 0.08;
+double          InpM5TightLiquidityStopBufferPoints = 15.0;
+double          InpM5TightLiquidityStopATRMultiplier = 1.10;
+double          InpM5TightLiquidityTakeProfitATRMultiplier = 2.40;
+double          InpM5TightLiquidityMinRR = 1.25;
+bool            InpM5TightLiquidityRequireM15Alignment = true;
+bool            InpM5TightLiquidityAllowPrimaryOverride = false;
+int             InpM5TightLiquidityOverrideMaxPrimaryQuality = 6;
+bool            InpM5TightLiquidityOverrideRequireSameBias = true;
+input group "Daily Donchian Breakout Secondary Lane"
+input bool            InpUseDailyDonchianBreakoutLane = false;
+input bool            InpDailyDonchianStandaloneMode = false;
+input bool            InpDailyDonchianBypassPrimarySession = false;
+input bool            InpDailyDonchianUseIsolatedExecution = false;
+input bool            InpDailyDonchianUseTakeProfit = false;
+input ENUM_TIMEFRAMES InpDailyDonchianTimeframe = PERIOD_D1;
+input int             InpDailyDonchianLookbackBars = 20;
+input int             InpDailyDonchianTrendEMAPeriod = 100;
+input int             InpDailyDonchianTrendSlopeLookback = 5;
+input double          InpDailyDonchianMinTrendSlopeATR = 0.03;
+input double          InpDailyDonchianMinADX = 15.0;
+input double          InpDailyDonchianBreakBufferATR = 0.02;
+input double          InpDailyDonchianMaxRetraceATR = 0.20;
+input double          InpDailyDonchianMaxExtensionATR = 0.75;
+input double          InpDailyDonchianStopATRMultiplier = 1.50;
+input double          InpDailyDonchianTakeProfitATRMultiplier = 3.00;
+input double          InpDailyDonchianMinRR = 1.50;
+input bool            InpDailyDonchianUseChannelExit = true;
+input int             InpDailyDonchianExitLookbackBars = 10;
+input double          InpDailyDonchianExitBufferATR = 0.00;
+input double          InpDailyDonchianRiskMultiplier = 0.50;
+input int             InpDailyDonchianMaxMonthlyEntries = 4;
+input int             InpDailyDonchianSpacingMinutes = 1440;
+input bool            InpUseHighEfficiencyTrendLane = false;
+input int             InpHighEfficiencyTrendMode = 0;
+input int             InpHighEfficiencyTrendMinScore = 6;
+input double          InpHighEfficiencyTrendRiskMultiplier = 0.65;
+input int             InpHighEfficiencyTrendMaxMonthlyEntries = 6;
+input int             InpHighEfficiencyTrendSpacingMinutes = 180;
+input double          InpHighEfficiencyTrendStopATRMultiplier = 1.25;
+input double          InpHighEfficiencyTrendTakeProfitATRMultiplier = 2.40;
+input double          InpHighEfficiencyTrendMinRR = 1.25;
+bool            InpUseEliteEntryQualityGate  = false;
+int             InpEliteEntryMinQualityScore = 12;
+int             InpEliteEntryMinPriceActionScore = 14;
+int             InpEliteEntryMinConfirmations = 3;
+int             InpWeightEMACross            = 1;
+int             InpWeightEMAPullback         = 2;
+int             InpWeightBOS                 = 2;
+int             InpWeightDisplacementBOS     = 2;
+int             InpWeightBreakoutRetest      = 2;
+int             InpWeightLiquiditySweep      = 2;
+int             InpWeightSweepRejection      = 2;
+int             InpWeightCHoCH               = 2;
+int             InpWeightFairValueGap        = 2;
+int             InpWeightFVGRetest           = 2;
+int             InpWeightOrderBlock          = 2;
+int             InpWeightEqualLevelSweep     = 2;
+int             InpWeightPreviousLevels      = 1;
+int             InpWeightSessionLevelSweep   = 1;
+int             InpWeightRoundNumberRejection = 1;
+int             InpWeightOpeningRangeBreakout = 2;
+int             InpWeightAsianRangeSweep     = 2;
+int             InpWeightCompressionBreakout = 2;
+int             InpWeightRangeExpansionBreakout = 2;
+int             InpWeightNarrowRangeBreakout = 2;
+int             InpWeightDonchianBreakout    = 2;
+int             InpWeightFailedBreakoutReversal = 2;
+int             InpWeightDailyOpenBias       = 1;
+int             InpWeightPreviousDayRangeBias = 1;
+int             InpWeightRangeLocationBias   = 1;
+int             InpWeightVWAP                = 1;
+int             InpWeightVWAPPullback        = 2;
+int             InpWeightMomentum            = 1;
+int             InpWeightEngulfing           = 1;
+int             InpWeightPinBar              = 1;
+int             InpWeightATRExpansion        = 1;
+int             InpWeightVolume              = 1;
+int             InpWeightCandleAnatomy       = 1;
+int             InpWeightRSI                 = 1;
+int             InpWeightMACD                = 1;
+int             InpWeightBollinger           = 1;
+int             InpWeightStochastic          = 1;
+int             InpWeightCCI                 = 1;
+int             InpWeightMFI                 = 1;
+int             InpWeightOBV                 = 1;
+int             InpWeightDIDirection         = 1;
+int             InpWeightADXStrengthening    = 1;
+int             InpWeightTickMicrostructure  = 2;
+int             InpWeightCumulativeDelta     = 2;
+int             InpWeightDisplacementCandle  = 2;
+int             InpWeightTickPressureCandle  = 2;
+int             InpWeightTickSpeedImpulse    = 2;
+int             InpWeightRegimeQuality       = 2;
+int             InpWeightCorrelation         = 1;
+int             InpWeightSmartMoneyQuality   = 3;
+int             InpWeightPriceActionComposite = 3;
+int             InpWeightBreakoutContinuationQuality = 3;
+int             InpWeightSessionImpulseLane  = 3;
+bool            InpUseEMACrossEntry          = false;
+int             InpEntryFastEMAPeriod        = 20;
+int             InpEntrySlowEMAPeriod        = 50;
+bool            InpUseEMAPullbackContinuation = false;
+double          InpEMAPullbackMaxDistanceATR = 0.35;
+double          InpEMAPullbackMinBodyPercent = 35.0;
+bool            InpUseBOS                    = true;
+int             InpBOSLookbackBars           = 20;
+bool            InpUseDisplacementBOS        = false;
+int             InpDisplacementBOSLookbackBars = 20;
+double          InpDisplacementBOSBufferPoints = 10.0;
+double          InpDisplacementBOSMinRangeATR = 0.70;
+double          InpDisplacementBOSMinBodyPercent = 50.0;
+bool            InpUseBreakoutRetest         = false;
+int             InpBreakoutRetestLookbackBars = 20;
+double          InpBreakoutRetestATR         = 0.25;
+double          InpBreakoutRetestCloseBufferPoints = 10.0;
+bool            InpUseLiquiditySweep         = true;
+input bool            InpAllowStandaloneLiquiditySweepEntry = true;
+int             InpSweepLookbackBars         = 10;
+bool            InpUseSweepRejection         = false;
+double          InpSweepRejectionMinWickPercent = 35.0;
+double          InpSweepRejectionMinCloseLocation = 0.60;
+bool            InpUseSwingRecencyFilter     = false;
+int             InpSwingLeftBars             = 2;
+int             InpSwingRightBars            = 2;
+int             InpMaxBarsSinceSwing         = 24;
+bool            InpUseMomentumCandle         = false;
+double          InpMomentumBodyATR           = 0.50;
+bool            InpUseEngulfing              = false;
+bool            InpUsePinBar                 = false;
+double          InpPinWickToBodyRatio        = 2.0;
+bool            InpUseATRExpansion           = false;
+double          InpATRExpansionMultiplier    = 1.20;
+bool            InpUseVolumeConfirmation     = false;
+int             InpVolumeLookbackBars        = 20;
+bool            InpUseTickVolumeRegimeGuard  = false;
+int             InpTickVolumeRegimeLookbackBars = 20;
+double          InpMinTickVolumeRatio        = 0.60;
+double          InpMaxTickVolumeRatio        = 2.80;
+bool            InpUseVolumeDryUpGuard       = false;
+int             InpVolumeDryUpLookbackBars   = 24;
+int             InpVolumeDryUpConsecutiveBars = 3;
+double          InpVolumeDryUpMaxRatio       = 0.55;
+input bool            InpUseChopFilter             = false;
+input int             InpChopLookbackBars          = 10;
+input double          InpChopMaxNetMoveATR         = 0.60;
+input double          InpChopMinAlternationPercent = 65.0;
+input bool            InpUseImpulseExhaustionGuard = false;
+input int             InpImpulseExhaustionLookbackBars = 6;
+input double          InpImpulseExhaustionMaxMoveATR = 1.80;
+input double          InpImpulseExhaustionClosePercent = 80.0;
+input bool            InpUseConsecutiveCandleExhaustionGuard = false;
+input int             InpConsecutiveCandleLookbackBars = 5;
+input int             InpMaxConsecutiveDirectionalBars = 4;
+input double          InpConsecutiveMoveMaxATR    = 1.60;
+input double          InpConsecutiveMinBodyPercent = 35.0;
+input bool            InpUseDailyRangeExhaustionGuard = false;
+input int             InpDailyRangeExhaustionLookbackDays = 10;
+input double          InpDailyRangeExhaustionMinRatio = 1.20;
+input double          InpDailyRangeExhaustionExtremePercent = 85.0;
+input bool            InpUseSessionRangeExhaustionGuard = false;
+input int             InpSessionRangeExhaustionLookbackHours = 8;
+input double          InpSessionRangeExhaustionMinATR = 2.20;
+input double          InpSessionRangeExhaustionExtremePercent = 82.0;
+bool            InpUseGapRiskGuard           = false;
+double          InpMaxGapATR                 = 0.60;
+double          InpMaxGapPoints              = 250.0;
+input bool            InpUseFailedBreakoutGuard    = false;
+input int             InpFailedBreakoutLookbackBars = 12;
+input double          InpFailedBreakoutBufferPoints = 10.0;
+bool            InpUseFailedBreakoutReversal = false;
+int             InpFailedBreakoutReversalLookbackBars = 12;
+double          InpFailedBreakoutReversalBufferPoints = 10.0;
+double          InpFailedBreakoutReversalMinCloseLocation = 0.60;
+input bool            InpUseEntryShockGuard        = false;
+input double          InpMaxEntryCandleATR         = 2.20;
+input double          InpMinEntryBodyPercent       = 30.0;
+bool            InpUseCHoCH                  = false;
+int             InpCHoCHLookbackBars         = 16;
+bool            InpUseFairValueGap           = false;
+int             InpFVGLookbackBars           = 8;
+double          InpFVGMinATR                  = 0.10;
+bool            InpUseFVGRetest              = false;
+double          InpFVGRetestBufferATR        = 0.20;
+bool            InpUseOrderBlock             = false;
+int             InpOrderBlockLookbackBars    = 20;
+double          InpOrderBlockRetestATR       = 0.25;
+bool            InpUseEqualHighLowSweep      = false;
+int             InpEqualLevelLookbackBars    = 16;
+double          InpEqualLevelTolerancePoints = 80;
+bool            InpUsePreviousLevels         = false;
+bool            InpUsePreviousDayLevels      = true;
+bool            InpUsePreviousWeekLevels     = true;
+bool            InpUsePreviousMonthLevels    = false;
+double          InpLevelRejectionBufferPoints = 40;
+bool            InpUseLevelProximityGuard    = false;
+bool            InpLevelGuardUsePreviousDay  = true;
+bool            InpLevelGuardUsePreviousWeek = true;
+bool            InpLevelGuardUsePreviousMonth = false;
+bool            InpLevelGuardUseRecentSwings = false;
+int             InpLevelGuardSwingLookbackBars = 30;
+double          InpMinDistanceFromLevelATR   = 0.35;
+double          InpMinDistanceFromLevelPoints = 80.0;
+bool            InpUseSessionLevelSweep      = false;
+int             InpSessionLevelLookbackHours = 8;
+bool            InpUseRoundNumberRejection   = false;
+double          InpRoundNumberStepPoints     = 1000.0;
+double          InpRoundNumberBufferPoints   = 80.0;
+bool            InpUseOpeningRangeBreakout   = false;
+int             InpOpeningRangeStartHour     = 7;
+int             InpOpeningRangeStartMinute   = 0;
+int             InpOpeningRangeMinutes       = 60;
+int             InpOpeningRangeMaxBarsAfter  = 16;
+double          InpOpeningRangeBufferPoints  = 20.0;
+bool            InpUseAsianRangeSweep        = false;
+int             InpAsianRangeStartHour       = 0;
+int             InpAsianRangeStartMinute     = 0;
+int             InpAsianRangeEndHour         = 6;
+int             InpAsianRangeEndMinute       = 0;
+int             InpAsianRangeMaxBarsAfter    = 32;
+double          InpAsianSweepBufferPoints    = 20.0;
+bool            InpUseCompressionBreakout    = false;
+int             InpCompressionLookbackBars   = 12;
+double          InpCompressionMaxRangeATR    = 1.10;
+double          InpCompressionBreakBufferPoints = 15.0;
+double          InpCompressionMinBodyPercent = 45.0;
+bool            InpUseRangeExpansionBreakout = false;
+int             InpRangeExpansionLookbackBars = 12;
+double          InpRangeExpansionMinRangeRatio = 1.35;
+double          InpRangeExpansionMinATR      = 0.55;
+double          InpRangeExpansionMinBodyPercent = 45.0;
+double          InpRangeExpansionCloseLocation = 0.65;
+double          InpRangeExpansionBufferPoints = 15.0;
+bool            InpUseNarrowRangeBreakout    = false;
+int             InpNarrowRangeLookbackBars   = 12;
+double          InpNarrowRangeMaxAverageRatio = 0.70;
+double          InpNarrowRangeMaxATR         = 0.45;
+double          InpNarrowBreakMinRangeATR    = 0.50;
+double          InpNarrowBreakMinBodyPercent = 45.0;
+double          InpNarrowBreakCloseLocation  = 0.65;
+double          InpNarrowBreakBufferPoints   = 10.0;
+bool            InpUseDonchianBreakout       = false;
+int             InpDonchianLookbackBars      = 24;
+double          InpDonchianBreakBufferPoints = 20.0;
+double          InpDonchianMinBodyPercent    = 35.0;
+bool            InpUseDailyOpenBias          = false;
+double          InpDailyOpenBiasBufferPoints = 30.0;
+bool            InpUsePreviousDayRangeBias   = false;
+ENUM_PREVIOUS_DAY_RANGE_MODE InpPreviousDayRangeMode = PREV_DAY_RANGE_HALF_BIAS;
+double          InpPreviousDayRangeBufferPoints = 30.0;
+bool            InpUseRangeLocationBias      = false;
+int             InpRangeLocationLookbackBars = 24;
+double          InpRangeLocationBuyMinPercent = 55.0;
+double          InpRangeLocationSellMaxPercent = 45.0;
+bool            InpUseVWAPConfirmation       = false;
+input int             InpVWAPLookbackBars          = 96;
+double          InpVWAPMaxDistanceATR        = 1.20;
+bool            InpUseVWAPPullbackContinuation = false;
+double          InpVWAPPullbackMaxDistanceATR = 0.35;
+double          InpVWAPPullbackMinBodyPercent = 35.0;
+input bool            InpUseVWAPDistanceGuard      = false;
+input double          InpVWAPGuardMaxDistanceATR   = 1.60;
+bool            InpUseSmartMoneyQualityGate  = false;
+int             InpSmartMoneyMinScore        = 6;
+bool            InpSmartMoneyRequireStructure = true;
+bool            InpSmartMoneyRequireLiquidityOrImbalance = true;
+bool            InpSmartMoneyRequireExecution = true;
+bool            InpSmartMoneyRequireOrderFlow = false;
+bool            InpUsePriceActionCompositeGate = false;
+int             InpPriceActionCompositeMinScore = 9;
+bool            InpPriceActionRequireStructure = true;
+bool            InpPriceActionRequireLiquidity = true;
+bool            InpPriceActionRequireExecution = true;
+bool            InpPriceActionRequireOrderFlow = false;
+bool            InpUseBreakoutContinuationQuality = false;
+int             InpBreakoutContinuationMinScore = 7;
+bool            InpBreakoutContinuationRequireExecution = true;
+bool            InpBreakoutContinuationRequireOrderFlow = true;
+bool            InpBreakoutContinuationRequireRegime = true;
+bool            InpBreakoutContinuationStandaloneEntry = false;
+int             InpBreakoutContinuationStandaloneMinScore = 8;
+bool            InpBreakoutContinuationRequireFollowThroughClose = false;
+int             InpBreakoutContinuationFollowThroughLookback = 12;
+double          InpBreakoutContinuationFollowThroughBufferPoints = 20.0;
+bool            InpUsePowerTrendContinuation = false;
+int             InpPowerTrendContinuationMinScore = 10;
+double          InpPowerTrendContinuationMinADX = 28.0;
+bool            InpPowerTrendContinuationRequireLiquidSession = true;
+bool            InpPowerTrendContinuationRequireHouseMoney = true;
+bool            InpPowerTrendContinuationStandaloneEntry = true;
+int             InpPowerTrendContinuationStandaloneMinScore = 12;
+int             InpPowerTrendContinuationEntryScoreDiscount = 1;
+double          InpPowerTrendContinuationRiskMultiplier = 1.35;
+double          InpPowerTrendContinuationTPMultiplier = 1.35;
+bool            InpUsePowerTrendQualityRiskRamp = false;
+int             InpPowerTrendQualityRiskFullScore = 16;
+double          InpPowerTrendQualityMaxRiskMultiplier = 1.75;
+bool            InpUsePowerTrendContinuationMonthFilter = false;
+bool            InpPowerTrendTradeJanuary = true;
+bool            InpPowerTrendTradeFebruary = true;
+bool            InpPowerTrendTradeMarch = true;
+bool            InpPowerTrendTradeApril = true;
+bool            InpPowerTrendTradeMay = true;
+bool            InpPowerTrendTradeJune = true;
+bool            InpPowerTrendTradeJuly = true;
+bool            InpPowerTrendTradeAugust = true;
+bool            InpPowerTrendTradeSeptember = true;
+bool            InpPowerTrendTradeOctober = true;
+bool            InpPowerTrendTradeNovember = true;
+bool            InpPowerTrendTradeDecember = true;
+bool            InpUseSessionImpulseLane = false;
+int             InpSessionImpulseMinScore = 8;
+double          InpSessionImpulseMinADX = 20.0;
+bool            InpSessionImpulseRequireLiquidSession = true;
+bool            InpSessionImpulseRequireSessionBreak = true;
+bool            InpSessionImpulseRequireExecution = true;
+bool            InpSessionImpulseRequireOrderFlow = false;
+bool            InpSessionImpulseStandaloneEntry = true;
+int             InpSessionImpulseStandaloneMinScore = 9;
+int             InpSessionImpulseEntryScoreDiscount = 1;
+double          InpSessionImpulseRiskMultiplier = 1.20;
+double          InpSessionImpulseTPMultiplier = 1.20;
+bool            InpUseSessionImpulseQualityRiskRamp = false;
+int             InpSessionImpulseQualityRiskFullScore = 14;
+double          InpSessionImpulseQualityMaxRiskMultiplier = 1.45;
+double          InpSessionImpulseMinBodyPercent = 38.0;
+double          InpSessionImpulseMinRangeATR = 0.40;
+double          InpSessionImpulseMinCloseLocation = 0.64;
+input bool            InpUseRangeReversionOpportunity = false;
+input int             InpRangeReversionMinScore = 7;
+input int             InpWeightRangeReversionOpportunity = 3;
+input bool            InpRangeReversionStandaloneEntry = true;
+input double          InpRangeReversionMaxADX = 24.0;
+input double          InpRangeReversionMinWickPercent = 35.0;
+input double          InpRangeReversionMinCloseLocation = 0.60;
+input double          InpRangeReversionMinRangeATR = 0.35;
+input bool            InpRangeReversionRequireVWAPMagnet = true;
+input double          InpRangeReversionMaxVWAPDistanceATR = 1.25;
+input bool            InpRangeReversionRequireOrderFlow = false;
+input bool            InpRangeReversionUseStructuralStop = true;
+input double          InpRangeReversionStopBufferATR = 0.12;
+input double          InpRangeReversionStopBufferPoints = 25.0;
+bool            InpRangeReversionUseLiquidityStopExtension = false;
+input bool            InpRangeReversionUseMeanTarget = true;
+input double          InpRangeReversionFallbackTPATR = 1.10;
+input double          InpRangeReversionMinRR = 0.90;
+input bool            InpRangeReversionUseCustomEliteGate = true;
+input int             InpRangeReversionEliteMinConfirmations = 2;
+input int             InpRangeReversionEliteMinQualityScore = 6;
+int             InpRangeReversionEliteMinPriceActionScore = 0;
+input group "Independent Band/VWAP Reversion Research Lane"
+input bool            InpUseBandVWAPReversionLane = false;
+input bool            InpBandVWAPReversionBypassPrimarySession = false;
+input bool            InpBandVWAPReversionUseIsolatedExecution = false;
+input bool            InpBandVWAPReversionIndependentAttempt = false;
+input ENUM_TIMEFRAMES InpBandVWAPReversionTimeframe = PERIOD_H1;
+input int             InpBandVWAPReversionATRPeriod = 14;
+input int             InpBandVWAPReversionADXPeriod = 14;
+input int             InpBandVWAPReversionRSIPeriod = 14;
+input int             InpBandVWAPReversionBollingerPeriod = 20;
+input double          InpBandVWAPReversionBollingerDeviation = 2.0;
+input int             InpBandVWAPReversionVWAPLookbackBars = 48;
+input double          InpBandVWAPReversionRiskMultiplier = 0.20;
+input int             InpBandVWAPReversionMaxMonthlyEntries = 12;
+input int             InpBandVWAPReversionSpacingMinutes = 180;
+input double          InpBandVWAPReversionMaxADX = 24.0;
+input double          InpBandVWAPReversionBuyMaxRSI = 40.0;
+input double          InpBandVWAPReversionSellMinRSI = 60.0;
+input double          InpBandVWAPReversionMinBandPenetrationATR = 0.00;
+input double          InpBandVWAPReversionMinBandWidthATR = 1.20;
+input double          InpBandVWAPReversionMaxBandWidthATR = 4.00;
+input double          InpBandVWAPReversionMinWickPercent = 20.0;
+input double          InpBandVWAPReversionMinCloseLocation = 0.55;
+input bool            InpBandVWAPReversionRequireVWAP = true;
+input bool            InpBandVWAPReversionRequireVolumeExpansion = false;
+input int             InpBandVWAPReversionStopLookbackBars = 5;
+input double          InpBandVWAPReversionStopBufferATR = 0.10;
+input double          InpBandVWAPReversionStopBufferPoints = 20.0;
+input double          InpBandVWAPReversionMaxStopATR = 1.80;
+input double          InpBandVWAPReversionMinTargetATR = 0.45;
+input double          InpBandVWAPReversionMinRR = 1.20;
+input double          InpBandVWAPReversionMaxSpreadATRPercent = 18.0;
+input bool            InpBandVWAPReversionUseDIEdgeGate = false;
+input double          InpBandVWAPReversionMinDIEdge = -10.0;
+input bool            InpUseFlatMonthMicroReversionLane = false;
+input double          InpFlatMonthMicroReversionRiskMultiplier = 0.35;
+input int             InpFlatMonthMicroReversionMaxMonthlyEntries = 10;
+input int             InpFlatMonthMicroReversionSpacingMinutes = 90;
+input double          InpFlatMonthMicroReversionMaxADX = 22.0;
+input double          InpFlatMonthMicroReversionMinWickPercent = 30.0;
+double          InpFlatMonthMicroReversionMinCloseLocation = 0.56;
+double          InpFlatMonthMicroReversionMinRangeATR = 0.28;
+input bool            InpFlatMonthMicroReversionRequireLiquidity = true;
+input bool            InpFlatMonthMicroReversionRequireVWAP = false;
+double          InpFlatMonthMicroReversionMaxVWAPDistanceATR = 1.40;
+double          InpFlatMonthMicroReversionStopBufferATR = 0.10;
+double          InpFlatMonthMicroReversionStopBufferPoints = 22.0;
+double          InpFlatMonthMicroReversionFallbackTPATR = 0.95;
+double          InpFlatMonthMicroReversionMinRR = 0.75;
+bool            InpUseInSessionLiquidityPullbackLane = false;
+int             InpInSessionLiquidityPullbackMinScore = 7;
+double          InpInSessionLiquidityPullbackRiskMultiplier = 0.45;
+int             InpInSessionLiquidityPullbackMaxMonthlyEntries = 8;
+int             InpInSessionLiquidityPullbackSpacingMinutes = 120;
+bool            InpInSessionLiquidityPullbackRequireLiquidSession = true;
+bool            InpInSessionLiquidityPullbackRequireMTFAlignment = false;
+bool            InpInSessionLiquidityPullbackRequireLiquidity = true;
+bool            InpInSessionLiquidityPullbackRequireOrderFlow = false;
+int             InpInSessionLiquidityPullbackLookbackBars = 10;
+double          InpInSessionLiquidityPullbackMinATR = 0.0;
+bool            InpInSessionLiquidityPullbackLowATRRequireOrderFlow = false;
+double          InpInSessionLiquidityPullbackLowATRThreshold = 0.0;
+double          InpInSessionLiquidityPullbackMaxPullbackATR = 0.55;
+double          InpInSessionLiquidityPullbackMinBodyPercent = 28.0;
+double          InpInSessionLiquidityPullbackStopBufferATR = 0.12;
+double          InpInSessionLiquidityPullbackStopBufferPoints = 25.0;
+double          InpInSessionLiquidityPullbackTakeProfitATR = 1.40;
+double          InpInSessionLiquidityPullbackMinRR = 0.90;
+bool            InpUseInSessionLiquidityPullbackMonthFilter = false;
+bool            InpISLPTradeJanuary = true;
+bool            InpISLPTradeFebruary = true;
+bool            InpISLPTradeMarch = true;
+bool            InpISLPTradeApril = true;
+bool            InpISLPTradeMay = true;
+bool            InpISLPTradeJune = true;
+bool            InpISLPTradeJuly = true;
+bool            InpISLPTradeAugust = true;
+bool            InpISLPTradeSeptember = true;
+bool            InpISLPTradeOctober = true;
+bool            InpISLPTradeNovember = true;
+bool            InpISLPTradeDecember = true;
+input bool            InpFlatMonthMicroReversionStandaloneActive = false;
+input bool            InpUseFlatMonthMicroReversionMonthFilter = false;
+input bool            InpFlatMicroRevTradeJanuary = true;
+input bool            InpFlatMicroRevTradeFebruary = true;
+input bool            InpFlatMicroRevTradeMarch = true;
+input bool            InpFlatMicroRevTradeApril = true;
+input bool            InpFlatMicroRevTradeMay = true;
+input bool            InpFlatMicroRevTradeJune = true;
+input bool            InpFlatMicroRevTradeJuly = true;
+input bool            InpFlatMicroRevTradeAugust = true;
+input bool            InpFlatMicroRevTradeSeptember = true;
+input bool            InpFlatMicroRevTradeOctober = true;
+input bool            InpFlatMicroRevTradeNovember = true;
+input bool            InpFlatMicroRevTradeDecember = true;
+bool            InpUseCandleAnatomy          = false;
+double          InpMinBodyPercent            = 45.0;
+double          InpMinDirectionalWickPercent = 30.0;
+input bool            InpUseOppositeWickGuard      = false;
+input double          InpMaxOppositeWickPercent    = 45.0;
+input bool            InpUseMarketPhaseFilter      = false;
+input double          InpTrendADXThreshold         = 20.0;
+input double          InpRangeADXThreshold         = 15.0;
+input bool            InpTradeTrendPhase           = true;
+input bool            InpTradeRangePhase           = false;
+bool            InpUseMarketPhaseRiskScaling = false;
+double          InpTrendPhaseRiskMultiplier  = 1.00;
+double          InpTransitionPhaseRiskMultiplier = 0.75;
+double          InpRangePhaseRiskMultiplier  = 0.50;
+bool            InpUseTrendRegimeRiskBoost  = false;
+double          InpTrendRegimeBoostADX      = 28.0;
+int             InpTrendRegimeBoostATRLookbackBars = 20;
+double          InpTrendRegimeBoostMinATRRatio = 1.05;
+double          InpTrendRegimeBoostFullATRRatio = 1.50;
+double          InpMaxTrendRegimeRiskMultiplier = 1.50;
+bool            InpTrendRegimeBoostRequiresEquityProfit = true;
+input bool            InpUseDynamicATRRegimeGuard  = false;
+input int             InpATRRegimeLookbackBars     = 20;
+input double          InpMinATRRegimeRatio         = 0.75;
+input double          InpMaxATRRegimeRatio         = 1.80;
+bool            InpUseRegimeQualityScore     = false;
+int             InpRegimeSlopeLookbackBars   = 8;
+input double          InpRegimeMinSlopePoints      = 35.0;
+double          InpRegimeMinATRPercentile    = 0.85;
+double          InpRegimeMaxATRPercentile    = 1.75;
+input bool            InpUseAdaptiveRegimeConfidenceGate = false;
+input int             InpAdaptiveRegimeMinScore    = 5;
+input int             InpAdaptiveRegimeLookbackBars = 12;
+input double          InpAdaptiveRegimeMinEfficiency = 0.35;
+input int             InpAdaptiveRegimeMinAlignedBars = 6;
+bool                  InpUsePriorMonthDefensiveRegime = false;
+int                   InpPriorMonthDefensiveATRPeriod = 6;
+double                InpPriorMonthDefensiveMaxBodyPercent = 35.0;
+double                InpPriorMonthDefensiveMaxRangeATR = 1.05;
+int                   InpPriorMonthDefensiveMinScore = 1;
+bool                  InpPriorMonthDefensiveUseMonthStart = true;
+int                   InpPriorMonthDefensiveMonthStartMinDay = 3;
+bool                  InpPriorMonthDefensiveUseWeakRegimeBlock = true;
+input bool            InpUseWeakRegimeEntryBlock  = false;
+input int             InpWeakRegimeLookbackBars   = 18;
+input double          InpWeakRegimeMaxNetMoveATR  = 0.85;
+input double          InpWeakRegimeMinAlternationPercent = 55.0;
+input double          InpWeakRegimeMaxADX         = 20.0;
+input int             InpWeakRegimeSlopeLookbackBars = 8;
+input double          InpWeakRegimeMaxSlopePoints = 55.0;
+input int             InpWeakRegimeMinScore       = 3;
+input int             InpWeakRegimeQualityBypassScore = 14;
+input bool            InpWeakRegimeBlockDiagnosticFallback = true;
+input bool            InpWeakRegimeAllowLiquiditySweep = true;
+bool            InpUseRSIConfirmation        = false;
+int             InpRSIPeriod                 = 14;
+double          InpRSIBuyMin                 = 52.0;
+double          InpRSISellMax                = 48.0;
+bool            InpUseRSIExhaustionGuard     = false;
+double          InpRSIBuyMax                 = 72.0;
+double          InpRSISellMin                = 28.0;
+bool            InpUseMACDConfirmation       = false;
+int             InpMACDFastEMA               = 12;
+int             InpMACDSlowEMA               = 26;
+int             InpMACDSignalSMA             = 9;
+bool            InpUseBollingerConfirmation  = false;
+int             InpBollingerPeriod           = 20;
+double          InpBollingerDeviation        = 2.0;
+bool            InpUseBollingerExtensionGuard = false;
+double          InpBollingerExtensionBuffer  = 0.10;
+bool            InpUseStochasticConfirmation = false;
+int             InpStochasticKPeriod         = 14;
+int             InpStochasticDPeriod         = 3;
+int             InpStochasticSlowing         = 3;
+double          InpStochasticBuyMin          = 55.0;
+double          InpStochasticSellMax         = 45.0;
+bool            InpUseStochasticExhaustionGuard = false;
+double          InpStochasticBuyMax          = 85.0;
+double          InpStochasticSellMin         = 15.0;
+bool            InpUseCCIConfirmation        = false;
+int             InpCCIPeriod                 = 20;
+double          InpCCIBuyMin                 = 50.0;
+double          InpCCISellMax                = -50.0;
+bool            InpUseCCIExhaustionGuard     = false;
+double          InpCCIBuyMax                 = 200.0;
+double          InpCCISellMin                = -200.0;
+bool            InpUseMFIConfirmation        = false;
+int             InpMFIPeriod                 = 14;
+double          InpMFIBuyMin                 = 55.0;
+double          InpMFISellMax                = 45.0;
+bool            InpUseMFIExhaustionGuard     = false;
+double          InpMFIBuyMax                 = 82.0;
+double          InpMFISellMin                = 18.0;
+bool            InpUseOBVConfirmation        = false;
+int             InpOBVLookbackBars           = 8;
+double          InpOBVMinChange              = 0.0;
+bool            InpUseDIDirectionConfirmation = false;
+double          InpMinDIDifference           = 2.0;
+bool            InpUseADXStrengtheningConfirmation = false;
+int             InpADXStrengthLookbackBars   = 5;
+double          InpADXMinIncrease            = 2.0;
+bool            InpUseCumulativeDeltaProxy   = false;
+int             InpCumulativeDeltaLookbackBars = 12;
+double          InpCumulativeDeltaMinRatio   = 0.18;
+int             InpCumulativeDeltaMinBarsAligned = 7;
+bool            InpUseTickMicrostructure     = false;
+int             InpTickMicroWindowSeconds    = 45;
+int             InpTickMicroMinTicks         = 8;
+double          InpTickMicroMinDirectionRatio = 0.20;
+double          InpTickMicroMinTicksPerSecond = 0.08;
+double          InpTickMicroMinMovePoints    = 10.0;
+bool            InpUseDisplacementCandle     = false;
+double          InpDisplacementMinRangeATR   = 0.90;
+double          InpDisplacementMinBodyPercent = 55.0;
+double          InpDisplacementMaxOppositeWickPercent = 30.0;
+bool            InpUseTickPressureCandle     = false;
+int             InpTickPressureLookbackBars  = 12;
+double          InpTickPressureMinVolumeRatio = 1.20;
+double          InpTickPressureMinCloseLocation = 0.68;
+input bool InpUseTickSpeedImpulse       = false;
+int             InpTickSpeedLookbackBars     = 12;
+double          InpTickSpeedMinRatio         = 1.35;
+double          InpTickSpeedMinBodyPercent   = 45.0;
+double          InpTickSpeedMinRangeATR      = 0.45;
+bool            InpUseCorrelationConfirmation = false;
+string          InpCorrelationSymbol         = "XAGUSD";
+ENUM_TIMEFRAMES InpCorrelationTimeframe      = PERIOD_M15;
+int             InpCorrelationLookbackBars   = 8;
+double          InpCorrelationMinMovePoints  = 20.0;
+ENUM_CORRELATION_CONFIRMATION_MODE InpCorrelationMode = CORRELATION_SAME_DIRECTION;
+bool            InpUseCorrelationRiskScaling = false;
+double          InpCorrelationWeakRiskMultiplier = 0.75;
+double          InpCorrelationConflictRiskMultiplier = 0.50;
+
+//--- Position management
+input group "Position Management"
+input bool InpUseBreakEven              = false;
+input double InpBreakEvenTriggerR         = 1.00;
+input double InpBreakEvenBufferPoints     = 30;
+input bool InpUseATRTrailing            = true;
+input double InpTrailATRMultiplier        = 1.60;
+input bool InpUseHouseMoneyATRTrailStretch = false;
+double          InpHouseMoneyATRTrailStretchStartCushionPercent = 6.0;
+double          InpHouseMoneyATRTrailStretchFullCushionPercent = 18.0;
+double          InpHouseMoneyATRTrailMaxMultiplier = 2.40;
+double          InpHouseMoneyATRTrailMinMFER = 1.50;
+bool            InpHouseMoneyATRTrailRequireProtectedStop = true;
+input bool            InpUseStructureTrailing      = false;
+int             InpTrailStructureLookback    = 8;
+input bool InpUsePartialClose           = false;
+double          InpPartialCloseAtR           = 1.50;
+double          InpPartialClosePercent       = 50.0;
+input bool            InpUseRPartialProfitLock     = false;
+input double          InpRPartialProfitLockAtR     = 1.00;
+input double          InpRPartialProfitLockPercent = 35.0;
+input bool            InpRPartialProfitLockMoveStop = true;
+input double          InpRPartialProfitLockStopR   = 0.10;
+bool            InpUseRPartialProfitLockMonthFilter = false;
+bool            InpRPartialProfitLockTradeJanuary = true;
+bool            InpRPartialProfitLockTradeFebruary = true;
+bool            InpRPartialProfitLockTradeMarch = true;
+bool            InpRPartialProfitLockTradeApril = true;
+bool            InpRPartialProfitLockTradeMay = true;
+bool            InpRPartialProfitLockTradeJune = true;
+bool            InpRPartialProfitLockTradeJuly = true;
+bool            InpRPartialProfitLockTradeAugust = true;
+bool            InpRPartialProfitLockTradeSeptember = true;
+bool            InpRPartialProfitLockTradeOctober = true;
+bool            InpRPartialProfitLockTradeNovember = true;
+bool            InpRPartialProfitLockTradeDecember = true;
+input bool InpUsePostPartialRunnerTPExpansion = false;
+double          InpPostPartialRunnerTPMultiplier = 1.35;
+double          InpPostPartialRunnerMinR      = 0.75;
+bool            InpPostPartialRunnerRequireProtectedStop = true;
+input bool InpUseProtectedRunnerPartialClose = false;
+double          InpProtectedRunnerPartialCloseAtR = 1.00;
+double          InpProtectedRunnerPartialClosePercent = 35.0;
+bool            InpProtectedRunnerPartialMoveStop = true;
+double          InpProtectedRunnerPartialStopLockR = 0.10;
+input bool InpUseProfitLockStop         = false;
+double          InpProfitLockTriggerATR      = 1.50;
+double          InpProfitLockATR             = 0.35;
+input bool InpUseRProfitLockStop        = false;
+double          InpRProfitLockTriggerR       = 1.25;
+double          InpRProfitLockR              = 0.25;
+input bool            InpUseMFEProfitLockStop      = false;
+input double          InpMFEProfitLockStartR       = 1.50;
+input double          InpMFEProfitLockGivebackR    = 0.75;
+input double          InpMFEProfitLockMinR         = 0.35;
+input bool            InpUseMFEProfitLockMonthFilter = false;
+input bool            InpMFEProfitLockTradeJanuary = true;
+input bool            InpMFEProfitLockTradeFebruary = true;
+input bool            InpMFEProfitLockTradeMarch = true;
+input bool            InpMFEProfitLockTradeApril = true;
+input bool            InpMFEProfitLockTradeMay = true;
+input bool            InpMFEProfitLockTradeJune = true;
+input bool            InpMFEProfitLockTradeJuly = true;
+input bool            InpMFEProfitLockTradeAugust = true;
+input bool            InpMFEProfitLockTradeSeptember = true;
+input bool            InpMFEProfitLockTradeOctober = true;
+input bool            InpMFEProfitLockTradeNovember = true;
+input bool            InpMFEProfitLockTradeDecember = true;
+input bool InpUseHouseMoneyMFEProfitLockStretch = false;
+double          InpHouseMoneyMFELockStretchStartCushionPercent = 6.0;
+double          InpHouseMoneyMFELockStretchFullCushionPercent = 18.0;
+double          InpHouseMoneyMFEProfitLockMaxGivebackR = 1.25;
+bool            InpHouseMoneyMFELockStretchRequireProtectedStop = true;
+bool            InpUseRunnerMFEProfitLockPatience = false;
+double          InpRunnerMFEProfitLockGivebackMultiplier = 1.20;
+bool            InpUsePowerTrendMFEProfitLockPatience = false;
+double          InpPowerTrendMFEProfitLockGivebackMultiplier = 1.35;
+bool            InpUseSessionImpulseMFEProfitLockPatience = false;
+double          InpSessionImpulseMFEProfitLockGivebackMultiplier = 1.25;
+input bool            InpUseMFEGivebackExit        = false;
+input double          InpMFEGivebackStartR         = 1.20;
+input double          InpMFEGivebackMaxGivebackR   = 0.70;
+input double          InpMFEGivebackMinCloseR      = 0.25;
+input bool InpUseHouseMoneyMFEGivebackStretch = false;
+double          InpHouseMoneyMFEStretchStartCushionPercent = 6.0;
+double          InpHouseMoneyMFEStretchFullCushionPercent = 18.0;
+double          InpHouseMoneyMFEGivebackMaxR = 1.25;
+bool            InpHouseMoneyMFEStretchRequireProtectedStop = true;
+input bool            InpUseRunnerExitPatience    = false;
+double          InpRunnerExitPatienceMinR   = 0.50;
+double          InpRunnerExitPatienceMinMFER = 1.00;
+bool            InpRunnerExitPatienceRequireHouseMoney = true;
+bool            InpRunnerExitPatienceRequireProtectedStop = true;
+bool            InpRunnerExitPatienceRequireTrendRegime = true;
+bool            InpRunnerExitPatienceRequireContinuation = true;
+double          InpRunnerExitPatienceMFEGivebackMultiplier = 1.35;
+input bool InpUsePowerTrendRunnerPatience = false;
+double          InpPowerTrendRunnerPatienceMinR = 0.20;
+double          InpPowerTrendRunnerPatienceMinMFER = 0.60;
+double          InpPowerTrendRunnerMFEGivebackMultiplier = 2.00;
+bool            InpPowerTrendRunnerRequireProtectedStop = true;
+bool            InpPowerTrendRunnerRequireContinuation = true;
+bool            InpUseSessionImpulseRunnerPatience = false;
+double          InpSessionImpulseRunnerPatienceMinR = 0.15;
+double          InpSessionImpulseRunnerPatienceMinMFER = 0.50;
+double          InpSessionImpulseRunnerMFEGivebackMultiplier = 1.50;
+bool            InpSessionImpulseRunnerRequireProtectedStop = true;
+bool            InpSessionImpulseRunnerRequireContinuation = true;
+bool            InpUseEarlyMFEReversalExit   = false;
+double          InpEarlyMFEReversalStartR    = 0.60;
+double          InpEarlyMFEReversalExitR     = -0.05;
+input bool            InpUseMFEFailureExit         = false;
+input int             InpMFEFailureBars            = 18;
+input double          InpMFEFailureMinMFER         = 0.35;
+input double          InpMFEFailureMaxCurrentR     = 0.05;
+bool            InpUseMFEFailureMonthFilter  = false;
+bool            InpMFEFailureTradeJanuary    = true;
+bool            InpMFEFailureTradeFebruary   = true;
+bool            InpMFEFailureTradeMarch      = true;
+bool            InpMFEFailureTradeApril      = true;
+bool            InpMFEFailureTradeMay        = true;
+bool            InpMFEFailureTradeJune       = true;
+bool            InpMFEFailureTradeJuly       = true;
+bool            InpMFEFailureTradeAugust     = true;
+bool            InpMFEFailureTradeSeptember  = true;
+bool            InpMFEFailureTradeOctober    = true;
+bool            InpMFEFailureTradeNovember   = true;
+bool            InpMFEFailureTradeDecember   = true;
+input bool            InpUseNoFollowThroughExit    = false;
+input int             InpNoFollowThroughBars       = 5;
+input double          InpNoFollowThroughMinMFER    = 0.20;
+double          InpNoFollowThroughMaxCurrentR = -0.10;
+input bool            InpUseFlatMonthProbeFailureExit = false;
+input int             InpFlatMonthProbeFailureBars = 4;
+input double          InpFlatMonthProbeFailureMinMFER = 0.15;
+input double          InpFlatMonthProbeFailureMaxCurrentR = -0.08;
+bool            InpUseSessionImpulseFailureExit = false;
+int             InpSessionImpulseFailureBars = 4;
+double          InpSessionImpulseFailureMinMFER = 0.25;
+double          InpSessionImpulseFailureMaxCurrentR = -0.05;
+bool            InpSessionImpulseFailureRequireOppositeCandle = false;
+double          InpSessionImpulseFailureOppositeRangeATR = 0.45;
+double          InpSessionImpulseFailureOppositeBodyPercent = 40.0;
+bool            InpUseAdverseRExit           = false;
+double          InpAdverseExitR              = 0.75;
+bool            InpUseOppositeDisplacementExit = false;
+double          InpOppositeDisplacementExitMinR = -0.25;
+double          InpOppositeDisplacementMinRangeATR = 0.80;
+double          InpOppositeDisplacementMinBodyPercent = 55.0;
+bool            InpUseSpreadShockExit        = false;
+double          InpSpreadShockExitPoints     = 450.0;
+double          InpSpreadShockExitATRPercent = 25.0;
+double          InpSpreadShockExitMaxR       = 0.10;
+input bool            InpUseUnderwaterTimeExit     = false;
+input int             InpUnderwaterExitBars        = 12;
+input double          InpUnderwaterExitMaxR        = -0.25;
+bool            InpUseStagnationExit         = false;
+int             InpStagnationExitBars        = 24;
+double          InpStagnationExitMaxR        = 0.10;
+bool            InpUseReversalPressureExit   = false;
+double          InpReversalPressureMinR      = 0.25;
+int             InpReversalPressureLookbackBars = 12;
+int             InpReversalPressureMinSignals = 2;
+bool            InpUseSmartMoneyThesisBreakExit = false;
+int             InpSmartMoneyExitMinScore    = 5;
+double          InpSmartMoneyExitMaxR        = 0.35;
+int             InpSmartMoneyExitMinHoldBars = 2;
+bool            InpSmartMoneyExitRequireStructure = true;
+bool            InpSmartMoneyExitRequireLiquidityOrImbalance = false;
+bool            InpSmartMoneyExitRequireExecution = true;
+bool            InpUseTimeExit               = false;
+int             InpMaxHoldBars               = 96;
+bool            InpUseEMAExit                = false;
+int             InpExitEMAPeriod             = 50;
+bool            InpUseVolatilityExit         = false;
+double          InpVolatilityExitATRPoints   = 1100;
+
+//--- Sessions
+input group "Session Filter"
+input bool            InpUseSessionFilter          = true;
+input bool            InpUseLondonSession          = true;
+input int             InpLondonStartHour           = 7;
+input int             InpLondonEndHour             = 11;
+input bool            InpUseNewYorkSession         = true;
+input int             InpNewYorkStartHour          = 13;
+input int             InpNewYorkEndHour            = 17;
+input bool            InpUseCustomSession          = false;
+input int             InpCustomStartHour           = 0;
+input int             InpCustomEndHour             = 23;
+bool            InpUseSessionOpenGuard       = false;
+int             InpSessionOpenGuardMinutes   = 15;
+bool            InpGuardLondonOpen           = true;
+bool            InpGuardNewYorkOpen          = true;
+bool            InpGuardCustomOpen           = false;
+bool            InpCloseBeforeSessionEnd     = false;
+int             InpSessionEndCloseMinutes    = 15;
+bool            InpCloseAtLondonEnd          = true;
+bool            InpCloseAtNewYorkEnd         = true;
+bool            InpCloseAtCustomEnd          = false;
+bool            InpUseSessionRiskScaling     = false;
+double          InpLondonRiskMultiplier      = 1.00;
+double          InpNewYorkRiskMultiplier     = 1.00;
+double          InpCustomSessionRiskMultiplier = 0.75;
+bool            InpUseDayOfWeekRiskScaling   = false;
+double          InpMondayRiskMultiplier      = 1.00;
+double          InpTuesdayRiskMultiplier     = 1.00;
+double          InpWednesdayRiskMultiplier   = 1.00;
+double          InpThursdayRiskMultiplier    = 1.00;
+double          InpFridayRiskMultiplier      = 0.75;
+bool            InpDisableFridayEvening      = true;
+int             InpFridayCutoffHour          = 18;
+bool            InpCloseBeforeWeekend        = false;
+int             InpWeekendCloseHour          = 17;
+bool            InpDisableSunday             = true;
+input bool            InpUseMonthStartFilter       = false;
+input int             InpMonthStartMinDay          = 3;
+bool            InpUseMonthStartFallbackGuard = false;
+int             InpMonthStartFallbackMinDay  = 3;
+bool            InpUseMonthlyOpenDiscoveryGuard = false;
+int             InpMonthlyOpenGuardMaxDay    = 2;
+int             InpMonthlyOpenGuardStartHour = 6;
+int             InpMonthlyOpenGuardEndHour   = 10;
+int             InpMonthlyOpenGuardOpeningRangeBars = 8;
+int             InpMonthlyOpenGuardMinPriorBars = 3;
+double          InpMonthlyOpenGuardMinBreakoutATR = 0.20;
+double          InpMonthlyOpenGuardMaxOppositeWickPercent = 40.0;
+int             InpMonthlyOpenGuardQualityBypassScore = 14;
+bool            InpMonthlyOpenGuardAllowStrongBOS = true;
+bool            InpMonthlyOpenGuardAllowLiquiditySweep = true;
+bool                  InpUseEarlyMonthOpenBiasGuard = false;
+int                   InpEarlyMonthOpenBiasMaxDay = 4;
+double                InpEarlyMonthOpenBiasBufferATR = 0.10;
+double                InpEarlyMonthOpenBiasBufferPoints = 25.0;
+int                   InpEarlyMonthOpenBiasBypassQualityScore = 14;
+bool                  InpUseEarlyMonthLargeStopGuard = false;
+int                   InpEarlyMonthLargeStopMaxDay = 3;
+double                InpEarlyMonthLargeStopMaxPoints = 18.0;
+int                   InpEarlyMonthLargeStopBypassQualityScore = 14;
+bool                  InpUseEarlyMonthAdverseRejectionGuard = false;
+int                   InpEarlyMonthAdverseRejectionMaxDay = 3;
+int                   InpEarlyMonthAdverseRejectionLookbackBars = 12;
+double                InpEarlyMonthAdverseRejectionBufferPoints = 10.0;
+double                InpEarlyMonthAdverseRejectionMinBodyPercent = 35.0;
+double                InpEarlyMonthAdverseRejectionMinWickPercent = 25.0;
+double                InpEarlyMonthAdverseRejectionMinCloseLocation = 0.60;
+int                   InpEarlyMonthAdverseRejectionBypassQualityScore = 14;
+input bool            InpUseMonthFilter            = false;
+input bool            InpTradeJanuary              = true;
+input bool            InpTradeFebruary             = true;
+input bool            InpTradeMarch                = true;
+input bool            InpTradeApril                = true;
+input bool            InpTradeMay                  = true;
+input bool            InpTradeJune                 = true;
+input bool            InpTradeJuly                 = true;
+input bool            InpTradeAugust               = true;
+input bool            InpTradeSeptember            = true;
+input bool            InpTradeOctober              = true;
+input bool            InpTradeNovember             = true;
+input bool            InpTradeDecember             = true;
+input bool            InpUseMonthDayWindowFilter   = false;
+int             InpJanuaryMinDay             = 1;
+int             InpJanuaryMaxDay             = 31;
+int             InpFebruaryMinDay            = 1;
+int             InpFebruaryMaxDay            = 31;
+int             InpMarchMinDay               = 1;
+input int             InpMarchMaxDay               = 31;
+int             InpAprilMinDay               = 1;
+int             InpAprilMaxDay               = 31;
+int             InpMayMinDay                 = 1;
+input int             InpMayMaxDay                 = 31;
+int             InpJuneMinDay                = 1;
+int             InpJuneMaxDay                = 31;
+int             InpJulyMinDay                = 1;
+int             InpJulyMaxDay                = 31;
+int             InpAugustMinDay              = 1;
+int             InpAugustMaxDay              = 31;
+int             InpSeptemberMinDay           = 1;
+int             InpSeptemberMaxDay           = 31;
+int             InpOctoberMinDay             = 1;
+int             InpOctoberMaxDay             = 31;
+int             InpNovemberMinDay            = 1;
+int             InpNovemberMaxDay            = 31;
+int             InpDecemberMinDay            = 1;
+int             InpDecemberMaxDay            = 31;
+bool            InpUseMonthDayRiskMultipliers = false;
+double          InpJanuaryDayRiskMultiplier  = 1.00;
+double          InpFebruaryDayRiskMultiplier = 1.00;
+double          InpMarchDayRiskMultiplier    = 1.00;
+double          InpAprilDayRiskMultiplier    = 1.00;
+double          InpMayDayRiskMultiplier      = 1.00;
+double          InpJuneDayRiskMultiplier     = 1.00;
+double          InpJulyDayRiskMultiplier     = 1.00;
+double          InpAugustDayRiskMultiplier   = 1.00;
+double          InpSeptemberDayRiskMultiplier = 1.00;
+double          InpOctoberDayRiskMultiplier  = 1.00;
+double          InpNovemberDayRiskMultiplier = 1.00;
+double          InpDecemberDayRiskMultiplier = 1.00;
+
+//--- News guard
+input group "Manual News Filter"
+bool            InpUseManualNewsFilter       = false;
+string          InpNewsTimesCsv              = "";
+int             InpNewsMinutesBefore         = 60;
+int             InpNewsMinutesAfter          = 45;
+bool            InpClosePositionsOnManualNews = false;
+
+//--- Reporting
+input group "Dashboard and Logging"
+input bool            InpShowDashboard             = true;
+input bool            InpDashboardInTester         = false;
+input ENUM_LOG_LEVEL  InpLogLevel                  = LOG_TRADES;
+input string          InpLogFileName               = "Professional_XAUUSD_EA_Trades.csv";
+input string          InpEvidenceProfileId         = "";
+input string          InpEvidenceSourceHash        = "";
+input string          InpEvidenceRunLabel          = "";
+input bool            InpUseBlockReasonDiagnostics = false;
+string          InpBlockReasonDiagnosticsFile = "Professional_XAUUSD_EA_BlockReasons.csv";
+
+//--- Optimization scoring
+input group "Optimization Fitness"
+input ENUM_TESTER_FITNESS_MODE InpTesterFitnessMode = FITNESS_ROBUST_PROFIT;
+int             InpTesterMinTrades           = 5;
+double          InpTesterMaxDrawdownPercent  = 25.0;
+double          InpTesterMinProfitFactor     = 1.05;
+double          InpTesterMinRecoveryFactor   = 0.80;
+double          InpTesterMinSharpeRatio      = 0.00;
+double          InpTesterDrawdownPenalty     = 2.0;
+double          InpTesterTradeCountPenalty   = 0.35;
+double          InpTesterRecoveryPenalty     = 1.0;
+double          InpTesterSharpePenalty       = 0.50;
+double          InpTesterProfitFactorRewardPower = 0.50;
+double          InpTesterRecoveryRewardPower = 0.50;
+double          InpTesterDrawdownRewardPower = 1.00;
+double          InpTesterProtectedProfitNetPower = 1.00;
+double          InpTesterRecoveryFloorPenaltyPower = 2.00;
+double          InpTesterDrawdownExcessPenaltyPower = 2.00;
+double          InpTesterMaxProfitNetPower = 1.35;
+double          InpTesterMaxProfitDrawdownPower = 2.00;
+double          InpTesterMaxProfitQualityPower = 1.00;
+
+CTrade trade;
+
+string InitialRiskKey(const ulong ticket)
+{
+   return "PXEA_INITIAL_RISK_" + (string)ticket;
+}
+
+string TradeMFEKey(const ulong ticket)
+{
+   return "PXEA_MFE_R_" + (string)ticket;
+}
+
+string TradeMAEKey(const ulong ticket)
+{
+   return "PXEA_MAE_R_" + (string)ticket;
+}
+
+void StoreInitialRisk(const ulong ticket, const double riskDistance)
+{
+   if(ticket == 0 || riskDistance <= 0.0)
+      return;
+   GlobalVariableSet(InitialRiskKey(ticket), riskDistance);
+}
+
+double InitialRiskDistance(const ulong ticket, const double fallbackDistance)
+{
+   double fallback = MathMax(0.0, fallbackDistance);
+   if(ticket == 0)
+      return fallback;
+
+   string key = InitialRiskKey(ticket);
+   if(GlobalVariableCheck(key))
+   {
+      double stored = GlobalVariableGet(key);
+      if(stored > 0.0)
+         return stored;
+   }
+
+   if(fallback > 0.0)
+      GlobalVariableSet(key, fallback);
+   return fallback;
+}
+
+class CIndicators
+{
+private:
+   int m_atr;
+   int m_adx;
+   int m_trendEma;
+   int m_fastTrendEma;
+   int m_mtfEma;
+   int m_entryFastEma;
+   int m_entrySlowEma;
+   int m_exitEma;
+   int m_rsi;
+   int m_macd;
+   int m_bands;
+   int m_stochastic;
+   int m_cci;
+   int m_mfi;
+   int m_obv;
+   int m_bandReversionAtr;
+   int m_bandReversionAdx;
+   int m_bandReversionRsi;
+   int m_bandReversionBands;
+
+public:
+   bool Init()
+   {
+      m_atr = iATR(_Symbol, InpSignalTimeframe, InpATRPeriod);
+      m_adx = iADX(_Symbol, InpSignalTimeframe, InpADXPeriod);
+      m_trendEma = iMA(_Symbol, InpSignalTimeframe, InpTrendEMAPeriod, 0, MODE_EMA, PRICE_CLOSE);
+      m_fastTrendEma = iMA(_Symbol, InpSignalTimeframe, InpFastTrendEMAPeriod, 0, MODE_EMA, PRICE_CLOSE);
+      m_mtfEma = iMA(_Symbol, InpMTFTrendTimeframe, InpMTFEMAPeriod, 0, MODE_EMA, PRICE_CLOSE);
+      m_entryFastEma = iMA(_Symbol, InpSignalTimeframe, InpEntryFastEMAPeriod, 0, MODE_EMA, PRICE_CLOSE);
+      m_entrySlowEma = iMA(_Symbol, InpSignalTimeframe, InpEntrySlowEMAPeriod, 0, MODE_EMA, PRICE_CLOSE);
+      m_exitEma = iMA(_Symbol, InpSignalTimeframe, InpExitEMAPeriod, 0, MODE_EMA, PRICE_CLOSE);
+      m_rsi = iRSI(_Symbol, InpSignalTimeframe, InpRSIPeriod, PRICE_CLOSE);
+      m_macd = iMACD(_Symbol, InpSignalTimeframe, InpMACDFastEMA, InpMACDSlowEMA, InpMACDSignalSMA, PRICE_CLOSE);
+      m_bands = iBands(_Symbol, InpSignalTimeframe, InpBollingerPeriod, 0, InpBollingerDeviation, PRICE_CLOSE);
+      m_stochastic = iStochastic(_Symbol, InpSignalTimeframe, InpStochasticKPeriod, InpStochasticDPeriod, InpStochasticSlowing, MODE_SMA, STO_LOWHIGH);
+      m_cci = iCCI(_Symbol, InpSignalTimeframe, InpCCIPeriod, PRICE_TYPICAL);
+      m_mfi = iMFI(_Symbol, InpSignalTimeframe, InpMFIPeriod, VOLUME_TICK);
+      m_obv = iOBV(_Symbol, InpSignalTimeframe, VOLUME_TICK);
+      m_bandReversionAtr = iATR(_Symbol, InpBandVWAPReversionTimeframe,
+                               MathMax(1, InpBandVWAPReversionATRPeriod));
+      m_bandReversionAdx = iADX(_Symbol, InpBandVWAPReversionTimeframe,
+                               MathMax(1, InpBandVWAPReversionADXPeriod));
+      m_bandReversionRsi = iRSI(_Symbol, InpBandVWAPReversionTimeframe,
+                               MathMax(1, InpBandVWAPReversionRSIPeriod), PRICE_CLOSE);
+      m_bandReversionBands = iBands(_Symbol, InpBandVWAPReversionTimeframe,
+                                   MathMax(1, InpBandVWAPReversionBollingerPeriod), 0,
+                                   MathMax(0.1, InpBandVWAPReversionBollingerDeviation), PRICE_CLOSE);
+
+      return HandlesReady();
+   }
+
+   void Release()
+   {
+      IndicatorRelease(m_atr);
+      IndicatorRelease(m_adx);
+      IndicatorRelease(m_trendEma);
+      IndicatorRelease(m_fastTrendEma);
+      IndicatorRelease(m_mtfEma);
+      IndicatorRelease(m_entryFastEma);
+      IndicatorRelease(m_entrySlowEma);
+      IndicatorRelease(m_exitEma);
+      IndicatorRelease(m_rsi);
+      IndicatorRelease(m_macd);
+      IndicatorRelease(m_bands);
+      IndicatorRelease(m_stochastic);
+      IndicatorRelease(m_cci);
+      IndicatorRelease(m_mfi);
+      IndicatorRelease(m_obv);
+      IndicatorRelease(m_bandReversionAtr);
+      IndicatorRelease(m_bandReversionAdx);
+      IndicatorRelease(m_bandReversionRsi);
+      IndicatorRelease(m_bandReversionBands);
+   }
+
+   bool HandlesReady()
+   {
+      return m_atr != INVALID_HANDLE &&
+             m_adx != INVALID_HANDLE &&
+             m_trendEma != INVALID_HANDLE &&
+             m_fastTrendEma != INVALID_HANDLE &&
+             m_mtfEma != INVALID_HANDLE &&
+             m_entryFastEma != INVALID_HANDLE &&
+             m_entrySlowEma != INVALID_HANDLE &&
+             m_exitEma != INVALID_HANDLE &&
+             m_rsi != INVALID_HANDLE &&
+             m_macd != INVALID_HANDLE &&
+             m_bands != INVALID_HANDLE &&
+             m_stochastic != INVALID_HANDLE &&
+              m_cci != INVALID_HANDLE &&
+              m_mfi != INVALID_HANDLE &&
+              m_obv != INVALID_HANDLE &&
+              m_bandReversionAtr != INVALID_HANDLE &&
+              m_bandReversionAdx != INVALID_HANDLE &&
+              m_bandReversionRsi != INVALID_HANDLE &&
+              m_bandReversionBands != INVALID_HANDLE;
+   }
+
+   bool Value(const int handle, const int buffer, const int shift, double &value)
+   {
+      double data[];
+      ArraySetAsSeries(data, true);
+      if(CopyBuffer(handle, buffer, shift, 1, data) != 1)
+         return false;
+      value = data[0];
+      return true;
+   }
+
+   bool ATR(const int shift, double &value) { return Value(m_atr, 0, shift, value); }
+   bool ADX(const int shift, double &value) { return Value(m_adx, 0, shift, value); }
+   bool PlusDI(const int shift, double &value) { return Value(m_adx, 1, shift, value); }
+   bool MinusDI(const int shift, double &value) { return Value(m_adx, 2, shift, value); }
+   bool TrendEMA(const int shift, double &value) { return Value(m_trendEma, 0, shift, value); }
+   bool FastTrendEMA(const int shift, double &value) { return Value(m_fastTrendEma, 0, shift, value); }
+   bool MTFEMA(const int shift, double &value) { return Value(m_mtfEma, 0, shift, value); }
+   bool EntryFastEMA(const int shift, double &value) { return Value(m_entryFastEma, 0, shift, value); }
+   bool EntrySlowEMA(const int shift, double &value) { return Value(m_entrySlowEma, 0, shift, value); }
+   bool ExitEMA(const int shift, double &value) { return Value(m_exitEma, 0, shift, value); }
+   bool RSI(const int shift, double &value) { return Value(m_rsi, 0, shift, value); }
+   bool MACDMain(const int shift, double &value) { return Value(m_macd, 0, shift, value); }
+   bool MACDSignal(const int shift, double &value) { return Value(m_macd, 1, shift, value); }
+   bool BollingerMiddle(const int shift, double &value) { return Value(m_bands, 0, shift, value); }
+   bool BollingerUpper(const int shift, double &value) { return Value(m_bands, 1, shift, value); }
+   bool BollingerLower(const int shift, double &value) { return Value(m_bands, 2, shift, value); }
+   bool StochasticMain(const int shift, double &value) { return Value(m_stochastic, 0, shift, value); }
+   bool StochasticSignal(const int shift, double &value) { return Value(m_stochastic, 1, shift, value); }
+   bool CCI(const int shift, double &value) { return Value(m_cci, 0, shift, value); }
+   bool MFI(const int shift, double &value) { return Value(m_mfi, 0, shift, value); }
+   bool OBV(const int shift, double &value) { return Value(m_obv, 0, shift, value); }
+   bool BandReversionATR(const int shift, double &value) { return Value(m_bandReversionAtr, 0, shift, value); }
+   bool BandReversionADX(const int shift, double &value) { return Value(m_bandReversionAdx, 0, shift, value); }
+   bool BandReversionPlusDI(const int shift, double &value) { return Value(m_bandReversionAdx, 1, shift, value); }
+   bool BandReversionMinusDI(const int shift, double &value) { return Value(m_bandReversionAdx, 2, shift, value); }
+   bool BandReversionRSI(const int shift, double &value) { return Value(m_bandReversionRsi, 0, shift, value); }
+   bool BandReversionMiddle(const int shift, double &value) { return Value(m_bandReversionBands, 0, shift, value); }
+   bool BandReversionUpper(const int shift, double &value) { return Value(m_bandReversionBands, 1, shift, value); }
+   bool BandReversionLower(const int shift, double &value) { return Value(m_bandReversionBands, 2, shift, value); }
+};
+
+CIndicators indicators;
+
+struct SSignal
+{
+   ENUM_TRADE_BIAS bias;
+   int confirmations;
+   int qualityScore;
+   int priceActionScore;
+   string reasons;
+   double atr;
+   double stopDistance;
+   double takeProfitDistance;
+   bool isRangeReversion;
+   bool isBandVWAPReversion;
+   bool isBreakoutContinuation;
+   bool isPowerTrendContinuation;
+   bool isSessionImpulse;
+   bool isM5TightLiquidity;
+   bool isDailyDonchianBreakout;
+   bool isFlatMonthBreakoutProbe;
+   bool isFlatMonthMicroReversion;
+   bool isFlatMonthStructuralDisplacement;
+   bool isFlatMonthLiquidityReclaim;
+   bool isInSessionLiquidityPullback;
+   bool isHighEfficiencyTrend;
+   bool isDiagnosticFallback;
+   bool useDirectStop;
+   double riskMultiplier;
+   double rangeReversionStopPrice;
+   double rangeReversionTargetPrice;
+};
+
+class CLogger
+{
+private:
+   int m_handle;
+
+public:
+   CLogger() : m_handle(INVALID_HANDLE) {}
+
+   void Init()
+   {
+      if(InpLogLevel == LOG_OFF)
+         return;
+
+      m_handle = FileOpen(InpLogFileName, FILE_READ | FILE_WRITE | FILE_CSV | FILE_COMMON | FILE_SHARE_READ | FILE_SHARE_WRITE);
+      if(m_handle == INVALID_HANDLE)
+         return;
+
+      if(FileSize(m_handle) == 0)
+      {
+         FileWrite(m_handle, "time", "event", "symbol", "ticket", "bias", "volume", "price",
+                   "sl", "tp", "risk_r", "profit", "reason", "atr", "spread_points",
+                   "max_favorable_r", "max_adverse_r", "held_bars", "entry_context",
+                   "profile_id", "source_hash", "run_label");
+      }
+      FileSeek(m_handle, 0, SEEK_END);
+   }
+
+   void Close()
+   {
+      if(m_handle != INVALID_HANDLE)
+         FileClose(m_handle);
+      m_handle = INVALID_HANDLE;
+   }
+
+   void Write(const string eventName,
+              const ulong ticket,
+              const string bias,
+              const double volume,
+              const double price,
+              const double sl,
+              const double tp,
+              const double riskR,
+              const double profit,
+              const string reason,
+              const double atr,
+              const double maxFavorableR = EMPTY_VALUE,
+              const double maxAdverseR = EMPTY_VALUE,
+              const int heldBars = -1,
+              const string entryContext = "")
+   {
+      if(InpLogLevel == LOG_OFF || m_handle == INVALID_HANDLE)
+         return;
+
+      double effectiveMFE = maxFavorableR;
+      if(effectiveMFE == EMPTY_VALUE && ticket > 0 && GlobalVariableCheck(TradeMFEKey(ticket)))
+         effectiveMFE = GlobalVariableGet(TradeMFEKey(ticket));
+
+      double effectiveMAE = maxAdverseR;
+      if(effectiveMAE == EMPTY_VALUE && ticket > 0 && GlobalVariableCheck(TradeMAEKey(ticket)))
+         effectiveMAE = GlobalVariableGet(TradeMAEKey(ticket));
+
+      FileWrite(m_handle,
+                TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS),
+                eventName,
+                _Symbol,
+                (string)ticket,
+                bias,
+                DoubleToString(volume, 2),
+                DoubleToString(price, _Digits),
+                DoubleToString(sl, _Digits),
+                DoubleToString(tp, _Digits),
+                DoubleToString(riskR, 2),
+                DoubleToString(profit, 2),
+                reason,
+                DoubleToString(atr, _Digits),
+                DoubleToString(SpreadPoints(), 1),
+                effectiveMFE == EMPTY_VALUE ? "" : DoubleToString(effectiveMFE, 2),
+                effectiveMAE == EMPTY_VALUE ? "" : DoubleToString(effectiveMAE, 2),
+                heldBars < 0 ? "" : IntegerToString(heldBars),
+                entryContext,
+                InpEvidenceProfileId,
+                InpEvidenceSourceHash,
+                InpEvidenceRunLabel);
+      FileFlush(m_handle);
+   }
+
+   static double SpreadPoints()
+   {
+      return (SymbolInfoDouble(_Symbol, SYMBOL_ASK) - SymbolInfoDouble(_Symbol, SYMBOL_BID)) / _Point;
+   }
+};
+
+CLogger logger;
+
+class CBlockDiagnostics
+{
+private:
+   int m_handle;
+
+   string BiasText(const ENUM_TRADE_BIAS bias) const
+   {
+      if(bias == BIAS_BUY)
+         return "buy";
+      if(bias == BIAS_SELL)
+         return "sell";
+      return "none";
+   }
+
+   string LaneText(const SSignal &signal) const
+   {
+      string lanes = "";
+      if(signal.isRangeReversion)
+         lanes += "range_reversion|";
+      if(signal.isBreakoutContinuation)
+         lanes += "breakout_continuation|";
+      if(signal.isPowerTrendContinuation)
+         lanes += "power_trend|";
+      if(signal.isSessionImpulse)
+         lanes += "session_impulse|";
+      if(signal.isM5TightLiquidity)
+         lanes += "m5_tight_liquidity|";
+      if(signal.isDailyDonchianBreakout)
+         lanes += "daily_donchian_breakout|";
+      if(signal.isFlatMonthBreakoutProbe)
+         lanes += "flat_breakout_probe|";
+      if(signal.isFlatMonthMicroReversion)
+         lanes += "flat_micro_reversion|";
+      if(signal.isFlatMonthStructuralDisplacement)
+         lanes += "flat_structural_displacement|";
+      if(signal.isFlatMonthLiquidityReclaim)
+         lanes += "flat_liquidity_reclaim|";
+      if(signal.isInSessionLiquidityPullback)
+         lanes += "in_session_liquidity_pullback|";
+      if(signal.isHighEfficiencyTrend)
+         lanes += "high_efficiency_trend|";
+      if(signal.isDiagnosticFallback)
+         lanes += "diagnostic_fallback|";
+
+      int length = StringLen(lanes);
+      if(length > 0)
+         return StringSubstr(lanes, 0, length - 1);
+      return "primary";
+   }
+
+public:
+   CBlockDiagnostics() : m_handle(INVALID_HANDLE) {}
+
+   void Init()
+   {
+      if(!InpUseBlockReasonDiagnostics)
+         return;
+
+      m_handle = FileOpen(InpBlockReasonDiagnosticsFile,
+                          FILE_READ | FILE_WRITE | FILE_CSV | FILE_COMMON | FILE_SHARE_READ | FILE_SHARE_WRITE);
+      if(m_handle == INVALID_HANDLE)
+         return;
+
+      bool writeHeader = (FileSize(m_handle) == 0);
+      if(writeHeader)
+      {
+         FileSeek(m_handle, 0, SEEK_SET);
+         FileWrite(m_handle, "time", "symbol", "month", "day", "hour", "reason",
+                   "trend_bias", "signal_bias", "confirmations", "quality_score",
+                   "price_action_score", "lanes", "spread_points", "atr", "signal_reasons");
+         FileFlush(m_handle);
+      }
+      FileSeek(m_handle, 0, SEEK_END);
+   }
+
+   void Close()
+   {
+      if(m_handle != INVALID_HANDLE)
+         FileClose(m_handle);
+      m_handle = INVALID_HANDLE;
+   }
+
+   void Write(const string reason, const ENUM_TRADE_BIAS trendBias, const SSignal &signal)
+   {
+      if(!InpUseBlockReasonDiagnostics || m_handle == INVALID_HANDLE)
+         return;
+
+      MqlDateTime dt;
+      TimeToStruct(TimeCurrent(), dt);
+      FileWrite(m_handle,
+                TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS),
+                _Symbol,
+                IntegerToString(dt.mon),
+                IntegerToString(dt.day),
+                IntegerToString(dt.hour),
+                reason,
+                BiasText(trendBias),
+                BiasText(signal.bias),
+                IntegerToString(signal.confirmations),
+                IntegerToString(signal.qualityScore),
+                IntegerToString(signal.priceActionScore),
+                LaneText(signal),
+                DoubleToString(CLogger::SpreadPoints(), 1),
+                DoubleToString(signal.atr, _Digits),
+                signal.reasons);
+      FileFlush(m_handle);
+   }
+};
+
+CBlockDiagnostics blockDiagnostics;
+
+class CSessionFilter
+{
+private:
+   bool InWindow(const int hour, const int startHour, const int endHour)
+   {
+      if(startHour == endHour)
+         return true;
+      if(startHour < endHour)
+         return hour >= startHour && hour < endHour;
+      return hour >= startHour || hour < endHour;
+   }
+
+   bool InOpenShockWindow(const int hour, const int minute, const int startHour)
+   {
+      int guardMinutes = MathMax(0, InpSessionOpenGuardMinutes);
+      if(guardMinutes <= 0)
+         return false;
+
+      int currentMinute = hour * 60 + minute;
+      int startMinute = MathMax(0, MathMin(23, startHour)) * 60;
+      int elapsed = currentMinute - startMinute;
+      if(elapsed < 0)
+         elapsed += 1440;
+      return elapsed >= 0 && elapsed < guardMinutes;
+   }
+
+   bool InCloseWindow(const int hour, const int minute, const int endHour, const int closeMinutes)
+   {
+      int minutes = MathMax(0, closeMinutes);
+      if(minutes <= 0)
+         return false;
+
+      int currentMinute = hour * 60 + minute;
+      int endMinute = MathMax(0, MathMin(23, endHour)) * 60;
+      int startMinute = endMinute - minutes;
+      if(startMinute < 0)
+         startMinute += 1440;
+
+      if(startMinute <= endMinute)
+         return currentMinute >= startMinute && currentMinute < endMinute;
+      return currentMinute >= startMinute || currentMinute < endMinute;
+   }
+
+public:
+   bool TradingDayAllowed()
+   {
+      MqlDateTime dt;
+      TimeToStruct(TimeCurrent(), dt);
+      if(InpDisableSunday && dt.day_of_week == 0)
+         return false;
+      if(InpDisableFridayEvening && dt.day_of_week == 5 && dt.hour >= InpFridayCutoffHour)
+         return false;
+      return true;
+   }
+
+   bool IsAllowed()
+   {
+      MqlDateTime dt;
+      TimeToStruct(TimeCurrent(), dt);
+
+      if(!TradingDayAllowed())
+         return false;
+
+      if(!InpUseSessionFilter)
+         return true;
+
+      bool allowed = false;
+      if(InpUseLondonSession && InWindow(dt.hour, InpLondonStartHour, InpLondonEndHour))
+         allowed = true;
+      if(InpUseNewYorkSession && InWindow(dt.hour, InpNewYorkStartHour, InpNewYorkEndHour))
+         allowed = true;
+      if(InpUseCustomSession && InWindow(dt.hour, InpCustomStartHour, InpCustomEndHour))
+         allowed = true;
+
+      if(allowed && InpUseSessionOpenGuard)
+      {
+         if(InpGuardLondonOpen && InpUseLondonSession && InOpenShockWindow(dt.hour, dt.min, InpLondonStartHour))
+            return false;
+         if(InpGuardNewYorkOpen && InpUseNewYorkSession && InOpenShockWindow(dt.hour, dt.min, InpNewYorkStartHour))
+            return false;
+         if(InpGuardCustomOpen && InpUseCustomSession && InOpenShockWindow(dt.hour, dt.min, InpCustomStartHour))
+            return false;
+      }
+
+      return allowed;
+   }
+
+   string Label()
+   {
+      if(!InpUseSessionFilter)
+         return "All";
+      MqlDateTime dt;
+      TimeToStruct(TimeCurrent(), dt);
+      if(InpUseLondonSession && InWindow(dt.hour, InpLondonStartHour, InpLondonEndHour))
+         return "London";
+      if(InpUseNewYorkSession && InWindow(dt.hour, InpNewYorkStartHour, InpNewYorkEndHour))
+         return "New York";
+      if(InpUseCustomSession && InWindow(dt.hour, InpCustomStartHour, InpCustomEndHour))
+         return "Custom";
+      return "Closed";
+   }
+
+   bool LiquidSessionActive()
+   {
+      MqlDateTime dt;
+      TimeToStruct(TimeCurrent(), dt);
+      if(InpDisableSunday && dt.day_of_week == 0)
+         return false;
+      if(InpDisableFridayEvening && dt.day_of_week == 5 && dt.hour >= InpFridayCutoffHour)
+         return false;
+
+      if(InpUseLondonSession && InWindow(dt.hour, InpLondonStartHour, InpLondonEndHour))
+         return true;
+      if(InpUseNewYorkSession && InWindow(dt.hour, InpNewYorkStartHour, InpNewYorkEndHour))
+         return true;
+      return false;
+   }
+
+   bool CloseWindowActive()
+   {
+      if(!InpCloseBeforeSessionEnd || !InpUseSessionFilter)
+         return false;
+
+      MqlDateTime dt;
+      TimeToStruct(TimeCurrent(), dt);
+      int minutes = MathMax(0, InpSessionEndCloseMinutes);
+      if(minutes <= 0)
+         return false;
+
+      if(InpCloseAtLondonEnd && InpUseLondonSession && InCloseWindow(dt.hour, dt.min, InpLondonEndHour, minutes))
+         return true;
+      if(InpCloseAtNewYorkEnd && InpUseNewYorkSession && InCloseWindow(dt.hour, dt.min, InpNewYorkEndHour, minutes))
+         return true;
+      if(InpCloseAtCustomEnd && InpUseCustomSession && InCloseWindow(dt.hour, dt.min, InpCustomEndHour, minutes))
+         return true;
+      return false;
+   }
+
+   double RiskMultiplier()
+   {
+      if(!InpUseSessionRiskScaling)
+         return 1.0;
+      if(!InpUseSessionFilter)
+         return 1.0;
+
+      MqlDateTime dt;
+      TimeToStruct(TimeCurrent(), dt);
+      if(InpUseLondonSession && InWindow(dt.hour, InpLondonStartHour, InpLondonEndHour))
+         return MathMax(0.0, InpLondonRiskMultiplier);
+      if(InpUseNewYorkSession && InWindow(dt.hour, InpNewYorkStartHour, InpNewYorkEndHour))
+         return MathMax(0.0, InpNewYorkRiskMultiplier);
+      if(InpUseCustomSession && InWindow(dt.hour, InpCustomStartHour, InpCustomEndHour))
+         return MathMax(0.0, InpCustomSessionRiskMultiplier);
+      return 0.0;
+   }
+
+   double DayOfWeekRiskMultiplier()
+   {
+      if(!InpUseDayOfWeekRiskScaling)
+         return 1.0;
+
+      MqlDateTime dt;
+      TimeToStruct(TimeCurrent(), dt);
+      if(dt.day_of_week == 1)
+         return MathMax(0.0, InpMondayRiskMultiplier);
+      if(dt.day_of_week == 2)
+         return MathMax(0.0, InpTuesdayRiskMultiplier);
+      if(dt.day_of_week == 3)
+         return MathMax(0.0, InpWednesdayRiskMultiplier);
+      if(dt.day_of_week == 4)
+         return MathMax(0.0, InpThursdayRiskMultiplier);
+      if(dt.day_of_week == 5)
+         return MathMax(0.0, InpFridayRiskMultiplier);
+      return 0.0;
+   }
+};
+
+class CNewsFilter
+{
+public:
+   bool IsBlocked()
+   {
+      if(!InpUseManualNewsFilter || StringLen(InpNewsTimesCsv) == 0)
+         return false;
+
+      string parts[];
+      int count = StringSplit(InpNewsTimesCsv, ',', parts);
+      for(int i = 0; i < count; i++)
+      {
+         StringTrimLeft(parts[i]);
+         StringTrimRight(parts[i]);
+         datetime newsTime = StringToTime(parts[i]);
+         if(newsTime <= 0)
+            continue;
+
+         datetime fromTime = newsTime - InpNewsMinutesBefore * 60;
+         datetime toTime = newsTime + InpNewsMinutesAfter * 60;
+         if(TimeCurrent() >= fromTime && TimeCurrent() <= toTime)
+            return true;
+      }
+      return false;
+   }
+};
+
+class CRiskManager
+{
+private:
+   datetime m_lastLossTime;
+   int m_consecutiveLosses;
+   double m_initialEquity;
+   double m_initialBalance;
+   double m_peakEquity;
+   datetime m_dailyProfitStart;
+   datetime m_weeklyProfitStart;
+   datetime m_monthlyProfitStart;
+   datetime m_dailyEquityStart;
+   double m_dailyPeakProfit;
+   double m_weeklyPeakProfit;
+   double m_monthlyPeakProfit;
+   double m_openBasketPeakProfit;
+   double m_dailyStartEquity;
+   double m_dailyPeakEquity;
+
+   double PeriodProfit(const ENUM_TIMEFRAMES period)
+   {
+      datetime start = iTime(_Symbol, period, 0);
+      if(start <= 0)
+         return 0.0;
+
+      HistorySelect(start, TimeCurrent());
+      double profit = 0.0;
+      int total = HistoryDealsTotal();
+      for(int i = 0; i < total; i++)
+      {
+         ulong ticket = HistoryDealGetTicket(i);
+         if(ticket == 0)
+            continue;
+         if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+            continue;
+         profit += HistoryDealGetDouble(ticket, DEAL_PROFIT);
+         profit += HistoryDealGetDouble(ticket, DEAL_SWAP);
+         profit += HistoryDealGetDouble(ticket, DEAL_COMMISSION);
+      }
+      return profit;
+   }
+
+   bool LossLimitHit(const double periodProfit, const double maxLossPercent)
+   {
+      if(maxLossPercent <= 0)
+         return false;
+      double limit = AccountInfoDouble(ACCOUNT_BALANCE) * maxLossPercent / 100.0;
+      return periodProfit <= -limit;
+   }
+
+   bool ProfitLockHit(const double periodProfit, const bool enabled, const double lockPercent)
+   {
+      if(!enabled || lockPercent <= 0.0)
+         return false;
+      double target = AccountInfoDouble(ACCOUNT_BALANCE) * lockPercent / 100.0;
+      return periodProfit >= target;
+   }
+
+   int PeriodEntryCount(const ENUM_TIMEFRAMES period)
+   {
+      datetime start = iTime(_Symbol, period, 0);
+      if(start <= 0)
+         return 0;
+
+      HistorySelect(start, TimeCurrent());
+      int count = 0;
+      int total = HistoryDealsTotal();
+      for(int i = 0; i < total; i++)
+      {
+         ulong ticket = HistoryDealGetTicket(i);
+         if(ticket == 0)
+            continue;
+         if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_IN)
+            continue;
+         count++;
+      }
+      return count;
+   }
+
+   datetime LastEntryTime()
+   {
+      HistorySelect(0, TimeCurrent());
+      datetime lastTime = 0;
+      int total = HistoryDealsTotal();
+      for(int i = total - 1; i >= 0; i--)
+      {
+         ulong ticket = HistoryDealGetTicket(i);
+         if(ticket == 0)
+            continue;
+         if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_IN)
+            continue;
+
+         lastTime = (datetime)HistoryDealGetInteger(ticket, DEAL_TIME);
+         break;
+      }
+      return lastTime;
+   }
+
+   int PeriodLossCount(const ENUM_TIMEFRAMES period)
+   {
+      datetime start = iTime(_Symbol, period, 0);
+      if(start <= 0)
+         return 0;
+
+      HistorySelect(start, TimeCurrent());
+      int count = 0;
+      int total = HistoryDealsTotal();
+      for(int i = 0; i < total; i++)
+      {
+         ulong ticket = HistoryDealGetTicket(i);
+         if(ticket == 0)
+            continue;
+         if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_OUT)
+            continue;
+
+         double profit = HistoryDealGetDouble(ticket, DEAL_PROFIT) +
+                         HistoryDealGetDouble(ticket, DEAL_SWAP) +
+                         HistoryDealGetDouble(ticket, DEAL_COMMISSION);
+         if(profit < 0.0)
+            count++;
+      }
+      return count;
+   }
+
+   double ProtectedProfitFloor()
+   {
+      if(InpMinProfitToProtectPercent <= 0.0)
+         return 0.0;
+      return AccountInfoDouble(ACCOUNT_BALANCE) * InpMinProfitToProtectPercent / 100.0;
+   }
+
+   bool ProfitGivebackHit(const ENUM_TIMEFRAMES period,
+                          const double currentProfit,
+                          const double givebackPercent,
+                          datetime &periodStart,
+                          double &peakProfit)
+   {
+      if(!InpUseProfitGivebackGuard || givebackPercent <= 0.0)
+         return false;
+
+      datetime start = iTime(_Symbol, period, 0);
+      if(start <= 0)
+         return false;
+
+      if(periodStart != start)
+      {
+         periodStart = start;
+         peakProfit = currentProfit;
+      }
+
+      if(currentProfit > peakProfit)
+         peakProfit = currentProfit;
+
+      double minProtectedProfit = ProtectedProfitFloor();
+      if(peakProfit < minProtectedProfit || peakProfit <= 0.0)
+         return false;
+
+      double giveback = peakProfit - currentProfit;
+      double allowedGiveback = peakProfit * givebackPercent / 100.0;
+      return giveback >= allowedGiveback;
+   }
+
+   bool DailyEquityTrailHit()
+   {
+      if(!InpUseDailyEquityTrailGuard || InpDailyEquityTrailGivebackPercent <= 0.0)
+         return false;
+
+      datetime start = iTime(_Symbol, PERIOD_D1, 0);
+      if(start <= 0)
+         return false;
+
+      double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+      if(equity <= 0.0)
+         return false;
+
+      if(m_dailyEquityStart != start)
+      {
+         m_dailyEquityStart = start;
+         m_dailyStartEquity = equity;
+         m_dailyPeakEquity = equity;
+      }
+
+      if(m_dailyStartEquity <= 0.0)
+         m_dailyStartEquity = equity;
+      if(m_dailyPeakEquity <= 0.0 || equity > m_dailyPeakEquity)
+         m_dailyPeakEquity = equity;
+
+      double peakGain = m_dailyPeakEquity - m_dailyStartEquity;
+      double minProtectedGain = AccountInfoDouble(ACCOUNT_BALANCE) *
+                                MathMax(0.0, InpDailyEquityTrailMinProfitPercent) / 100.0;
+      if(peakGain < minProtectedGain || peakGain <= 0.0)
+         return false;
+
+      double giveback = m_dailyPeakEquity - equity;
+      double allowedGiveback = peakGain * MathMax(0.0, InpDailyEquityTrailGivebackPercent) / 100.0;
+      return giveback >= allowedGiveback;
+   }
+
+   bool EquityProfitPeakTrailHit()
+   {
+      if(!InpUseEquityProfitPeakTrail || InpEquityProfitPeakTrailGivebackPercent <= 0.0)
+         return false;
+      if(m_initialEquity <= 0.0)
+         return false;
+
+      double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+      if(equity <= 0.0)
+         return false;
+
+      if(m_peakEquity <= 0.0 || equity > m_peakEquity)
+         m_peakEquity = equity;
+
+      double peakProfit = m_peakEquity - m_initialEquity;
+      double minProtectedProfit = m_initialEquity *
+                                  MathMax(0.0, InpEquityProfitPeakTrailMinProfitPercent) / 100.0;
+      if(peakProfit < minProtectedProfit || peakProfit <= 0.0)
+         return false;
+
+      double giveback = m_peakEquity - equity;
+      double allowedGiveback = peakProfit *
+                               MathMax(0.0, InpEquityProfitPeakTrailGivebackPercent) / 100.0;
+      return giveback >= allowedGiveback;
+   }
+
+   double OpenBasketProfit(int &positions)
+   {
+      positions = 0;
+      double profit = 0.0;
+      for(int i = PositionsTotal() - 1; i >= 0; i--)
+      {
+         ulong ticket = PositionGetTicket(i);
+         if(ticket == 0 || !PositionSelectByTicket(ticket))
+            continue;
+         if(PositionGetString(POSITION_SYMBOL) != _Symbol ||
+            PositionGetInteger(POSITION_MAGIC) != InpMagicNumber)
+            continue;
+
+         positions++;
+         profit += PositionGetDouble(POSITION_PROFIT);
+         profit += PositionGetDouble(POSITION_SWAP);
+      }
+      return profit;
+   }
+
+   bool OpenBasketProfitTrailHit()
+   {
+      if(!InpUseOpenBasketProfitTrail || InpOpenBasketTrailGivebackPercent <= 0.0)
+         return false;
+
+      int positions = 0;
+      double currentProfit = OpenBasketProfit(positions);
+      if(positions < MathMax(1, InpOpenBasketTrailMinPositions) || currentProfit <= 0.0)
+      {
+         m_openBasketPeakProfit = 0.0;
+         return false;
+      }
+
+      if(currentProfit > m_openBasketPeakProfit)
+         m_openBasketPeakProfit = currentProfit;
+
+      double minProtectedProfit = AccountInfoDouble(ACCOUNT_BALANCE) *
+                                  MathMax(0.0, InpOpenBasketTrailMinProfitPercent) / 100.0;
+      if(m_openBasketPeakProfit < minProtectedProfit || m_openBasketPeakProfit <= 0.0)
+         return false;
+
+      double giveback = m_openBasketPeakProfit - currentProfit;
+      double allowedGiveback = m_openBasketPeakProfit *
+                               MathMax(0.0, InpOpenBasketTrailGivebackPercent) / 100.0;
+      return giveback >= allowedGiveback;
+   }
+
+   double RiskMoneyForSymbolOrder(const string symbol,
+                                  const ENUM_ORDER_TYPE orderType,
+                                  const double entryPrice,
+                                  const double stopPrice,
+                                  const double lots)
+   {
+      if(StringLen(symbol) <= 0 ||
+         (orderType != ORDER_TYPE_BUY && orderType != ORDER_TYPE_SELL) ||
+         entryPrice <= 0.0 || stopPrice <= 0.0 || lots <= 0.0 ||
+         MathAbs(entryPrice - stopPrice) <= 0.0)
+         return 0.0;
+
+      double stopProfit = 0.0;
+      if(!OrderCalcProfit(orderType,
+                          symbol,
+                          lots,
+                          entryPrice,
+                          stopPrice,
+                          stopProfit))
+         return 0.0;
+
+      return MathAbs(stopProfit);
+   }
+
+   double RiskMoneyForOrder(const ENUM_ORDER_TYPE orderType,
+                            const double entryPrice,
+                            const double stopPrice,
+                            const double lots)
+   {
+      return RiskMoneyForSymbolOrder(_Symbol, orderType, entryPrice, stopPrice, lots);
+   }
+
+   double PositionRiskMoney(const ulong ticket, bool &unprotected)
+   {
+      if(ticket == 0 || !PositionSelectByTicket(ticket))
+         return 0.0;
+      if(PositionGetString(POSITION_SYMBOL) != _Symbol)
+         return 0.0;
+      if(PositionGetInteger(POSITION_MAGIC) != InpMagicNumber)
+         return 0.0;
+
+      double sl = PositionGetDouble(POSITION_SL);
+      double openPrice = PositionGetDouble(POSITION_PRICE_OPEN);
+      double volume = PositionGetDouble(POSITION_VOLUME);
+      long type = PositionGetInteger(POSITION_TYPE);
+      double stopDistance = 0.0;
+
+      if(sl <= 0.0 || openPrice <= 0.0 || volume <= 0.0)
+      {
+         unprotected = true;
+         return 0.0;
+      }
+
+      if(type == POSITION_TYPE_BUY)
+      {
+         if(sl >= openPrice)
+            return 0.0;
+         stopDistance = openPrice - sl;
+      }
+      else if(type == POSITION_TYPE_SELL)
+      {
+         if(sl <= openPrice)
+            return 0.0;
+         stopDistance = sl - openPrice;
+      }
+
+      if(stopDistance <= 0.0)
+      {
+         unprotected = true;
+         return 0.0;
+      }
+
+      ENUM_ORDER_TYPE orderType = (type == POSITION_TYPE_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+      double riskMoney = RiskMoneyForOrder(orderType, openPrice, sl, volume);
+      if(riskMoney <= 0.0)
+         unprotected = true;
+      return riskMoney;
+   }
+
+   double OpenRiskPercent(bool &hasUnprotectedPosition)
+   {
+      hasUnprotectedPosition = false;
+      double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+      if(equity <= 0.0)
+         return 0.0;
+
+      double riskMoney = 0.0;
+      for(int i = PositionsTotal() - 1; i >= 0; i--)
+      {
+         ulong ticket = PositionGetTicket(i);
+         bool unprotected = false;
+         riskMoney += PositionRiskMoney(ticket, unprotected);
+         if(unprotected)
+            hasUnprotectedPosition = true;
+      }
+
+      return 100.0 * riskMoney / equity;
+   }
+
+   double AccountPositionRiskMoney(const ulong ticket, bool &unprotected)
+   {
+      unprotected = false;
+      if(ticket == 0 || !PositionSelectByTicket(ticket))
+         return 0.0;
+
+      string symbol = PositionGetString(POSITION_SYMBOL);
+      double sl = PositionGetDouble(POSITION_SL);
+      double openPrice = PositionGetDouble(POSITION_PRICE_OPEN);
+      double volume = PositionGetDouble(POSITION_VOLUME);
+      long type = PositionGetInteger(POSITION_TYPE);
+      if(StringLen(symbol) <= 0 || sl <= 0.0 || openPrice <= 0.0 || volume <= 0.0)
+      {
+         unprotected = true;
+         return 0.0;
+      }
+
+      ENUM_ORDER_TYPE orderType;
+      if(type == POSITION_TYPE_BUY)
+      {
+         if(sl >= openPrice)
+            return 0.0;
+         orderType = ORDER_TYPE_BUY;
+      }
+      else if(type == POSITION_TYPE_SELL)
+      {
+         if(sl <= openPrice)
+            return 0.0;
+         orderType = ORDER_TYPE_SELL;
+      }
+      else
+      {
+         unprotected = true;
+         return 0.0;
+      }
+
+      double riskMoney = RiskMoneyForSymbolOrder(symbol, orderType, openPrice, sl, volume);
+      if(riskMoney <= 0.0)
+         unprotected = true;
+      return riskMoney;
+   }
+
+   double AccountWideOpenRiskPercent(bool &hasUnprotectedPosition,
+                                     int &positionCount)
+   {
+      hasUnprotectedPosition = false;
+      positionCount = 0;
+      double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+      if(equity <= 0.0)
+         return -1.0;
+
+      double riskMoney = 0.0;
+      for(int i = PositionsTotal() - 1; i >= 0; i--)
+      {
+         ulong ticket = PositionGetTicket(i);
+         if(ticket == 0 || !PositionSelectByTicket(ticket))
+            continue;
+         positionCount++;
+         bool unprotected = false;
+         riskMoney += AccountPositionRiskMoney(ticket, unprotected);
+         if(unprotected)
+            hasUnprotectedPosition = true;
+      }
+
+      return 100.0 * riskMoney / equity;
+   }
+
+   bool RecentPerformanceSample(const int lookbackTrades,
+                                double &netPercent,
+                                datetime &latestCloseTime)
+   {
+      netPercent = 0.0;
+      latestCloseTime = 0;
+      if(lookbackTrades <= 0)
+         return false;
+
+      HistorySelect(0, TimeCurrent());
+      int found = 0;
+      double netProfit = 0.0;
+      int total = HistoryDealsTotal();
+      for(int i = total - 1; i >= 0 && found < lookbackTrades; i--)
+      {
+         ulong ticket = HistoryDealGetTicket(i);
+         if(ticket == 0)
+            continue;
+         if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_OUT)
+            continue;
+
+         netProfit += HistoryDealGetDouble(ticket, DEAL_PROFIT);
+         netProfit += HistoryDealGetDouble(ticket, DEAL_SWAP);
+         netProfit += HistoryDealGetDouble(ticket, DEAL_COMMISSION);
+         if(latestCloseTime == 0)
+            latestCloseTime = (datetime)HistoryDealGetInteger(ticket, DEAL_TIME);
+         found++;
+      }
+
+      if(found < lookbackTrades)
+         return false;
+
+      double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+      if(balance <= 0.0)
+         return false;
+
+      netPercent = 100.0 * netProfit / balance;
+      return true;
+   }
+
+   bool RecentPerformanceRMultipleSample(const int lookbackTrades,
+                                         double &averageR,
+                                         datetime &latestCloseTime)
+   {
+      averageR = 0.0;
+      latestCloseTime = 0;
+      if(lookbackTrades <= 0)
+         return false;
+
+      HistorySelect(0, TimeCurrent());
+      int found = 0;
+      double totalR = 0.0;
+      int total = HistoryDealsTotal();
+      for(int i = total - 1; i >= 0 && found < lookbackTrades; i--)
+      {
+         ulong exitDeal = HistoryDealGetTicket(i);
+         if(exitDeal == 0)
+            continue;
+         if(HistoryDealGetString(exitDeal, DEAL_SYMBOL) != _Symbol)
+            continue;
+         if(HistoryDealGetInteger(exitDeal, DEAL_MAGIC) != InpMagicNumber)
+            continue;
+         if(HistoryDealGetInteger(exitDeal, DEAL_ENTRY) != DEAL_ENTRY_OUT)
+            continue;
+
+         long positionId = HistoryDealGetInteger(exitDeal, DEAL_POSITION_ID);
+         if(positionId <= 0)
+            continue;
+
+         double closeVolume = HistoryDealGetDouble(exitDeal, DEAL_VOLUME);
+         double entryPrice = 0.0;
+         double entryStop = 0.0;
+         long entryType = -1;
+
+         for(int j = i - 1; j >= 0; j--)
+         {
+            ulong entryDeal = HistoryDealGetTicket(j);
+            if(entryDeal == 0)
+               continue;
+            if(HistoryDealGetInteger(entryDeal, DEAL_POSITION_ID) != positionId)
+               continue;
+            if(HistoryDealGetInteger(entryDeal, DEAL_ENTRY) != DEAL_ENTRY_IN)
+               continue;
+
+            entryPrice = HistoryDealGetDouble(entryDeal, DEAL_PRICE);
+            entryStop = HistoryDealGetDouble(entryDeal, DEAL_SL);
+            entryType = HistoryDealGetInteger(entryDeal, DEAL_TYPE);
+            break;
+         }
+
+         if(entryPrice <= 0.0 || entryStop <= 0.0 || closeVolume <= 0.0)
+            continue;
+
+         double stopDistance = 0.0;
+         if(entryType == DEAL_TYPE_BUY)
+            stopDistance = entryPrice - entryStop;
+         else if(entryType == DEAL_TYPE_SELL)
+            stopDistance = entryStop - entryPrice;
+
+         if(stopDistance <= 0.0)
+            continue;
+
+         ENUM_ORDER_TYPE orderType = (entryType == DEAL_TYPE_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+         double riskMoney = RiskMoneyForOrder(orderType, entryPrice, entryStop, closeVolume);
+         if(riskMoney <= 0.0)
+            continue;
+
+         double profit = HistoryDealGetDouble(exitDeal, DEAL_PROFIT) +
+                         HistoryDealGetDouble(exitDeal, DEAL_SWAP) +
+                         HistoryDealGetDouble(exitDeal, DEAL_COMMISSION);
+         totalR += profit / riskMoney;
+         if(latestCloseTime == 0)
+            latestCloseTime = (datetime)HistoryDealGetInteger(exitDeal, DEAL_TIME);
+         found++;
+      }
+
+      if(found < lookbackTrades)
+         return false;
+
+      averageR = totalR / found;
+      return true;
+   }
+
+   bool EntryCommentForPosition(const long positionId, string &comment)
+   {
+      comment = "";
+      if(positionId <= 0)
+         return false;
+
+      int total = HistoryDealsTotal();
+      for(int j = total - 1; j >= 0; j--)
+      {
+         ulong entryDeal = HistoryDealGetTicket(j);
+         if(entryDeal == 0)
+            continue;
+         if(HistoryDealGetInteger(entryDeal, DEAL_POSITION_ID) != positionId)
+            continue;
+         if(HistoryDealGetString(entryDeal, DEAL_SYMBOL) != _Symbol)
+            continue;
+         if(HistoryDealGetInteger(entryDeal, DEAL_MAGIC) != InpMagicNumber)
+            continue;
+         if(HistoryDealGetInteger(entryDeal, DEAL_ENTRY) != DEAL_ENTRY_IN)
+            continue;
+
+         comment = HistoryDealGetString(entryDeal, DEAL_COMMENT);
+         return true;
+      }
+      return false;
+   }
+
+   bool SetupLanePerformanceSampleWindow(const string laneNeedle,
+                                         const int lookbackTrades,
+                                         const int minTrades,
+                                         double &averageR,
+                                         int &sampleTrades,
+                                         datetime &latestCloseTime)
+   {
+      averageR = 0.0;
+      sampleTrades = 0;
+      latestCloseTime = 0;
+      if(StringLen(laneNeedle) <= 0 || lookbackTrades <= 0)
+         return false;
+
+      HistorySelect(0, TimeCurrent());
+      double totalR = 0.0;
+      int total = HistoryDealsTotal();
+      for(int i = total - 1; i >= 0 && sampleTrades < lookbackTrades; i--)
+      {
+         ulong exitDeal = HistoryDealGetTicket(i);
+         if(exitDeal == 0)
+            continue;
+         if(HistoryDealGetString(exitDeal, DEAL_SYMBOL) != _Symbol)
+            continue;
+         if(HistoryDealGetInteger(exitDeal, DEAL_MAGIC) != InpMagicNumber)
+            continue;
+         if(HistoryDealGetInteger(exitDeal, DEAL_ENTRY) != DEAL_ENTRY_OUT)
+            continue;
+
+         long positionId = HistoryDealGetInteger(exitDeal, DEAL_POSITION_ID);
+         string entryComment = "";
+         if(!EntryCommentForPosition(positionId, entryComment))
+            continue;
+         if(StringFind(entryComment, laneNeedle) < 0)
+            continue;
+
+         double closeVolume = HistoryDealGetDouble(exitDeal, DEAL_VOLUME);
+         double entryPrice = 0.0;
+         double entryStop = 0.0;
+         long entryType = -1;
+         for(int j = i - 1; j >= 0; j--)
+         {
+            ulong entryDeal = HistoryDealGetTicket(j);
+            if(entryDeal == 0)
+               continue;
+            if(HistoryDealGetInteger(entryDeal, DEAL_POSITION_ID) != positionId)
+               continue;
+            if(HistoryDealGetInteger(entryDeal, DEAL_ENTRY) != DEAL_ENTRY_IN)
+               continue;
+
+            entryPrice = HistoryDealGetDouble(entryDeal, DEAL_PRICE);
+            entryStop = HistoryDealGetDouble(entryDeal, DEAL_SL);
+            entryType = HistoryDealGetInteger(entryDeal, DEAL_TYPE);
+            break;
+         }
+
+         if(entryPrice <= 0.0 || entryStop <= 0.0 || closeVolume <= 0.0)
+            continue;
+
+         double stopDistance = 0.0;
+         if(entryType == DEAL_TYPE_BUY)
+            stopDistance = entryPrice - entryStop;
+         else if(entryType == DEAL_TYPE_SELL)
+            stopDistance = entryStop - entryPrice;
+         if(stopDistance <= 0.0)
+            continue;
+
+         ENUM_ORDER_TYPE orderType = (entryType == DEAL_TYPE_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+         double riskMoney = RiskMoneyForOrder(orderType, entryPrice, entryStop, closeVolume);
+         if(riskMoney <= 0.0)
+            continue;
+
+         double profit = HistoryDealGetDouble(exitDeal, DEAL_PROFIT) +
+                         HistoryDealGetDouble(exitDeal, DEAL_SWAP) +
+                         HistoryDealGetDouble(exitDeal, DEAL_COMMISSION);
+         totalR += profit / riskMoney;
+         if(latestCloseTime == 0)
+            latestCloseTime = (datetime)HistoryDealGetInteger(exitDeal, DEAL_TIME);
+         sampleTrades++;
+      }
+
+      if(sampleTrades < MathMax(1, minTrades))
+         return false;
+
+      averageR = totalR / sampleTrades;
+      return true;
+   }
+
+   bool SetupLanePerformanceSample(const string laneNeedle,
+                                   double &averageR,
+                                   int &sampleTrades,
+                                   datetime &latestCloseTime)
+   {
+      return SetupLanePerformanceSampleWindow(laneNeedle,
+                                             InpSetupLanePerformanceLookbackTrades,
+                                             InpSetupLanePerformanceMinTrades,
+                                             averageR,
+                                             sampleTrades,
+                                             latestCloseTime);
+   }
+
+   bool RecentProfitFactorSample(const int lookbackTrades,
+                                 double &profitFactor,
+                                 datetime &latestCloseTime)
+   {
+      profitFactor = 0.0;
+      latestCloseTime = 0;
+      if(lookbackTrades <= 0)
+         return false;
+
+      HistorySelect(0, TimeCurrent());
+      int found = 0;
+      double grossProfit = 0.0;
+      double grossLoss = 0.0;
+      int total = HistoryDealsTotal();
+      for(int i = total - 1; i >= 0 && found < lookbackTrades; i--)
+      {
+         ulong ticket = HistoryDealGetTicket(i);
+         if(ticket == 0)
+            continue;
+         if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_OUT)
+            continue;
+
+         double profit = HistoryDealGetDouble(ticket, DEAL_PROFIT) +
+                         HistoryDealGetDouble(ticket, DEAL_SWAP) +
+                         HistoryDealGetDouble(ticket, DEAL_COMMISSION);
+         if(profit > 0.0)
+            grossProfit += profit;
+         else if(profit < 0.0)
+            grossLoss += -profit;
+         if(latestCloseTime == 0)
+            latestCloseTime = (datetime)HistoryDealGetInteger(ticket, DEAL_TIME);
+         found++;
+      }
+
+      if(found < lookbackTrades || grossProfit <= 0.0)
+         return false;
+      if(grossLoss <= 0.0)
+         profitFactor = MathMax(1.0, InpRecentProfitFactorFull);
+      else
+         profitFactor = grossProfit / grossLoss;
+
+      return true;
+   }
+
+   bool RecentPerformanceWeak()
+   {
+      if(!InpUseRecentPerformanceRiskThrottle)
+         return false;
+
+      double netPercent = 0.0;
+      datetime latestCloseTime = 0;
+      if(!RecentPerformanceSample(InpRecentPerformanceLookbackTrades, netPercent, latestCloseTime))
+         return false;
+
+      return netPercent <= InpRecentPerformanceMinNetPercent;
+   }
+
+   bool RecentPerformancePauseActive()
+   {
+      if(!InpUseRecentPerformanceTradePause || InpRecentPerformancePauseMinutes <= 0)
+         return false;
+
+      double netPercent = 0.0;
+      datetime latestCloseTime = 0;
+      if(!RecentPerformanceSample(InpRecentPerformancePauseLookbackTrades, netPercent, latestCloseTime))
+         return false;
+
+      if(netPercent > InpRecentPerformancePauseMaxNetPercent)
+         return false;
+      if(latestCloseTime <= 0)
+         return false;
+
+      return TimeCurrent() - latestCloseTime < InpRecentPerformancePauseMinutes * 60;
+   }
+
+   bool RecentPerformanceRPauseActive()
+   {
+      if(!InpUseRecentPerformanceRTradePause || InpRecentPerformanceRPauseMinutes <= 0)
+         return false;
+
+      double averageR = 0.0;
+      datetime latestCloseTime = 0;
+      if(!RecentPerformanceRMultipleSample(InpRecentPerformanceRPauseLookbackTrades, averageR, latestCloseTime))
+         return false;
+
+      if(averageR > InpRecentPerformancePauseMaxAverageR)
+         return false;
+      if(latestCloseTime <= 0)
+         return false;
+
+      return TimeCurrent() - latestCloseTime < InpRecentPerformanceRPauseMinutes * 60;
+   }
+
+public:
+   double OpenRiskPercentForDashboard(bool &hasUnprotectedPosition)
+   {
+      return OpenRiskPercent(hasUnprotectedPosition);
+   }
+
+   bool RecentPerformanceQualityAllows(const int qualityScore, string &reason)
+   {
+      if(!InpUseRecentPerformanceQualityGate)
+         return true;
+
+      double netPercent = 0.0;
+      datetime latestCloseTime = 0;
+      if(!RecentPerformanceSample(InpRecentPerformanceQualityLookbackTrades, netPercent, latestCloseTime))
+         return true;
+
+      if(netPercent > InpRecentPerformanceQualityMaxNetPercent)
+         return true;
+
+      if(qualityScore >= InpRecentPerformanceMinQualityScore)
+         return true;
+
+      reason = "recent performance quality";
+      return false;
+   }
+
+   bool RecentPerformanceRQualityAllows(const int qualityScore, string &reason)
+   {
+      if(!InpUseRecentPerformanceRQualityGate)
+         return true;
+
+      double averageR = 0.0;
+      datetime latestCloseTime = 0;
+      if(!RecentPerformanceRMultipleSample(InpRecentPerformanceRLookbackTrades, averageR, latestCloseTime))
+         return true;
+
+      if(averageR > InpRecentPerformanceMaxAverageR)
+         return true;
+
+      if(qualityScore >= InpRecentPerformanceRMinQualityScore)
+         return true;
+
+      reason = "recent average R quality";
+      return false;
+   }
+
+   double RecentPerformanceRRiskMultiplier()
+   {
+      if(!InpUseRecentPerformanceRRiskScaling)
+         return 1.0;
+
+      double averageR = 0.0;
+      datetime latestCloseTime = 0;
+      if(!RecentPerformanceRMultipleSample(InpRecentPerformanceRRiskLookbackTrades, averageR, latestCloseTime))
+         return 1.0;
+
+      double startR = InpRecentPerformanceRRiskStartAverageR;
+      double fullR = MathMin(startR - 0.01, InpRecentPerformanceRRiskFullAverageR);
+      if(averageR >= startR)
+         return 1.0;
+      if(averageR <= fullR)
+         return MathMax(0.0, MathMin(1.0, InpMinRecentPerformanceRRiskMultiplier));
+
+      double minMultiplier = MathMax(0.0, MathMin(1.0, InpMinRecentPerformanceRRiskMultiplier));
+      double progress = (startR - averageR) / (startR - fullR);
+      progress = MathMin(1.0, MathMax(0.0, progress));
+      return 1.0 - progress * (1.0 - minMultiplier);
+   }
+
+   double SetupLanePerformanceRiskMultiplier(const bool isRangeReversion,
+                                             const bool isBreakoutContinuation,
+                                             const bool isPowerTrendContinuation,
+                                             const bool isSessionImpulse)
+   {
+      if(!InpUseSetupLanePerformanceRiskScaling)
+         return 1.0;
+
+      string laneNeedle = "";
+      if(isPowerTrendContinuation)
+         laneNeedle = "PTC;";
+      else if(isSessionImpulse)
+         laneNeedle = "SIL;";
+      else if(isRangeReversion)
+         laneNeedle = "RRO;";
+      else if(isBreakoutContinuation)
+         laneNeedle = "BCQ;";
+      else
+         return 1.0;
+
+      double averageR = 0.0;
+      int sampleTrades = 0;
+      datetime latestCloseTime = 0;
+      if(!SetupLanePerformanceSample(laneNeedle, averageR, sampleTrades, latestCloseTime))
+         return 1.0;
+
+      double minMultiplier = MathMax(0.0, MathMin(1.0, InpMinSetupLaneRiskMultiplier));
+      double maxMultiplier = MathMax(1.0, InpMaxSetupLaneRiskMultiplier);
+      double weakR = InpSetupLaneWeakAverageR;
+      double strongR = MathMax(weakR + 0.01, InpSetupLaneStrongAverageR);
+
+      if(averageR <= weakR)
+         return minMultiplier;
+      if(averageR >= strongR)
+      {
+         if(InpSetupLaneBoostRequiresClosedProfit && !GrowthBoostAllowed())
+            return 1.0;
+         return maxMultiplier;
+      }
+
+      double progress = (averageR - weakR) / (strongR - weakR);
+      progress = MathMin(1.0, MathMax(0.0, progress));
+      double multiplier = minMultiplier + progress * (1.0 - minMultiplier);
+      if(multiplier > 1.0)
+      {
+         if(InpSetupLaneBoostRequiresClosedProfit && !GrowthBoostAllowed())
+            return 1.0;
+         double boostProgress = (averageR - 0.0) / MathMax(0.01, strongR);
+         boostProgress = MathMin(1.0, MathMax(0.0, boostProgress));
+         return 1.0 + boostProgress * (maxMultiplier - 1.0);
+      }
+      return multiplier;
+   }
+
+   double DiagnosticFallbackPerformanceRiskMultiplier(const bool isDiagnosticFallback)
+   {
+      if(!InpUseDiagnosticFallbackPerformanceRiskScaling || !isDiagnosticFallback)
+         return 1.0;
+
+      double averageR = 0.0;
+      int sampleTrades = 0;
+      datetime latestCloseTime = 0;
+      if(!SetupLanePerformanceSampleWindow("DGF;",
+                                           InpDiagnosticFallbackPerformanceLookbackTrades,
+                                           InpDiagnosticFallbackPerformanceMinTrades,
+                                           averageR,
+                                           sampleTrades,
+                                           latestCloseTime))
+         return 1.0;
+
+      double minMultiplier = MathMax(0.0, MathMin(1.0, InpMinDiagnosticFallbackPerformanceRiskMultiplier));
+      double weakR = InpDiagnosticFallbackWeakAverageR;
+      double strongR = MathMax(weakR + 0.01, InpDiagnosticFallbackStrongAverageR);
+      if(averageR <= weakR)
+         return minMultiplier;
+      if(averageR >= strongR)
+         return 1.0;
+
+      double progress = (averageR - weakR) / (strongR - weakR);
+      progress = MathMin(1.0, MathMax(0.0, progress));
+      return minMultiplier + progress * (1.0 - minMultiplier);
+   }
+
+   bool DiagnosticFallbackRecentAverageR(const int lookbackTrades,
+                                         const int minTrades,
+                                         double &averageR,
+                                         int &sampleTrades,
+                                         datetime &latestCloseTime)
+   {
+      return SetupLanePerformanceSampleWindow("DGF;",
+                                             lookbackTrades,
+                                             minTrades,
+                                             averageR,
+                                             sampleTrades,
+                                             latestCloseTime);
+   }
+
+   bool HourPerformanceSample(double &netPercent, int &sampleTrades)
+   {
+      netPercent = 0.0;
+      sampleTrades = 0;
+      if((!InpUseHourPerformanceRiskScaling && !InpUseHourPerformanceQualityGate) ||
+         InpHourPerformanceLookbackDays <= 0)
+         return false;
+
+      MqlDateTime nowStruct;
+      TimeToStruct(TimeCurrent(), nowStruct);
+      datetime start = TimeCurrent() - MathMax(1, InpHourPerformanceLookbackDays) * 86400;
+      if(!HistorySelect(start, TimeCurrent()))
+         return false;
+
+      double netProfit = 0.0;
+      int total = HistoryDealsTotal();
+      for(int i = total - 1; i >= 0; i--)
+      {
+         ulong ticket = HistoryDealGetTicket(i);
+         if(ticket == 0)
+            continue;
+         if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_OUT)
+            continue;
+
+         datetime closeTime = (datetime)HistoryDealGetInteger(ticket, DEAL_TIME);
+         MqlDateTime closeStruct;
+         TimeToStruct(closeTime, closeStruct);
+         if(closeStruct.hour != nowStruct.hour)
+            continue;
+
+         netProfit += HistoryDealGetDouble(ticket, DEAL_PROFIT);
+         netProfit += HistoryDealGetDouble(ticket, DEAL_SWAP);
+         netProfit += HistoryDealGetDouble(ticket, DEAL_COMMISSION);
+         sampleTrades++;
+      }
+
+      if(sampleTrades < MathMax(1, InpHourPerformanceMinTrades))
+         return false;
+
+      double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+      if(balance <= 0.0)
+         return false;
+
+      netPercent = 100.0 * netProfit / balance;
+      return true;
+   }
+
+   double HourPerformanceRiskMultiplier()
+   {
+      if(!InpUseHourPerformanceRiskScaling)
+         return 1.0;
+
+      double netPercent = 0.0;
+      int sampleTrades = 0;
+      if(!HourPerformanceSample(netPercent, sampleTrades))
+         return 1.0;
+
+      double minMultiplier = MathMax(0.0, MathMin(1.0, InpMinHourPerformanceRiskMultiplier));
+      double maxMultiplier = MathMax(1.0, InpMaxHourPerformanceRiskMultiplier);
+      double weak = InpHourPerformanceWeakNetPercent;
+      double strong = MathMax(weak + 0.01, InpHourPerformanceStrongNetPercent);
+
+      if(netPercent <= weak)
+         return minMultiplier;
+
+      if(netPercent >= strong)
+      {
+         if(InpHourPerformanceBoostRequiresClosedProfit && !GrowthBoostAllowed())
+            return 1.0;
+         double progress = (netPercent - strong) / MathMax(0.01, strong);
+         progress = MathMin(1.0, MathMax(0.0, progress));
+         return 1.0 + progress * (maxMultiplier - 1.0);
+      }
+
+      if(netPercent < 0.0)
+      {
+         double progress = (netPercent - weak) / (0.0 - weak);
+         progress = MathMin(1.0, MathMax(0.0, progress));
+         return minMultiplier + progress * (1.0 - minMultiplier);
+      }
+
+      return 1.0;
+   }
+
+   bool HourPerformanceQualityAllows(const int qualityScore, string &reason)
+   {
+      reason = "";
+      if(!InpUseHourPerformanceQualityGate)
+         return true;
+
+      double netPercent = 0.0;
+      int sampleTrades = 0;
+      if(!HourPerformanceSample(netPercent, sampleTrades))
+         return true;
+
+      if(netPercent > InpHourPerformanceWeakNetPercent)
+         return true;
+
+      if(qualityScore >= InpHourPerformanceMinQualityScore)
+         return true;
+
+      reason = "hour performance quality";
+      return false;
+   }
+
+   ENUM_TRADE_BIAS EntryBiasForPosition(const long positionId)
+   {
+      if(positionId <= 0)
+         return BIAS_NONE;
+
+      int total = HistoryDealsTotal();
+      for(int i = 0; i < total; i++)
+      {
+         ulong ticket = HistoryDealGetTicket(i);
+         if(ticket == 0)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_POSITION_ID) != positionId)
+            continue;
+         if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_IN)
+            continue;
+
+         long dealType = HistoryDealGetInteger(ticket, DEAL_TYPE);
+         if(dealType == DEAL_TYPE_BUY)
+            return BIAS_BUY;
+         if(dealType == DEAL_TYPE_SELL)
+            return BIAS_SELL;
+      }
+
+      return BIAS_NONE;
+   }
+
+   bool DirectionalHourPerformanceSample(const ENUM_TRADE_BIAS bias,
+                                         double &netPercent,
+                                         int &sampleTrades)
+   {
+      netPercent = 0.0;
+      sampleTrades = 0;
+      if(bias == BIAS_NONE ||
+         (!InpUseDirectionalHourPerformanceRiskScaling &&
+          !InpUseDirectionalHourPerformanceQualityGate &&
+          !InpUseDirectionalHourTakeProfitExpansion) ||
+         InpDirectionalHourPerformanceLookbackDays <= 0)
+         return false;
+
+      datetime start = TimeCurrent() - MathMax(1, InpDirectionalHourPerformanceLookbackDays) * 86400;
+      if(!HistorySelect(start, TimeCurrent()))
+         return false;
+
+      MqlDateTime nowTime;
+      TimeToStruct(TimeCurrent(), nowTime);
+      double netProfit = 0.0;
+      int total = HistoryDealsTotal();
+      for(int i = total - 1; i >= 0; i--)
+      {
+         ulong ticket = HistoryDealGetTicket(i);
+         if(ticket == 0)
+            continue;
+         if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_OUT)
+            continue;
+
+         datetime closeTime = (datetime)HistoryDealGetInteger(ticket, DEAL_TIME);
+         MqlDateTime dealTime;
+         TimeToStruct(closeTime, dealTime);
+         if(dealTime.hour != nowTime.hour)
+            continue;
+
+         long positionId = HistoryDealGetInteger(ticket, DEAL_POSITION_ID);
+         if(EntryBiasForPosition(positionId) != bias)
+            continue;
+
+         netProfit += HistoryDealGetDouble(ticket, DEAL_PROFIT);
+         netProfit += HistoryDealGetDouble(ticket, DEAL_SWAP);
+         netProfit += HistoryDealGetDouble(ticket, DEAL_COMMISSION);
+         sampleTrades++;
+      }
+
+      if(sampleTrades < MathMax(1, InpDirectionalHourPerformanceMinTrades))
+         return false;
+
+      double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+      if(balance <= 0.0)
+         return false;
+
+      netPercent = 100.0 * netProfit / balance;
+      return true;
+   }
+
+   double DirectionalHourPerformanceRiskMultiplier(const ENUM_TRADE_BIAS bias)
+   {
+      if(!InpUseDirectionalHourPerformanceRiskScaling)
+         return 1.0;
+
+      double netPercent = 0.0;
+      int sampleTrades = 0;
+      if(!DirectionalHourPerformanceSample(bias, netPercent, sampleTrades))
+         return 1.0;
+
+      double minMultiplier = MathMax(0.0, MathMin(1.0, InpMinDirectionalHourPerformanceRiskMultiplier));
+      double maxMultiplier = MathMax(1.0, InpMaxDirectionalHourPerformanceRiskMultiplier);
+      double weak = InpDirectionalHourPerformanceWeakNetPercent;
+      double strong = MathMax(weak + 0.01, InpDirectionalHourPerformanceStrongNetPercent);
+
+      if(netPercent <= weak)
+         return minMultiplier;
+      if(netPercent >= strong)
+      {
+         if(InpDirectionalHourPerformanceBoostRequiresClosedProfit && !GrowthBoostAllowed())
+            return 1.0;
+         return maxMultiplier;
+      }
+
+      double progress = (netPercent - weak) / (strong - weak);
+      progress = MathMin(1.0, MathMax(0.0, progress));
+      double neutralRange = 0.0;
+      if(weak < 0.0 && strong > 0.0)
+         neutralRange = (0.0 - weak) / (strong - weak);
+
+      if(progress <= neutralRange)
+      {
+         double scaledProgress = (neutralRange <= 0.0) ? 1.0 : progress / neutralRange;
+         return minMultiplier + scaledProgress * (1.0 - minMultiplier);
+      }
+
+      if(InpDirectionalHourPerformanceBoostRequiresClosedProfit && !GrowthBoostAllowed())
+         return 1.0;
+
+      double boostProgress = (1.0 - neutralRange <= 0.0) ? 1.0 :
+                             (progress - neutralRange) / (1.0 - neutralRange);
+      boostProgress = MathMin(1.0, MathMax(0.0, boostProgress));
+      return 1.0 + boostProgress * (maxMultiplier - 1.0);
+   }
+
+   bool DirectionalHourPerformanceQualityAllows(const ENUM_TRADE_BIAS bias,
+                                                const int qualityScore,
+                                                string &reason)
+   {
+      reason = "";
+      if(!InpUseDirectionalHourPerformanceQualityGate)
+         return true;
+
+      double netPercent = 0.0;
+      int sampleTrades = 0;
+      if(!DirectionalHourPerformanceSample(bias, netPercent, sampleTrades))
+         return true;
+
+      if(netPercent > InpDirectionalHourPerformanceWeakNetPercent)
+         return true;
+
+      if(qualityScore >= InpDirectionalHourPerformanceMinQualityScore)
+         return true;
+
+      reason = "directional hour performance quality";
+      return false;
+   }
+
+   bool DirectionalLossCooldownActive(const ENUM_TRADE_BIAS bias, string &reason)
+   {
+      reason = "";
+      if(!InpUseDirectionalLossCooldown || bias == BIAS_NONE)
+         return false;
+
+      int lookbackTrades = MathMax(1, InpDirectionalLossLookbackTrades);
+      int threshold = MathMax(1, InpDirectionalLossThreshold);
+      int found = 0;
+      int directionalLosses = 0;
+      datetime latestDirectionalLossTime = 0;
+
+      HistorySelect(0, TimeCurrent());
+      int total = HistoryDealsTotal();
+      for(int i = total - 1; i >= 0 && found < lookbackTrades; i--)
+      {
+         ulong ticket = HistoryDealGetTicket(i);
+         if(ticket == 0)
+            continue;
+         if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_OUT)
+            continue;
+
+         found++;
+         double profit = HistoryDealGetDouble(ticket, DEAL_PROFIT) +
+                         HistoryDealGetDouble(ticket, DEAL_SWAP) +
+                         HistoryDealGetDouble(ticket, DEAL_COMMISSION);
+         if(profit >= 0.0)
+            continue;
+
+         long dealType = HistoryDealGetInteger(ticket, DEAL_TYPE);
+         bool lossMatchesBias = (bias == BIAS_BUY && dealType == DEAL_TYPE_SELL) ||
+                                (bias == BIAS_SELL && dealType == DEAL_TYPE_BUY);
+         if(!lossMatchesBias)
+            continue;
+
+         directionalLosses++;
+         if(latestDirectionalLossTime == 0)
+            latestDirectionalLossTime = (datetime)HistoryDealGetInteger(ticket, DEAL_TIME);
+      }
+
+      if(directionalLosses < threshold)
+         return false;
+
+      reason = (bias == BIAS_BUY) ? "buy directional loss cooldown" : "sell directional loss cooldown";
+      if(InpDirectionalLossCooldownMinutes <= 0 || latestDirectionalLossTime <= 0)
+         return true;
+
+      return TimeCurrent() - latestDirectionalLossTime < InpDirectionalLossCooldownMinutes * 60;
+   }
+
+   bool DirectionalLossQualityAllows(const ENUM_TRADE_BIAS bias, const int qualityScore, string &reason)
+   {
+      reason = "";
+      if(!InpUseDirectionalLossQualityGate || bias == BIAS_NONE)
+         return true;
+
+      int lookbackTrades = MathMax(1, InpDirectionalLossQualityLookbackTrades);
+      int threshold = MathMax(1, InpDirectionalLossQualityThreshold);
+      int found = 0;
+      int directionalLosses = 0;
+
+      HistorySelect(0, TimeCurrent());
+      int total = HistoryDealsTotal();
+      for(int i = total - 1; i >= 0 && found < lookbackTrades; i--)
+      {
+         ulong ticket = HistoryDealGetTicket(i);
+         if(ticket == 0)
+            continue;
+         if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_OUT)
+            continue;
+
+         found++;
+         double profit = HistoryDealGetDouble(ticket, DEAL_PROFIT) +
+                         HistoryDealGetDouble(ticket, DEAL_SWAP) +
+                         HistoryDealGetDouble(ticket, DEAL_COMMISSION);
+         if(profit >= 0.0)
+            continue;
+
+         long dealType = HistoryDealGetInteger(ticket, DEAL_TYPE);
+         bool lossMatchesBias = (bias == BIAS_BUY && dealType == DEAL_TYPE_SELL) ||
+                                (bias == BIAS_SELL && dealType == DEAL_TYPE_BUY);
+         if(lossMatchesBias)
+            directionalLosses++;
+      }
+
+      if(directionalLosses < threshold)
+         return true;
+
+      int requiredScore = MathMax(1, InpDirectionalLossMinQualityScore);
+      if(qualityScore >= requiredScore)
+         return true;
+
+      reason = (bias == BIAS_BUY) ? "buy directional quality" : "sell directional quality";
+      return false;
+   }
+
+   double DirectionalLossRiskMultiplier(const ENUM_TRADE_BIAS bias)
+   {
+      if(!InpUseDirectionalLossRiskScaling || bias == BIAS_NONE)
+         return 1.0;
+
+      int lookbackTrades = MathMax(1, InpDirectionalLossRiskLookbackTrades);
+      int threshold = MathMax(1, InpDirectionalLossRiskThreshold);
+      int found = 0;
+      int directionalLosses = 0;
+
+      HistorySelect(0, TimeCurrent());
+      int total = HistoryDealsTotal();
+      for(int i = total - 1; i >= 0 && found < lookbackTrades; i--)
+      {
+         ulong ticket = HistoryDealGetTicket(i);
+         if(ticket == 0)
+            continue;
+         if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_OUT)
+            continue;
+
+         found++;
+         double profit = HistoryDealGetDouble(ticket, DEAL_PROFIT) +
+                         HistoryDealGetDouble(ticket, DEAL_SWAP) +
+                         HistoryDealGetDouble(ticket, DEAL_COMMISSION);
+         if(profit >= 0.0)
+            continue;
+
+         long dealType = HistoryDealGetInteger(ticket, DEAL_TYPE);
+         bool lossMatchesBias = (bias == BIAS_BUY && dealType == DEAL_TYPE_SELL) ||
+                                (bias == BIAS_SELL && dealType == DEAL_TYPE_BUY);
+         if(lossMatchesBias)
+            directionalLosses++;
+      }
+
+      if(directionalLosses < threshold)
+         return 1.0;
+
+      return MathMax(0.0, MathMin(1.0, InpDirectionalLossRiskMultiplier));
+   }
+
+   double DailyLossPressureRiskMultiplier()
+   {
+      if(!InpUseDailyLossRiskScaling || InpMaxDailyLossPercent <= 0.0)
+         return 1.0;
+
+      double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+      if(balance <= 0.0)
+         return 1.0;
+
+      double dailyProfit = PeriodProfit(PERIOD_D1);
+      if(dailyProfit >= 0.0)
+         return 1.0;
+
+      double dailyLossPercent = -dailyProfit / balance * 100.0;
+      double startFraction = MathMax(0.0, MathMin(0.95, InpDailyLossRiskStartFraction));
+      double startPercent = InpMaxDailyLossPercent * startFraction;
+      double fullPercent = MathMax(startPercent + 0.01, InpMaxDailyLossPercent);
+      if(dailyLossPercent <= startPercent)
+         return 1.0;
+
+      double minMultiplier = MathMax(0.0, MathMin(1.0, InpMinDailyLossRiskMultiplier));
+      double progress = (dailyLossPercent - startPercent) / (fullPercent - startPercent);
+      progress = MathMin(1.0, MathMax(0.0, progress));
+      return 1.0 - progress * (1.0 - minMultiplier);
+   }
+
+   double DailyProfitProtectionRiskMultiplier()
+   {
+      if(!InpUseDailyProfitRiskScaling || InpDailyProfitLockPercent <= 0.0)
+         return 1.0;
+
+      double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+      if(balance <= 0.0)
+         return 1.0;
+
+      double dailyProfit = PeriodProfit(PERIOD_D1);
+      if(dailyProfit <= 0.0)
+         return 1.0;
+
+      double dailyProfitPercent = dailyProfit / balance * 100.0;
+      double startFraction = MathMax(0.0, MathMin(0.95, InpDailyProfitRiskStartFraction));
+      double startPercent = InpDailyProfitLockPercent * startFraction;
+      double fullPercent = MathMax(startPercent + 0.01, InpDailyProfitLockPercent);
+      if(dailyProfitPercent <= startPercent)
+         return 1.0;
+
+      double minMultiplier = MathMax(0.0, MathMin(1.0, InpMinDailyProfitRiskMultiplier));
+      double progress = (dailyProfitPercent - startPercent) / (fullPercent - startPercent);
+      progress = MathMin(1.0, MathMax(0.0, progress));
+      return 1.0 - progress * (1.0 - minMultiplier);
+   }
+
+   double DailyProfitOpportunityRiskMultiplier()
+   {
+      if(!InpUseDailyProfitOpportunityRiskBoost || InpMaxDailyProfitOpportunityRiskMultiplier <= 1.0)
+         return 1.0;
+      if(!HouseMoneyAccelerationAllowed())
+         return 1.0;
+      if(InpDailyProfitOpportunityRequiresProtection && !InpUseDailyProfitLock && !InpUseDailyEquityTrailGuard)
+         return 1.0;
+
+      double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+      if(balance <= 0.0)
+         return 1.0;
+
+      double dailyProfit = PeriodProfit(PERIOD_D1);
+      if(dailyProfit <= 0.0)
+         return 1.0;
+
+      double anchorPercent = InpDailyProfitLockPercent;
+      if(anchorPercent <= 0.0)
+         anchorPercent = MathMax(0.0, InpDailyEquityTrailMinProfitPercent);
+      if(anchorPercent <= 0.0)
+         return 1.0;
+
+      double startFraction = MathMax(0.0, MathMin(0.95, InpDailyProfitOpportunityStartFraction));
+      double fullFraction = MathMax(startFraction + 0.01, MathMin(2.0, InpDailyProfitOpportunityFullFraction));
+      double startPercent = anchorPercent * startFraction;
+      double fullPercent = MathMax(startPercent + 0.01, anchorPercent * fullFraction);
+      double dailyProfitPercent = dailyProfit / balance * 100.0;
+      if(dailyProfitPercent <= startPercent)
+         return 1.0;
+
+      double progress = (dailyProfitPercent - startPercent) / (fullPercent - startPercent);
+      progress = MathMin(1.0, MathMax(0.0, progress));
+      double maxMultiplier = MathMax(1.0, InpMaxDailyProfitOpportunityRiskMultiplier);
+      return 1.0 + progress * (maxMultiplier - 1.0);
+   }
+
+   double WeeklyProfitProtectionRiskMultiplier()
+   {
+      if(!InpUseWeeklyProfitRiskScaling || InpWeeklyProfitLockPercent <= 0.0)
+         return 1.0;
+
+      double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+      if(balance <= 0.0)
+         return 1.0;
+
+      double weeklyProfit = PeriodProfit(PERIOD_W1);
+      if(weeklyProfit <= 0.0)
+         return 1.0;
+
+      double weeklyProfitPercent = weeklyProfit / balance * 100.0;
+      double startFraction = MathMax(0.0, MathMin(0.95, InpWeeklyProfitRiskStartFraction));
+      double startPercent = InpWeeklyProfitLockPercent * startFraction;
+      double fullPercent = MathMax(startPercent + 0.01, InpWeeklyProfitLockPercent);
+      if(weeklyProfitPercent <= startPercent)
+         return 1.0;
+
+      double minMultiplier = MathMax(0.0, MathMin(1.0, InpMinWeeklyProfitRiskMultiplier));
+      double progress = (weeklyProfitPercent - startPercent) / (fullPercent - startPercent);
+      progress = MathMin(1.0, MathMax(0.0, progress));
+      return 1.0 - progress * (1.0 - minMultiplier);
+   }
+
+   double MonthlyProfitProtectionRiskMultiplier()
+   {
+      if(!InpUseMonthlyProfitRiskScaling || InpMonthlyProfitLockPercent <= 0.0)
+         return 1.0;
+
+      double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+      if(balance <= 0.0)
+         return 1.0;
+
+      double monthlyProfit = PeriodProfit(PERIOD_MN1);
+      if(monthlyProfit <= 0.0)
+         return 1.0;
+
+      double monthlyProfitPercent = monthlyProfit / balance * 100.0;
+      double startFraction = MathMax(0.0, MathMin(0.95, InpMonthlyProfitRiskStartFraction));
+      double startPercent = InpMonthlyProfitLockPercent * startFraction;
+      double fullPercent = MathMax(startPercent + 0.01, InpMonthlyProfitLockPercent);
+      if(monthlyProfitPercent <= startPercent)
+         return 1.0;
+
+      double minMultiplier = MathMax(0.0, MathMin(1.0, InpMinMonthlyProfitRiskMultiplier));
+      double progress = (monthlyProfitPercent - startPercent) / (fullPercent - startPercent);
+      progress = MathMin(1.0, MathMax(0.0, progress));
+      return 1.0 - progress * (1.0 - minMultiplier);
+   }
+
+   double WeeklyLossPressureRiskMultiplier()
+   {
+      if(!InpUseWeeklyLossRiskScaling || InpMaxWeeklyLossPercent <= 0.0)
+         return 1.0;
+
+      double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+      if(balance <= 0.0)
+         return 1.0;
+
+      double weeklyProfit = PeriodProfit(PERIOD_W1);
+      if(weeklyProfit >= 0.0)
+         return 1.0;
+
+      double weeklyLossPercent = -weeklyProfit / balance * 100.0;
+      double startFraction = MathMax(0.0, MathMin(0.95, InpWeeklyLossRiskStartFraction));
+      double startPercent = InpMaxWeeklyLossPercent * startFraction;
+      double fullPercent = MathMax(startPercent + 0.01, InpMaxWeeklyLossPercent);
+      if(weeklyLossPercent <= startPercent)
+         return 1.0;
+
+      double minMultiplier = MathMax(0.0, MathMin(1.0, InpMinWeeklyLossRiskMultiplier));
+      double progress = (weeklyLossPercent - startPercent) / (fullPercent - startPercent);
+      progress = MathMin(1.0, MathMax(0.0, progress));
+      return 1.0 - progress * (1.0 - minMultiplier);
+   }
+
+   double MonthlyLossPressureRiskMultiplier()
+   {
+      if(!InpUseMonthlyLossRiskScaling || InpMaxMonthlyLossPercent <= 0.0)
+         return 1.0;
+
+      double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+      if(balance <= 0.0)
+         return 1.0;
+
+      double monthlyProfit = PeriodProfit(PERIOD_MN1);
+      if(monthlyProfit >= 0.0)
+         return 1.0;
+
+      double monthlyLossPercent = -monthlyProfit / balance * 100.0;
+      double startFraction = MathMax(0.0, MathMin(0.95, InpMonthlyLossRiskStartFraction));
+      double startPercent = InpMaxMonthlyLossPercent * startFraction;
+      double fullPercent = MathMax(startPercent + 0.01, InpMaxMonthlyLossPercent);
+      if(monthlyLossPercent <= startPercent)
+         return 1.0;
+
+      double minMultiplier = MathMax(0.0, MathMin(1.0, InpMinMonthlyLossRiskMultiplier));
+      double progress = (monthlyLossPercent - startPercent) / (fullPercent - startPercent);
+      progress = MathMin(1.0, MathMax(0.0, progress));
+      return 1.0 - progress * (1.0 - minMultiplier);
+   }
+
+private:
+   bool GrowthBoostAllowed()
+   {
+      if(!InpGrowthBoostRequiresClosedProfit)
+         return HouseMoneyAccelerationAllowed();
+      return (m_initialBalance > 0.0 &&
+              AccountInfoDouble(ACCOUNT_BALANCE) > m_initialBalance &&
+              HouseMoneyAccelerationAllowed());
+   }
+
+   double HotStreakRiskMultiplier()
+   {
+      if(!InpUseHotStreakRiskBoost || InpMaxHotStreakRiskMultiplier <= 1.0)
+         return 1.0;
+      if(!GrowthBoostAllowed())
+         return 1.0;
+      if(InpHotStreakRequiresEquityProfit && m_initialEquity > 0.0 &&
+         AccountInfoDouble(ACCOUNT_EQUITY) <= m_initialEquity)
+         return 1.0;
+
+      double averageR = 0.0;
+      datetime latestCloseTime = 0;
+      if(!RecentPerformanceRMultipleSample(InpHotStreakLookbackTrades, averageR, latestCloseTime))
+         return 1.0;
+
+      double startR = MathMax(0.0, InpHotStreakStartAverageR);
+      double fullR = MathMax(startR + 0.01, InpHotStreakFullAverageR);
+      if(averageR <= startR)
+         return 1.0;
+
+      double progress = (averageR - startR) / (fullR - startR);
+      progress = MathMin(1.0, MathMax(0.0, progress));
+      double maxMultiplier = MathMax(1.0, InpMaxHotStreakRiskMultiplier);
+      return 1.0 + progress * (maxMultiplier - 1.0);
+   }
+
+   double RecentProfitFactorRiskMultiplier()
+   {
+      if(!InpUseRecentProfitFactorRiskBoost || InpMaxRecentProfitFactorRiskMultiplier <= 1.0)
+         return 1.0;
+      if(InpRecentProfitFactorRequiresClosedProfit && !GrowthBoostAllowed())
+         return 1.0;
+      if(InpRecentProfitFactorRequiresEquityProfit && m_initialEquity > 0.0 &&
+         AccountInfoDouble(ACCOUNT_EQUITY) <= m_initialEquity)
+         return 1.0;
+
+      double profitFactor = 0.0;
+      datetime latestCloseTime = 0;
+      if(!RecentProfitFactorSample(InpRecentProfitFactorLookbackTrades, profitFactor, latestCloseTime))
+         return 1.0;
+
+      double startPf = MathMax(1.0, InpRecentProfitFactorStart);
+      double fullPf = MathMax(startPf + 0.01, InpRecentProfitFactorFull);
+      if(profitFactor <= startPf)
+         return 1.0;
+
+      double progress = (profitFactor - startPf) / (fullPf - startPf);
+      progress = MathMin(1.0, MathMax(0.0, progress));
+      double maxMultiplier = MathMax(1.0, InpMaxRecentProfitFactorRiskMultiplier);
+      return 1.0 + progress * (maxMultiplier - 1.0);
+   }
+
+   double ProtectedCushionRiskBoostMultiplier()
+   {
+      if(!InpUseProtectedCushionRiskBoost || InpMaxProtectedCushionBoostMultiplier <= 1.0)
+         return 1.0;
+      if(!GrowthBoostAllowed())
+         return 1.0;
+
+      double protectedFloor = ProtectedEquityFloor();
+      if(protectedFloor <= 0.0 || m_initialEquity <= 0.0)
+         return 1.0;
+
+      double cushionPercent = ProtectedFloorCushionPercent();
+      double startPercent = MathMax(0.0, InpProtectedCushionBoostStartPercent);
+      double fullPercent = MathMax(startPercent + 0.01, InpProtectedCushionBoostFullPercent);
+      if(cushionPercent <= startPercent)
+         return 1.0;
+
+      double progress = (cushionPercent - startPercent) / (fullPercent - startPercent);
+      progress = MathMin(1.0, MathMax(0.0, progress));
+      double maxMultiplier = MathMax(1.0, InpMaxProtectedCushionBoostMultiplier);
+      return 1.0 + progress * (maxMultiplier - 1.0);
+   }
+
+   double EffectiveRiskPercent()
+   {
+      double riskPercent = InpRiskPercent;
+
+      if(InpUseLossStreakRiskReduction && InpLossStreakRiskReductionStart > 0 &&
+         InpLossStreakRiskReductionFactor > 0.0 && InpLossStreakRiskReductionFactor < 1.0)
+      {
+         int reductionSteps = m_consecutiveLosses - InpLossStreakRiskReductionStart + 1;
+         if(reductionSteps > 0)
+            riskPercent *= MathPow(InpLossStreakRiskReductionFactor, reductionSteps);
+      }
+
+      if(InpUseDrawdownRiskReduction && InpDrawdownRiskReductionMaxFactor > 0.0 &&
+         InpDrawdownRiskReductionMaxFactor < 1.0 &&
+         InpDrawdownRiskReductionFullPercent > InpDrawdownRiskReductionStartPercent)
+      {
+         double drawdownPercent = CurrentEquityDrawdownPercent();
+         if(drawdownPercent >= InpDrawdownRiskReductionStartPercent)
+         {
+            double progress = (drawdownPercent - InpDrawdownRiskReductionStartPercent) /
+                              (InpDrawdownRiskReductionFullPercent - InpDrawdownRiskReductionStartPercent);
+            progress = MathMin(1.0, MathMax(0.0, progress));
+            double factor = 1.0 - progress * (1.0 - InpDrawdownRiskReductionMaxFactor);
+            riskPercent *= factor;
+         }
+      }
+
+      if(InpUseStartingEquityRecoveryRiskScaling && m_initialEquity > 0.0)
+      {
+         double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+         if(equity < m_initialEquity)
+         {
+            double belowStartPercent = 100.0 * (m_initialEquity - equity) / m_initialEquity;
+            double startPercent = MathMax(0.0, InpStartingEquityRecoveryRiskStartDrawdownPercent);
+            double fullPercent = MathMax(startPercent + 0.01, InpStartingEquityRecoveryRiskFullDrawdownPercent);
+            if(belowStartPercent >= startPercent)
+            {
+               double progress = (belowStartPercent - startPercent) / (fullPercent - startPercent);
+               progress = MathMin(1.0, MathMax(0.0, progress));
+               double minMultiplier = MathMax(0.0, MathMin(1.0, InpMinStartingEquityRecoveryRiskMultiplier));
+               riskPercent *= 1.0 - progress * (1.0 - minMultiplier);
+            }
+         }
+      }
+
+      if(RecentPerformanceWeak() && InpRecentPerformanceRiskFactor > 0.0 && InpRecentPerformanceRiskFactor < 1.0)
+         riskPercent *= InpRecentPerformanceRiskFactor;
+
+      riskPercent *= HotStreakRiskMultiplier();
+      riskPercent *= RecentProfitFactorRiskMultiplier();
+      riskPercent *= MonthRiskMultiplier();
+      riskPercent *= MonthDayRiskMultiplier();
+
+      if(InpUseProfitOnlyRiskBoost && m_initialEquity > 0.0 && InpMaxProfitBoostMultiplier > 1.0 &&
+         GrowthBoostAllowed())
+      {
+         double profitReference = InpGrowthBoostRequiresClosedProfit ? AccountInfoDouble(ACCOUNT_BALANCE)
+                                                                     : AccountInfoDouble(ACCOUNT_EQUITY);
+         double startReference = InpGrowthBoostRequiresClosedProfit ? m_initialBalance : m_initialEquity;
+         if(startReference <= 0.0)
+            return MathMax(InpMinReducedRiskPercent, riskPercent);
+
+         double profitPercent = 100.0 * (profitReference - startReference) / startReference;
+         double startPercent = MathMax(0.0, InpProfitBoostStartPercent);
+         double fullPercent = MathMax(startPercent + 0.01, InpProfitBoostFullPercent);
+         if(profitPercent > startPercent)
+         {
+            double progress = (profitPercent - startPercent) / (fullPercent - startPercent);
+            progress = MathMin(1.0, MathMax(0.0, progress));
+            double maxMultiplier = MathMax(1.0, InpMaxProfitBoostMultiplier);
+            riskPercent *= 1.0 + progress * (maxMultiplier - 1.0);
+         }
+      }
+
+      riskPercent *= ProtectedCushionRiskBoostMultiplier();
+
+      return MathMax(InpMinReducedRiskPercent, riskPercent);
+   }
+
+   double MonthRiskMultiplier()
+   {
+      if(!InpUseMonthRiskMultipliers)
+         return 1.0;
+
+      MqlDateTime dt;
+      TimeToStruct(TimeCurrent(), dt);
+      double multiplier = 1.0;
+      switch(dt.mon)
+      {
+         case 1:  multiplier = InpJanuaryRiskMultiplier; break;
+         case 2:  multiplier = InpFebruaryRiskMultiplier; break;
+         case 3:  multiplier = InpMarchRiskMultiplier; break;
+         case 4:  multiplier = InpAprilRiskMultiplier; break;
+         case 5:  multiplier = InpMayRiskMultiplier; break;
+         case 6:  multiplier = InpJuneRiskMultiplier; break;
+         case 7:  multiplier = InpJulyRiskMultiplier; break;
+         case 8:  multiplier = InpAugustRiskMultiplier; break;
+         case 9:  multiplier = InpSeptemberRiskMultiplier; break;
+         case 10: multiplier = InpOctoberRiskMultiplier; break;
+         case 11: multiplier = InpNovemberRiskMultiplier; break;
+         case 12: multiplier = InpDecemberRiskMultiplier; break;
+      }
+      return MathMax(0.0, multiplier);
+   }
+
+   double MonthDayRiskMultiplier()
+   {
+      if(!InpUseMonthDayRiskMultipliers)
+         return 1.0;
+
+      MqlDateTime dt;
+      TimeToStruct(TimeCurrent(), dt);
+
+      double multiplier = 1.0;
+      bool insideWindow = false;
+      switch(dt.mon)
+      {
+         case 1:
+            insideWindow = DayInsideMonthWindow(dt.day, InpJanuaryMinDay, InpJanuaryMaxDay);
+            multiplier = InpJanuaryDayRiskMultiplier;
+            break;
+         case 2:
+            insideWindow = DayInsideMonthWindow(dt.day, InpFebruaryMinDay, InpFebruaryMaxDay);
+            multiplier = InpFebruaryDayRiskMultiplier;
+            break;
+         case 3:
+            insideWindow = DayInsideMonthWindow(dt.day, InpMarchMinDay, InpMarchMaxDay);
+            multiplier = InpMarchDayRiskMultiplier;
+            break;
+         case 4:
+            insideWindow = DayInsideMonthWindow(dt.day, InpAprilMinDay, InpAprilMaxDay);
+            multiplier = InpAprilDayRiskMultiplier;
+            break;
+         case 5:
+            insideWindow = DayInsideMonthWindow(dt.day, InpMayMinDay, InpMayMaxDay);
+            multiplier = InpMayDayRiskMultiplier;
+            break;
+         case 6:
+            insideWindow = DayInsideMonthWindow(dt.day, InpJuneMinDay, InpJuneMaxDay);
+            multiplier = InpJuneDayRiskMultiplier;
+            break;
+         case 7:
+            insideWindow = DayInsideMonthWindow(dt.day, InpJulyMinDay, InpJulyMaxDay);
+            multiplier = InpJulyDayRiskMultiplier;
+            break;
+         case 8:
+            insideWindow = DayInsideMonthWindow(dt.day, InpAugustMinDay, InpAugustMaxDay);
+            multiplier = InpAugustDayRiskMultiplier;
+            break;
+         case 9:
+            insideWindow = DayInsideMonthWindow(dt.day, InpSeptemberMinDay, InpSeptemberMaxDay);
+            multiplier = InpSeptemberDayRiskMultiplier;
+            break;
+         case 10:
+            insideWindow = DayInsideMonthWindow(dt.day, InpOctoberMinDay, InpOctoberMaxDay);
+            multiplier = InpOctoberDayRiskMultiplier;
+            break;
+         case 11:
+            insideWindow = DayInsideMonthWindow(dt.day, InpNovemberMinDay, InpNovemberMaxDay);
+            multiplier = InpNovemberDayRiskMultiplier;
+            break;
+         case 12:
+            insideWindow = DayInsideMonthWindow(dt.day, InpDecemberMinDay, InpDecemberMaxDay);
+            multiplier = InpDecemberDayRiskMultiplier;
+            break;
+      }
+
+      if(!insideWindow)
+         return 1.0;
+      return MathMax(0.0, multiplier);
+   }
+
+   double EffectiveMaxSpreadPoints()
+   {
+      double maxSpread = MathMax(0.0, InpMaxSpreadPoints);
+      if(!InpUseMonthSpreadCaps)
+         return maxSpread;
+
+      MqlDateTime dt;
+      TimeToStruct(TimeCurrent(), dt);
+      double monthCap = 0.0;
+      switch(dt.mon)
+      {
+         case 1:  monthCap = InpJanuaryMaxSpreadPoints; break;
+         case 2:  monthCap = InpFebruaryMaxSpreadPoints; break;
+         case 3:  monthCap = InpMarchMaxSpreadPoints; break;
+         case 4:  monthCap = InpAprilMaxSpreadPoints; break;
+         case 5:  monthCap = InpMayMaxSpreadPoints; break;
+         case 6:  monthCap = InpJuneMaxSpreadPoints; break;
+         case 7:  monthCap = InpJulyMaxSpreadPoints; break;
+         case 8:  monthCap = InpAugustMaxSpreadPoints; break;
+         case 9:  monthCap = InpSeptemberMaxSpreadPoints; break;
+         case 10: monthCap = InpOctoberMaxSpreadPoints; break;
+         case 11: monthCap = InpNovemberMaxSpreadPoints; break;
+         case 12: monthCap = InpDecemberMaxSpreadPoints; break;
+      }
+
+      monthCap = MathMax(0.0, monthCap);
+      if(monthCap <= 0.0)
+         return maxSpread;
+      if(maxSpread <= 0.0)
+         return monthCap;
+      return MathMin(maxSpread, monthCap);
+   }
+
+public:
+   CRiskManager() :
+      m_lastLossTime(0),
+      m_consecutiveLosses(0),
+      m_initialEquity(0.0),
+      m_initialBalance(0.0),
+      m_peakEquity(0.0),
+      m_dailyProfitStart(0),
+      m_weeklyProfitStart(0),
+      m_monthlyProfitStart(0),
+      m_dailyEquityStart(0),
+      m_dailyPeakProfit(0.0),
+      m_weeklyPeakProfit(0.0),
+      m_monthlyPeakProfit(0.0),
+      m_openBasketPeakProfit(0.0),
+      m_dailyStartEquity(0.0),
+      m_dailyPeakEquity(0.0) {}
+
+   void Init()
+   {
+      m_initialEquity = AccountInfoDouble(ACCOUNT_EQUITY);
+      m_initialBalance = AccountInfoDouble(ACCOUNT_BALANCE);
+      m_peakEquity = m_initialEquity;
+   }
+
+   double InitialBalance()
+   {
+      return m_initialBalance;
+   }
+
+   double StartingEquityFloor()
+   {
+      if(!InpUseStartingEquityProtection || m_initialEquity <= 0.0)
+         return 0.0;
+      return m_initialEquity * (1.0 + MathMax(0.0, InpStartingEquityBufferPercent) / 100.0);
+   }
+
+   double EquityProfitLockFloor()
+   {
+      if(!InpUseEquityProfitLock || m_initialEquity <= 0.0)
+         return 0.0;
+
+      double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+      if(m_peakEquity <= 0.0)
+         m_peakEquity = equity;
+      if(equity > m_peakEquity)
+         m_peakEquity = equity;
+
+      double peakProfit = m_peakEquity - m_initialEquity;
+      double startProfit = m_initialEquity * MathMax(0.0, InpEquityProfitLockStartPercent) / 100.0;
+      if(peakProfit < startProfit || peakProfit <= 0.0)
+         return 0.0;
+
+      double lockPercent = MathMax(0.0, MathMin(100.0, InpEquityProfitLockPercent));
+      return m_initialEquity + peakProfit * lockPercent / 100.0;
+   }
+
+   double BalanceProfitLockFloor()
+   {
+      if(!InpUseBalanceProfitLock || m_initialBalance <= 0.0)
+         return 0.0;
+
+      double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+      double realizedProfit = balance - m_initialBalance;
+      double startProfit = m_initialBalance * MathMax(0.0, InpBalanceProfitLockStartPercent) / 100.0;
+      if(realizedProfit < startProfit || realizedProfit <= 0.0)
+         return 0.0;
+
+      double lockPercent = MathMax(0.0, MathMin(100.0, InpBalanceProfitLockPercent));
+      return m_initialBalance + realizedProfit * lockPercent / 100.0;
+   }
+
+   double ProtectedEquityFloor()
+   {
+      return MathMax(MathMax(StartingEquityFloor(), EquityProfitLockFloor()),
+                     BalanceProfitLockFloor());
+   }
+
+   bool EquityAboveStarting()
+   {
+      return (m_initialEquity > 0.0 && AccountInfoDouble(ACCOUNT_EQUITY) > m_initialEquity);
+   }
+
+   bool ClosedProfitAboveStarting()
+   {
+      return (m_initialBalance > 0.0 && AccountInfoDouble(ACCOUNT_BALANCE) > m_initialBalance);
+   }
+
+   bool HouseMoneyAccelerationAllowed()
+   {
+      if(!InpUseHouseMoneyAccelerationGate)
+         return true;
+      if(m_initialBalance <= 0.0 || m_initialEquity <= 0.0)
+         return false;
+
+      double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+      double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+      if(balance <= 0.0 || equity <= 0.0)
+         return false;
+      if(InpHouseMoneyRequireEquityAboveStarting && equity <= m_initialEquity)
+         return false;
+
+      double closedProfit = balance - m_initialBalance;
+      double closedProfitPercent = 100.0 * closedProfit / m_initialBalance;
+      if(closedProfitPercent < MathMax(0.0, InpHouseMoneyMinClosedProfitPercent))
+         return false;
+
+      double protectedFloor = ProtectedEquityFloor();
+      if(protectedFloor <= 0.0 || equity <= protectedFloor)
+         return false;
+      if(ProtectedFloorCushionPercent() < MathMax(0.0, InpHouseMoneyMinProtectedCushionPercent))
+         return false;
+
+      if(closedProfit > 0.0 && InpHouseMoneyMaxRealizedGivebackPercent >= 0.0)
+      {
+         double equityProfit = equity - m_initialBalance;
+         double giveback = closedProfit - equityProfit;
+         if(giveback > 0.0)
+         {
+            double givebackPercent = 100.0 * giveback / closedProfit;
+            if(givebackPercent > MathMax(0.0, InpHouseMoneyMaxRealizedGivebackPercent))
+               return false;
+         }
+      }
+
+      if(m_peakEquity <= 0.0 || equity > m_peakEquity)
+         m_peakEquity = equity;
+      double peakProfit = m_peakEquity - m_initialEquity;
+      if(peakProfit > 0.0 && InpHouseMoneyMaxEquityPeakGivebackPercent >= 0.0)
+      {
+         double peakGiveback = m_peakEquity - equity;
+         if(peakGiveback > 0.0)
+         {
+            double peakGivebackPercent = 100.0 * peakGiveback / peakProfit;
+            if(peakGivebackPercent > MathMax(0.0, InpHouseMoneyMaxEquityPeakGivebackPercent))
+               return false;
+         }
+      }
+
+      return true;
+   }
+
+   double WinnerScaleInRiskMultiplier()
+   {
+      double baseMultiplier = MathMax(0.0, InpWinnerScaleInRiskMultiplier);
+      if(!InpUseHouseMoneyScaleInRiskRamp)
+         return baseMultiplier;
+      if(!HouseMoneyAccelerationAllowed())
+         return baseMultiplier;
+
+      double cushionPercent = ProtectedFloorCushionPercent();
+      double startPercent = MathMax(0.0, InpHouseMoneyScaleInRiskStartCushionPercent);
+      double fullPercent = MathMax(startPercent + 0.01, InpHouseMoneyScaleInRiskFullCushionPercent);
+      if(cushionPercent <= startPercent)
+         return baseMultiplier;
+
+      double progress = (cushionPercent - startPercent) / (fullPercent - startPercent);
+      progress = MathMin(1.0, MathMax(0.0, progress));
+      double maxMultiplier = MathMax(baseMultiplier, InpMaxHouseMoneyScaleInRiskMultiplier);
+      return baseMultiplier + progress * (maxMultiplier - baseMultiplier);
+   }
+
+   double ClosedProfitOpportunityRiskMultiplier()
+   {
+      if(!InpUseClosedProfitOpportunityRiskBoost || InpMaxClosedProfitOpportunityRiskMultiplier <= 1.0)
+         return 1.0;
+      if(!HouseMoneyAccelerationAllowed())
+         return 1.0;
+      if(m_initialBalance <= 0.0)
+         return 1.0;
+
+      double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+      if(balance <= m_initialBalance)
+         return 1.0;
+      if(InpClosedProfitOpportunityRequiresProtectedFloor)
+      {
+         double protectedFloor = ProtectedEquityFloor();
+         if(protectedFloor <= 0.0 || AccountInfoDouble(ACCOUNT_EQUITY) <= protectedFloor)
+            return 1.0;
+      }
+
+      double profitPercent = 100.0 * (balance - m_initialBalance) / m_initialBalance;
+      double startPercent = MathMax(0.0, InpClosedProfitOpportunityStartPercent);
+      double fullPercent = MathMax(startPercent + 0.01, InpClosedProfitOpportunityFullPercent);
+      if(profitPercent <= startPercent)
+         return 1.0;
+
+      double progress = (profitPercent - startPercent) / (fullPercent - startPercent);
+      progress = MathMin(1.0, MathMax(0.0, progress));
+      double maxMultiplier = MathMax(1.0, InpMaxClosedProfitOpportunityRiskMultiplier);
+      return 1.0 + progress * (maxMultiplier - 1.0);
+   }
+
+   double ProtectedFloorCushionPercent()
+   {
+      double protectedFloor = ProtectedEquityFloor();
+      if(protectedFloor <= 0.0 || m_initialEquity <= 0.0)
+         return 1000000.0;
+
+      double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+      return 100.0 * (equity - protectedFloor) / m_initialEquity;
+   }
+
+   double ProtectedFloorRiskMultiplier()
+   {
+      if(!InpUseProtectedFloorRiskScaling)
+         return 1.0;
+
+      double startPercent = MathMax(0.01, InpProtectedFloorRiskStartPercent);
+      double cushionPercent = ProtectedFloorCushionPercent();
+      if(cushionPercent >= startPercent)
+         return 1.0;
+
+      double minMultiplier = MathMax(0.0, MathMin(1.0, InpMinProtectedFloorRiskMultiplier));
+      double pressure = (startPercent - MathMax(0.0, cushionPercent)) / startPercent;
+      pressure = MathMin(1.0, MathMax(0.0, pressure));
+      return 1.0 - pressure * (1.0 - minMultiplier);
+   }
+
+   bool ProtectedFloorQualityAllows(const int qualityScore, string &reason)
+   {
+      if(!InpUseProtectedFloorQualityGate)
+         return true;
+
+      double startPercent = MathMax(0.01, InpProtectedFloorQualityStartPercent);
+      double cushionPercent = ProtectedFloorCushionPercent();
+      if(cushionPercent >= startPercent)
+         return true;
+
+      int requiredScore = MathMax(0, InpProtectedFloorMinQualityScore);
+      if(qualityScore >= requiredScore)
+         return true;
+
+      reason = "protected floor quality";
+      return false;
+   }
+
+   bool StartingEquityRecoveryQualityAllows(const int qualityScore, string &reason)
+   {
+      if(!InpUseStartingEquityRecoveryQualityGate)
+         return true;
+      if(m_initialEquity <= 0.0)
+         return true;
+
+      double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+      if(equity >= m_initialEquity)
+         return true;
+
+      double drawdownPercent = 100.0 * (m_initialEquity - equity) / m_initialEquity;
+      double startPercent = MathMax(0.0, InpStartingEquityRecoveryStartDrawdownPercent);
+      double fullPercent = MathMax(startPercent + 0.01, InpStartingEquityRecoveryFullDrawdownPercent);
+      if(drawdownPercent < startPercent)
+         return true;
+
+      int minScore = MathMax(0, InpStartingEquityRecoveryMinQualityScore);
+      int maxScore = MathMax(minScore, InpStartingEquityRecoveryMaxQualityScore);
+      double progress = (drawdownPercent - startPercent) / (fullPercent - startPercent);
+      progress = MathMin(1.0, MathMax(0.0, progress));
+      int requiredScore = (int)MathRound(minScore + progress * (maxScore - minScore));
+      if(qualityScore >= requiredScore)
+         return true;
+
+      reason = "starting equity recovery quality";
+      return false;
+   }
+
+   bool RealizedProfitGivebackQualityAllows(const int qualityScore, string &reason)
+   {
+      if(!InpUseRealizedProfitGivebackQualityGate)
+         return true;
+      if(m_initialBalance <= 0.0)
+         return true;
+
+      double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+      double realizedProfit = balance - m_initialBalance;
+      if(realizedProfit <= 0.0)
+         return true;
+
+      double equityProfit = AccountInfoDouble(ACCOUNT_EQUITY) - m_initialBalance;
+      double giveback = realizedProfit - equityProfit;
+      if(giveback <= 0.0)
+         return true;
+
+      double givebackPercent = 100.0 * giveback / realizedProfit;
+      double startPercent = MathMax(0.0, InpRealizedProfitGivebackStartPercent);
+      double fullPercent = MathMax(startPercent + 0.01, InpRealizedProfitGivebackFullPercent);
+      if(givebackPercent < startPercent)
+         return true;
+
+      int minScore = MathMax(0, InpRealizedProfitGivebackMinQualityScore);
+      int maxScore = MathMax(minScore, InpRealizedProfitGivebackMaxQualityScore);
+      double progress = (givebackPercent - startPercent) / (fullPercent - startPercent);
+      progress = MathMin(1.0, MathMax(0.0, progress));
+      int requiredScore = (int)MathRound(minScore + progress * (maxScore - minScore));
+      if(qualityScore >= requiredScore)
+         return true;
+
+      reason = "realized profit giveback quality";
+      return false;
+   }
+
+   bool EquityPeakGivebackQualityAllows(const int qualityScore, string &reason)
+   {
+      if(!InpUseEquityPeakGivebackQualityGate)
+         return true;
+      if(m_initialEquity <= 0.0)
+         return true;
+
+      double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+      if(m_peakEquity <= 0.0 || equity > m_peakEquity)
+         m_peakEquity = equity;
+
+      double peakProfit = m_peakEquity - m_initialEquity;
+      double minPeakProfit = m_initialEquity *
+                             MathMax(0.0, InpEquityPeakGivebackMinPeakProfitPercent) / 100.0;
+      if(peakProfit < minPeakProfit || peakProfit <= 0.0)
+         return true;
+
+      double giveback = m_peakEquity - equity;
+      if(giveback <= 0.0)
+         return true;
+
+      double givebackPercent = 100.0 * giveback / peakProfit;
+      double startPercent = MathMax(0.0, InpEquityPeakGivebackStartPercent);
+      double fullPercent = MathMax(startPercent + 0.01, InpEquityPeakGivebackFullPercent);
+      if(givebackPercent < startPercent)
+         return true;
+
+      int minScore = MathMax(0, InpEquityPeakGivebackMinQualityScore);
+      int maxScore = MathMax(minScore, InpEquityPeakGivebackMaxQualityScore);
+      double progress = (givebackPercent - startPercent) / (fullPercent - startPercent);
+      progress = MathMin(1.0, MathMax(0.0, progress));
+      int requiredScore = (int)MathRound(minScore + progress * (maxScore - minScore));
+      if(qualityScore >= requiredScore)
+         return true;
+
+      reason = "equity peak giveback quality";
+      return false;
+   }
+
+   bool OpenProfitAddOnQualityAllows(const int qualityScore,
+                                     const int priceActionScore,
+                                     string &reason)
+   {
+      reason = "";
+      if(!InpUseOpenProfitAddOnQualityGate)
+         return true;
+
+      int positions = 0;
+      double openProfit = OpenBasketProfit(positions);
+      if(positions < MathMax(1, InpOpenProfitAddOnMinPositions) || openProfit <= 0.0)
+         return true;
+
+      double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+      if(balance <= 0.0)
+         return true;
+
+      double openProfitPercent = 100.0 * openProfit / balance;
+      if(openProfitPercent < MathMax(0.0, InpOpenProfitAddOnMinProfitPercent))
+         return true;
+
+      int requiredQuality = MathMax(0, InpOpenProfitAddOnMinQualityScore);
+      int requiredPriceAction = MathMax(0, InpOpenProfitAddOnMinPriceActionScore);
+      if(qualityScore >= requiredQuality && priceActionScore >= requiredPriceAction)
+         return true;
+
+      reason = "open profit add-on quality";
+      return false;
+   }
+
+   double CurrentEquityDrawdownPercent()
+   {
+      double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+      if(m_peakEquity <= 0.0)
+         m_peakEquity = equity;
+      if(equity > m_peakEquity)
+         m_peakEquity = equity;
+      if(m_peakEquity <= 0.0)
+         return 0.0;
+      return 100.0 * (m_peakEquity - equity) / m_peakEquity;
+   }
+
+   void RefreshConsecutiveLosses()
+   {
+      HistorySelect(0, TimeCurrent());
+      m_consecutiveLosses = 0;
+      m_lastLossTime = 0;
+      int total = HistoryDealsTotal();
+
+      for(int i = total - 1; i >= 0; i--)
+      {
+         ulong ticket = HistoryDealGetTicket(i);
+         if(ticket == 0)
+            continue;
+         if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_OUT)
+            continue;
+
+         double profit = HistoryDealGetDouble(ticket, DEAL_PROFIT) +
+                         HistoryDealGetDouble(ticket, DEAL_SWAP) +
+                         HistoryDealGetDouble(ticket, DEAL_COMMISSION);
+         if(profit < 0)
+         {
+            m_consecutiveLosses++;
+            if(m_lastLossTime == 0)
+               m_lastLossTime = (datetime)HistoryDealGetInteger(ticket, DEAL_TIME);
+         }
+         else if(profit > 0)
+         {
+            break;
+         }
+      }
+   }
+
+   bool AbnormalLossStreakQuarantineActive()
+   {
+      if(!InpUseAbnormalLossStreakQuarantine ||
+         InpAbnormalLossStreakThreshold <= 0 ||
+         InpAbnormalLossStreakQuarantineHours <= 0 ||
+         m_consecutiveLosses < InpAbnormalLossStreakThreshold ||
+         m_lastLossTime <= 0)
+         return false;
+
+      long elapsedSeconds = (long)TimeCurrent() - (long)m_lastLossTime;
+      long quarantineSeconds = (long)InpAbnormalLossStreakQuarantineHours * 60 * 60;
+      if(elapsedSeconds < 0)
+         return true;
+      return elapsedSeconds < quarantineSeconds;
+   }
+
+   int CountPositions()
+   {
+      int count = 0;
+      for(int i = PositionsTotal() - 1; i >= 0; i--)
+      {
+         ulong ticket = PositionGetTicket(i);
+         if(ticket == 0 || !PositionSelectByTicket(ticket))
+            continue;
+         if(PositionGetString(POSITION_SYMBOL) == _Symbol &&
+            PositionGetInteger(POSITION_MAGIC) == InpMagicNumber)
+            count++;
+      }
+      return count;
+   }
+
+   int CountPositionsByBias(const ENUM_TRADE_BIAS bias)
+   {
+      int count = 0;
+      for(int i = PositionsTotal() - 1; i >= 0; i--)
+      {
+         ulong ticket = PositionGetTicket(i);
+         if(ticket == 0 || !PositionSelectByTicket(ticket))
+            continue;
+         if(PositionGetString(POSITION_SYMBOL) != _Symbol ||
+            PositionGetInteger(POSITION_MAGIC) != InpMagicNumber)
+            continue;
+
+         long type = PositionGetInteger(POSITION_TYPE);
+         if((bias == BIAS_BUY && type == POSITION_TYPE_BUY) ||
+            (bias == BIAS_SELL && type == POSITION_TYPE_SELL))
+            count++;
+      }
+      return count;
+   }
+
+   bool WinnerScaleInAllows(const ENUM_TRADE_BIAS bias,
+                            const int qualityScore,
+                            const int priceActionScore,
+                            const bool isPowerTrendContinuation,
+                            const bool isSessionImpulse,
+                            const bool isFlatMonthLiquidityReclaimScaleIn,
+                            const double referenceRiskDistance,
+                            string &reason,
+                            bool &isScaleIn)
+   {
+      isScaleIn = false;
+      int sameDirection = CountPositionsByBias(bias);
+      int totalPositions = CountPositions();
+      if(totalPositions <= 0 || sameDirection <= 0)
+         return true;
+
+      isScaleIn = true;
+      if(!InpUseWinnerScaleIn)
+         return true;
+      bool allowedContinuationLane = isPowerTrendContinuation ||
+                                     (InpWinnerScaleInAllowSessionImpulse && isSessionImpulse) ||
+                                     (InpWinnerScaleInAllowFlatMonthLiquidityReclaim &&
+                                      isFlatMonthLiquidityReclaimScaleIn);
+      if(InpWinnerScaleInRequirePowerTrendContinuation && !allowedContinuationLane)
+      {
+         if(InpWinnerScaleInAllowFlatMonthLiquidityReclaim && InpWinnerScaleInAllowSessionImpulse)
+            reason = "winner scale-in requires PTC/SIL/FMLR";
+         else if(InpWinnerScaleInAllowFlatMonthLiquidityReclaim)
+            reason = "winner scale-in requires PTC/FMLR";
+         else
+            reason = InpWinnerScaleInAllowSessionImpulse
+                     ? "winner scale-in requires PTC/SIL"
+                     : "winner scale-in requires power trend";
+         return false;
+      }
+      if(InpWinnerScaleInRequireEquityAboveStarting && !EquityAboveStarting())
+      {
+         reason = "winner scale-in below starting equity";
+         return false;
+      }
+      if(InpWinnerScaleInBlockOnProfitGivebackQuality)
+      {
+         string givebackReason = "";
+         if(!RealizedProfitGivebackQualityAllows(qualityScore, givebackReason) ||
+            !EquityPeakGivebackQualityAllows(qualityScore, givebackReason))
+         {
+            reason = "winner scale-in profit giveback";
+            return false;
+         }
+      }
+      if(sameDirection < totalPositions)
+      {
+         reason = "winner scale-in opposite exposure";
+         return false;
+      }
+      if(qualityScore < InpWinnerScaleInMinQualityScore)
+      {
+         reason = "winner scale-in quality";
+         return false;
+      }
+      if(priceActionScore < MathMax(0, InpWinnerScaleInMinPriceActionScore))
+      {
+         reason = "winner scale-in price action";
+         return false;
+      }
+
+      double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+      double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+      datetime newestPositionTime = 0;
+      double minimumR = MathMax(0.0, InpWinnerScaleInMinProfitR);
+      double riskReference = MathMax(0.0, referenceRiskDistance);
+
+      for(int i = PositionsTotal() - 1; i >= 0; i--)
+      {
+         ulong ticket = PositionGetTicket(i);
+         if(ticket == 0 || !PositionSelectByTicket(ticket))
+            continue;
+         if(PositionGetString(POSITION_SYMBOL) != _Symbol ||
+            PositionGetInteger(POSITION_MAGIC) != InpMagicNumber)
+            continue;
+
+         long type = PositionGetInteger(POSITION_TYPE);
+         if(!((bias == BIAS_BUY && type == POSITION_TYPE_BUY) ||
+              (bias == BIAS_SELL && type == POSITION_TYPE_SELL)))
+            continue;
+
+         double openPrice = PositionGetDouble(POSITION_PRICE_OPEN);
+         double sl = PositionGetDouble(POSITION_SL);
+         datetime positionTime = (datetime)PositionGetInteger(POSITION_TIME);
+         if(positionTime > newestPositionTime)
+            newestPositionTime = positionTime;
+         if(openPrice <= 0.0 || sl <= 0.0)
+         {
+            reason = "winner scale-in unprotected";
+            return false;
+         }
+
+         if(InpWinnerScaleInRequireProtectedStop)
+         {
+            if(type == POSITION_TYPE_BUY && sl < openPrice)
+            {
+               reason = "winner scale-in stop not protected";
+               return false;
+            }
+            if(type == POSITION_TYPE_SELL && sl > openPrice)
+            {
+               reason = "winner scale-in stop not protected";
+               return false;
+            }
+         }
+
+         double positionRisk = InitialRiskDistance(ticket, MathAbs(openPrice - sl));
+         double lockedR = 0.0;
+         if(positionRisk > 0.0)
+         {
+            if(type == POSITION_TYPE_BUY)
+               lockedR = (sl - openPrice) / positionRisk;
+            else
+               lockedR = (openPrice - sl) / positionRisk;
+         }
+         if(InpWinnerScaleInMinLockedR > 0.0 && lockedR < InpWinnerScaleInMinLockedR)
+         {
+            reason = "winner scale-in locked R";
+            return false;
+         }
+
+         double profitDistance = (type == POSITION_TYPE_BUY) ? (bid - openPrice) : (openPrice - ask);
+         if(riskReference <= 0.0 || profitDistance <= 0.0)
+         {
+            reason = "winner scale-in not profitable";
+            return false;
+         }
+         if(profitDistance / riskReference < minimumR)
+         {
+            reason = "winner scale-in R";
+            return false;
+         }
+      }
+
+      if(InpWinnerScaleInMinMinutesSincePosition > 0 && newestPositionTime > 0 &&
+         TimeCurrent() - newestPositionTime < InpWinnerScaleInMinMinutesSincePosition * 60)
+      {
+         reason = "winner scale-in spacing";
+         return false;
+      }
+
+      return true;
+   }
+
+   bool CanOpen(string &reason, const bool bypassStrategyLossState = false)
+   {
+      RefreshConsecutiveLosses();
+
+      if(StringFind(_Symbol, InpAllowedSymbol) < 0)
+      {
+         reason = "symbol not allowed";
+         return false;
+      }
+
+      if(CountPositions() >= InpMaxSimultaneousPositions)
+      {
+         reason = "max positions";
+         return false;
+      }
+
+      if(InpMaxTradesPerDay > 0 && PeriodEntryCount(PERIOD_D1) >= InpMaxTradesPerDay)
+      {
+         reason = "daily trade limit";
+         return false;
+      }
+
+      if(InpMinMinutesBetweenTrades > 0)
+      {
+         datetime lastEntryTime = LastEntryTime();
+         if(lastEntryTime > 0 && TimeCurrent() - lastEntryTime < InpMinMinutesBetweenTrades * 60)
+         {
+            reason = "trade spacing";
+            return false;
+         }
+      }
+
+      if(InpMaxDailyLossCount > 0 && PeriodLossCount(PERIOD_D1) >= InpMaxDailyLossCount)
+      {
+         reason = "daily loss count limit";
+         return false;
+      }
+
+      if(InpMaxWeeklyLossCount > 0 && PeriodLossCount(PERIOD_W1) >= InpMaxWeeklyLossCount)
+      {
+         reason = "weekly loss count limit";
+         return false;
+      }
+
+      if(InpMaxMonthlyLossCount > 0 && PeriodLossCount(PERIOD_MN1) >= InpMaxMonthlyLossCount)
+      {
+         reason = "monthly loss count limit";
+         return false;
+      }
+
+      if(CLogger::SpreadPoints() > EffectiveMaxSpreadPoints())
+      {
+         reason = "spread";
+         return false;
+      }
+
+      if(InpMaxEquityDrawdownPercent > 0.0 && CurrentEquityDrawdownPercent() >= InpMaxEquityDrawdownPercent)
+      {
+         reason = "equity drawdown limit";
+         return false;
+      }
+
+      if(!bypassStrategyLossState && AbnormalLossStreakQuarantineActive())
+      {
+         reason = "abnormal loss streak quarantine";
+         return false;
+      }
+
+      if(!bypassStrategyLossState &&
+         InpMaxConsecutiveLosses > 0 && m_consecutiveLosses >= InpMaxConsecutiveLosses)
+      {
+         if(InpCooldownMinutesAfterLoss <= 0 || m_lastLossTime <= 0)
+         {
+            reason = "consecutive losses";
+            return false;
+         }
+
+         if(TimeCurrent() - m_lastLossTime < InpCooldownMinutesAfterLoss * 60)
+         {
+            reason = "loss streak cooldown";
+            return false;
+         }
+      }
+
+      if(!bypassStrategyLossState && m_lastLossTime > 0 && InpCooldownMinutesAfterLoss > 0)
+      {
+         if(TimeCurrent() - m_lastLossTime < InpCooldownMinutesAfterLoss * 60)
+         {
+            reason = "cooldown";
+            return false;
+         }
+      }
+
+      if(!bypassStrategyLossState && RecentPerformancePauseActive())
+      {
+         reason = "recent performance pause";
+         return false;
+      }
+
+      if(!bypassStrategyLossState && RecentPerformanceRPauseActive())
+      {
+         reason = "recent average R pause";
+         return false;
+      }
+
+      if(RiskLimitHit(reason))
+         return false;
+
+      reason = "allowed";
+      return true;
+   }
+
+   bool RiskLimitHit(string &reason)
+   {
+      double startingFloor = StartingEquityFloor();
+      double profitLockFloor = EquityProfitLockFloor();
+      double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+      if(startingFloor > 0.0 && equity <= startingFloor)
+      {
+         reason = "starting equity protection";
+         return true;
+      }
+      if(profitLockFloor > 0.0 && equity <= profitLockFloor)
+      {
+         reason = "equity profit lock";
+         return true;
+      }
+      if(EquityProfitPeakTrailHit())
+      {
+         reason = "equity profit peak trail";
+         return true;
+      }
+
+      if(InpMaxEquityDrawdownPercent > 0.0 && CurrentEquityDrawdownPercent() >= InpMaxEquityDrawdownPercent)
+      {
+         reason = "equity drawdown limit";
+         return true;
+      }
+
+      double dailyProfit = PeriodProfit(PERIOD_D1);
+      double weeklyProfit = PeriodProfit(PERIOD_W1);
+      double monthlyProfit = PeriodProfit(PERIOD_MN1);
+
+      if(LossLimitHit(dailyProfit, InpMaxDailyLossPercent))
+      {
+         reason = "daily loss limit";
+         return true;
+      }
+      if(ProfitLockHit(dailyProfit, InpUseDailyProfitLock, InpDailyProfitLockPercent))
+      {
+         reason = "daily profit lock";
+         return true;
+      }
+      if(DailyEquityTrailHit())
+      {
+         reason = "daily equity trail";
+         return true;
+      }
+      if(OpenBasketProfitTrailHit())
+      {
+         reason = "open basket profit trail";
+         return true;
+      }
+      if(LossLimitHit(weeklyProfit, InpMaxWeeklyLossPercent))
+      {
+         reason = "weekly loss limit";
+         return true;
+      }
+      if(ProfitLockHit(weeklyProfit, InpUseWeeklyProfitLock, InpWeeklyProfitLockPercent))
+      {
+         reason = "weekly profit lock";
+         return true;
+      }
+      if(LossLimitHit(monthlyProfit, InpMaxMonthlyLossPercent))
+      {
+         reason = "monthly loss limit";
+         return true;
+      }
+      if(ProfitLockHit(monthlyProfit, InpUseMonthlyProfitLock, InpMonthlyProfitLockPercent))
+      {
+         reason = "monthly profit lock";
+         return true;
+      }
+
+      if(ProfitGivebackHit(PERIOD_D1, dailyProfit, InpDailyProfitGivebackPercent, m_dailyProfitStart, m_dailyPeakProfit))
+      {
+         reason = "daily profit giveback";
+         return true;
+      }
+      if(ProfitGivebackHit(PERIOD_W1, weeklyProfit, InpWeeklyProfitGivebackPercent, m_weeklyProfitStart, m_weeklyPeakProfit))
+      {
+         reason = "weekly profit giveback";
+         return true;
+      }
+      if(ProfitGivebackHit(PERIOD_MN1, monthlyProfit, InpMonthlyProfitGivebackPercent, m_monthlyProfitStart, m_monthlyPeakProfit))
+      {
+         reason = "monthly profit giveback";
+         return true;
+      }
+
+      reason = "";
+      return false;
+   }
+
+   double NormalizeLots(const double lots)
+   {
+      double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+      double maxLot = MathMin(SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX), InpMaxPositionLots);
+      double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+
+      if(step <= 0)
+         step = 0.01;
+      if(maxLot < minLot)
+         return 0.0;
+      if(lots < minLot && !InpAllowMinLotRiskOverflow)
+         return 0.0;
+
+      double normalized = MathFloor(lots / step) * step;
+      normalized = MathMax(minLot, MathMin(maxLot, normalized));
+      if(normalized < minLot)
+         return 0.0;
+      return NormalizeDouble(normalized, 2);
+   }
+
+   double LotsForRisk(const ENUM_TRADE_BIAS bias,
+                      const double entryPrice,
+                      const double stopDistance,
+                      const double riskMultiplier)
+   {
+      RefreshConsecutiveLosses();
+      double safeMultiplier = MathMax(0.0, riskMultiplier);
+      double effectiveRiskPercent = EffectiveRiskPercent() * safeMultiplier;
+      if(InpMaxEffectiveRiskPercent > 0.0)
+         effectiveRiskPercent = MathMin(effectiveRiskPercent, MathMax(0.0, InpMaxEffectiveRiskPercent));
+      if((bias != BIAS_BUY && bias != BIAS_SELL) ||
+         entryPrice <= 0.0 || stopDistance <= 0.0 || effectiveRiskPercent <= 0.0)
+         return 0.0;
+
+      double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+      double riskMoney = equity * effectiveRiskPercent / 100.0;
+      double protectedFloor = ProtectedEquityFloor();
+      if(protectedFloor > 0.0)
+      {
+         double maxRiskBeforeFloor = equity - protectedFloor;
+         if(maxRiskBeforeFloor <= 0.0)
+            return 0.0;
+         if(InpUseProtectedFloorCushionRiskCap)
+         {
+            double cushionRiskPercent = MathMax(0.0, MathMin(100.0, InpMaxProtectedFloorCushionRiskPercent));
+            maxRiskBeforeFloor *= cushionRiskPercent / 100.0;
+         }
+         riskMoney = MathMin(riskMoney, maxRiskBeforeFloor);
+      }
+
+      ENUM_ORDER_TYPE orderType = (bias == BIAS_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+      double stopPrice = (bias == BIAS_BUY) ? entryPrice - stopDistance
+                                            : entryPrice + stopDistance;
+      double moneyPerLot = RiskMoneyForOrder(orderType, entryPrice, stopPrice, 1.0);
+      if(moneyPerLot <= 0)
+         return 0.0;
+
+      return NormalizeLots(riskMoney / moneyPerLot);
+   }
+
+   bool ExposureAllows(const ENUM_TRADE_BIAS bias,
+                       const double entryPrice,
+                       const double stopDistance,
+                       const double lots,
+                       string &reason)
+   {
+      if(InpUseAccountWideExposureGuard)
+      {
+         bool hasAccountUnprotectedPosition = false;
+         int accountPositionCount = 0;
+         double accountOpenRiskPercent = AccountWideOpenRiskPercent(hasAccountUnprotectedPosition,
+                                                                    accountPositionCount);
+         if(accountOpenRiskPercent < 0.0)
+         {
+            reason = "account-wide equity unavailable";
+            return false;
+         }
+         if(hasAccountUnprotectedPosition && InpAccountWideBlockUnprotectedExposure)
+         {
+            reason = "account-wide unprotected exposure";
+            return false;
+         }
+         if(InpAccountWideMaxPositions <= 0)
+         {
+            reason = "account-wide position cap disabled";
+            return false;
+         }
+         if(accountPositionCount >= InpAccountWideMaxPositions)
+         {
+            reason = "account-wide position limit";
+            return false;
+         }
+
+         double accountRiskCap = MathMax(0.0, InpAccountWideMaxOpenRiskPercent);
+         if(accountRiskCap <= 0.0)
+         {
+            reason = "account-wide risk cap disabled";
+            return false;
+         }
+
+         double accountEquity = AccountInfoDouble(ACCOUNT_EQUITY);
+         if(accountEquity <= 0.0)
+         {
+            reason = "account-wide equity unavailable";
+            return false;
+         }
+         ENUM_ORDER_TYPE accountOrderType = (bias == BIAS_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+         double accountStopPrice = (bias == BIAS_BUY) ? entryPrice - stopDistance
+                                                      : entryPrice + stopDistance;
+         double addedAccountRiskMoney = RiskMoneyForOrder(accountOrderType,
+                                                           entryPrice,
+                                                           accountStopPrice,
+                                                           lots);
+         if(addedAccountRiskMoney <= 0.0)
+         {
+            reason = "account-wide added risk calculation";
+            return false;
+         }
+         double addedAccountRiskPercent = 100.0 * addedAccountRiskMoney / accountEquity;
+         if(accountOpenRiskPercent + addedAccountRiskPercent > accountRiskCap)
+         {
+            reason = "account-wide open risk limit";
+            return false;
+         }
+      }
+
+      if(InpMaxOpenRiskPercent <= 0.0)
+         return true;
+
+      bool hasUnprotectedPosition = false;
+      double openRiskPercent = OpenRiskPercent(hasUnprotectedPosition);
+      if(hasUnprotectedPosition && InpBlockUnprotectedExposure)
+      {
+         reason = "unprotected open exposure";
+         return false;
+      }
+
+      double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+      if(equity <= 0.0)
+      {
+         reason = "equity unavailable";
+         return false;
+      }
+
+      ENUM_ORDER_TYPE orderType = (bias == BIAS_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+      double stopPrice = (bias == BIAS_BUY) ? entryPrice - stopDistance
+                                            : entryPrice + stopDistance;
+      double addedRiskMoney = RiskMoneyForOrder(orderType, entryPrice, stopPrice, lots);
+      if(addedRiskMoney <= 0.0)
+      {
+         reason = "open risk calculation";
+         return false;
+      }
+      double addedRiskPercent = 100.0 * addedRiskMoney / equity;
+      double maxOpenRiskPercent = EffectiveMaxOpenRiskPercent();
+      if(openRiskPercent + addedRiskPercent > maxOpenRiskPercent)
+      {
+         reason = "open risk limit";
+         return false;
+      }
+
+      return true;
+   }
+
+   double EffectiveMaxOpenRiskPercent()
+   {
+      double baseCap = MathMax(0.0, InpMaxOpenRiskPercent);
+      if(baseCap <= 0.0 || !InpUseHouseMoneyOpenRiskExpansion)
+         return baseCap;
+      if(!HouseMoneyAccelerationAllowed())
+         return baseCap;
+
+      double cushionPercent = ProtectedFloorCushionPercent();
+      double startPercent = MathMax(0.0, InpHouseMoneyOpenRiskStartCushionPercent);
+      double fullPercent = MathMax(startPercent + 0.01, InpHouseMoneyOpenRiskFullCushionPercent);
+      if(cushionPercent <= startPercent)
+         return baseCap;
+
+      double progress = (cushionPercent - startPercent) / (fullPercent - startPercent);
+      progress = MathMin(1.0, MathMax(0.0, progress));
+      double maxCap = MathMax(baseCap, InpHouseMoneyMaxOpenRiskPercent);
+      return baseCap + progress * (maxCap - baseCap);
+   }
+
+   bool ScaleInOpenProfitCoversRisk(const ENUM_TRADE_BIAS bias,
+                                    const double entryPrice,
+                                    const double stopDistance,
+                                    const double lots,
+                                    string &reason)
+   {
+      reason = "";
+      if(!InpWinnerScaleInRequireOpenProfitRiskCover)
+         return true;
+
+      ENUM_ORDER_TYPE orderType = (bias == BIAS_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+      double stopPrice = (bias == BIAS_BUY) ? entryPrice - stopDistance
+                                            : entryPrice + stopDistance;
+      double addedRiskMoney = RiskMoneyForOrder(orderType, entryPrice, stopPrice, lots);
+      if(addedRiskMoney <= 0.0)
+      {
+         reason = "scale-in risk unavailable";
+         return false;
+      }
+
+      int positions = 0;
+      double openProfit = OpenBasketProfit(positions);
+      if(positions <= 0 || openProfit <= 0.0)
+      {
+         reason = "scale-in no open profit cushion";
+         return false;
+      }
+
+      double requiredCoverage = addedRiskMoney *
+                                MathMax(0.0, InpWinnerScaleInOpenProfitRiskCoverage);
+      if(openProfit < requiredCoverage)
+      {
+         reason = "scale-in open profit risk cover";
+         return false;
+      }
+
+      return true;
+   }
+
+   int ConsecutiveLosses() { return m_consecutiveLosses; }
+   double PeakEquity() { return m_peakEquity; }
+   double DailyPeakProfit() { return m_dailyPeakProfit; }
+   double WeeklyPeakProfit() { return m_weeklyPeakProfit; }
+   double MonthlyPeakProfit() { return m_monthlyPeakProfit; }
+   double DailyStartEquity() { return m_dailyStartEquity; }
+   double DailyPeakEquity() { return m_dailyPeakEquity; }
+};
+
+class CMarketStructure
+{
+public:
+   bool HighestHighForTimeframe(const ENUM_TIMEFRAMES timeframe,
+                                const int startShift,
+                                const int bars,
+                                double &price)
+   {
+      int index = iHighest(_Symbol, timeframe, MODE_HIGH, bars, startShift);
+      if(index < 0)
+         return false;
+      price = iHigh(_Symbol, timeframe, index);
+      return price > 0;
+   }
+
+   bool HighestHigh(const int startShift, const int bars, double &price)
+   {
+      return HighestHighForTimeframe(InpSignalTimeframe, startShift, bars, price);
+   }
+
+   bool LowestLowForTimeframe(const ENUM_TIMEFRAMES timeframe,
+                              const int startShift,
+                              const int bars,
+                              double &price)
+   {
+      int index = iLowest(_Symbol, timeframe, MODE_LOW, bars, startShift);
+      if(index < 0)
+         return false;
+      price = iLow(_Symbol, timeframe, index);
+      return price > 0;
+   }
+
+   bool LowestLow(const int startShift, const int bars, double &price)
+   {
+      return LowestLowForTimeframe(InpSignalTimeframe, startShift, bars, price);
+   }
+
+   bool BOS(const ENUM_TRADE_BIAS bias, const int lookback)
+   {
+      double level = 0;
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      if(bias == BIAS_BUY && HighestHigh(2, lookback, level))
+         return close1 > level;
+      if(bias == BIAS_SELL && LowestLow(2, lookback, level))
+         return close1 < level;
+      return false;
+   }
+
+   bool DisplacementBOS(const ENUM_TRADE_BIAS bias, const int lookback, const double atr)
+   {
+      if(atr <= 0.0)
+         return false;
+
+      double level = 0.0;
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range <= _Point)
+         return false;
+
+      if(range < atr * MathMax(0.0, InpDisplacementBOSMinRangeATR))
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range;
+      if(bodyPercent < MathMax(0.0, InpDisplacementBOSMinBodyPercent))
+         return false;
+
+      double buffer = MathMax(0.0, InpDisplacementBOSBufferPoints) * _Point;
+      if(bias == BIAS_BUY && HighestHigh(2, lookback, level))
+         return close1 > open1 && close1 > level + buffer;
+      if(bias == BIAS_SELL && LowestLow(2, lookback, level))
+         return close1 < open1 && close1 < level - buffer;
+      return false;
+   }
+
+   bool IsSwingHigh(const int shift, const int leftBars, const int rightBars)
+   {
+      double high = iHigh(_Symbol, InpSignalTimeframe, shift);
+      if(high <= 0.0)
+         return false;
+
+      int left = MathMax(1, leftBars);
+      int right = MathMax(1, rightBars);
+      for(int i = 1; i <= left; i++)
+      {
+         double olderHigh = iHigh(_Symbol, InpSignalTimeframe, shift + i);
+         if(olderHigh <= 0.0 || high <= olderHigh)
+            return false;
+      }
+      for(int i = 1; i <= right; i++)
+      {
+         double newerHigh = iHigh(_Symbol, InpSignalTimeframe, shift - i);
+         if(newerHigh <= 0.0 || high <= newerHigh)
+            return false;
+      }
+      return true;
+   }
+
+   bool IsSwingLow(const int shift, const int leftBars, const int rightBars)
+   {
+      double low = iLow(_Symbol, InpSignalTimeframe, shift);
+      if(low <= 0.0)
+         return false;
+
+      int left = MathMax(1, leftBars);
+      int right = MathMax(1, rightBars);
+      for(int i = 1; i <= left; i++)
+      {
+         double olderLow = iLow(_Symbol, InpSignalTimeframe, shift + i);
+         if(olderLow <= 0.0 || low >= olderLow)
+            return false;
+      }
+      for(int i = 1; i <= right; i++)
+      {
+         double newerLow = iLow(_Symbol, InpSignalTimeframe, shift - i);
+         if(newerLow <= 0.0 || low >= newerLow)
+            return false;
+      }
+      return true;
+   }
+
+   bool RecentSwingAllows(const ENUM_TRADE_BIAS bias)
+   {
+      int right = MathMax(1, InpSwingRightBars);
+      int maxBars = MathMax(right + 1, InpMaxBarsSinceSwing);
+      int left = MathMax(1, InpSwingLeftBars);
+
+      for(int shift = right + 1; shift <= maxBars + right; shift++)
+      {
+         if(bias == BIAS_BUY && IsSwingLow(shift, left, right))
+            return true;
+         if(bias == BIAS_SELL && IsSwingHigh(shift, left, right))
+            return true;
+      }
+      return false;
+   }
+
+   bool BreakoutRetest(const ENUM_TRADE_BIAS bias, const int lookback, const double atr)
+   {
+      if(atr <= 0)
+         return false;
+
+      double level = 0.0;
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double tolerance = atr * InpBreakoutRetestATR;
+      double closeBuffer = InpBreakoutRetestCloseBufferPoints * _Point;
+
+      if(bias == BIAS_BUY && HighestHigh(3, lookback, level))
+      {
+         double close2 = iClose(_Symbol, InpSignalTimeframe, 2);
+         return close2 > level && low1 <= level + tolerance && close1 > level + closeBuffer;
+      }
+      if(bias == BIAS_SELL && LowestLow(3, lookback, level))
+      {
+         double close2 = iClose(_Symbol, InpSignalTimeframe, 2);
+         return close2 < level && high1 >= level - tolerance && close1 < level - closeBuffer;
+      }
+      return false;
+   }
+
+   bool LiquiditySweep(const ENUM_TRADE_BIAS bias, const int lookback)
+   {
+      double level = 0;
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+
+      if(bias == BIAS_BUY && LowestLow(2, lookback, level))
+         return low1 < level && close1 > open1 && close1 > level;
+      if(bias == BIAS_SELL && HighestHigh(2, lookback, level))
+         return high1 > level && close1 < open1 && close1 < level;
+      return false;
+   }
+
+   bool SweepRejection(const ENUM_TRADE_BIAS bias, const int lookback)
+   {
+      double level = 0.0;
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range <= _Point)
+         return false;
+
+      double minWickPercent = MathMax(0.0, InpSweepRejectionMinWickPercent);
+      double closeLocation = (close1 - low1) / range;
+      double closeThreshold = MathMin(0.95, MathMax(0.50, InpSweepRejectionMinCloseLocation));
+      double upperPercent = 100.0 * (high1 - MathMax(open1, close1)) / range;
+      double lowerPercent = 100.0 * (MathMin(open1, close1) - low1) / range;
+
+      if(bias == BIAS_BUY && LowestLow(2, lookback, level))
+         return low1 < level && close1 > level && close1 > open1 &&
+                lowerPercent >= minWickPercent && closeLocation >= closeThreshold;
+      if(bias == BIAS_SELL && HighestHigh(2, lookback, level))
+         return high1 > level && close1 < level && close1 < open1 &&
+                upperPercent >= minWickPercent && closeLocation <= (1.0 - closeThreshold);
+      return false;
+   }
+
+   bool CHoCH(const ENUM_TRADE_BIAS bias, const int lookback)
+   {
+      double previousHigh = 0;
+      double previousLow = 0;
+      double priorHigh = 0;
+      double priorLow = 0;
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+
+      if(!HighestHigh(2, lookback, previousHigh) || !LowestLow(2, lookback, previousLow))
+         return false;
+      if(!HighestHigh(2 + lookback, lookback, priorHigh) || !LowestLow(2 + lookback, lookback, priorLow))
+         return false;
+
+      if(bias == BIAS_BUY)
+         return previousLow < priorLow && close1 > previousHigh;
+      if(bias == BIAS_SELL)
+         return previousHigh > priorHigh && close1 < previousLow;
+      return false;
+   }
+
+   bool FairValueGap(const ENUM_TRADE_BIAS bias, const int lookback, const double atr)
+   {
+      if(atr <= 0)
+         return false;
+
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double minGap = atr * InpFVGMinATR;
+      for(int shift = 1; shift <= lookback; shift++)
+      {
+         double highOlder = iHigh(_Symbol, InpSignalTimeframe, shift + 2);
+         double lowOlder = iLow(_Symbol, InpSignalTimeframe, shift + 2);
+         double highRecent = iHigh(_Symbol, InpSignalTimeframe, shift);
+         double lowRecent = iLow(_Symbol, InpSignalTimeframe, shift);
+
+         if(bias == BIAS_BUY && lowRecent - highOlder >= minGap)
+         {
+            double midpoint = (lowRecent + highOlder) * 0.5;
+            if(close1 >= midpoint)
+               return true;
+         }
+         if(bias == BIAS_SELL && lowOlder - highRecent >= minGap)
+         {
+            double midpoint = (lowOlder + highRecent) * 0.5;
+            if(close1 <= midpoint)
+               return true;
+         }
+      }
+      return false;
+   }
+
+   bool FairValueGapRetest(const ENUM_TRADE_BIAS bias, const int lookback, const double atr)
+   {
+      if(atr <= 0)
+         return false;
+
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      if(open1 <= 0.0 || close1 <= 0.0 || low1 <= 0.0 || high1 <= 0.0)
+         return false;
+
+      double minGap = atr * MathMax(0.0, InpFVGMinATR);
+      double buffer = atr * MathMax(0.0, InpFVGRetestBufferATR);
+      for(int shift = 2; shift <= lookback + 1; shift++)
+      {
+         double highOlder = iHigh(_Symbol, InpSignalTimeframe, shift + 2);
+         double lowOlder = iLow(_Symbol, InpSignalTimeframe, shift + 2);
+         double highRecent = iHigh(_Symbol, InpSignalTimeframe, shift);
+         double lowRecent = iLow(_Symbol, InpSignalTimeframe, shift);
+
+         if(highOlder <= 0.0 || lowOlder <= 0.0 || highRecent <= 0.0 || lowRecent <= 0.0)
+            continue;
+
+         if(bias == BIAS_BUY && lowRecent - highOlder >= minGap)
+         {
+            double zoneLow = highOlder;
+            double zoneHigh = lowRecent;
+            bool touchedZone = low1 <= zoneHigh + buffer && high1 >= zoneLow - buffer;
+            if(touchedZone && close1 > open1 && close1 >= zoneHigh)
+               return true;
+         }
+
+         if(bias == BIAS_SELL && lowOlder - highRecent >= minGap)
+         {
+            double zoneLow = highRecent;
+            double zoneHigh = lowOlder;
+            bool touchedZone = high1 >= zoneLow - buffer && low1 <= zoneHigh + buffer;
+            if(touchedZone && close1 < open1 && close1 <= zoneLow)
+               return true;
+         }
+      }
+      return false;
+   }
+
+   bool OrderBlockRetest(const ENUM_TRADE_BIAS bias, const int lookback, const double atr)
+   {
+      if(atr <= 0)
+         return false;
+
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double retestBuffer = atr * InpOrderBlockRetestATR;
+
+      for(int shift = 2; shift <= lookback + 1; shift++)
+      {
+         double open = iOpen(_Symbol, InpSignalTimeframe, shift);
+         double close = iClose(_Symbol, InpSignalTimeframe, shift);
+         double high = iHigh(_Symbol, InpSignalTimeframe, shift);
+         double low = iLow(_Symbol, InpSignalTimeframe, shift);
+
+         if(bias == BIAS_BUY && close < open && close1 > high && low1 <= high + retestBuffer)
+            return true;
+         if(bias == BIAS_SELL && close > open && close1 < low && high1 >= low - retestBuffer)
+            return true;
+      }
+      return false;
+   }
+
+   bool EqualHighLowSweep(const ENUM_TRADE_BIAS bias, const int lookback)
+   {
+      double tolerance = InpEqualLevelTolerancePoints * _Point;
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+
+      for(int a = 2; a <= lookback; a++)
+      {
+         double highA = iHigh(_Symbol, InpSignalTimeframe, a);
+         double lowA = iLow(_Symbol, InpSignalTimeframe, a);
+         for(int b = a + 1; b <= lookback + 1; b++)
+         {
+            double highB = iHigh(_Symbol, InpSignalTimeframe, b);
+            double lowB = iLow(_Symbol, InpSignalTimeframe, b);
+
+            if(bias == BIAS_SELL && MathAbs(highA - highB) <= tolerance)
+            {
+               double level = MathMax(highA, highB);
+               if(high1 > level && close1 < open1 && close1 < level)
+                  return true;
+            }
+            if(bias == BIAS_BUY && MathAbs(lowA - lowB) <= tolerance)
+            {
+               double level = MathMin(lowA, lowB);
+               if(low1 < level && close1 > open1 && close1 > level)
+                  return true;
+            }
+         }
+      }
+      return false;
+   }
+
+   bool PeriodLevelRejection(const ENUM_TRADE_BIAS bias, const ENUM_TIMEFRAMES timeframe)
+   {
+      double high = iHigh(_Symbol, timeframe, 1);
+      double low = iLow(_Symbol, timeframe, 1);
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double buffer = InpLevelRejectionBufferPoints * _Point;
+
+      if(high <= 0 || low <= 0)
+         return false;
+      if(bias == BIAS_BUY)
+         return low1 <= low + buffer && close1 > open1 && close1 > low;
+      if(bias == BIAS_SELL)
+         return high1 >= high - buffer && close1 < open1 && close1 < high;
+      return false;
+   }
+
+   bool PreviousLevels(const ENUM_TRADE_BIAS bias)
+   {
+      if(InpUsePreviousDayLevels && PeriodLevelRejection(bias, PERIOD_D1))
+         return true;
+      if(InpUsePreviousWeekLevels && PeriodLevelRejection(bias, PERIOD_W1))
+         return true;
+      if(InpUsePreviousMonthLevels && PeriodLevelRejection(bias, PERIOD_MN1))
+         return true;
+      return false;
+   }
+
+   bool SessionLevelSweep(const ENUM_TRADE_BIAS bias)
+   {
+      datetime currentBar = iTime(_Symbol, InpSignalTimeframe, 1);
+      if(currentBar <= 0)
+         return false;
+
+      int bars = MathMax(4, (int)MathCeil((InpSessionLevelLookbackHours * 3600.0) / PeriodSeconds(InpSignalTimeframe)));
+      double high = 0;
+      double low = 0;
+      if(!HighestHigh(2, bars, high) || !LowestLow(2, bars, low))
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+
+      if(bias == BIAS_BUY)
+         return low1 < low && close1 > open1 && close1 > low;
+      if(bias == BIAS_SELL)
+         return high1 > high && close1 < open1 && close1 < high;
+      return false;
+   }
+
+   bool RoundNumberRejection(const ENUM_TRADE_BIAS bias)
+   {
+      double step = InpRoundNumberStepPoints * _Point;
+      double buffer = InpRoundNumberBufferPoints * _Point;
+      if(step <= 0.0 || buffer < 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      if(high1 <= 0.0 || low1 <= 0.0 || close1 <= 0.0 || open1 <= 0.0)
+         return false;
+
+      double reference = (high1 + low1) * 0.5;
+      double roundLevel = MathRound(reference / step) * step;
+      if(roundLevel <= 0.0)
+         return false;
+
+      if(bias == BIAS_BUY)
+         return low1 <= roundLevel + buffer && close1 > open1 && close1 > roundLevel;
+      if(bias == BIAS_SELL)
+         return high1 >= roundLevel - buffer && close1 < open1 && close1 < roundLevel;
+      return false;
+   }
+
+   bool OpeningRangeBreakout(const ENUM_TRADE_BIAS bias)
+   {
+      datetime currentBar = iTime(_Symbol, InpSignalTimeframe, 1);
+      if(currentBar <= 0)
+         return false;
+
+      MqlDateTime dt;
+      TimeToStruct(currentBar, dt);
+      dt.hour = InpOpeningRangeStartHour;
+      dt.min = InpOpeningRangeStartMinute;
+      dt.sec = 0;
+      datetime rangeStart = StructToTime(dt);
+      datetime rangeEnd = rangeStart + MathMax(1, InpOpeningRangeMinutes) * 60;
+      if(currentBar <= rangeEnd)
+         return false;
+
+      int maxBarsAfter = MathMax(1, InpOpeningRangeMaxBarsAfter);
+      if((currentBar - rangeEnd) > maxBarsAfter * PeriodSeconds(InpSignalTimeframe))
+         return false;
+
+      double rangeHigh = 0.0;
+      double rangeLow = 0.0;
+      int rangeBars = 0;
+      for(int shift = 1; shift <= 500; shift++)
+      {
+         datetime barTime = iTime(_Symbol, InpSignalTimeframe, shift);
+         if(barTime <= 0)
+            break;
+         if(barTime < rangeStart)
+            break;
+         if(barTime >= rangeStart && barTime < rangeEnd)
+         {
+            double high = iHigh(_Symbol, InpSignalTimeframe, shift);
+            double low = iLow(_Symbol, InpSignalTimeframe, shift);
+            if(high <= 0 || low <= 0)
+               continue;
+            rangeHigh = (rangeBars == 0) ? high : MathMax(rangeHigh, high);
+            rangeLow = (rangeBars == 0) ? low : MathMin(rangeLow, low);
+            rangeBars++;
+         }
+      }
+
+      if(rangeBars <= 0 || rangeHigh <= rangeLow)
+         return false;
+
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double buffer = InpOpeningRangeBufferPoints * _Point;
+      if(bias == BIAS_BUY)
+         return close1 > rangeHigh + buffer;
+      if(bias == BIAS_SELL)
+         return close1 < rangeLow - buffer;
+      return false;
+   }
+
+   bool AsianRangeLevels(double &rangeHigh, double &rangeLow)
+   {
+      rangeHigh = 0.0;
+      rangeLow = 0.0;
+      datetime currentBar = iTime(_Symbol, InpSignalTimeframe, 1);
+      if(currentBar <= 0)
+         return false;
+
+      MqlDateTime dt;
+      TimeToStruct(currentBar, dt);
+      dt.hour = InpAsianRangeStartHour;
+      dt.min = InpAsianRangeStartMinute;
+      dt.sec = 0;
+      datetime rangeStart = StructToTime(dt);
+
+      dt.hour = InpAsianRangeEndHour;
+      dt.min = InpAsianRangeEndMinute;
+      dt.sec = 0;
+      datetime rangeEnd = StructToTime(dt);
+      if(rangeEnd <= rangeStart)
+         rangeEnd += 86400;
+
+      if(currentBar <= rangeEnd)
+         return false;
+
+      int maxBarsAfter = MathMax(1, InpAsianRangeMaxBarsAfter);
+      if((currentBar - rangeEnd) > maxBarsAfter * PeriodSeconds(InpSignalTimeframe))
+         return false;
+
+      int rangeBars = 0;
+      for(int shift = 1; shift <= 1000; shift++)
+      {
+         datetime barTime = iTime(_Symbol, InpSignalTimeframe, shift);
+         if(barTime <= 0)
+            break;
+         if(barTime < rangeStart)
+            break;
+         if(barTime >= rangeStart && barTime < rangeEnd)
+         {
+            double high = iHigh(_Symbol, InpSignalTimeframe, shift);
+            double low = iLow(_Symbol, InpSignalTimeframe, shift);
+            if(high <= 0.0 || low <= 0.0)
+               continue;
+            rangeHigh = (rangeBars == 0) ? high : MathMax(rangeHigh, high);
+            rangeLow = (rangeBars == 0) ? low : MathMin(rangeLow, low);
+            rangeBars++;
+         }
+      }
+
+      if(rangeBars <= 0 || rangeHigh <= rangeLow)
+         return false;
+
+      return true;
+   }
+
+   bool AsianRangeSweep(const ENUM_TRADE_BIAS bias)
+   {
+      double rangeHigh = 0.0;
+      double rangeLow = 0.0;
+      if(!AsianRangeLevels(rangeHigh, rangeLow))
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double buffer = MathMax(0.0, InpAsianSweepBufferPoints) * _Point;
+
+      if(bias == BIAS_BUY)
+         return low1 < rangeLow - buffer && close1 > open1 && close1 > rangeLow;
+      if(bias == BIAS_SELL)
+         return high1 > rangeHigh + buffer && close1 < open1 && close1 < rangeHigh;
+      return false;
+   }
+
+   bool CompressionBreakout(const ENUM_TRADE_BIAS bias, const double atr)
+   {
+      if(atr <= 0.0)
+         return false;
+
+      int lookback = MathMax(4, InpCompressionLookbackBars);
+      double rangeHigh = 0.0;
+      double rangeLow = 0.0;
+      if(!HighestHigh(2, lookback, rangeHigh) || !LowestLow(2, lookback, rangeLow))
+         return false;
+
+      double compressionRange = rangeHigh - rangeLow;
+      if(compressionRange <= _Point)
+         return false;
+      if(InpCompressionMaxRangeATR > 0.0 && compressionRange > atr * InpCompressionMaxRangeATR)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double candleRange = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || candleRange <= _Point)
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / candleRange;
+      if(bodyPercent < InpCompressionMinBodyPercent)
+         return false;
+
+      double buffer = MathMax(0.0, InpCompressionBreakBufferPoints) * _Point;
+      if(bias == BIAS_BUY)
+         return close1 > rangeHigh + buffer && close1 > open1;
+      if(bias == BIAS_SELL)
+         return close1 < rangeLow - buffer && close1 < open1;
+      return false;
+   }
+
+   bool RangeExpansionBreakout(const ENUM_TRADE_BIAS bias, const double atr)
+   {
+      if(atr <= 0.0)
+         return false;
+
+      int lookback = MathMax(4, InpRangeExpansionLookbackBars);
+      double rangeHigh = 0.0;
+      double rangeLow = 0.0;
+      if(!HighestHigh(2, lookback, rangeHigh) || !LowestLow(2, lookback, rangeLow))
+         return false;
+
+      double averageRange = 0.0;
+      int samples = 0;
+      for(int shift = 2; shift < 2 + lookback; shift++)
+      {
+         double high = iHigh(_Symbol, InpSignalTimeframe, shift);
+         double low = iLow(_Symbol, InpSignalTimeframe, shift);
+         if(high <= 0.0 || low <= 0.0 || high <= low)
+            continue;
+         averageRange += high - low;
+         samples++;
+      }
+      if(samples < 4 || averageRange <= 0.0)
+         return false;
+      averageRange /= (double)samples;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range <= _Point)
+         return false;
+
+      if(range < averageRange * MathMax(1.0, InpRangeExpansionMinRangeRatio))
+         return false;
+      if(range < atr * MathMax(0.0, InpRangeExpansionMinATR))
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range;
+      if(bodyPercent < MathMax(0.0, InpRangeExpansionMinBodyPercent))
+         return false;
+
+      double closeLocation = (close1 - low1) / range;
+      double closeThreshold = MathMin(0.95, MathMax(0.50, InpRangeExpansionCloseLocation));
+      double buffer = MathMax(0.0, InpRangeExpansionBufferPoints) * _Point;
+
+      if(bias == BIAS_BUY)
+         return close1 > open1 && close1 > rangeHigh + buffer && closeLocation >= closeThreshold;
+      if(bias == BIAS_SELL)
+         return close1 < open1 && close1 < rangeLow - buffer && closeLocation <= (1.0 - closeThreshold);
+      return false;
+   }
+
+   bool NarrowRangeBreakout(const ENUM_TRADE_BIAS bias, const double atr)
+   {
+      if(atr <= 0.0)
+         return false;
+
+      double setupHigh = iHigh(_Symbol, InpSignalTimeframe, 2);
+      double setupLow = iLow(_Symbol, InpSignalTimeframe, 2);
+      if(setupHigh <= 0.0 || setupLow <= 0.0 || setupHigh <= setupLow)
+         return false;
+
+      double setupRange = setupHigh - setupLow;
+      if(InpNarrowRangeMaxATR > 0.0 && setupRange > atr * InpNarrowRangeMaxATR)
+         return false;
+
+      int lookback = MathMax(4, InpNarrowRangeLookbackBars);
+      double averageRange = 0.0;
+      int samples = 0;
+      for(int shift = 3; shift < 3 + lookback; shift++)
+      {
+         double high = iHigh(_Symbol, InpSignalTimeframe, shift);
+         double low = iLow(_Symbol, InpSignalTimeframe, shift);
+         if(high <= 0.0 || low <= 0.0 || high <= low)
+            continue;
+         averageRange += high - low;
+         samples++;
+      }
+
+      if(samples < 4 || averageRange <= 0.0)
+         return false;
+      averageRange /= (double)samples;
+
+      if(setupRange > averageRange * MathMax(0.05, InpNarrowRangeMaxAverageRatio))
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double breakRange = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || breakRange <= _Point)
+         return false;
+
+      if(breakRange < atr * MathMax(0.0, InpNarrowBreakMinRangeATR))
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / breakRange;
+      if(bodyPercent < MathMax(0.0, InpNarrowBreakMinBodyPercent))
+         return false;
+
+      double closeLocation = (close1 - low1) / breakRange;
+      double closeThreshold = MathMin(0.95, MathMax(0.50, InpNarrowBreakCloseLocation));
+      double buffer = MathMax(0.0, InpNarrowBreakBufferPoints) * _Point;
+
+      if(bias == BIAS_BUY)
+         return close1 > open1 && close1 > setupHigh + buffer && closeLocation >= closeThreshold;
+      if(bias == BIAS_SELL)
+         return close1 < open1 && close1 < setupLow - buffer && closeLocation <= (1.0 - closeThreshold);
+      return false;
+   }
+
+   bool DonchianBreakout(const ENUM_TRADE_BIAS bias)
+   {
+      int lookback = MathMax(4, InpDonchianLookbackBars);
+      double channelHigh = 0.0;
+      double channelLow = 0.0;
+      if(!HighestHigh(2, lookback, channelHigh) || !LowestLow(2, lookback, channelLow))
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range <= _Point)
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range;
+      if(bodyPercent < MathMax(0.0, InpDonchianMinBodyPercent))
+         return false;
+
+      double buffer = MathMax(0.0, InpDonchianBreakBufferPoints) * _Point;
+      if(bias == BIAS_BUY)
+         return close1 > channelHigh + buffer && close1 > open1;
+      if(bias == BIAS_SELL)
+         return close1 < channelLow - buffer && close1 < open1;
+      return false;
+   }
+
+   bool DailyOpenBias(const ENUM_TRADE_BIAS bias)
+   {
+      double dailyOpen = iOpen(_Symbol, PERIOD_D1, 0);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      if(dailyOpen <= 0.0 || close1 <= 0.0)
+         return false;
+
+      double buffer = MathMax(0.0, InpDailyOpenBiasBufferPoints) * _Point;
+      if(bias == BIAS_BUY)
+         return close1 > dailyOpen + buffer;
+      if(bias == BIAS_SELL)
+         return close1 < dailyOpen - buffer;
+      return false;
+   }
+
+   bool PreviousDayRangeBias(const ENUM_TRADE_BIAS bias)
+   {
+      double high = iHigh(_Symbol, PERIOD_D1, 1);
+      double low = iLow(_Symbol, PERIOD_D1, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      if(high <= 0.0 || low <= 0.0 || high <= low || close1 <= 0.0)
+         return false;
+
+      double buffer = MathMax(0.0, InpPreviousDayRangeBufferPoints) * _Point;
+      if(InpPreviousDayRangeMode == PREV_DAY_RANGE_BREAKOUT)
+      {
+         if(bias == BIAS_BUY)
+            return close1 > high + buffer;
+         if(bias == BIAS_SELL)
+            return close1 < low - buffer;
+         return false;
+      }
+
+      double midpoint = (high + low) * 0.5;
+      if(bias == BIAS_BUY)
+         return close1 > midpoint + buffer;
+      if(bias == BIAS_SELL)
+         return close1 < midpoint - buffer;
+      return false;
+   }
+
+   bool RangeLocationBias(const ENUM_TRADE_BIAS bias)
+   {
+      double rangeHigh = 0.0;
+      double rangeLow = 0.0;
+      int lookback = MathMax(4, InpRangeLocationLookbackBars);
+      if(!HighestHigh(1, lookback, rangeHigh) || !LowestLow(1, lookback, rangeLow))
+         return false;
+
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      if(rangeHigh <= rangeLow || close1 <= 0.0)
+         return false;
+
+      double locationPercent = 100.0 * (close1 - rangeLow) / (rangeHigh - rangeLow);
+      if(bias == BIAS_BUY)
+         return locationPercent >= MathMax(0.0, MathMin(100.0, InpRangeLocationBuyMinPercent));
+      if(bias == BIAS_SELL)
+         return locationPercent <= MathMax(0.0, MathMin(100.0, InpRangeLocationSellMaxPercent));
+      return false;
+   }
+
+   bool VWAPValueForTimeframe(const ENUM_TIMEFRAMES timeframe,
+                              const int lookback,
+                              double &vwap)
+   {
+      double weighted = 0;
+      double volume = 0;
+      int bars = MathMax(5, lookback);
+      for(int shift = 1; shift <= bars; shift++)
+      {
+         double high = iHigh(_Symbol, timeframe, shift);
+         double low = iLow(_Symbol, timeframe, shift);
+         double close = iClose(_Symbol, timeframe, shift);
+         long tickVolume = iVolume(_Symbol, timeframe, shift);
+         if(high <= 0 || low <= 0 || close <= 0 || tickVolume <= 0)
+            continue;
+
+         double typical = (high + low + close) / 3.0;
+         weighted += typical * (double)tickVolume;
+         volume += (double)tickVolume;
+      }
+
+      if(volume <= 0)
+         return false;
+
+      vwap = weighted / volume;
+      return vwap > 0.0;
+   }
+
+   bool VWAPValue(const int lookback, double &vwap)
+   {
+      return VWAPValueForTimeframe(InpSignalTimeframe, lookback, vwap);
+   }
+
+   bool VWAPConfluence(const ENUM_TRADE_BIAS bias, const int lookback, const double atr)
+   {
+      if(atr <= 0)
+         return false;
+
+      double vwap = 0.0;
+      if(!VWAPValue(lookback, vwap))
+         return false;
+
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      if(MathAbs(close1 - vwap) > atr * InpVWAPMaxDistanceATR)
+         return false;
+
+      if(bias == BIAS_BUY)
+         return close1 >= vwap;
+      if(bias == BIAS_SELL)
+         return close1 <= vwap;
+      return false;
+   }
+};
+
+class CTrendFilter
+{
+public:
+   ENUM_TRADE_BIAS Bias(string &reason)
+   {
+      int buyVotes = 0;
+      int sellVotes = 0;
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+
+      if(InpUseEMA200Trend)
+      {
+         double ema = 0;
+         if(!indicators.TrendEMA(1, ema))
+            return BIAS_NONE;
+         if(close1 > ema)
+            buyVotes++;
+         else if(close1 < ema)
+            sellVotes++;
+      }
+
+      if(InpUseEMA100Trend)
+      {
+         double ema = 0;
+         if(!indicators.FastTrendEMA(1, ema))
+            return BIAS_NONE;
+         if(close1 > ema)
+            buyVotes++;
+         else if(close1 < ema)
+            sellVotes++;
+      }
+
+      if(InpUseEMASlope)
+      {
+         double emaNow = 0;
+         double emaPast = 0;
+         if(!indicators.TrendEMA(1, emaNow) || !indicators.TrendEMA(1 + InpSlopeLookbackBars, emaPast))
+            return BIAS_NONE;
+
+         double slopePoints = (emaNow - emaPast) / _Point;
+         if(slopePoints >= InpMinSlopePoints)
+            buyVotes++;
+         else if(slopePoints <= -InpMinSlopePoints)
+            sellVotes++;
+      }
+
+      if(InpUseMTFTrend)
+      {
+         double mtfEma = 0;
+         double mtfClose = iClose(_Symbol, InpMTFTrendTimeframe, 1);
+         if(!indicators.MTFEMA(1, mtfEma) || mtfClose <= 0)
+            return BIAS_NONE;
+
+         if(mtfClose > mtfEma)
+            buyVotes++;
+         else if(mtfClose < mtfEma)
+            sellVotes++;
+      }
+
+      if(InpUseADXFilter)
+      {
+         double adx = 0;
+         if(!indicators.ADX(1, adx) || adx < InpMinADX)
+         {
+            reason = "ADX below threshold";
+            return BIAS_NONE;
+         }
+      }
+
+      if(InpUseATRVolatilityFilter)
+      {
+         double atr = 0;
+         if(!indicators.ATR(1, atr))
+            return BIAS_NONE;
+         double atrPoints = atr / _Point;
+         if(atrPoints < InpMinATRPoints || atrPoints > InpMaxATRPoints)
+         {
+            reason = "ATR outside range";
+            return BIAS_NONE;
+         }
+      }
+
+      if(buyVotes > sellVotes)
+      {
+         reason = "trend buy";
+         return BIAS_BUY;
+      }
+      if(sellVotes > buyVotes)
+      {
+         reason = "trend sell";
+         return BIAS_SELL;
+      }
+
+      reason = "trend neutral";
+      return BIAS_NONE;
+   }
+};
+
+class CTickMicrostructure
+{
+private:
+   double m_mid[256];
+   long m_timeMsc[256];
+   int m_direction[256];
+   int m_count;
+   int m_next;
+   double m_lastMid;
+   long m_lastTimeMsc;
+
+   int PhysicalIndex(const int logicalIndex)
+   {
+      int start = (m_count < 256) ? 0 : m_next;
+      return (start + logicalIndex) % 256;
+   }
+
+public:
+   CTickMicrostructure()
+   {
+      Reset();
+   }
+
+   void Reset()
+   {
+      m_count = 0;
+      m_next = 0;
+      m_lastMid = 0.0;
+      m_lastTimeMsc = 0;
+      ArrayInitialize(m_mid, 0.0);
+      ArrayInitialize(m_timeMsc, 0);
+      ArrayInitialize(m_direction, 0);
+   }
+
+   void Update()
+   {
+      MqlTick tick;
+      if(!SymbolInfoTick(_Symbol, tick))
+         return;
+      if(tick.bid <= 0 || tick.ask <= 0)
+         return;
+
+      double mid = (tick.bid + tick.ask) * 0.5;
+      long timeMsc = (long)tick.time_msc;
+      if(m_lastTimeMsc == timeMsc && MathAbs(mid - m_lastMid) < _Point * 0.1)
+         return;
+
+      int direction = 0;
+      if(m_lastMid > 0)
+      {
+         if(mid > m_lastMid)
+            direction = 1;
+         else if(mid < m_lastMid)
+            direction = -1;
+      }
+
+      m_mid[m_next] = mid;
+      m_timeMsc[m_next] = timeMsc;
+      m_direction[m_next] = direction;
+      m_next = (m_next + 1) % 256;
+      if(m_count < 256)
+         m_count++;
+
+      m_lastMid = mid;
+      m_lastTimeMsc = timeMsc;
+   }
+
+   bool Snapshot(const int windowSeconds,
+                 int &ticks,
+                 int &upTicks,
+                 int &downTicks,
+                 double &directionRatio,
+                 double &ticksPerSecond,
+                 double &movePoints)
+   {
+      ticks = 0;
+      upTicks = 0;
+      downTicks = 0;
+      directionRatio = 0.0;
+      ticksPerSecond = 0.0;
+      movePoints = 0.0;
+
+      if(m_count <= 1 || windowSeconds <= 0)
+         return false;
+
+      long latestTime = m_timeMsc[PhysicalIndex(m_count - 1)];
+      long cutoff = latestTime - (long)windowSeconds * 1000;
+      double firstMid = 0.0;
+      double lastMid = 0.0;
+      long firstTime = 0;
+      long lastTime = 0;
+
+      for(int i = 0; i < m_count; i++)
+      {
+         int index = PhysicalIndex(i);
+         if(m_timeMsc[index] < cutoff)
+            continue;
+
+         if(ticks == 0)
+         {
+            firstMid = m_mid[index];
+            firstTime = m_timeMsc[index];
+         }
+         lastMid = m_mid[index];
+         lastTime = m_timeMsc[index];
+         ticks++;
+         if(m_direction[index] > 0)
+            upTicks++;
+         else if(m_direction[index] < 0)
+            downTicks++;
+      }
+
+      if(ticks <= 1)
+         return false;
+
+      directionRatio = (double)(upTicks - downTicks) / (double)ticks;
+      double elapsedSeconds = MathMax(0.001, (double)(lastTime - firstTime) / 1000.0);
+      ticksPerSecond = (double)ticks / elapsedSeconds;
+      movePoints = (lastMid - firstMid) / _Point;
+      return true;
+   }
+
+   bool Confirms(const ENUM_TRADE_BIAS bias)
+   {
+      int ticks = 0;
+      int upTicks = 0;
+      int downTicks = 0;
+      double directionRatio = 0.0;
+      double ticksPerSecond = 0.0;
+      double movePoints = 0.0;
+      if(!Snapshot(InpTickMicroWindowSeconds, ticks, upTicks, downTicks, directionRatio, ticksPerSecond, movePoints))
+         return false;
+      if(ticks < InpTickMicroMinTicks || ticksPerSecond < InpTickMicroMinTicksPerSecond)
+         return false;
+
+      if(bias == BIAS_BUY)
+         return directionRatio >= InpTickMicroMinDirectionRatio && movePoints >= InpTickMicroMinMovePoints;
+      if(bias == BIAS_SELL)
+         return directionRatio <= -InpTickMicroMinDirectionRatio && movePoints <= -InpTickMicroMinMovePoints;
+      return false;
+   }
+};
+
+CTickMicrostructure tickMicrostructure;
+
+datetime g_lastBandReversionBarTime = 0;
+
+class CEntryEngine
+{
+private:
+   CMarketStructure m_structure;
+
+   int RequiredConfirmations(const ENUM_TRADE_BIAS bias)
+   {
+      if(!InpUseDirectionalConfirmations)
+         return InpMinimumConfirmations;
+      if(bias == BIAS_BUY)
+         return MathMax(0, InpBuyMinimumConfirmations);
+      if(bias == BIAS_SELL)
+         return MathMax(0, InpSellMinimumConfirmations);
+      return InpMinimumConfirmations;
+   }
+
+   void AddConfirmation(const bool condition,
+                        const int weight,
+                        const string reason,
+                        int &confirmations,
+                        int &qualityScore,
+                        string &reasons)
+   {
+      if(!condition)
+         return;
+
+      confirmations++;
+      int safeWeight = weight;
+      if(safeWeight < 0)
+         safeWeight = 0;
+      qualityScore += safeWeight;
+      reasons += reason;
+   }
+
+   bool DiagnosticTrendFallback(const ENUM_TRADE_BIAS bias)
+   {
+      if(!InpUseDiagnosticTrendFallbackEntry)
+         return false;
+
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      if(open1 <= 0.0 || close1 <= 0.0 || high1 <= 0.0 || low1 <= 0.0 || range <= _Point)
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range;
+      if(bodyPercent < MathMax(0.0, InpDiagnosticFallbackMinBodyPercent))
+         return false;
+
+      if(bias == BIAS_BUY)
+         return close1 > open1;
+      if(bias == BIAS_SELL)
+         return close1 < open1;
+      return false;
+   }
+
+   bool DiagnosticFallbackQualityAllows(const ENUM_TRADE_BIAS bias,
+                                        const double atr,
+                                        const int priceActionScore,
+                                        const int smartMoneyScore)
+   {
+      if(!InpUseDiagnosticFallbackQualityGate)
+         return true;
+      if(atr <= 0.0)
+         return false;
+
+      if(priceActionScore < MathMax(0, InpDiagnosticFallbackMinPriceActionScore))
+         return false;
+      if(smartMoneyScore < MathMax(0, InpDiagnosticFallbackMinSmartMoneyScore))
+         return false;
+
+      bool bos = m_structure.BOS(bias, InpBOSLookbackBars);
+      bool displacementBos = m_structure.DisplacementBOS(bias, InpDisplacementBOSLookbackBars, atr);
+      bool choch = m_structure.CHoCH(bias, InpCHoCHLookbackBars);
+      bool breakoutRetest = m_structure.BreakoutRetest(bias, InpBreakoutRetestLookbackBars, atr);
+      bool hasStructure = bos || displacementBos || choch || breakoutRetest;
+
+      bool liquiditySweep = m_structure.LiquiditySweep(bias, InpSweepLookbackBars);
+      bool sweepRejection = m_structure.SweepRejection(bias, InpSweepLookbackBars);
+      bool equalSweep = m_structure.EqualHighLowSweep(bias, InpEqualLevelLookbackBars);
+      bool sessionSweep = m_structure.SessionLevelSweep(bias);
+      bool asianSweep = m_structure.AsianRangeSweep(bias);
+      bool failedBreakoutReversal = FailedBreakoutReversal(bias);
+      bool hasLiquidity = liquiditySweep || sweepRejection || equalSweep ||
+                          sessionSweep || asianSweep || failedBreakoutReversal;
+
+      bool displacementCandle = DisplacementCandle(bias, atr);
+      bool tickPressure = TickPressureCandle(bias);
+      bool tickSpeed = TickSpeedImpulse(bias, atr);
+      bool vwapPullback = VWAPPullbackContinuation(bias, atr);
+      bool momentum = MomentumCandle(bias, atr);
+      bool candleAnatomy = CandleAnatomy(bias);
+      bool hasExecution = displacementCandle || tickPressure || tickSpeed ||
+                          vwapPullback || momentum || candleAnatomy;
+
+      if(InpDiagnosticFallbackRequireStructure && !hasStructure)
+         return false;
+      if(InpDiagnosticFallbackRequireLiquidity && !hasLiquidity)
+         return false;
+      if(InpDiagnosticFallbackRequireExecution && !hasExecution)
+         return false;
+
+      return true;
+   }
+
+   bool DiagnosticFallbackSpreadAllows(const double atr, string &reason)
+   {
+      reason = "";
+      if(!InpUseDiagnosticFallbackSpreadGuard)
+         return true;
+
+      double spreadPoints = CLogger::SpreadPoints();
+      double maxSpreadPoints = MathMax(0.0, InpDiagnosticFallbackMaxSpreadPoints);
+      if(maxSpreadPoints > 0.0 && spreadPoints > maxSpreadPoints)
+      {
+         reason = "diagnostic fallback spread points";
+         return false;
+      }
+
+      double maxSpreadATRPercent = MathMax(0.0, InpDiagnosticFallbackMaxSpreadATRPercent);
+      if(maxSpreadATRPercent > 0.0 && atr > 0.0)
+      {
+         double spreadATRPercent = 100.0 * spreadPoints / (atr / _Point);
+         if(spreadATRPercent > maxSpreadATRPercent)
+         {
+            reason = "diagnostic fallback spread ATR";
+            return false;
+         }
+      }
+
+      return true;
+   }
+
+   bool EMACross(const ENUM_TRADE_BIAS bias)
+   {
+      double fast1 = 0, fast2 = 0, slow1 = 0, slow2 = 0;
+      if(!indicators.EntryFastEMA(1, fast1) || !indicators.EntryFastEMA(2, fast2) ||
+         !indicators.EntrySlowEMA(1, slow1) || !indicators.EntrySlowEMA(2, slow2))
+         return false;
+
+      if(bias == BIAS_BUY)
+         return fast2 <= slow2 && fast1 > slow1;
+      if(bias == BIAS_SELL)
+         return fast2 >= slow2 && fast1 < slow1;
+      return false;
+   }
+
+   bool EMAPullbackContinuation(const ENUM_TRADE_BIAS bias, const double atr)
+   {
+      if(atr <= 0.0)
+         return false;
+
+      double ema = 0.0;
+      if(!indicators.EntryFastEMA(1, ema) || ema <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range <= _Point)
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range;
+      if(bodyPercent < MathMax(0.0, InpEMAPullbackMinBodyPercent))
+         return false;
+
+      double tolerance = atr * MathMax(0.0, InpEMAPullbackMaxDistanceATR);
+      if(bias == BIAS_BUY)
+         return low1 <= ema + tolerance && close1 > ema && close1 > open1;
+      if(bias == BIAS_SELL)
+         return high1 >= ema - tolerance && close1 < ema && close1 < open1;
+      return false;
+   }
+
+   bool MomentumCandle(const ENUM_TRADE_BIAS bias, const double atr)
+   {
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double body = MathAbs(close1 - open1);
+      if(atr <= 0 || body < atr * InpMomentumBodyATR)
+         return false;
+
+      return (bias == BIAS_BUY && close1 > open1) ||
+             (bias == BIAS_SELL && close1 < open1);
+   }
+
+   bool Engulfing(const ENUM_TRADE_BIAS bias)
+   {
+      double o1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double c1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double o2 = iOpen(_Symbol, InpSignalTimeframe, 2);
+      double c2 = iClose(_Symbol, InpSignalTimeframe, 2);
+
+      if(bias == BIAS_BUY)
+         return c1 > o1 && c2 < o2 && c1 >= o2 && o1 <= c2;
+      if(bias == BIAS_SELL)
+         return c1 < o1 && c2 > o2 && c1 <= o2 && o1 >= c2;
+      return false;
+   }
+
+   bool PinBar(const ENUM_TRADE_BIAS bias)
+   {
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double body = MathMax(MathAbs(close1 - open1), _Point);
+      double upper = high1 - MathMax(open1, close1);
+      double lower = MathMin(open1, close1) - low1;
+
+      if(bias == BIAS_BUY)
+         return lower >= body * InpPinWickToBodyRatio && upper <= body * 1.25;
+      if(bias == BIAS_SELL)
+         return upper >= body * InpPinWickToBodyRatio && lower <= body * 1.25;
+      return false;
+   }
+
+   bool ATRExpansion()
+   {
+      double atr1 = 0;
+      double atrPast = 0;
+      if(!indicators.ATR(1, atr1) || !indicators.ATR(6, atrPast))
+         return false;
+      return atrPast > 0 && atr1 >= atrPast * InpATRExpansionMultiplier;
+   }
+
+   bool VolumeConfirmationForTimeframe(const ENUM_TIMEFRAMES timeframe)
+   {
+      long current = iVolume(_Symbol, timeframe, 1);
+      if(current <= 0)
+         return false;
+
+      double average = 0;
+      for(int i = 2; i < 2 + InpVolumeLookbackBars; i++)
+         average += (double)iVolume(_Symbol, timeframe, i);
+      average /= MathMax(1, InpVolumeLookbackBars);
+
+      return current > average;
+   }
+
+   bool VolumeConfirmation()
+   {
+      return VolumeConfirmationForTimeframe(InpSignalTimeframe);
+   }
+
+   bool TickVolumeRegimeAllows()
+   {
+      if(!InpUseTickVolumeRegimeGuard)
+         return true;
+
+      long current = iVolume(_Symbol, InpSignalTimeframe, 1);
+      if(current <= 0)
+         return false;
+
+      int lookback = MathMax(1, InpTickVolumeRegimeLookbackBars);
+      double average = 0.0;
+      int samples = 0;
+      for(int i = 2; i < 2 + lookback; i++)
+      {
+         long volume = iVolume(_Symbol, InpSignalTimeframe, i);
+         if(volume <= 0)
+            continue;
+         average += (double)volume;
+         samples++;
+      }
+
+      if(samples <= 0)
+         return false;
+
+      average /= (double)samples;
+      if(average <= 0.0)
+         return false;
+
+      double ratio = (double)current / average;
+      if(InpMinTickVolumeRatio > 0.0 && ratio < InpMinTickVolumeRatio)
+         return false;
+      if(InpMaxTickVolumeRatio > 0.0 && ratio > InpMaxTickVolumeRatio)
+         return false;
+      return true;
+   }
+
+   bool VolumeDryUpAllows()
+   {
+      if(!InpUseVolumeDryUpGuard)
+         return true;
+
+      int lookback = MathMax(3, InpVolumeDryUpLookbackBars);
+      double average = 0.0;
+      int samples = 0;
+      for(int i = 1 + InpVolumeDryUpConsecutiveBars; i < 1 + InpVolumeDryUpConsecutiveBars + lookback; i++)
+      {
+         long volume = iVolume(_Symbol, InpSignalTimeframe, i);
+         if(volume <= 0)
+            continue;
+         average += (double)volume;
+         samples++;
+      }
+
+      if(samples < 3)
+         return true;
+
+      average /= (double)samples;
+      if(average <= 0.0)
+         return true;
+
+      int dryBars = 0;
+      int needed = MathMax(1, InpVolumeDryUpConsecutiveBars);
+      double maxRatio = MathMax(0.05, InpVolumeDryUpMaxRatio);
+      for(int shift = 1; shift <= needed; shift++)
+      {
+         long volume = iVolume(_Symbol, InpSignalTimeframe, shift);
+         if(volume <= 0)
+            return true;
+         if((double)volume / average <= maxRatio)
+            dryBars++;
+      }
+
+      return dryBars < needed;
+   }
+
+   bool ChopFilterAllows(const double atr)
+   {
+      if(!InpUseChopFilter)
+         return true;
+      if(atr <= 0.0)
+         return true;
+
+      int lookback = MathMax(4, InpChopLookbackBars);
+      int directionalBars = 0;
+      int alternations = 0;
+      int previousDirection = 0;
+      for(int shift = 1; shift <= lookback; shift++)
+      {
+         double open = iOpen(_Symbol, InpSignalTimeframe, shift);
+         double close = iClose(_Symbol, InpSignalTimeframe, shift);
+         if(open <= 0.0 || close <= 0.0)
+            return true;
+
+         int direction = 0;
+         if(close > open)
+            direction = 1;
+         else if(close < open)
+            direction = -1;
+
+         if(direction == 0)
+            continue;
+
+         directionalBars++;
+         if(previousDirection != 0 && direction != previousDirection)
+            alternations++;
+         previousDirection = direction;
+      }
+
+      if(directionalBars < 4)
+         return true;
+
+      double closeNow = iClose(_Symbol, InpSignalTimeframe, 1);
+      double closePast = iClose(_Symbol, InpSignalTimeframe, lookback);
+      if(closeNow <= 0.0 || closePast <= 0.0)
+         return true;
+
+      double netMove = MathAbs(closeNow - closePast);
+      double maxNetMove = atr * MathMax(0.0, InpChopMaxNetMoveATR);
+      double alternationPercent = 100.0 * (double)alternations / (double)MathMax(1, directionalBars - 1);
+
+      if(maxNetMove > 0.0 &&
+         netMove <= maxNetMove &&
+         alternationPercent >= MathMax(0.0, InpChopMinAlternationPercent))
+         return false;
+
+      return true;
+   }
+
+   bool ImpulseExhaustionAllows(const ENUM_TRADE_BIAS bias, const double atr)
+   {
+      if(!InpUseImpulseExhaustionGuard)
+         return true;
+      if(atr <= 0.0)
+         return true;
+
+      int lookback = MathMax(2, InpImpulseExhaustionLookbackBars);
+      double closeNow = iClose(_Symbol, InpSignalTimeframe, 1);
+      double closePast = iClose(_Symbol, InpSignalTimeframe, lookback + 1);
+      if(closeNow <= 0.0 || closePast <= 0.0)
+         return true;
+
+      double rangeHigh = 0.0;
+      double rangeLow = 0.0;
+      if(!m_structure.HighestHigh(1, lookback, rangeHigh) ||
+         !m_structure.LowestLow(1, lookback, rangeLow) ||
+         rangeHigh <= rangeLow)
+         return true;
+
+      double move = closeNow - closePast;
+      double maxMove = atr * MathMax(0.0, InpImpulseExhaustionMaxMoveATR);
+      if(maxMove <= 0.0)
+         return true;
+
+      double closeLocation = 100.0 * (closeNow - rangeLow) / (rangeHigh - rangeLow);
+      double extremePercent = MathMin(99.0, MathMax(50.0, InpImpulseExhaustionClosePercent));
+
+      if(bias == BIAS_BUY)
+         return !(move >= maxMove && closeLocation >= extremePercent);
+      if(bias == BIAS_SELL)
+         return !(move <= -maxMove && closeLocation <= (100.0 - extremePercent));
+      return true;
+   }
+
+   bool ConsecutiveCandleExhaustionAllows(const ENUM_TRADE_BIAS bias, const double atr)
+   {
+      if(!InpUseConsecutiveCandleExhaustionGuard)
+         return true;
+      if(atr <= 0.0 || bias == BIAS_NONE)
+         return true;
+
+      int lookback = MathMax(2, InpConsecutiveCandleLookbackBars);
+      int maxDirectionalBars = MathMax(1, InpMaxConsecutiveDirectionalBars);
+      double minBodyPercent = MathMax(0.0, InpConsecutiveMinBodyPercent);
+      int runBars = 0;
+      double runStartClose = 0.0;
+      double runEndClose = 0.0;
+
+      for(int shift = 1; shift <= lookback; shift++)
+      {
+         double high = iHigh(_Symbol, InpSignalTimeframe, shift);
+         double low = iLow(_Symbol, InpSignalTimeframe, shift);
+         double open = iOpen(_Symbol, InpSignalTimeframe, shift);
+         double close = iClose(_Symbol, InpSignalTimeframe, shift);
+         double previousClose = iClose(_Symbol, InpSignalTimeframe, shift + 1);
+         double range = high - low;
+         if(high <= 0.0 || low <= 0.0 || open <= 0.0 || close <= 0.0 || previousClose <= 0.0 || range <= _Point)
+            break;
+
+         double bodyPercent = 100.0 * MathAbs(close - open) / range;
+         bool aligned = (bias == BIAS_BUY && close > open) ||
+                        (bias == BIAS_SELL && close < open);
+         if(!aligned || bodyPercent < minBodyPercent)
+            break;
+
+         if(runBars == 0)
+            runEndClose = close;
+         runStartClose = previousClose;
+         runBars++;
+      }
+
+      if(runBars < maxDirectionalBars)
+         return true;
+
+      double runMove = (bias == BIAS_BUY) ? runEndClose - runStartClose : runStartClose - runEndClose;
+      double maxMove = atr * MathMax(0.0, InpConsecutiveMoveMaxATR);
+      if(maxMove <= 0.0)
+         return true;
+
+      return runMove < maxMove;
+   }
+
+   bool DailyRangeExhaustionAllows(const ENUM_TRADE_BIAS bias)
+   {
+      if(!InpUseDailyRangeExhaustionGuard)
+         return true;
+
+      double dayHigh = iHigh(_Symbol, PERIOD_D1, 0);
+      double dayLow = iLow(_Symbol, PERIOD_D1, 0);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      if(dayHigh <= 0.0 || dayLow <= 0.0 || close1 <= 0.0 || dayHigh <= dayLow)
+         return true;
+
+      int lookback = MathMax(2, InpDailyRangeExhaustionLookbackDays);
+      double averageRange = 0.0;
+      int samples = 0;
+      for(int shift = 1; shift <= lookback; shift++)
+      {
+         double high = iHigh(_Symbol, PERIOD_D1, shift);
+         double low = iLow(_Symbol, PERIOD_D1, shift);
+         if(high <= 0.0 || low <= 0.0 || high <= low)
+            continue;
+         averageRange += high - low;
+         samples++;
+      }
+
+      if(samples < 2 || averageRange <= 0.0)
+         return true;
+
+      averageRange /= (double)samples;
+      double currentRange = dayHigh - dayLow;
+      if(currentRange < averageRange * MathMax(0.0, InpDailyRangeExhaustionMinRatio))
+         return true;
+
+      double location = 100.0 * (close1 - dayLow) / currentRange;
+      double extremePercent = MathMin(99.0, MathMax(50.0, InpDailyRangeExhaustionExtremePercent));
+
+      if(bias == BIAS_BUY)
+         return location < extremePercent;
+      if(bias == BIAS_SELL)
+         return location > (100.0 - extremePercent);
+      return true;
+   }
+
+   bool SessionRangeExhaustionAllows(const ENUM_TRADE_BIAS bias, const double atr)
+   {
+      if(!InpUseSessionRangeExhaustionGuard)
+         return true;
+      if(atr <= 0.0)
+         return true;
+
+      int seconds = PeriodSeconds(InpSignalTimeframe);
+      if(seconds <= 0)
+         return true;
+
+      int bars = MathMax(4, (int)MathCeil((MathMax(1, InpSessionRangeExhaustionLookbackHours) * 3600.0) / seconds));
+      double rangeHigh = 0.0;
+      double rangeLow = 0.0;
+      bool initialized = false;
+
+      for(int shift = 1; shift <= bars; shift++)
+      {
+         double high = iHigh(_Symbol, InpSignalTimeframe, shift);
+         double low = iLow(_Symbol, InpSignalTimeframe, shift);
+         if(high <= 0.0 || low <= 0.0 || high <= low)
+            continue;
+
+         if(!initialized)
+         {
+            rangeHigh = high;
+            rangeLow = low;
+            initialized = true;
+         }
+         else
+         {
+            rangeHigh = MathMax(rangeHigh, high);
+            rangeLow = MathMin(rangeLow, low);
+         }
+      }
+
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = rangeHigh - rangeLow;
+      if(!initialized || close1 <= 0.0 || range <= _Point)
+         return true;
+
+      if(range < atr * MathMax(0.0, InpSessionRangeExhaustionMinATR))
+         return true;
+
+      double location = 100.0 * (close1 - rangeLow) / range;
+      double extremePercent = MathMin(99.0, MathMax(50.0, InpSessionRangeExhaustionExtremePercent));
+
+      if(bias == BIAS_BUY)
+         return location < extremePercent;
+      if(bias == BIAS_SELL)
+         return location > (100.0 - extremePercent);
+      return true;
+   }
+
+   bool GapRiskAllows(const double atr)
+   {
+      if(!InpUseGapRiskGuard)
+         return true;
+
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close2 = iClose(_Symbol, InpSignalTimeframe, 2);
+      if(open1 <= 0.0 || close2 <= 0.0)
+         return false;
+
+      double gap = MathAbs(open1 - close2);
+      if(InpMaxGapPoints > 0.0 && gap > InpMaxGapPoints * _Point)
+         return false;
+      if(atr > 0.0 && InpMaxGapATR > 0.0 && gap > atr * InpMaxGapATR)
+         return false;
+      return true;
+   }
+
+   bool FailedBreakoutAllows(const ENUM_TRADE_BIAS bias)
+   {
+      if(!InpUseFailedBreakoutGuard)
+         return true;
+
+      int lookback = MathMax(3, InpFailedBreakoutLookbackBars);
+      double buffer = MathMax(0.0, InpFailedBreakoutBufferPoints) * _Point;
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      if(high1 <= 0.0 || low1 <= 0.0 || close1 <= 0.0)
+         return true;
+
+      double level = 0.0;
+      if(bias == BIAS_BUY && m_structure.HighestHigh(2, lookback, level))
+      {
+         if(high1 > level + buffer && close1 <= level)
+            return false;
+      }
+      if(bias == BIAS_SELL && m_structure.LowestLow(2, lookback, level))
+      {
+         if(low1 < level - buffer && close1 >= level)
+            return false;
+      }
+      return true;
+   }
+
+   bool FailedBreakoutReversal(const ENUM_TRADE_BIAS bias)
+   {
+      int lookback = MathMax(3, InpFailedBreakoutReversalLookbackBars);
+      double buffer = MathMax(0.0, InpFailedBreakoutReversalBufferPoints) * _Point;
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range <= _Point)
+         return false;
+
+      double closeLocation = (close1 - low1) / range;
+      double closeThreshold = MathMin(0.95, MathMax(0.50, InpFailedBreakoutReversalMinCloseLocation));
+      double level = 0.0;
+
+      if(bias == BIAS_BUY && m_structure.LowestLow(2, lookback, level))
+      {
+         return low1 < level - buffer &&
+                close1 > level &&
+                close1 > open1 &&
+                closeLocation >= closeThreshold;
+      }
+
+      if(bias == BIAS_SELL && m_structure.HighestHigh(2, lookback, level))
+      {
+         return high1 > level + buffer &&
+                close1 < level &&
+                close1 < open1 &&
+                closeLocation <= (1.0 - closeThreshold);
+      }
+
+      return false;
+   }
+
+   bool OpposingLevelDistanceAllows(const ENUM_TRADE_BIAS bias, const double atr)
+   {
+      if(!InpUseLevelProximityGuard)
+         return true;
+
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      if(close1 <= 0.0 || atr <= 0.0)
+         return true;
+
+      double minDistance = MathMax(MathMax(0.0, InpMinDistanceFromLevelATR) * atr,
+                                   MathMax(0.0, InpMinDistanceFromLevelPoints) * _Point);
+      if(minDistance <= 0.0)
+         return true;
+
+      ENUM_TIMEFRAMES levels[3] = { PERIOD_D1, PERIOD_W1, PERIOD_MN1 };
+      bool enabled[3] = { InpLevelGuardUsePreviousDay, InpLevelGuardUsePreviousWeek, InpLevelGuardUsePreviousMonth };
+
+      for(int i = 0; i < 3; i++)
+      {
+         if(!enabled[i])
+            continue;
+
+         double high = iHigh(_Symbol, levels[i], 1);
+         double low = iLow(_Symbol, levels[i], 1);
+         if(high <= 0.0 || low <= 0.0)
+            continue;
+
+         if(bias == BIAS_BUY && close1 < high && (high - close1) <= minDistance)
+            return false;
+         if(bias == BIAS_SELL && close1 > low && (close1 - low) <= minDistance)
+            return false;
+      }
+
+      if(InpLevelGuardUseRecentSwings)
+      {
+         int right = MathMax(1, InpSwingRightBars);
+         int left = MathMax(1, InpSwingLeftBars);
+         int lookback = MathMax(right + 1, InpLevelGuardSwingLookbackBars);
+         for(int shift = right + 1; shift <= lookback + right; shift++)
+         {
+            if(bias == BIAS_BUY && m_structure.IsSwingHigh(shift, left, right))
+            {
+               double swingHigh = iHigh(_Symbol, InpSignalTimeframe, shift);
+               if(swingHigh > close1 && (swingHigh - close1) <= minDistance)
+                  return false;
+            }
+
+            if(bias == BIAS_SELL && m_structure.IsSwingLow(shift, left, right))
+            {
+               double swingLow = iLow(_Symbol, InpSignalTimeframe, shift);
+               if(swingLow < close1 && (close1 - swingLow) <= minDistance)
+                  return false;
+            }
+         }
+      }
+
+      return true;
+   }
+
+   bool EntryShockGuardAllows(const double atr)
+   {
+      if(!InpUseEntryShockGuard)
+         return true;
+      if(atr <= 0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      if(range <= _Point)
+         return false;
+
+      if(range > atr * InpMaxEntryCandleATR)
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range;
+      return bodyPercent >= InpMinEntryBodyPercent;
+   }
+
+   bool CandleAnatomy(const ENUM_TRADE_BIAS bias)
+   {
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      if(range <= _Point)
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range;
+      double upperPercent = 100.0 * (high1 - MathMax(open1, close1)) / range;
+      double lowerPercent = 100.0 * (MathMin(open1, close1) - low1) / range;
+
+      if(bodyPercent < InpMinBodyPercent)
+         return false;
+      if(bias == BIAS_BUY)
+         return close1 > open1 && lowerPercent >= InpMinDirectionalWickPercent;
+      if(bias == BIAS_SELL)
+         return close1 < open1 && upperPercent >= InpMinDirectionalWickPercent;
+      return false;
+   }
+
+   bool OppositeWickAllows(const ENUM_TRADE_BIAS bias)
+   {
+      if(!InpUseOppositeWickGuard)
+         return true;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      if(range <= _Point)
+         return true;
+
+      double upperPercent = 100.0 * (high1 - MathMax(open1, close1)) / range;
+      double lowerPercent = 100.0 * (MathMin(open1, close1) - low1) / range;
+      double maxOpposite = MathMax(0.0, InpMaxOppositeWickPercent);
+
+      if(bias == BIAS_BUY)
+         return upperPercent <= maxOpposite;
+      if(bias == BIAS_SELL)
+         return lowerPercent <= maxOpposite;
+      return true;
+   }
+
+   bool MarketPhaseAllows()
+   {
+      if(!InpUseMarketPhaseFilter)
+         return true;
+
+      double adx = 0;
+      if(!indicators.ADX(1, adx))
+         return false;
+
+      bool trendPhase = adx >= InpTrendADXThreshold;
+      bool rangePhase = adx <= InpRangeADXThreshold;
+      if(trendPhase)
+         return InpTradeTrendPhase;
+      if(rangePhase)
+         return InpTradeRangePhase;
+
+      return InpTradeTrendPhase && InpTradeRangePhase;
+   }
+
+   bool DynamicATRRegimeAllows(const double atr)
+   {
+      if(!InpUseDynamicATRRegimeGuard)
+         return true;
+      if(atr <= 0)
+         return false;
+
+      int samples = MathMax(3, InpATRRegimeLookbackBars);
+      double atrAverage = 0.0;
+      int valid = 0;
+      for(int shift = 2; shift < 2 + samples; shift++)
+      {
+         double sampleAtr = 0.0;
+         if(!indicators.ATR(shift, sampleAtr) || sampleAtr <= 0)
+            return false;
+         atrAverage += sampleAtr;
+         valid++;
+      }
+      if(valid <= 0 || atrAverage <= 0)
+         return false;
+
+      atrAverage /= (double)valid;
+      double ratio = atr / atrAverage;
+      return ratio >= InpMinATRRegimeRatio && ratio <= InpMaxATRRegimeRatio;
+   }
+
+   bool RegimeQuality(const ENUM_TRADE_BIAS bias, const double atr)
+   {
+      if(atr <= 0)
+         return false;
+
+      double adx = 0;
+      if(!indicators.ADX(1, adx) || adx < InpTrendADXThreshold)
+         return false;
+
+      double emaNow = 0;
+      double emaPast = 0;
+      int lookback = MathMax(1, InpRegimeSlopeLookbackBars);
+      if(!indicators.TrendEMA(1, emaNow) || !indicators.TrendEMA(1 + lookback, emaPast))
+         return false;
+
+      double slopePoints = (emaNow - emaPast) / _Point;
+      if(bias == BIAS_BUY && slopePoints < InpRegimeMinSlopePoints)
+         return false;
+      if(bias == BIAS_SELL && slopePoints > -InpRegimeMinSlopePoints)
+         return false;
+
+      double atrAverage = 0.0;
+      int samples = 20;
+      for(int shift = 2; shift < 2 + samples; shift++)
+      {
+         double sampleAtr = 0.0;
+         if(!indicators.ATR(shift, sampleAtr) || sampleAtr <= 0)
+            return false;
+         atrAverage += sampleAtr;
+      }
+      atrAverage /= (double)samples;
+      if(atrAverage <= 0)
+         return false;
+
+      double atrRatio = atr / atrAverage;
+      return atrRatio >= InpRegimeMinATRPercentile && atrRatio <= InpRegimeMaxATRPercentile;
+   }
+
+   bool AdaptiveRegimeConfidenceAllows(const ENUM_TRADE_BIAS bias,
+                                       const double atr,
+                                       int &score,
+                                       string &reason)
+   {
+      score = 0;
+      reason = "";
+      if(!InpUseAdaptiveRegimeConfidenceGate)
+         return true;
+      if(atr <= 0.0 || bias == BIAS_NONE)
+         return false;
+
+      double adxNow = 0.0;
+      double adxPast = 0.0;
+      int lookback = MathMax(2, InpAdaptiveRegimeLookbackBars);
+      if(indicators.ADX(1, adxNow))
+      {
+         if(adxNow >= InpTrendADXThreshold)
+         {
+            score += 2;
+            reason += "regime ADX;";
+         }
+         if(indicators.ADX(1 + MathMin(lookback, MathMax(1, InpADXStrengthLookbackBars)), adxPast) &&
+            adxNow - adxPast >= MathMax(0.0, InpADXMinIncrease))
+         {
+            score += 1;
+            reason += "regime ADX rising;";
+         }
+      }
+
+      double emaNow = 0.0;
+      double emaPast = 0.0;
+      int slopeLookback = MathMax(1, InpRegimeSlopeLookbackBars);
+      if(indicators.TrendEMA(1, emaNow) && indicators.TrendEMA(1 + slopeLookback, emaPast))
+      {
+         double slopePoints = (emaNow - emaPast) / _Point;
+         if((bias == BIAS_BUY && slopePoints >= InpRegimeMinSlopePoints) ||
+            (bias == BIAS_SELL && slopePoints <= -InpRegimeMinSlopePoints))
+         {
+            score += 2;
+            reason += "regime slope;";
+         }
+      }
+
+      double atrAverage = 0.0;
+      int validAtr = 0;
+      for(int shift = 2; shift < 2 + MathMax(3, InpATRRegimeLookbackBars); shift++)
+      {
+         double sampleAtr = 0.0;
+         if(!indicators.ATR(shift, sampleAtr) || sampleAtr <= 0.0)
+            continue;
+         atrAverage += sampleAtr;
+         validAtr++;
+      }
+      if(validAtr > 0 && atrAverage > 0.0)
+      {
+         atrAverage /= (double)validAtr;
+         double atrRatio = atr / atrAverage;
+         if(atrRatio >= InpMinATRRegimeRatio && atrRatio <= InpMaxATRRegimeRatio)
+         {
+            score += 1;
+            reason += "regime ATR;";
+         }
+      }
+
+      double closeNow = iClose(_Symbol, InpSignalTimeframe, 1);
+      double closePast = iClose(_Symbol, InpSignalTimeframe, 1 + lookback);
+      double totalMovement = 0.0;
+      int alignedBars = 0;
+      for(int shift = 1; shift <= lookback; shift++)
+      {
+         double open = iOpen(_Symbol, InpSignalTimeframe, shift);
+         double close = iClose(_Symbol, InpSignalTimeframe, shift);
+         double previousClose = iClose(_Symbol, InpSignalTimeframe, shift + 1);
+         if(open <= 0.0 || close <= 0.0 || previousClose <= 0.0)
+            continue;
+
+         totalMovement += MathAbs(close - previousClose);
+         if((bias == BIAS_BUY && close > open) || (bias == BIAS_SELL && close < open))
+            alignedBars++;
+      }
+
+      if(closeNow > 0.0 && closePast > 0.0 && totalMovement > _Point)
+      {
+         double directionalMove = (bias == BIAS_BUY) ? closeNow - closePast : closePast - closeNow;
+         double efficiency = directionalMove / totalMovement;
+         if(efficiency >= MathMax(0.0, InpAdaptiveRegimeMinEfficiency))
+         {
+            score += 2;
+            reason += "regime efficiency;";
+         }
+      }
+
+      if(alignedBars >= MathMax(1, InpAdaptiveRegimeMinAlignedBars))
+      {
+         score += 1;
+         reason += "regime aligned candles;";
+      }
+
+      return score >= MathMax(1, InpAdaptiveRegimeMinScore);
+   }
+
+   bool CorrelationConfirmation(const ENUM_TRADE_BIAS bias)
+   {
+      string symbol = InpCorrelationSymbol;
+      StringTrimLeft(symbol);
+      StringTrimRight(symbol);
+      if(StringLen(symbol) == 0)
+         return false;
+
+      SymbolSelect(symbol, true);
+      int lookback = MathMax(1, InpCorrelationLookbackBars);
+      double closeNow = iClose(symbol, InpCorrelationTimeframe, 1);
+      double closePast = iClose(symbol, InpCorrelationTimeframe, 1 + lookback);
+      double point = SymbolInfoDouble(symbol, SYMBOL_POINT);
+      if(closeNow <= 0 || closePast <= 0 || point <= 0)
+         return false;
+
+      double movePoints = (closeNow - closePast) / point;
+      if(MathAbs(movePoints) < InpCorrelationMinMovePoints)
+         return false;
+
+      if(InpCorrelationMode == CORRELATION_INVERSE_DIRECTION)
+         movePoints = -movePoints;
+
+      if(bias == BIAS_BUY)
+         return movePoints > 0;
+      if(bias == BIAS_SELL)
+         return movePoints < 0;
+      return false;
+   }
+
+   bool RSIConfirmation(const ENUM_TRADE_BIAS bias)
+   {
+      double rsi = 0;
+      if(!indicators.RSI(1, rsi))
+         return false;
+      if(bias == BIAS_BUY)
+         return rsi >= InpRSIBuyMin;
+      if(bias == BIAS_SELL)
+         return rsi <= InpRSISellMax;
+      return false;
+   }
+
+   bool RSIExhaustionAllows(const ENUM_TRADE_BIAS bias)
+   {
+      if(!InpUseRSIExhaustionGuard)
+         return true;
+
+      double rsi = 0;
+      if(!indicators.RSI(1, rsi))
+         return true;
+
+      if(bias == BIAS_BUY)
+         return rsi <= InpRSIBuyMax;
+      if(bias == BIAS_SELL)
+         return rsi >= InpRSISellMin;
+      return true;
+   }
+
+   bool MACDConfirmation(const ENUM_TRADE_BIAS bias)
+   {
+      double main1 = 0;
+      double signal1 = 0;
+      if(!indicators.MACDMain(1, main1) || !indicators.MACDSignal(1, signal1))
+         return false;
+      if(bias == BIAS_BUY)
+         return main1 > signal1 && main1 > 0;
+      if(bias == BIAS_SELL)
+         return main1 < signal1 && main1 < 0;
+      return false;
+   }
+
+   bool BollingerConfirmation(const ENUM_TRADE_BIAS bias)
+   {
+      double upper = 0;
+      double middle = 0;
+      double lower = 0;
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      if(!indicators.BollingerUpper(1, upper) ||
+         !indicators.BollingerMiddle(1, middle) ||
+         !indicators.BollingerLower(1, lower))
+         return false;
+
+      if(bias == BIAS_BUY)
+         return close1 > middle && close1 < upper;
+      if(bias == BIAS_SELL)
+         return close1 < middle && close1 > lower;
+      return false;
+   }
+
+   bool BollingerExtensionAllows(const ENUM_TRADE_BIAS bias)
+   {
+      if(!InpUseBollingerExtensionGuard)
+         return true;
+
+      double upper = 0;
+      double middle = 0;
+      double lower = 0;
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      if(!indicators.BollingerUpper(1, upper) ||
+         !indicators.BollingerMiddle(1, middle) ||
+         !indicators.BollingerLower(1, lower) ||
+         close1 <= 0.0)
+         return true;
+
+      double halfWidth = MathMax(upper - middle, middle - lower);
+      if(halfWidth <= _Point)
+         return true;
+
+      double buffer = halfWidth * MathMax(0.0, InpBollingerExtensionBuffer);
+      if(bias == BIAS_BUY)
+         return close1 <= upper + buffer;
+      if(bias == BIAS_SELL)
+         return close1 >= lower - buffer;
+      return true;
+   }
+
+   bool StochasticConfirmation(const ENUM_TRADE_BIAS bias)
+   {
+      double main1 = 0.0;
+      double signal1 = 0.0;
+      if(!indicators.StochasticMain(1, main1) || !indicators.StochasticSignal(1, signal1))
+         return false;
+
+      if(bias == BIAS_BUY)
+         return main1 >= InpStochasticBuyMin && main1 > signal1;
+      if(bias == BIAS_SELL)
+         return main1 <= InpStochasticSellMax && main1 < signal1;
+      return false;
+   }
+
+   bool StochasticExhaustionAllows(const ENUM_TRADE_BIAS bias)
+   {
+      if(!InpUseStochasticExhaustionGuard)
+         return true;
+
+      double main1 = 0.0;
+      if(!indicators.StochasticMain(1, main1))
+         return true;
+
+      if(bias == BIAS_BUY)
+         return main1 <= InpStochasticBuyMax;
+      if(bias == BIAS_SELL)
+         return main1 >= InpStochasticSellMin;
+      return true;
+   }
+
+   bool CCIConfirmation(const ENUM_TRADE_BIAS bias)
+   {
+      double cci = 0.0;
+      if(!indicators.CCI(1, cci))
+         return false;
+
+      if(bias == BIAS_BUY)
+         return cci >= InpCCIBuyMin;
+      if(bias == BIAS_SELL)
+         return cci <= InpCCISellMax;
+      return false;
+   }
+
+   bool CCIExhaustionAllows(const ENUM_TRADE_BIAS bias)
+   {
+      if(!InpUseCCIExhaustionGuard)
+         return true;
+
+      double cci = 0.0;
+      if(!indicators.CCI(1, cci))
+         return true;
+
+      if(bias == BIAS_BUY)
+         return cci <= InpCCIBuyMax;
+      if(bias == BIAS_SELL)
+         return cci >= InpCCISellMin;
+      return true;
+   }
+
+   bool MFIConfirmation(const ENUM_TRADE_BIAS bias)
+   {
+      double mfi = 0.0;
+      if(!indicators.MFI(1, mfi))
+         return false;
+
+      if(bias == BIAS_BUY)
+         return mfi >= InpMFIBuyMin;
+      if(bias == BIAS_SELL)
+         return mfi <= InpMFISellMax;
+      return false;
+   }
+
+   bool MFIExhaustionAllows(const ENUM_TRADE_BIAS bias)
+   {
+      if(!InpUseMFIExhaustionGuard)
+         return true;
+
+      double mfi = 0.0;
+      if(!indicators.MFI(1, mfi))
+         return true;
+
+      if(bias == BIAS_BUY)
+         return mfi <= InpMFIBuyMax;
+      if(bias == BIAS_SELL)
+         return mfi >= InpMFISellMin;
+      return true;
+   }
+
+   bool OBVConfirmation(const ENUM_TRADE_BIAS bias)
+   {
+      int lookback = MathMax(1, InpOBVLookbackBars);
+      double obvNow = 0.0;
+      double obvPast = 0.0;
+      if(!indicators.OBV(1, obvNow) || !indicators.OBV(1 + lookback, obvPast))
+         return false;
+
+      double change = obvNow - obvPast;
+      double minChange = MathMax(0.0, InpOBVMinChange);
+      if(MathAbs(change) < minChange)
+         return false;
+
+      if(bias == BIAS_BUY)
+         return change > 0.0;
+      if(bias == BIAS_SELL)
+         return change < 0.0;
+      return false;
+   }
+
+   bool DIDirectionConfirmation(const ENUM_TRADE_BIAS bias)
+   {
+      double plusDI = 0.0;
+      double minusDI = 0.0;
+      if(!indicators.PlusDI(1, plusDI) || !indicators.MinusDI(1, minusDI))
+         return false;
+
+      double minDifference = MathMax(0.0, InpMinDIDifference);
+      if(bias == BIAS_BUY)
+         return plusDI > minusDI && (plusDI - minusDI) >= minDifference;
+      if(bias == BIAS_SELL)
+         return minusDI > plusDI && (minusDI - plusDI) >= minDifference;
+      return false;
+   }
+
+   bool ADXStrengtheningConfirmation()
+   {
+      int lookback = MathMax(1, InpADXStrengthLookbackBars);
+      double adxNow = 0.0;
+      double adxPast = 0.0;
+      if(!indicators.ADX(1, adxNow) || !indicators.ADX(1 + lookback, adxPast))
+         return false;
+
+      return (adxNow - adxPast) >= MathMax(0.0, InpADXMinIncrease);
+   }
+
+   bool CumulativeDeltaProxy(const ENUM_TRADE_BIAS bias)
+   {
+      int lookback = MathMax(3, InpCumulativeDeltaLookbackBars);
+      double signedVolume = 0.0;
+      double totalVolume = 0.0;
+      int alignedBars = 0;
+
+      for(int shift = 1; shift <= lookback; shift++)
+      {
+         double open = iOpen(_Symbol, InpSignalTimeframe, shift);
+         double close = iClose(_Symbol, InpSignalTimeframe, shift);
+         long volume = iVolume(_Symbol, InpSignalTimeframe, shift);
+         if(open <= 0.0 || close <= 0.0 || volume <= 0)
+            continue;
+
+         double direction = 0.0;
+         if(close > open)
+            direction = 1.0;
+         else if(close < open)
+            direction = -1.0;
+         else
+            continue;
+
+         signedVolume += direction * (double)volume;
+         totalVolume += (double)volume;
+
+         if((bias == BIAS_BUY && direction > 0.0) || (bias == BIAS_SELL && direction < 0.0))
+            alignedBars++;
+      }
+
+      if(totalVolume <= 0.0)
+         return false;
+
+      double ratio = signedVolume / totalVolume;
+      double minRatio = MathMax(0.0, InpCumulativeDeltaMinRatio);
+      int minAlignedBars = MathMin(lookback, MathMax(1, InpCumulativeDeltaMinBarsAligned));
+
+      if(bias == BIAS_BUY)
+         return ratio >= minRatio && alignedBars >= minAlignedBars;
+      if(bias == BIAS_SELL)
+         return ratio <= -minRatio && alignedBars >= minAlignedBars;
+      return false;
+   }
+
+   bool DisplacementCandle(const ENUM_TRADE_BIAS bias, const double atr)
+   {
+      if(atr <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range <= _Point)
+         return false;
+
+      if(range < atr * MathMax(0.0, InpDisplacementMinRangeATR))
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range;
+      if(bodyPercent < MathMax(0.0, InpDisplacementMinBodyPercent))
+         return false;
+
+      double upperPercent = 100.0 * (high1 - MathMax(open1, close1)) / range;
+      double lowerPercent = 100.0 * (MathMin(open1, close1) - low1) / range;
+      double maxOppositeWick = MathMax(0.0, InpDisplacementMaxOppositeWickPercent);
+
+      if(bias == BIAS_BUY)
+         return close1 > open1 && upperPercent <= maxOppositeWick;
+      if(bias == BIAS_SELL)
+         return close1 < open1 && lowerPercent <= maxOppositeWick;
+      return false;
+   }
+
+   bool TickPressureCandle(const ENUM_TRADE_BIAS bias)
+   {
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      long currentVolume = iVolume(_Symbol, InpSignalTimeframe, 1);
+      if(high1 <= 0.0 || low1 <= 0.0 || close1 <= 0.0 || open1 <= 0.0 || range <= _Point || currentVolume <= 0)
+         return false;
+
+      int lookback = MathMax(2, InpTickPressureLookbackBars);
+      double averageVolume = 0.0;
+      int samples = 0;
+      for(int shift = 2; shift < 2 + lookback; shift++)
+      {
+         long volume = iVolume(_Symbol, InpSignalTimeframe, shift);
+         if(volume <= 0)
+            continue;
+         averageVolume += (double)volume;
+         samples++;
+      }
+      if(samples <= 0 || averageVolume <= 0.0)
+         return false;
+
+      averageVolume /= (double)samples;
+      double volumeRatio = (double)currentVolume / averageVolume;
+      if(volumeRatio < MathMax(0.0, InpTickPressureMinVolumeRatio))
+         return false;
+
+      double closeLocation = (close1 - low1) / range;
+      double threshold = MathMin(0.95, MathMax(0.50, InpTickPressureMinCloseLocation));
+      if(bias == BIAS_BUY)
+         return close1 > open1 && closeLocation >= threshold;
+      if(bias == BIAS_SELL)
+         return close1 < open1 && closeLocation <= (1.0 - threshold);
+      return false;
+   }
+
+   bool TickSpeedImpulse(const ENUM_TRADE_BIAS bias, const double atr)
+   {
+      if(atr <= 0.0)
+         return false;
+
+      int seconds = PeriodSeconds(InpSignalTimeframe);
+      if(seconds <= 0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      long currentVolume = iVolume(_Symbol, InpSignalTimeframe, 1);
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range <= _Point || currentVolume <= 0)
+         return false;
+
+      if(range < atr * MathMax(0.0, InpTickSpeedMinRangeATR))
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range;
+      if(bodyPercent < MathMax(0.0, InpTickSpeedMinBodyPercent))
+         return false;
+
+      int lookback = MathMax(2, InpTickSpeedLookbackBars);
+      double averageTicksPerSecond = 0.0;
+      int samples = 0;
+      for(int shift = 2; shift < 2 + lookback; shift++)
+      {
+         long volume = iVolume(_Symbol, InpSignalTimeframe, shift);
+         if(volume <= 0)
+            continue;
+         averageTicksPerSecond += (double)volume / (double)seconds;
+         samples++;
+      }
+
+      if(samples <= 0 || averageTicksPerSecond <= 0.0)
+         return false;
+
+      averageTicksPerSecond /= (double)samples;
+      double currentTicksPerSecond = (double)currentVolume / (double)seconds;
+      if(currentTicksPerSecond < averageTicksPerSecond * MathMax(1.0, InpTickSpeedMinRatio))
+         return false;
+
+      if(bias == BIAS_BUY)
+         return close1 > open1;
+      if(bias == BIAS_SELL)
+         return close1 < open1;
+      return false;
+   }
+
+   bool VWAPDistanceAllows(const double atr)
+   {
+      if(!InpUseVWAPDistanceGuard)
+         return true;
+      if(atr <= 0.0)
+         return true;
+
+      double vwap = 0.0;
+      if(!m_structure.VWAPValue(InpVWAPLookbackBars, vwap))
+         return true;
+
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      if(close1 <= 0.0)
+         return true;
+
+      double maxDistance = atr * MathMax(0.0, InpVWAPGuardMaxDistanceATR);
+      if(maxDistance <= 0.0)
+         return true;
+
+      return MathAbs(close1 - vwap) <= maxDistance;
+   }
+
+   bool VWAPPullbackContinuation(const ENUM_TRADE_BIAS bias, const double atr)
+   {
+      if(atr <= 0.0)
+         return false;
+
+      double vwap = 0.0;
+      if(!m_structure.VWAPValue(InpVWAPLookbackBars, vwap))
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range <= _Point)
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range;
+      if(bodyPercent < MathMax(0.0, InpVWAPPullbackMinBodyPercent))
+         return false;
+
+      double tolerance = atr * MathMax(0.0, InpVWAPPullbackMaxDistanceATR);
+      if(bias == BIAS_BUY)
+         return low1 <= vwap + tolerance && close1 > vwap && close1 > open1;
+      if(bias == BIAS_SELL)
+         return high1 >= vwap - tolerance && close1 < vwap && close1 < open1;
+      return false;
+   }
+
+   void AddSmartMoneyComponent(const bool condition,
+                               const int weight,
+                               const string reason,
+                               int &score,
+                               string &reasons)
+   {
+      if(!condition)
+         return;
+
+      score += MathMax(0, weight);
+      reasons += reason;
+   }
+
+   bool SmartMoneyQuality(const ENUM_TRADE_BIAS bias,
+                          const double atr,
+                          int &score,
+                          string &reasons)
+   {
+      score = 0;
+      reasons = "";
+      if(atr <= 0.0)
+         return false;
+
+      bool bos = m_structure.BOS(bias, InpBOSLookbackBars);
+      bool displacementBos = m_structure.DisplacementBOS(bias, InpDisplacementBOSLookbackBars, atr);
+      bool choch = m_structure.CHoCH(bias, InpCHoCHLookbackBars);
+      bool breakoutRetest = m_structure.BreakoutRetest(bias, InpBreakoutRetestLookbackBars, atr);
+      bool hasStructure = bos || displacementBos || choch || breakoutRetest;
+
+      bool liquiditySweep = m_structure.LiquiditySweep(bias, InpSweepLookbackBars);
+      bool sweepRejection = m_structure.SweepRejection(bias, InpSweepLookbackBars);
+      bool equalSweep = m_structure.EqualHighLowSweep(bias, InpEqualLevelLookbackBars);
+      bool sessionSweep = m_structure.SessionLevelSweep(bias);
+      bool failedBreakoutReversal = FailedBreakoutReversal(bias);
+      bool hasLiquidity = liquiditySweep || sweepRejection || equalSweep || sessionSweep || failedBreakoutReversal;
+
+      bool fvg = m_structure.FairValueGap(bias, InpFVGLookbackBars, atr);
+      bool fvgRetest = m_structure.FairValueGapRetest(bias, InpFVGLookbackBars, atr);
+      bool orderBlock = m_structure.OrderBlockRetest(bias, InpOrderBlockLookbackBars, atr);
+      bool hasImbalance = fvg || fvgRetest || orderBlock;
+
+      bool displacementCandle = DisplacementCandle(bias, atr);
+      bool tickPressure = TickPressureCandle(bias);
+      bool tickSpeed = TickSpeedImpulse(bias, atr);
+      bool vwapPullback = VWAPPullbackContinuation(bias, atr);
+      bool momentum = MomentumCandle(bias, atr);
+      bool candleAnatomy = CandleAnatomy(bias);
+      bool hasExecution = displacementCandle || tickPressure || tickSpeed || vwapPullback || momentum || candleAnatomy;
+
+      bool volume = VolumeConfirmation();
+      bool cumulativeDelta = CumulativeDeltaProxy(bias);
+      bool tickMicro = tickMicrostructure.Confirms(bias);
+      bool hasOrderFlow = volume || cumulativeDelta || tickMicro;
+
+      bool vwap = m_structure.VWAPConfluence(bias, InpVWAPLookbackBars, atr);
+      bool dailyOpen = m_structure.DailyOpenBias(bias);
+      bool previousDayRange = m_structure.PreviousDayRangeBias(bias);
+      bool rangeLocation = m_structure.RangeLocationBias(bias);
+      bool regime = RegimeQuality(bias, atr);
+
+      AddSmartMoneyComponent(bos, 2, "SMQ BOS;", score, reasons);
+      AddSmartMoneyComponent(displacementBos, 2, "SMQ displacement BOS;", score, reasons);
+      AddSmartMoneyComponent(choch, 2, "SMQ CHoCH;", score, reasons);
+      AddSmartMoneyComponent(breakoutRetest, 1, "SMQ retest;", score, reasons);
+      AddSmartMoneyComponent(liquiditySweep, 2, "SMQ liquidity sweep;", score, reasons);
+      AddSmartMoneyComponent(sweepRejection, 2, "SMQ sweep rejection;", score, reasons);
+      AddSmartMoneyComponent(failedBreakoutReversal, 2, "SMQ failed breakout reversal;", score, reasons);
+      AddSmartMoneyComponent(equalSweep, 1, "SMQ equal-level sweep;", score, reasons);
+      AddSmartMoneyComponent(sessionSweep, 1, "SMQ session sweep;", score, reasons);
+      AddSmartMoneyComponent(fvg, 1, "SMQ FVG;", score, reasons);
+      AddSmartMoneyComponent(fvgRetest, 2, "SMQ FVG retest;", score, reasons);
+      AddSmartMoneyComponent(orderBlock, 2, "SMQ order block;", score, reasons);
+      AddSmartMoneyComponent(displacementCandle, 2, "SMQ displacement candle;", score, reasons);
+      AddSmartMoneyComponent(tickPressure, 2, "SMQ tick pressure;", score, reasons);
+      AddSmartMoneyComponent(tickSpeed, 2, "SMQ tick speed;", score, reasons);
+      AddSmartMoneyComponent(vwapPullback, 2, "SMQ VWAP pullback;", score, reasons);
+      AddSmartMoneyComponent(momentum, 1, "SMQ momentum;", score, reasons);
+      AddSmartMoneyComponent(candleAnatomy, 1, "SMQ candle anatomy;", score, reasons);
+      AddSmartMoneyComponent(volume, 1, "SMQ volume;", score, reasons);
+      AddSmartMoneyComponent(cumulativeDelta, 2, "SMQ cumulative delta;", score, reasons);
+      AddSmartMoneyComponent(tickMicro, 2, "SMQ tick tape;", score, reasons);
+      AddSmartMoneyComponent(vwap, 1, "SMQ VWAP;", score, reasons);
+      AddSmartMoneyComponent(dailyOpen, 1, "SMQ daily open;", score, reasons);
+      AddSmartMoneyComponent(previousDayRange, 1, "SMQ previous day range;", score, reasons);
+      AddSmartMoneyComponent(rangeLocation, 1, "SMQ range location;", score, reasons);
+      AddSmartMoneyComponent(regime, 2, "SMQ regime;", score, reasons);
+
+      bool requiredStructure = !InpSmartMoneyRequireStructure || hasStructure;
+      bool requiredLiquidityOrImbalance = !InpSmartMoneyRequireLiquidityOrImbalance || hasLiquidity || hasImbalance;
+      bool requiredExecution = !InpSmartMoneyRequireExecution || hasExecution;
+      bool requiredOrderFlow = !InpSmartMoneyRequireOrderFlow || hasOrderFlow;
+
+      return score >= MathMax(1, InpSmartMoneyMinScore) &&
+             requiredStructure &&
+             requiredLiquidityOrImbalance &&
+             requiredExecution &&
+             requiredOrderFlow;
+   }
+
+   bool PriceActionCompositeQuality(const ENUM_TRADE_BIAS bias,
+                                    const double atr,
+                                    int &score,
+                                    string &reasons)
+   {
+      score = 0;
+      reasons = "";
+      if(atr <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      if(range <= 0.0)
+         return false;
+
+      double body = MathAbs(close1 - open1);
+      double bodyPercent = body / range * 100.0;
+      double closeLocation = (close1 - low1) / range;
+      double upperWick = high1 - MathMax(open1, close1);
+      double lowerWick = MathMin(open1, close1) - low1;
+      double upperPercent = upperWick / range * 100.0;
+      double lowerPercent = lowerWick / range * 100.0;
+
+      bool bullishOHLC = bias == BIAS_BUY &&
+                         close1 > open1 &&
+                         closeLocation >= 0.62 &&
+                         lowerPercent >= 20.0;
+      bool bearishOHLC = bias == BIAS_SELL &&
+                         close1 < open1 &&
+                         closeLocation <= 0.38 &&
+                         upperPercent >= 20.0;
+      bool ohlcRejection = bullishOHLC || bearishOHLC;
+      bool directionalBody = bodyPercent >= 38.0 && range >= atr * 0.45;
+
+      bool bos = m_structure.BOS(bias, InpBOSLookbackBars);
+      bool displacementBos = m_structure.DisplacementBOS(bias, InpDisplacementBOSLookbackBars, atr);
+      bool choch = m_structure.CHoCH(bias, InpCHoCHLookbackBars);
+      bool breakoutRetest = m_structure.BreakoutRetest(bias, InpBreakoutRetestLookbackBars, atr);
+      bool hasStructure = bos || displacementBos || choch || breakoutRetest;
+
+      bool liquiditySweep = m_structure.LiquiditySweep(bias, InpSweepLookbackBars);
+      bool sweepRejection = m_structure.SweepRejection(bias, InpSweepLookbackBars);
+      bool equalSweep = m_structure.EqualHighLowSweep(bias, InpEqualLevelLookbackBars);
+      bool sessionSweep = m_structure.SessionLevelSweep(bias);
+      bool asianSweep = m_structure.AsianRangeSweep(bias);
+      bool failedBreakoutReversal = FailedBreakoutReversal(bias);
+      bool hasLiquidity = liquiditySweep || sweepRejection || equalSweep || sessionSweep || asianSweep || failedBreakoutReversal;
+
+      bool fvg = m_structure.FairValueGap(bias, InpFVGLookbackBars, atr);
+      bool fvgRetest = m_structure.FairValueGapRetest(bias, InpFVGLookbackBars, atr);
+      bool orderBlock = m_structure.OrderBlockRetest(bias, InpOrderBlockLookbackBars, atr);
+      bool vwap = m_structure.VWAPConfluence(bias, InpVWAPLookbackBars, atr);
+      bool hasImbalance = fvg || fvgRetest || orderBlock;
+
+      bool displacementCandle = DisplacementCandle(bias, atr);
+      bool tickPressure = TickPressureCandle(bias);
+      bool tickSpeed = TickSpeedImpulse(bias, atr);
+      bool momentum = MomentumCandle(bias, atr);
+      bool candleAnatomy = CandleAnatomy(bias);
+      bool hasExecution = ohlcRejection || directionalBody || displacementCandle || tickPressure || tickSpeed || momentum || candleAnatomy;
+
+      bool volume = VolumeConfirmation();
+      bool cumulativeDelta = CumulativeDeltaProxy(bias);
+      bool tickMicro = tickMicrostructure.Confirms(bias);
+      bool hasOrderFlow = volume || cumulativeDelta || tickMicro || tickPressure || tickSpeed;
+
+      bool dailyOpen = m_structure.DailyOpenBias(bias);
+      bool previousDayRange = m_structure.PreviousDayRangeBias(bias);
+      bool rangeLocation = m_structure.RangeLocationBias(bias);
+      bool regime = RegimeQuality(bias, atr);
+
+      AddSmartMoneyComponent(bos, 2, "PA BOS;", score, reasons);
+      AddSmartMoneyComponent(displacementBos, 2, "PA displacement BOS;", score, reasons);
+      AddSmartMoneyComponent(choch, 2, "PA CHoCH;", score, reasons);
+      AddSmartMoneyComponent(breakoutRetest, 1, "PA retest;", score, reasons);
+      AddSmartMoneyComponent(liquiditySweep, 2, "PA liquidity sweep;", score, reasons);
+      AddSmartMoneyComponent(sweepRejection, 2, "PA wick rejection;", score, reasons);
+      AddSmartMoneyComponent(failedBreakoutReversal, 2, "PA failed breakout reversal;", score, reasons);
+      AddSmartMoneyComponent(equalSweep, 1, "PA equal-level sweep;", score, reasons);
+      AddSmartMoneyComponent(sessionSweep, 1, "PA session sweep;", score, reasons);
+      AddSmartMoneyComponent(asianSweep, 1, "PA Asian sweep;", score, reasons);
+      AddSmartMoneyComponent(fvg, 1, "PA FVG;", score, reasons);
+      AddSmartMoneyComponent(fvgRetest, 2, "PA FVG retest;", score, reasons);
+      AddSmartMoneyComponent(orderBlock, 2, "PA order block;", score, reasons);
+      AddSmartMoneyComponent(ohlcRejection, 2, "PA OHLC rejection;", score, reasons);
+      AddSmartMoneyComponent(directionalBody, 1, "PA body/range;", score, reasons);
+      AddSmartMoneyComponent(displacementCandle, 2, "PA displacement candle;", score, reasons);
+      AddSmartMoneyComponent(tickPressure, 2, "PA tick pressure;", score, reasons);
+      AddSmartMoneyComponent(tickSpeed, 2, "PA tick speed;", score, reasons);
+      AddSmartMoneyComponent(momentum, 1, "PA momentum;", score, reasons);
+      AddSmartMoneyComponent(candleAnatomy, 1, "PA candle anatomy;", score, reasons);
+      AddSmartMoneyComponent(volume, 1, "PA volume;", score, reasons);
+      AddSmartMoneyComponent(cumulativeDelta, 2, "PA cumulative delta;", score, reasons);
+      AddSmartMoneyComponent(tickMicro, 2, "PA tick tape;", score, reasons);
+      AddSmartMoneyComponent(vwap, 1, "PA VWAP;", score, reasons);
+      AddSmartMoneyComponent(dailyOpen, 1, "PA daily open;", score, reasons);
+      AddSmartMoneyComponent(previousDayRange, 1, "PA previous day range;", score, reasons);
+      AddSmartMoneyComponent(rangeLocation, 1, "PA range location;", score, reasons);
+      AddSmartMoneyComponent(regime, 2, "PA regime;", score, reasons);
+
+      bool requiredStructure = !InpPriceActionRequireStructure || hasStructure;
+      bool requiredLiquidity = !InpPriceActionRequireLiquidity || hasLiquidity || hasImbalance;
+      bool requiredExecution = !InpPriceActionRequireExecution || hasExecution;
+      bool requiredOrderFlow = !InpPriceActionRequireOrderFlow || hasOrderFlow;
+
+      return score >= MathMax(1, InpPriceActionCompositeMinScore) &&
+             requiredStructure &&
+             requiredLiquidity &&
+             requiredExecution &&
+             requiredOrderFlow;
+   }
+
+   bool BreakoutContinuationFollowThroughClose(const ENUM_TRADE_BIAS bias)
+   {
+      int lookback = MathMax(4, InpBreakoutContinuationFollowThroughLookback);
+      double rangeHigh = 0.0;
+      double rangeLow = 0.0;
+      if(!m_structure.HighestHigh(2, lookback, rangeHigh) ||
+         !m_structure.LowestLow(2, lookback, rangeLow))
+         return false;
+
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      if(open1 <= 0.0 || close1 <= 0.0)
+         return false;
+
+      double buffer = MathMax(0.0, InpBreakoutContinuationFollowThroughBufferPoints) * _Point;
+      if(bias == BIAS_BUY)
+         return close1 > open1 && close1 > rangeHigh + buffer;
+      if(bias == BIAS_SELL)
+         return close1 < open1 && close1 < rangeLow - buffer;
+      return false;
+   }
+
+   bool BreakoutContinuationQuality(const ENUM_TRADE_BIAS bias,
+                                    const double atr,
+                                    int &score,
+                                    string &reasons)
+   {
+      score = 0;
+      reasons = "";
+      if(atr <= 0.0)
+         return false;
+
+      bool compression = m_structure.CompressionBreakout(bias, atr);
+      bool rangeExpansion = m_structure.RangeExpansionBreakout(bias, atr);
+      bool narrowRange = m_structure.NarrowRangeBreakout(bias, atr);
+      bool donchian = m_structure.DonchianBreakout(bias);
+      bool displacementBos = m_structure.DisplacementBOS(bias, InpDisplacementBOSLookbackBars, atr);
+      bool breakoutRetest = m_structure.BreakoutRetest(bias, InpBreakoutRetestLookbackBars, atr);
+      bool hasBreakout = compression || rangeExpansion || narrowRange || donchian || displacementBos || breakoutRetest;
+
+      bool displacementCandle = DisplacementCandle(bias, atr);
+      bool tickPressure = TickPressureCandle(bias);
+      bool tickSpeed = TickSpeedImpulse(bias, atr);
+      bool momentum = MomentumCandle(bias, atr);
+      bool vwapPullback = VWAPPullbackContinuation(bias, atr);
+      bool hasExecution = displacementCandle || tickPressure || tickSpeed || momentum || vwapPullback;
+
+      bool cumulativeDelta = CumulativeDeltaProxy(bias);
+      bool tickMicro = tickMicrostructure.Confirms(bias);
+      bool adxStrength = ADXStrengtheningConfirmation();
+      bool hasOrderFlow = cumulativeDelta || tickMicro || tickPressure || tickSpeed;
+
+      bool vwap = m_structure.VWAPConfluence(bias, InpVWAPLookbackBars, atr);
+      bool dailyOpen = m_structure.DailyOpenBias(bias);
+      bool previousDayRange = m_structure.PreviousDayRangeBias(bias);
+      bool regime = RegimeQuality(bias, atr);
+      bool hasRegime = regime || adxStrength;
+      bool followThroughClose = true;
+      if(InpBreakoutContinuationRequireFollowThroughClose)
+      {
+         followThroughClose = BreakoutContinuationFollowThroughClose(bias);
+         AddSmartMoneyComponent(followThroughClose, 1, "BCQ follow-through close;", score, reasons);
+      }
+
+      AddSmartMoneyComponent(compression, 2, "BCQ compression;", score, reasons);
+      AddSmartMoneyComponent(rangeExpansion, 2, "BCQ range expansion;", score, reasons);
+      AddSmartMoneyComponent(narrowRange, 2, "BCQ narrow range;", score, reasons);
+      AddSmartMoneyComponent(donchian, 2, "BCQ Donchian;", score, reasons);
+      AddSmartMoneyComponent(displacementBos, 2, "BCQ displacement BOS;", score, reasons);
+      AddSmartMoneyComponent(breakoutRetest, 2, "BCQ retest;", score, reasons);
+      AddSmartMoneyComponent(displacementCandle, 2, "BCQ displacement candle;", score, reasons);
+      AddSmartMoneyComponent(tickPressure, 2, "BCQ tick pressure;", score, reasons);
+      AddSmartMoneyComponent(tickSpeed, 2, "BCQ tick speed;", score, reasons);
+      AddSmartMoneyComponent(momentum, 1, "BCQ momentum;", score, reasons);
+      AddSmartMoneyComponent(vwapPullback, 2, "BCQ VWAP pullback;", score, reasons);
+      AddSmartMoneyComponent(cumulativeDelta, 2, "BCQ cumulative delta;", score, reasons);
+      AddSmartMoneyComponent(tickMicro, 2, "BCQ tick tape;", score, reasons);
+      AddSmartMoneyComponent(adxStrength, 1, "BCQ ADX strengthening;", score, reasons);
+      AddSmartMoneyComponent(vwap, 1, "BCQ VWAP;", score, reasons);
+      AddSmartMoneyComponent(dailyOpen, 1, "BCQ daily open;", score, reasons);
+      AddSmartMoneyComponent(previousDayRange, 1, "BCQ previous day range;", score, reasons);
+      AddSmartMoneyComponent(regime, 2, "BCQ regime;", score, reasons);
+
+      bool requiredExecution = !InpBreakoutContinuationRequireExecution || hasExecution;
+      bool requiredOrderFlow = !InpBreakoutContinuationRequireOrderFlow || hasOrderFlow;
+      bool requiredRegime = !InpBreakoutContinuationRequireRegime || hasRegime;
+
+      return hasBreakout &&
+             score >= MathMax(1, InpBreakoutContinuationMinScore) &&
+             requiredExecution &&
+             requiredOrderFlow &&
+             requiredRegime &&
+             followThroughClose;
+   }
+
+   bool PowerTrendContinuationQuality(const ENUM_TRADE_BIAS bias,
+                                      const double atr,
+                                      const bool breakoutContinuationQuality,
+                                      const int breakoutContinuationScore,
+                                      int &score,
+                                      string &reasons)
+   {
+      score = breakoutContinuationScore;
+      reasons = "";
+      if(!InpUsePowerTrendContinuation || !breakoutContinuationQuality || atr <= 0.0)
+         return false;
+      if(!PowerTrendContinuationMonthAllows())
+      {
+         reasons += "PTC month filter;";
+         return false;
+      }
+
+      if(InpPowerTrendContinuationRequireLiquidSession && !sessionFilter.LiquidSessionActive())
+      {
+         reasons += "PTC non-liquid session;";
+         return false;
+      }
+
+      double adx = 0.0;
+      if(!indicators.ADX(1, adx) || adx < MathMax(0.0, InpPowerTrendContinuationMinADX))
+      {
+         reasons += "PTC ADX reject;";
+         return false;
+      }
+      AddSmartMoneyComponent(true, 2, "PTC ADX;", score, reasons);
+
+      bool displacement = DisplacementCandle(bias, atr);
+      bool momentum = MomentumCandle(bias, atr);
+      bool tickSpeed = TickSpeedImpulse(bias, atr);
+      bool vwapPullback = VWAPPullbackContinuation(bias, atr);
+      bool execution = displacement || momentum || tickSpeed || vwapPullback;
+      AddSmartMoneyComponent(displacement, 2, "PTC displacement;", score, reasons);
+      AddSmartMoneyComponent(momentum, 1, "PTC momentum;", score, reasons);
+      AddSmartMoneyComponent(tickSpeed, 2, "PTC tick speed;", score, reasons);
+      AddSmartMoneyComponent(vwapPullback, 2, "PTC VWAP pullback;", score, reasons);
+
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double fastTrend = 0.0;
+      double mtfTrend = 0.0;
+      bool fastAligned = indicators.FastTrendEMA(1, fastTrend) && close1 > 0.0 &&
+                         ((bias == BIAS_BUY && close1 > fastTrend) ||
+                          (bias == BIAS_SELL && close1 < fastTrend));
+      bool mtfAligned = indicators.MTFEMA(1, mtfTrend) && close1 > 0.0 &&
+                        ((bias == BIAS_BUY && close1 > mtfTrend) ||
+                         (bias == BIAS_SELL && close1 < mtfTrend));
+      AddSmartMoneyComponent(fastAligned, 1, "PTC fast trend;", score, reasons);
+      AddSmartMoneyComponent(mtfAligned, 1, "PTC MTF trend;", score, reasons);
+
+      return execution &&
+             fastAligned &&
+             score >= MathMax(1, InpPowerTrendContinuationMinScore);
+   }
+
+   bool SessionImpulseLaneQuality(const ENUM_TRADE_BIAS bias,
+                                  const double atr,
+                                  int &score,
+                                  string &reasons)
+   {
+      score = 0;
+      reasons = "";
+      if(!InpUseSessionImpulseLane || atr <= 0.0)
+         return false;
+
+      if(InpSessionImpulseRequireLiquidSession && !sessionFilter.LiquidSessionActive())
+      {
+         reasons += "SIL non-liquid session;";
+         return false;
+      }
+
+      double adx = 0.0;
+      if(!indicators.ADX(1, adx) || adx < MathMax(0.0, InpSessionImpulseMinADX))
+      {
+         reasons += "SIL ADX reject;";
+         return false;
+      }
+      AddSmartMoneyComponent(true, 2, "SIL ADX;", score, reasons);
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range <= _Point)
+         return false;
+
+      double closeLocation = (close1 - low1) / range;
+      double bodyPercent = MathAbs(close1 - open1) / range * 100.0;
+      double minBodyPercent = MathMax(0.0, InpSessionImpulseMinBodyPercent);
+      double minRangeATR = MathMax(0.0, InpSessionImpulseMinRangeATR);
+      double minCloseLocation = MathMin(0.95, MathMax(0.50, InpSessionImpulseMinCloseLocation));
+      bool impulseCandle = false;
+      if(bias == BIAS_BUY)
+         impulseCandle = close1 > open1 &&
+                         closeLocation >= minCloseLocation &&
+                         bodyPercent >= minBodyPercent &&
+                         range >= atr * minRangeATR;
+      else if(bias == BIAS_SELL)
+         impulseCandle = close1 < open1 &&
+                         closeLocation <= (1.0 - minCloseLocation) &&
+                         bodyPercent >= minBodyPercent &&
+                         range >= atr * minRangeATR;
+
+      bool openingRange = m_structure.OpeningRangeBreakout(bias);
+      bool sessionSweep = m_structure.SessionLevelSweep(bias);
+      bool rangeExpansion = m_structure.RangeExpansionBreakout(bias, atr);
+      bool donchian = m_structure.DonchianBreakout(bias);
+      bool sessionBreak = openingRange || sessionSweep || rangeExpansion || donchian;
+
+      bool displacement = DisplacementCandle(bias, atr);
+      bool momentum = MomentumCandle(bias, atr);
+      bool tickPressure = TickPressureCandle(bias);
+      bool tickSpeed = TickSpeedImpulse(bias, atr);
+      bool vwapPullback = VWAPPullbackContinuation(bias, atr);
+      bool execution = impulseCandle || displacement || momentum || tickPressure || tickSpeed || vwapPullback;
+
+      bool cumulativeDelta = CumulativeDeltaProxy(bias);
+      bool tickMicro = tickMicrostructure.Confirms(bias);
+      bool hasOrderFlow = tickPressure || tickSpeed || cumulativeDelta || tickMicro;
+
+      bool vwap = m_structure.VWAPConfluence(bias, InpVWAPLookbackBars, atr);
+      bool dailyOpen = m_structure.DailyOpenBias(bias);
+      bool previousDayRange = m_structure.PreviousDayRangeBias(bias);
+      bool regime = RegimeQuality(bias, atr);
+      bool adxStrength = ADXStrengtheningConfirmation();
+
+      AddSmartMoneyComponent(openingRange, 2, "SIL opening range;", score, reasons);
+      AddSmartMoneyComponent(sessionSweep, 2, "SIL session level;", score, reasons);
+      AddSmartMoneyComponent(rangeExpansion, 2, "SIL range expansion;", score, reasons);
+      AddSmartMoneyComponent(donchian, 1, "SIL Donchian;", score, reasons);
+      AddSmartMoneyComponent(impulseCandle, 2, "SIL OHLC impulse;", score, reasons);
+      AddSmartMoneyComponent(displacement, 2, "SIL displacement;", score, reasons);
+      AddSmartMoneyComponent(momentum, 1, "SIL momentum;", score, reasons);
+      AddSmartMoneyComponent(tickPressure, 2, "SIL tick pressure;", score, reasons);
+      AddSmartMoneyComponent(tickSpeed, 2, "SIL tick speed;", score, reasons);
+      AddSmartMoneyComponent(vwapPullback, 1, "SIL VWAP pullback;", score, reasons);
+      AddSmartMoneyComponent(cumulativeDelta, 1, "SIL cumulative delta;", score, reasons);
+      AddSmartMoneyComponent(tickMicro, 1, "SIL tick tape;", score, reasons);
+      AddSmartMoneyComponent(vwap, 1, "SIL VWAP;", score, reasons);
+      AddSmartMoneyComponent(dailyOpen, 1, "SIL daily open;", score, reasons);
+      AddSmartMoneyComponent(previousDayRange, 1, "SIL previous day range;", score, reasons);
+      AddSmartMoneyComponent(regime, 1, "SIL regime;", score, reasons);
+      AddSmartMoneyComponent(adxStrength, 1, "SIL ADX strengthening;", score, reasons);
+
+      bool requiredSessionBreak = !InpSessionImpulseRequireSessionBreak || sessionBreak;
+      bool requiredExecution = !InpSessionImpulseRequireExecution || execution;
+      bool requiredOrderFlow = !InpSessionImpulseRequireOrderFlow || hasOrderFlow;
+
+      return score >= MathMax(1, InpSessionImpulseMinScore) &&
+             requiredSessionBreak &&
+             requiredExecution &&
+             requiredOrderFlow;
+   }
+
+   bool FlatMonthBreakoutProbeStopTarget(const ENUM_TRADE_BIAS bias,
+                                         const double atr,
+                                         double &stopDistance,
+                                         double &targetDistance,
+                                         string &reasons)
+   {
+      stopDistance = 0.0;
+      targetDistance = 0.0;
+      if(!InpFlatMonthBreakoutProbeUseStructuralStop)
+         return true;
+      if(bias == BIAS_NONE || atr <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      if(high1 <= 0.0 || low1 <= 0.0 || close1 <= 0.0)
+         return false;
+
+      double entry = (bias == BIAS_BUY) ? SymbolInfoDouble(_Symbol, SYMBOL_ASK)
+                                        : SymbolInfoDouble(_Symbol, SYMBOL_BID);
+      if(entry <= 0.0)
+         entry = close1;
+
+      int lookback = MathMax(2, InpFlatMonthBreakoutProbeStopLookbackBars);
+      double structureLevel = 0.0;
+      double buffer = MathMax(0.0, InpFlatMonthBreakoutProbeStopBufferATR) * atr +
+                      MathMax(0.0, InpFlatMonthBreakoutProbeStopBufferPoints) * _Point;
+      double stopLevel = 0.0;
+
+      if(bias == BIAS_BUY)
+      {
+         if(!m_structure.LowestLow(1, lookback, structureLevel))
+            structureLevel = low1;
+         stopLevel = MathMin(low1, structureLevel) - buffer;
+         stopDistance = entry - stopLevel;
+      }
+      else
+      {
+         if(!m_structure.HighestHigh(1, lookback, structureLevel))
+            structureLevel = high1;
+         stopLevel = MathMax(high1, structureLevel) + buffer;
+         stopDistance = stopLevel - entry;
+      }
+
+      targetDistance = atr * MathMax(0.10, InpFlatMonthBreakoutProbeTakeProfitATR);
+      if(stopDistance <= 0.0 || targetDistance <= 0.0)
+         return false;
+
+      double stopATR = stopDistance / atr;
+      if(stopATR < MathMax(0.0, InpFlatMonthBreakoutProbeMinStopATR) ||
+         stopATR > MathMax(InpFlatMonthBreakoutProbeMinStopATR, InpFlatMonthBreakoutProbeMaxStopATR))
+      {
+         reasons += "FMB structural stop size reject;";
+         return false;
+      }
+
+      if(targetDistance / stopDistance < MathMax(0.0, InpFlatMonthBreakoutProbeMinRR))
+      {
+         reasons += "FMB RR reject;";
+         return false;
+      }
+
+      reasons += "FMB structural stop;";
+      return true;
+   }
+
+   bool FlatMonthBreakoutProbeQuality(const ENUM_TRADE_BIAS bias,
+                                      const double atr,
+                                      int &score,
+                                      string &reasons,
+                                      double &stopDistance,
+                                      double &targetDistance)
+   {
+      score = 0;
+      reasons = "";
+      stopDistance = 0.0;
+      targetDistance = 0.0;
+      if(!InpUseFlatMonthBreakoutProbe || atr <= 0.0)
+         return false;
+      if(!FlatMonthOpportunityActive())
+         return false;
+      if(InpFlatMonthBreakoutProbeRequireLiquidSession && !sessionFilter.LiquidSessionActive())
+      {
+         reasons += "FMB non-liquid session;";
+         return false;
+      }
+
+      int monthlyEntries = CurrentPeriodEntryCount(PERIOD_MN1);
+      if(InpFlatMonthBreakoutProbeMaxMonthlyEntries > 0 &&
+         monthlyEntries >= InpFlatMonthBreakoutProbeMaxMonthlyEntries)
+         return false;
+
+      datetime referenceTime = CurrentLastEntryTime();
+      datetime monthStart = iTime(_Symbol, PERIOD_MN1, 0);
+      if(referenceTime <= 0 || referenceTime < monthStart)
+         referenceTime = monthStart;
+      int minHours = MathMax(0, InpFlatMonthBreakoutProbeMinHours);
+      if(referenceTime > 0 && minHours > 0 &&
+         TimeCurrent() - referenceTime < minHours * 3600)
+         return false;
+
+      double adx = 0.0;
+      if(InpFlatMonthBreakoutProbeRequireADX)
+      {
+         if(!indicators.ADX(1, adx))
+            return false;
+         if(adx < MathMax(0.0, InpFlatMonthBreakoutProbeMinADX) ||
+            adx > MathMax(InpFlatMonthBreakoutProbeMinADX, InpFlatMonthBreakoutProbeMaxADX))
+         {
+            reasons += "FMB ADX reject;";
+            return false;
+         }
+         AddSmartMoneyComponent(true, 2, "FMB ADX;", score, reasons);
+      }
+
+      bool rangeExpansion = m_structure.RangeExpansionBreakout(bias, atr);
+      bool donchian = InpFlatMonthBreakoutProbeAllowDonchian &&
+                      m_structure.DonchianBreakout(bias);
+      bool displacementBos = InpFlatMonthBreakoutProbeAllowDisplacementBOS &&
+                             m_structure.DisplacementBOS(bias, InpDisplacementBOSLookbackBars, atr);
+      bool openingRange = InpFlatMonthBreakoutProbeAllowOpeningRange &&
+                          m_structure.OpeningRangeBreakout(bias);
+      if(InpFlatMonthBreakoutProbeRequireRangeExpansion && !rangeExpansion)
+      {
+         reasons += "FMB no range expansion;";
+         return false;
+      }
+
+      bool hasBreakout = rangeExpansion || donchian || displacementBos || openingRange;
+      if(!hasBreakout)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range <= _Point)
+         return false;
+      if(range < atr * MathMax(0.0, InpFlatMonthBreakoutProbeMinRangeATR))
+      {
+         reasons += "FMB candle too small;";
+         return false;
+      }
+
+      double upperWick = high1 - MathMax(open1, close1);
+      double lowerWick = MathMin(open1, close1) - low1;
+      double oppositeWickPercent = (bias == BIAS_BUY)
+                                   ? 100.0 * upperWick / range
+                                   : 100.0 * lowerWick / range;
+      if(oppositeWickPercent > MathMax(0.0, InpFlatMonthBreakoutProbeMaxOppositeWickPercent))
+      {
+         reasons += "FMB opposite wick;";
+         return false;
+      }
+
+      bool displacement = DisplacementCandle(bias, atr);
+      bool momentum = MomentumCandle(bias, atr);
+      bool tickSpeed = TickSpeedImpulse(bias, atr);
+      bool tickPressure = TickPressureCandle(bias);
+      bool execution = displacement || momentum || tickSpeed || tickPressure;
+      if(InpFlatMonthBreakoutProbeRequireExecution && !execution)
+      {
+         reasons += "FMB no execution;";
+         return false;
+      }
+
+      AddSmartMoneyComponent(rangeExpansion, 2, "FMB range expansion;", score, reasons);
+      AddSmartMoneyComponent(donchian, 2, "FMB Donchian;", score, reasons);
+      AddSmartMoneyComponent(displacementBos, 2, "FMB displacement BOS;", score, reasons);
+      AddSmartMoneyComponent(openingRange, 1, "FMB opening range;", score, reasons);
+      AddSmartMoneyComponent(displacement, 2, "FMB displacement;", score, reasons);
+      AddSmartMoneyComponent(momentum, 1, "FMB momentum;", score, reasons);
+      AddSmartMoneyComponent(tickSpeed, 2, "FMB tick speed;", score, reasons);
+      AddSmartMoneyComponent(tickPressure, 1, "FMB tick pressure;", score, reasons);
+
+      if(score < MathMax(1, InpFlatMonthBreakoutProbeMinScore))
+         return false;
+
+      return FlatMonthBreakoutProbeStopTarget(bias,
+                                              atr,
+                                              stopDistance,
+                                              targetDistance,
+                                              reasons);
+   }
+
+   bool RangeReversionOpportunity(const ENUM_TRADE_BIAS bias,
+                                  const double atr,
+                                  int &score,
+                                  string &reasons,
+                                  double &stopPrice,
+                                  double &targetPrice)
+   {
+      score = 0;
+      reasons = "";
+      stopPrice = 0.0;
+      targetPrice = 0.0;
+      if(atr <= 0.0)
+         return false;
+
+      double adx = 0.0;
+      if(indicators.ADX(1, adx) && adx > MathMax(0.0, InpRangeReversionMaxADX))
+      {
+         reasons += "RRO ADX too strong;";
+         return false;
+      }
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range <= _Point)
+         return false;
+
+      if(range < atr * MathMax(0.0, InpRangeReversionMinRangeATR))
+      {
+         reasons += "RRO candle too small;";
+         return false;
+      }
+
+      double closeLocation = (close1 - low1) / range;
+      double upperWick = high1 - MathMax(open1, close1);
+      double lowerWick = MathMin(open1, close1) - low1;
+      double upperPercent = upperWick / range * 100.0;
+      double lowerPercent = lowerWick / range * 100.0;
+      double minWick = MathMax(0.0, InpRangeReversionMinWickPercent);
+      double minCloseLocation = MathMin(0.95, MathMax(0.50, InpRangeReversionMinCloseLocation));
+
+      bool rejectionCandle = false;
+      if(bias == BIAS_BUY)
+         rejectionCandle = lowerPercent >= minWick && closeLocation >= minCloseLocation && close1 > open1;
+      else if(bias == BIAS_SELL)
+         rejectionCandle = upperPercent >= minWick && closeLocation <= (1.0 - minCloseLocation) && close1 < open1;
+
+      bool liquiditySweep = m_structure.LiquiditySweep(bias, InpSweepLookbackBars);
+      bool sweepRejection = m_structure.SweepRejection(bias, InpSweepLookbackBars);
+      bool equalSweep = m_structure.EqualHighLowSweep(bias, InpEqualLevelLookbackBars);
+      bool sessionSweep = m_structure.SessionLevelSweep(bias);
+      bool asianSweep = m_structure.AsianRangeSweep(bias);
+      bool failedBreakoutReversal = FailedBreakoutReversal(bias);
+      bool hasLiquidityEvent = liquiditySweep || sweepRejection || equalSweep || sessionSweep || asianSweep || failedBreakoutReversal;
+
+      double vwap = 0.0;
+      bool hasVwap = m_structure.VWAPValue(InpVWAPLookbackBars, vwap);
+      bool vwapMagnet = false;
+      if(hasVwap)
+      {
+         double maxDistance = atr * MathMax(0.0, InpRangeReversionMaxVWAPDistanceATR);
+         bool nearVwap = maxDistance <= 0.0 || MathAbs(close1 - vwap) <= maxDistance;
+         if(bias == BIAS_BUY)
+            vwapMagnet = close1 <= vwap && nearVwap;
+         else if(bias == BIAS_SELL)
+            vwapMagnet = close1 >= vwap && nearVwap;
+      }
+
+      bool tickPressure = TickPressureCandle(bias);
+      bool tickSpeed = TickSpeedImpulse(bias, atr);
+      bool cumulativeDelta = CumulativeDeltaProxy(bias);
+      bool tickMicro = tickMicrostructure.Confirms(bias);
+      bool hasOrderFlow = tickPressure || tickSpeed || cumulativeDelta || tickMicro;
+
+      AddSmartMoneyComponent(hasLiquidityEvent, 3, "RRO liquidity event;", score, reasons);
+      AddSmartMoneyComponent(rejectionCandle, 2, "RRO wick rejection;", score, reasons);
+      AddSmartMoneyComponent(vwapMagnet, 1, "RRO VWAP magnet;", score, reasons);
+      AddSmartMoneyComponent(hasOrderFlow, 1, "RRO order flow;", score, reasons);
+      AddSmartMoneyComponent(failedBreakoutReversal, 1, "RRO failed breakout;", score, reasons);
+
+      bool requiredVwap = !InpRangeReversionRequireVWAPMagnet || vwapMagnet;
+      bool requiredOrderFlow = !InpRangeReversionRequireOrderFlow || hasOrderFlow;
+
+      bool qualifies = hasLiquidityEvent &&
+                       rejectionCandle &&
+                       requiredVwap &&
+                       requiredOrderFlow &&
+                       score >= MathMax(1, InpRangeReversionMinScore);
+      if(!qualifies)
+         return false;
+
+      double buffer = MathMax(0.0, InpRangeReversionStopBufferATR) * atr +
+                      MathMax(0.0, InpRangeReversionStopBufferPoints) * _Point;
+      if(bias == BIAS_BUY)
+      {
+         stopPrice = low1 - buffer;
+         if(InpRangeReversionUseMeanTarget && hasVwap && vwap > close1)
+            targetPrice = vwap;
+         else
+            targetPrice = close1 + atr * MathMax(0.10, InpRangeReversionFallbackTPATR);
+      }
+      else if(bias == BIAS_SELL)
+      {
+         stopPrice = high1 + buffer;
+         if(InpRangeReversionUseMeanTarget && hasVwap && vwap < close1)
+            targetPrice = vwap;
+         else
+            targetPrice = close1 - atr * MathMax(0.10, InpRangeReversionFallbackTPATR);
+      }
+
+      return stopPrice > 0.0 && targetPrice > 0.0;
+   }
+
+   bool FlatMonthMicroReversionOpportunity(const ENUM_TRADE_BIAS bias,
+                                           const double atr,
+                                           int &score,
+                                           string &reasons,
+                                           double &stopPrice,
+                                           double &targetPrice)
+   {
+      score = 0;
+      reasons = "";
+      stopPrice = 0.0;
+      targetPrice = 0.0;
+      if(!InpUseFlatMonthMicroReversionLane || atr <= 0.0)
+         return false;
+      if(!FlatMonthMicroReversionActive())
+         return false;
+      if(InpFlatMonthMicroReversionMaxMonthlyEntries > 0 &&
+         CurrentPeriodEntryCount(PERIOD_MN1) >= InpFlatMonthMicroReversionMaxMonthlyEntries)
+         return false;
+
+      int spacingMinutes = MathMax(0, InpFlatMonthMicroReversionSpacingMinutes);
+      datetime lastEntry = CurrentLastEntryTime();
+      if(lastEntry > 0 && spacingMinutes > 0 &&
+         TimeCurrent() - lastEntry < spacingMinutes * 60)
+         return false;
+
+      double adx = 0.0;
+      if(indicators.ADX(1, adx) && adx > MathMax(0.0, InpFlatMonthMicroReversionMaxADX))
+      {
+         reasons += "FMR ADX too strong;";
+         return false;
+      }
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range <= _Point)
+         return false;
+      if(range < atr * MathMax(0.0, InpFlatMonthMicroReversionMinRangeATR))
+      {
+         reasons += "FMR candle too small;";
+         return false;
+      }
+
+      double closeLocation = (close1 - low1) / range;
+      double upperWick = high1 - MathMax(open1, close1);
+      double lowerWick = MathMin(open1, close1) - low1;
+      double upperPercent = upperWick / range * 100.0;
+      double lowerPercent = lowerWick / range * 100.0;
+      double minWick = MathMax(0.0, InpFlatMonthMicroReversionMinWickPercent);
+      double minCloseLocation = MathMin(0.95, MathMax(0.50, InpFlatMonthMicroReversionMinCloseLocation));
+
+      bool rejectionCandle = false;
+      if(bias == BIAS_BUY)
+         rejectionCandle = lowerPercent >= minWick && closeLocation >= minCloseLocation;
+      else if(bias == BIAS_SELL)
+         rejectionCandle = upperPercent >= minWick && closeLocation <= (1.0 - minCloseLocation);
+      if(!rejectionCandle)
+         return false;
+
+      bool liquidityEvent = m_structure.LiquiditySweep(bias, InpSweepLookbackBars) ||
+                            m_structure.SweepRejection(bias, InpSweepLookbackBars) ||
+                            m_structure.EqualHighLowSweep(bias, InpEqualLevelLookbackBars) ||
+                            m_structure.SessionLevelSweep(bias) ||
+                            m_structure.AsianRangeSweep(bias) ||
+                            FailedBreakoutReversal(bias);
+      if(InpFlatMonthMicroReversionRequireLiquidity && !liquidityEvent)
+      {
+         reasons += "FMR no liquidity event;";
+         return false;
+      }
+
+      bool locationExtreme = false;
+      if(InpFlatMonthMicroReversionRequireVWAP)
+      {
+         int locationLookback = MathMax(4, InpEqualLevelLookbackBars);
+         double proximity = MathMax(0.35 * atr, 80.0 * _Point);
+         double level = 0.0;
+         if(EqualLiquidityStopLevel(bias, locationLookback, level))
+         {
+            if((bias == BIAS_BUY && (MathAbs(low1 - level) <= proximity || (low1 < level && close1 > level))) ||
+               (bias == BIAS_SELL && (MathAbs(high1 - level) <= proximity || (high1 > level && close1 < level))))
+               locationExtreme = true;
+         }
+         if(!locationExtreme && PreviousPeriodLiquidityStopLevel(bias, PERIOD_D1, close1, level))
+         {
+            if((bias == BIAS_BUY && (MathAbs(low1 - level) <= proximity || (low1 < level && close1 > level))) ||
+               (bias == BIAS_SELL && (MathAbs(high1 - level) <= proximity || (high1 > level && close1 < level))))
+               locationExtreme = true;
+         }
+         if(!locationExtreme)
+            locationExtreme = m_structure.SessionLevelSweep(bias) || m_structure.AsianRangeSweep(bias);
+         if(!locationExtreme)
+         {
+            reasons += "FMR no location extreme;";
+            return false;
+         }
+      }
+
+      double vwap = 0.0;
+      bool hasVwap = m_structure.VWAPValue(InpVWAPLookbackBars, vwap);
+      bool vwapMagnet = false;
+      if(hasVwap)
+      {
+         double maxDistance = atr * MathMax(0.0, InpFlatMonthMicroReversionMaxVWAPDistanceATR);
+         bool nearVwap = maxDistance <= 0.0 || MathAbs(close1 - vwap) <= maxDistance;
+         if(bias == BIAS_BUY)
+            vwapMagnet = close1 <= vwap && nearVwap;
+         else if(bias == BIAS_SELL)
+            vwapMagnet = close1 >= vwap && nearVwap;
+      }
+      if(InpFlatMonthMicroReversionRequireVWAP && !vwapMagnet)
+      {
+         reasons += "FMR no VWAP magnet;";
+         return false;
+      }
+
+      AddSmartMoneyComponent(liquidityEvent, 3, "FMR liquidity;", score, reasons);
+      AddSmartMoneyComponent(rejectionCandle, 2, "FMR rejection;", score, reasons);
+      AddSmartMoneyComponent(locationExtreme, 1, "FMR location extreme;", score, reasons);
+      AddSmartMoneyComponent(vwapMagnet, 1, "FMR VWAP;", score, reasons);
+
+      double buffer = MathMax(0.0, InpFlatMonthMicroReversionStopBufferATR) * atr +
+                      MathMax(0.0, InpFlatMonthMicroReversionStopBufferPoints) * _Point;
+      if(bias == BIAS_BUY)
+      {
+         stopPrice = low1 - buffer;
+         if(hasVwap && vwap > close1)
+            targetPrice = vwap;
+         else
+            targetPrice = close1 + atr * MathMax(0.10, InpFlatMonthMicroReversionFallbackTPATR);
+      }
+      else if(bias == BIAS_SELL)
+      {
+         stopPrice = high1 + buffer;
+         if(hasVwap && vwap < close1)
+            targetPrice = vwap;
+         else
+            targetPrice = close1 - atr * MathMax(0.10, InpFlatMonthMicroReversionFallbackTPATR);
+      }
+
+      double stopDistance = MathAbs(close1 - stopPrice);
+      double targetDistance = MathAbs(targetPrice - close1);
+      if(stopDistance <= 0.0 || targetDistance <= 0.0)
+         return false;
+      if(targetDistance / stopDistance < MathMax(0.0, InpFlatMonthMicroReversionMinRR))
+      {
+         reasons += "FMR RR reject;";
+         return false;
+      }
+
+      reasons += "Flat month micro reversion;";
+      return true;
+   }
+
+   bool FlatMonthForwardLiquidityClearance(const ENUM_TRADE_BIAS bias,
+                                           const double entryPrice,
+                                           const double atr,
+                                           const int lookback,
+                                           double &nearestDistance)
+   {
+      nearestDistance = 0.0;
+      if(bias == BIAS_NONE || entryPrice <= 0.0 || atr <= 0.0)
+         return false;
+
+      ENUM_TRADE_BIAS targetLiquidityBias = OppositeBias(bias);
+      bool found = false;
+      double selectedDistance = 0.0;
+      double level = 0.0;
+
+      if(InpFlatMonthStructuralDisplacementUseEqualLevels &&
+         EqualLiquidityStopLevel(targetLiquidityBias, MathMax(4, lookback), level))
+      {
+         double distance = (bias == BIAS_BUY) ? level - entryPrice : entryPrice - level;
+         if(distance > 0.0)
+         {
+            selectedDistance = distance;
+            found = true;
+         }
+      }
+
+      if(InpFlatMonthStructuralDisplacementUsePreviousDay &&
+         PreviousPeriodLiquidityStopLevel(targetLiquidityBias, PERIOD_D1, entryPrice, level))
+      {
+         double distance = (bias == BIAS_BUY) ? level - entryPrice : entryPrice - level;
+         if(distance > 0.0 && (!found || distance < selectedDistance))
+         {
+            selectedDistance = distance;
+            found = true;
+         }
+      }
+
+      if(InpFlatMonthStructuralDisplacementUsePreviousWeek &&
+         PreviousPeriodLiquidityStopLevel(targetLiquidityBias, PERIOD_W1, entryPrice, level))
+      {
+         double distance = (bias == BIAS_BUY) ? level - entryPrice : entryPrice - level;
+         if(distance > 0.0 && (!found || distance < selectedDistance))
+         {
+            selectedDistance = distance;
+            found = true;
+         }
+      }
+
+      if(!found)
+         return true;
+
+      nearestDistance = selectedDistance;
+      return nearestDistance >= atr * MathMax(0.0, InpFlatMonthStructuralDisplacementMinClearanceATR);
+   }
+
+   bool FlatMonthStructuralDisplacementEfficiencyRelaxed()
+   {
+      if(!InpUseFlatMonthStructuralDisplacementEfficiencyRelaxation)
+         return false;
+      if(!FlatMonthOpportunityActive())
+         return false;
+
+      double progress = FlatMonthCatchUpProgress();
+      if(progress < MathMax(0.0, InpFlatMonthStructuralDisplacementRelaxMinCatchUpProgress))
+         return false;
+
+      datetime referenceTime = CurrentLastEntryTime();
+      datetime monthStart = iTime(_Symbol, PERIOD_MN1, 0);
+      if(referenceTime <= 0 || referenceTime < monthStart)
+         referenceTime = monthStart;
+
+      int minHours = MathMax(0, InpFlatMonthStructuralDisplacementRelaxAfterHours);
+      if(referenceTime > 0 && minHours > 0 &&
+         TimeCurrent() - referenceTime < minHours * 3600)
+         return false;
+
+      return true;
+   }
+
+   bool FlatMonthStructuralDisplacementOpportunity(const ENUM_TRADE_BIAS bias,
+                                                   const double atr,
+                                                   int &score,
+                                                   string &reasons,
+                                                   double &stopDistance,
+                                                   double &targetDistance)
+   {
+      score = 0;
+      reasons = "";
+      stopDistance = 0.0;
+      targetDistance = 0.0;
+      if(!InpUseFlatMonthStructuralDisplacementLane || atr <= 0.0 || bias == BIAS_NONE)
+         return false;
+      if(!FlatMonthOpportunityActive())
+         return false;
+      if(InpFlatMonthStructuralDisplacementRequireLiquidSession && !sessionFilter.LiquidSessionActive())
+      {
+         reasons += "FSD non-liquid session;";
+         return false;
+      }
+
+      if(InpFlatMonthStructuralDisplacementMaxMonthlyEntries > 0 &&
+         CurrentPeriodEntryCount(PERIOD_MN1) >= InpFlatMonthStructuralDisplacementMaxMonthlyEntries)
+         return false;
+
+      datetime lastLaneEntry = LastSetupLaneEntryTime("FSD;");
+      int spacingMinutes = MathMax(0, InpFlatMonthStructuralDisplacementSpacingMinutes);
+      if(lastLaneEntry > 0 && spacingMinutes > 0 &&
+         TimeCurrent() - lastLaneEntry < spacingMinutes * 60)
+         return false;
+
+      bool efficiencyRelaxed = FlatMonthStructuralDisplacementEfficiencyRelaxed();
+      double adx = 0.0;
+      if(InpFlatMonthStructuralDisplacementRequireADX)
+      {
+         if(!indicators.ADX(1, adx))
+            return false;
+         if(adx < MathMax(0.0, InpFlatMonthStructuralDisplacementMinADX) ||
+            adx > MathMax(InpFlatMonthStructuralDisplacementMinADX,
+                          InpFlatMonthStructuralDisplacementMaxADX))
+         {
+            reasons += "FSD ADX reject;";
+            return false;
+         }
+         AddSmartMoneyComponent(true, 2, "FSD ADX;", score, reasons);
+      }
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range <= _Point)
+         return false;
+
+      double minRangeATR = efficiencyRelaxed
+                           ? MathMin(MathMax(0.0, InpFlatMonthStructuralDisplacementMinRangeATR),
+                                     MathMax(0.0, InpFlatMonthStructuralDisplacementRelaxMinRangeATR))
+                           : MathMax(0.0, InpFlatMonthStructuralDisplacementMinRangeATR);
+      if(range < atr * minRangeATR)
+      {
+         reasons += "FSD candle too small;";
+         return false;
+      }
+
+      double bodyPercent = MathAbs(close1 - open1) / range * 100.0;
+      double minBodyPercent = efficiencyRelaxed
+                              ? MathMin(MathMax(0.0, InpFlatMonthStructuralDisplacementMinBodyPercent),
+                                        MathMax(0.0, InpFlatMonthStructuralDisplacementRelaxMinBodyPercent))
+                              : MathMax(0.0, InpFlatMonthStructuralDisplacementMinBodyPercent);
+      if(bodyPercent < minBodyPercent)
+      {
+         reasons += "FSD weak body;";
+         return false;
+      }
+
+      bool directionalBody = (bias == BIAS_BUY && close1 > open1) ||
+                             (bias == BIAS_SELL && close1 < open1);
+      if(!directionalBody)
+         return false;
+
+      double upperWick = high1 - MathMax(open1, close1);
+      double lowerWick = MathMin(open1, close1) - low1;
+      double oppositeWickPercent = (bias == BIAS_BUY)
+                                   ? 100.0 * upperWick / range
+                                   : 100.0 * lowerWick / range;
+      double maxOppositeWickPercent = efficiencyRelaxed
+                                      ? MathMax(MathMax(0.0, InpFlatMonthStructuralDisplacementMaxOppositeWickPercent),
+                                                MathMax(0.0, InpFlatMonthStructuralDisplacementRelaxMaxOppositeWickPercent))
+                                      : MathMax(0.0, InpFlatMonthStructuralDisplacementMaxOppositeWickPercent);
+      if(oppositeWickPercent > maxOppositeWickPercent)
+      {
+         reasons += "FSD opposite wick;";
+         return false;
+      }
+
+      int lookback = MathMax(4, InpFlatMonthStructuralDisplacementLookbackBars);
+      bool displacementBos = m_structure.DisplacementBOS(bias, lookback, atr);
+      bool bos = m_structure.BOS(bias, lookback);
+      bool rangeExpansion = m_structure.RangeExpansionBreakout(bias, atr);
+      bool displacement = DisplacementCandle(bias, atr);
+      if(!displacementBos && !(bos && displacement) && !rangeExpansion)
+      {
+         reasons += "FSD no structure break;";
+         return false;
+      }
+
+      bool sweepOrRetest = m_structure.LiquiditySweep(bias, InpSweepLookbackBars) ||
+                           m_structure.SweepRejection(bias, InpSweepLookbackBars) ||
+                           m_structure.EqualHighLowSweep(bias, InpEqualLevelLookbackBars) ||
+                           m_structure.BreakoutRetest(bias, InpBreakoutRetestLookbackBars, atr) ||
+                           m_structure.SessionLevelSweep(bias);
+      bool orderFlow = TickPressureCandle(bias) ||
+                       TickSpeedImpulse(bias, atr) ||
+                       CumulativeDeltaProxy(bias) ||
+                       tickMicrostructure.Confirms(bias);
+
+      if(efficiencyRelaxed)
+      {
+         if(InpFlatMonthStructuralDisplacementRelaxRequireSweepOrOrderFlow &&
+            !sweepOrRetest && !orderFlow)
+         {
+            reasons += "FSD relaxed no sweep/orderflow;";
+            return false;
+         }
+      }
+      else
+      {
+         if(InpFlatMonthStructuralDisplacementRequireSweepOrRetest && !sweepOrRetest)
+         {
+            reasons += "FSD no sweep/retest;";
+            return false;
+         }
+         if(InpFlatMonthStructuralDisplacementRequireOrderFlow && !orderFlow)
+         {
+            reasons += "FSD no order flow;";
+            return false;
+         }
+      }
+
+      double nearestForward = 0.0;
+      if(InpFlatMonthStructuralDisplacementRequireForwardClearance &&
+         !FlatMonthForwardLiquidityClearance(bias, close1, atr, lookback, nearestForward))
+      {
+         reasons += "FSD forward liquidity too close;";
+         return false;
+      }
+
+      double entry = (bias == BIAS_BUY) ? SymbolInfoDouble(_Symbol, SYMBOL_ASK)
+                                        : SymbolInfoDouble(_Symbol, SYMBOL_BID);
+      if(entry <= 0.0)
+         entry = close1;
+
+      double buffer = MathMax(0.0, InpFlatMonthStructuralDisplacementStopBufferATR) * atr +
+                      MathMax(0.0, InpFlatMonthStructuralDisplacementStopBufferPoints) * _Point;
+      double stopLevel = (bias == BIAS_BUY) ? low1 - buffer : high1 + buffer;
+      stopDistance = (bias == BIAS_BUY) ? entry - stopLevel : stopLevel - entry;
+      targetDistance = atr * MathMax(0.10, InpFlatMonthStructuralDisplacementTakeProfitATR);
+      if(stopDistance <= 0.0 || targetDistance <= 0.0)
+         return false;
+      if(targetDistance / stopDistance < MathMax(0.0, InpFlatMonthStructuralDisplacementMinRR))
+      {
+         reasons += "FSD RR reject;";
+         return false;
+      }
+
+      AddSmartMoneyComponent(displacementBos, 2, "FSD displacement BOS;", score, reasons);
+      AddSmartMoneyComponent(bos, 1, "FSD BOS;", score, reasons);
+      AddSmartMoneyComponent(rangeExpansion, 1, "FSD range expansion;", score, reasons);
+      AddSmartMoneyComponent(displacement, 2, "FSD displacement;", score, reasons);
+      AddSmartMoneyComponent(sweepOrRetest, 2, "FSD sweep/retest;", score, reasons);
+      AddSmartMoneyComponent(orderFlow, 1, "FSD order flow;", score, reasons);
+
+      if(efficiencyRelaxed)
+         reasons += "Flat month structural displacement efficiency relaxation;";
+      reasons += "Flat month structural displacement;";
+
+      int minScore = efficiencyRelaxed
+                     ? MathMin(MathMax(1, InpFlatMonthStructuralDisplacementMinScore),
+                               MathMax(1, InpFlatMonthStructuralDisplacementRelaxMinScore))
+                     : MathMax(1, InpFlatMonthStructuralDisplacementMinScore);
+      return score >= minScore;
+   }
+
+   void ConsiderFlatMonthLiquidityTargetLevel(const ENUM_TRADE_BIAS bias,
+                                              const double entryPrice,
+                                              const double level,
+                                              const double minDistance,
+                                              bool &found,
+                                              double &selectedDistance)
+   {
+      if(entryPrice <= 0.0 || level <= 0.0 || bias == BIAS_NONE)
+         return;
+
+      double distance = (bias == BIAS_BUY) ? level - entryPrice : entryPrice - level;
+      if(distance <= 0.0)
+         return;
+      if(minDistance > 0.0 && distance < minDistance)
+         return;
+
+      if(!found || distance < selectedDistance)
+      {
+         selectedDistance = distance;
+         found = true;
+      }
+   }
+
+   bool FlatMonthLiquidityReclaimSwingTargetDistance(const ENUM_TRADE_BIAS bias,
+                                                     const double entryPrice,
+                                                     const double minDistance,
+                                                     double &targetDistance)
+   {
+      targetDistance = 0.0;
+      if(bias == BIAS_NONE || entryPrice <= 0.0)
+         return false;
+
+      bool found = false;
+      double selectedDistance = 0.0;
+      int left = MathMax(1, InpFlatMonthLiquidityReclaimSwingLeftBars);
+      int right = MathMax(1, InpFlatMonthLiquidityReclaimSwingRightBars);
+      int swingLookback = MathMax(right + 2, InpFlatMonthLiquidityReclaimSwingLookbackBars);
+
+      for(int shift = right + 1; shift <= swingLookback + right; shift++)
+      {
+         double level = 0.0;
+         if(bias == BIAS_BUY && m_structure.IsSwingHigh(shift, left, right))
+            level = iHigh(_Symbol, InpSignalTimeframe, shift);
+         else if(bias == BIAS_SELL && m_structure.IsSwingLow(shift, left, right))
+            level = iLow(_Symbol, InpSignalTimeframe, shift);
+
+         ConsiderFlatMonthLiquidityTargetLevel(bias, entryPrice, level, minDistance, found, selectedDistance);
+      }
+
+      if(found)
+         targetDistance = selectedDistance;
+      return targetDistance > 0.0;
+   }
+
+   bool FlatMonthLiquidityReclaimOpenTargetDistance(const ENUM_TRADE_BIAS bias,
+                                                    const double entryPrice,
+                                                    const double minDistance,
+                                                    double &targetDistance)
+   {
+      targetDistance = 0.0;
+      if(bias == BIAS_NONE || entryPrice <= 0.0)
+         return false;
+
+      bool found = false;
+      double selectedDistance = 0.0;
+      double level = 0.0;
+      if(InpFlatMonthLiquidityReclaimTargetUsePreviousDay)
+      {
+         level = iOpen(_Symbol, PERIOD_D1, 0);
+         ConsiderFlatMonthLiquidityTargetLevel(bias, entryPrice, level, minDistance, found, selectedDistance);
+      }
+
+      if(InpFlatMonthLiquidityReclaimTargetUsePreviousWeek)
+      {
+         level = iOpen(_Symbol, PERIOD_W1, 0);
+         ConsiderFlatMonthLiquidityTargetLevel(bias, entryPrice, level, minDistance, found, selectedDistance);
+      }
+
+      if(InpFlatMonthLiquidityReclaimHTFUsePreviousMonth)
+      {
+         level = iOpen(_Symbol, PERIOD_MN1, 0);
+         ConsiderFlatMonthLiquidityTargetLevel(bias, entryPrice, level, minDistance, found, selectedDistance);
+      }
+
+      if(found)
+         targetDistance = selectedDistance;
+      return targetDistance > 0.0;
+   }
+
+   bool FlatMonthLiquidityReclaimPreviousMonthTargetDistance(const ENUM_TRADE_BIAS bias,
+                                                             const double entryPrice,
+                                                             double &targetDistance)
+   {
+      targetDistance = 0.0;
+      if(!InpFlatMonthLiquidityReclaimHTFUsePreviousMonth ||
+         bias == BIAS_NONE ||
+         entryPrice <= 0.0)
+         return false;
+
+      double level = 0.0;
+      ENUM_TRADE_BIAS targetLiquidityBias = OppositeBias(bias);
+      if(!PreviousPeriodLiquidityStopLevel(targetLiquidityBias, PERIOD_MN1, entryPrice, level))
+         return false;
+
+      bool found = false;
+      double selectedDistance = 0.0;
+      ConsiderFlatMonthLiquidityTargetLevel(bias, entryPrice, level, 0.0, found, selectedDistance);
+      if(found)
+         targetDistance = selectedDistance;
+      return targetDistance > 0.0;
+   }
+
+   bool FlatMonthLiquidityReclaimForwardLiquidityDistance(const ENUM_TRADE_BIAS bias,
+                                                          const double entryPrice,
+                                                          const double atr,
+                                                          const int lookback,
+                                                          const bool applyTargetLimits,
+                                                          const double minimumCandidateDistance,
+                                                          double &targetDistance)
+   {
+      targetDistance = 0.0;
+      if(bias == BIAS_NONE ||
+         entryPrice <= 0.0 ||
+         atr <= 0.0)
+         return false;
+
+      ENUM_TRADE_BIAS targetLiquidityBias = OppositeBias(bias);
+      bool found = false;
+      double selectedDistance = 0.0;
+      double level = 0.0;
+      double minTargetDistance = MathMax(0.0, minimumCandidateDistance);
+      if(applyTargetLimits)
+         minTargetDistance = MathMax(minTargetDistance,
+                                     atr * MathMax(0.0, InpFlatMonthLiquidityReclaimMinTargetATR));
+
+      if(InpFlatMonthLiquidityReclaimTargetUseEqualLevels &&
+         EqualLiquidityStopLevel(targetLiquidityBias, MathMax(4, lookback), level))
+      {
+         ConsiderFlatMonthLiquidityTargetLevel(bias, entryPrice, level, minTargetDistance, found, selectedDistance);
+      }
+
+      if(InpFlatMonthLiquidityReclaimTargetUsePreviousDay &&
+         PreviousPeriodLiquidityStopLevel(targetLiquidityBias, PERIOD_D1, entryPrice, level))
+      {
+         ConsiderFlatMonthLiquidityTargetLevel(bias, entryPrice, level, minTargetDistance, found, selectedDistance);
+      }
+
+      if(InpFlatMonthLiquidityReclaimTargetUsePreviousWeek &&
+         PreviousPeriodLiquidityStopLevel(targetLiquidityBias, PERIOD_W1, entryPrice, level))
+      {
+         ConsiderFlatMonthLiquidityTargetLevel(bias, entryPrice, level, minTargetDistance, found, selectedDistance);
+      }
+
+      double previousMonthTargetDistance = 0.0;
+      if(FlatMonthLiquidityReclaimPreviousMonthTargetDistance(bias,
+                                                              entryPrice,
+                                                              previousMonthTargetDistance))
+      {
+         if(previousMonthTargetDistance >= minTargetDistance &&
+            (!found || previousMonthTargetDistance < selectedDistance))
+         {
+            selectedDistance = previousMonthTargetDistance;
+            found = true;
+         }
+      }
+
+      double openTargetDistance = 0.0;
+      if(FlatMonthLiquidityReclaimOpenTargetDistance(bias, entryPrice, minTargetDistance, openTargetDistance))
+      {
+         if(openTargetDistance >= minTargetDistance &&
+            (!found || openTargetDistance < selectedDistance))
+         {
+            selectedDistance = openTargetDistance;
+            found = true;
+         }
+      }
+
+      if(InpFlatMonthLiquidityReclaimTargetUseSessionRange)
+      {
+         int seconds = PeriodSeconds(InpSignalTimeframe);
+         if(seconds <= 0)
+            seconds = 60;
+         int hours = MathMax(1, InpFlatMonthLiquidityReclaimTargetSessionLookbackHours);
+         int bars = MathMax(4, (int)MathCeil((hours * 3600.0) / seconds));
+         double sessionHigh = 0.0;
+         double sessionLow = 0.0;
+         if(m_structure.HighestHigh(2, bars, sessionHigh) &&
+            m_structure.LowestLow(2, bars, sessionLow))
+         {
+            level = (bias == BIAS_BUY) ? sessionHigh : sessionLow;
+            ConsiderFlatMonthLiquidityTargetLevel(bias, entryPrice, level, minTargetDistance, found, selectedDistance);
+         }
+      }
+
+      if(InpFlatMonthLiquidityReclaimTargetUseAsianRange)
+      {
+         double asianHigh = 0.0;
+         double asianLow = 0.0;
+         if(m_structure.AsianRangeLevels(asianHigh, asianLow))
+         {
+            level = (bias == BIAS_BUY) ? asianHigh : asianLow;
+            ConsiderFlatMonthLiquidityTargetLevel(bias, entryPrice, level, minTargetDistance, found, selectedDistance);
+         }
+      }
+
+      if(InpFlatMonthLiquidityReclaimTargetUseSwingLevels)
+      {
+         double swingDistance = 0.0;
+         if(FlatMonthLiquidityReclaimSwingTargetDistance(bias, entryPrice, minTargetDistance, swingDistance))
+         {
+            if(swingDistance >= minTargetDistance &&
+               (!found || swingDistance < selectedDistance))
+            {
+               selectedDistance = swingDistance;
+               found = true;
+            }
+         }
+      }
+
+      if(!found)
+         return false;
+
+      if(applyTargetLimits)
+      {
+         if(selectedDistance < minTargetDistance)
+            return false;
+
+         double maxDistance = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimMaxTargetATR);
+         if(maxDistance > 0.0 && selectedDistance > maxDistance)
+            selectedDistance = maxDistance;
+      }
+
+      targetDistance = selectedDistance;
+      return targetDistance > 0.0;
+   }
+
+   bool FlatMonthLiquidityReclaimTargetDistance(const ENUM_TRADE_BIAS bias,
+                                                 const double entryPrice,
+                                                 const double atr,
+                                                 const int lookback,
+                                                 double &targetDistance)
+   {
+      targetDistance = 0.0;
+      if(!InpFlatMonthLiquidityReclaimUseLiquidityTarget)
+         return false;
+
+      return FlatMonthLiquidityReclaimForwardLiquidityDistance(bias,
+                                                              entryPrice,
+                                                              atr,
+                                                              lookback,
+                                                              true,
+                                                              0.0,
+                                                              targetDistance);
+   }
+
+   bool FlatMonthLiquidityEqualLevelReclaimLevel(const ENUM_TRADE_BIAS bias,
+                                                 const double atr,
+                                                 const int lookback,
+                                                 double &level)
+   {
+      level = 0.0;
+      if(!InpFlatMonthLiquidityReclaimUseEqualLevels ||
+         bias == BIAS_NONE ||
+         atr <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
+         return false;
+
+      bool directionalBody = (bias == BIAS_BUY && close1 > open1) ||
+                             (bias == BIAS_SELL && close1 < open1);
+      if(!directionalBody)
+         return false;
+
+      double equalLevel = 0.0;
+      if(!EqualLiquidityStopLevel(bias, MathMax(4, lookback), equalLevel))
+         return false;
+
+      if(bias == BIAS_BUY)
+      {
+         if(equalLevel <= 0.0 || low1 >= equalLevel || close1 <= equalLevel)
+            return false;
+
+         level = MathMin(low1, equalLevel);
+         return level > 0.0;
+      }
+
+      if(bias == BIAS_SELL)
+      {
+         if(equalLevel <= 0.0 || high1 <= equalLevel || close1 >= equalLevel)
+            return false;
+
+         level = MathMax(high1, equalLevel);
+         return level > 0.0;
+      }
+
+      return false;
+   }
+
+   bool FlatMonthLiquidityPreviousPeriodReclaimCandidate(const ENUM_TRADE_BIAS bias,
+                                                         const ENUM_TIMEFRAMES timeframe,
+                                                         const string sourceName,
+                                                         const double high1,
+                                                         const double low1,
+                                                         const double open1,
+                                                         const double close1,
+                                                         double &selectedLevel,
+                                                         double &selectedDistance,
+                                                         string &selectedSource)
+   {
+      if(bias == BIAS_NONE ||
+         high1 <= 0.0 ||
+         low1 <= 0.0 ||
+         open1 <= 0.0 ||
+         close1 <= 0.0)
+         return false;
+
+      double periodHigh = iHigh(_Symbol, timeframe, 1);
+      double periodLow = iLow(_Symbol, timeframe, 1);
+      if(periodHigh <= 0.0 || periodLow <= 0.0 || periodHigh <= periodLow)
+         return false;
+
+      double candidate = 0.0;
+      double distance = 0.0;
+      if(bias == BIAS_BUY)
+      {
+         if(close1 <= open1 || low1 >= periodLow || close1 <= periodLow)
+            return false;
+         candidate = MathMin(low1, periodLow);
+         distance = MathAbs(close1 - periodLow);
+      }
+      else if(bias == BIAS_SELL)
+      {
+         if(close1 >= open1 || high1 <= periodHigh || close1 >= periodHigh)
+            return false;
+         candidate = MathMax(high1, periodHigh);
+         distance = MathAbs(close1 - periodHigh);
+      }
+      else
+         return false;
+
+      if(candidate <= 0.0 || distance <= 0.0)
+         return false;
+
+      if(selectedDistance <= 0.0 || distance < selectedDistance)
+      {
+         selectedDistance = distance;
+         selectedLevel = candidate;
+         selectedSource = sourceName;
+      }
+
+      return true;
+   }
+
+   bool FlatMonthLiquidityPreviousPeriodReclaimLevel(const ENUM_TRADE_BIAS bias,
+                                                     double &level,
+                                                     string &source)
+   {
+      level = 0.0;
+      source = "";
+      if(bias == BIAS_NONE)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0)
+         return false;
+
+      bool found = false;
+      double selectedDistance = 0.0;
+      if(InpFlatMonthLiquidityReclaimUsePreviousDay &&
+         FlatMonthLiquidityPreviousPeriodReclaimCandidate(bias,
+                                                          PERIOD_D1,
+                                                          "previous day",
+                                                          high1,
+                                                          low1,
+                                                          open1,
+                                                          close1,
+                                                          level,
+                                                          selectedDistance,
+                                                          source))
+      {
+         found = true;
+      }
+
+      if(InpFlatMonthLiquidityReclaimUsePreviousWeek &&
+         FlatMonthLiquidityPreviousPeriodReclaimCandidate(bias,
+                                                          PERIOD_W1,
+                                                          "previous week",
+                                                          high1,
+                                                          low1,
+                                                          open1,
+                                                          close1,
+                                                          level,
+                                                          selectedDistance,
+                                                          source))
+      {
+         found = true;
+      }
+
+      return found && level > 0.0;
+   }
+
+   bool FlatMonthLiquidityDailyOpenReclaimLevel(const ENUM_TRADE_BIAS bias,
+                                                double &level)
+   {
+      level = 0.0;
+      if(!InpFlatMonthLiquidityReclaimUsePreviousDay || bias == BIAS_NONE)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double dailyOpen = iOpen(_Symbol, PERIOD_D1, 0);
+      if(high1 <= 0.0 ||
+         low1 <= 0.0 ||
+         open1 <= 0.0 ||
+         close1 <= 0.0 ||
+         dailyOpen <= 0.0 ||
+         high1 <= low1)
+         return false;
+
+      double reclaimBuffer = MathMax(_Point,
+                                     MathMax(0.0, InpFlatMonthLiquidityReclaimStopBufferPoints) * _Point * 0.25);
+      if(bias == BIAS_BUY)
+      {
+         if(close1 <= open1 || low1 >= dailyOpen || close1 <= dailyOpen + reclaimBuffer)
+            return false;
+
+         level = MathMin(low1, dailyOpen);
+         return level > 0.0;
+      }
+
+      if(bias == BIAS_SELL)
+      {
+         if(close1 >= open1 || high1 <= dailyOpen || close1 >= dailyOpen - reclaimBuffer)
+            return false;
+
+         level = MathMax(high1, dailyOpen);
+         return level > 0.0;
+      }
+
+      return false;
+   }
+
+   bool FlatMonthLiquidityHigherOpenReclaimCandidate(const ENUM_TRADE_BIAS bias,
+                                                     const ENUM_TIMEFRAMES timeframe,
+                                                     const string sourceName,
+                                                     const double high1,
+                                                     const double low1,
+                                                     const double open1,
+                                                     const double close1,
+                                                     const double reclaimBuffer,
+                                                     double &selectedLevel,
+                                                     double &selectedDistance,
+                                                     string &selectedSource)
+   {
+      if(bias == BIAS_NONE ||
+         high1 <= 0.0 ||
+         low1 <= 0.0 ||
+         open1 <= 0.0 ||
+         close1 <= 0.0 ||
+         high1 <= low1)
+         return false;
+
+      double periodOpen = iOpen(_Symbol, timeframe, 0);
+      if(periodOpen <= 0.0)
+         return false;
+
+      double candidate = 0.0;
+      double distance = 0.0;
+      if(bias == BIAS_BUY)
+      {
+         if(close1 <= open1 || low1 >= periodOpen || close1 <= periodOpen + reclaimBuffer)
+            return false;
+
+         candidate = MathMin(low1, periodOpen);
+         distance = MathAbs(close1 - periodOpen);
+      }
+      else if(bias == BIAS_SELL)
+      {
+         if(close1 >= open1 || high1 <= periodOpen || close1 >= periodOpen - reclaimBuffer)
+            return false;
+
+         candidate = MathMax(high1, periodOpen);
+         distance = MathAbs(close1 - periodOpen);
+      }
+      else
+         return false;
+
+      if(candidate <= 0.0 || distance <= 0.0)
+         return false;
+
+      if(selectedDistance <= 0.0 || distance < selectedDistance)
+      {
+         selectedDistance = distance;
+         selectedLevel = candidate;
+         selectedSource = sourceName;
+      }
+
+      return true;
+   }
+
+   bool FlatMonthLiquidityHigherOpenReclaimLevel(const ENUM_TRADE_BIAS bias,
+                                                 double &level,
+                                                 string &source)
+   {
+      level = 0.0;
+      source = "";
+      if(bias == BIAS_NONE)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || high1 <= low1)
+         return false;
+
+      double reclaimBuffer = MathMax(_Point,
+                                     MathMax(0.0, InpFlatMonthLiquidityReclaimStopBufferPoints) * _Point * 0.25);
+      bool found = false;
+      double selectedDistance = 0.0;
+      if(InpFlatMonthLiquidityReclaimUsePreviousWeek &&
+         FlatMonthLiquidityHigherOpenReclaimCandidate(bias,
+                                                      PERIOD_W1,
+                                                      "weekly open",
+                                                      high1,
+                                                      low1,
+                                                      open1,
+                                                      close1,
+                                                      reclaimBuffer,
+                                                      level,
+                                                      selectedDistance,
+                                                      source))
+      {
+         found = true;
+      }
+
+      if(InpFlatMonthLiquidityReclaimHTFUsePreviousMonth &&
+         FlatMonthLiquidityHigherOpenReclaimCandidate(bias,
+                                                      PERIOD_MN1,
+                                                      "monthly open",
+                                                      high1,
+                                                      low1,
+                                                      open1,
+                                                      close1,
+                                                      reclaimBuffer,
+                                                      level,
+                                                      selectedDistance,
+                                                      source))
+      {
+         found = true;
+      }
+
+      return found && level > 0.0;
+   }
+
+   bool FlatMonthLiquiditySessionReclaimCandidate(const ENUM_TRADE_BIAS bias,
+                                                  const double boxHigh,
+                                                  const double boxLow,
+                                                  const string sourceName,
+                                                  const double high1,
+                                                  const double low1,
+                                                  const double open1,
+                                                  const double close1,
+                                                  double &selectedLevel,
+                                                  double &selectedRange,
+                                                  string &selectedSource)
+   {
+      if(bias == BIAS_NONE ||
+         boxHigh <= 0.0 ||
+         boxLow <= 0.0 ||
+         boxHigh <= boxLow ||
+         high1 <= 0.0 ||
+         low1 <= 0.0 ||
+         open1 <= 0.0 ||
+         close1 <= 0.0)
+         return false;
+
+      double boxRange = boxHigh - boxLow;
+      double candidate = 0.0;
+      if(bias == BIAS_BUY)
+      {
+         if(close1 <= open1 || low1 >= boxLow || close1 <= boxLow)
+            return false;
+         candidate = MathMin(low1, boxLow);
+      }
+      else if(bias == BIAS_SELL)
+      {
+         if(close1 >= open1 || high1 <= boxHigh || close1 >= boxHigh)
+            return false;
+         candidate = MathMax(high1, boxHigh);
+      }
+      else
+         return false;
+
+      if(candidate <= 0.0)
+         return false;
+
+      if(selectedRange <= 0.0 || boxRange < selectedRange)
+      {
+         selectedRange = boxRange;
+         selectedLevel = candidate;
+         selectedSource = sourceName;
+      }
+
+      return true;
+   }
+
+   bool FlatMonthLiquiditySessionReclaimLevel(const ENUM_TRADE_BIAS bias,
+                                              const double atr,
+                                              double &level,
+                                              string &source)
+   {
+      level = 0.0;
+      source = "";
+      if(bias == BIAS_NONE || atr <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
+         return false;
+
+      bool found = false;
+      double selectedRange = 0.0;
+      if(InpFlatMonthLiquidityReclaimTargetUseAsianRange)
+      {
+         double asianHigh = 0.0;
+         double asianLow = 0.0;
+         if(m_structure.AsianRangeLevels(asianHigh, asianLow) &&
+            FlatMonthLiquiditySessionReclaimCandidate(bias,
+                                                      asianHigh,
+                                                      asianLow,
+                                                      "Asian",
+                                                      high1,
+                                                      low1,
+                                                      open1,
+                                                      close1,
+                                                      level,
+                                                      selectedRange,
+                                                      source))
+         {
+            found = true;
+         }
+      }
+
+      if(InpFlatMonthLiquidityReclaimTargetUseSessionRange)
+      {
+         int seconds = PeriodSeconds(InpSignalTimeframe);
+         if(seconds <= 0)
+            seconds = 60;
+         int hours = MathMax(1, InpFlatMonthLiquidityReclaimTargetSessionLookbackHours);
+         int bars = MathMax(4, (int)MathCeil((hours * 3600.0) / seconds));
+         double rollingHigh = 0.0;
+         double rollingLow = 0.0;
+         if(m_structure.HighestHigh(2, bars, rollingHigh) &&
+            m_structure.LowestLow(2, bars, rollingLow) &&
+            FlatMonthLiquiditySessionReclaimCandidate(bias,
+                                                      rollingHigh,
+                                                      rollingLow,
+                                                      "Rolling session",
+                                                      high1,
+                                                      low1,
+                                                      open1,
+                                                      close1,
+                                                      level,
+                                                      selectedRange,
+                                                      source))
+         {
+            found = true;
+         }
+      }
+
+      return found && level > 0.0;
+   }
+
+   bool FlatMonthLiquiditySwingSweepReclaimLevel(const ENUM_TRADE_BIAS bias,
+                                                 const double atr,
+                                                 double &level)
+   {
+      level = 0.0;
+      if(!InpFlatMonthLiquidityReclaimTargetUseSwingLevels ||
+         bias == BIAS_NONE ||
+         atr <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
+         return false;
+
+      bool directionalBody = (bias == BIAS_BUY && close1 > open1) ||
+                             (bias == BIAS_SELL && close1 < open1);
+      if(!directionalBody)
+         return false;
+
+      int left = MathMax(1, InpFlatMonthLiquidityReclaimSwingLeftBars);
+      int right = MathMax(1, InpFlatMonthLiquidityReclaimSwingRightBars);
+      int swingLookback = MathMax(right + 2, InpFlatMonthLiquidityReclaimSwingLookbackBars);
+      bool found = false;
+      double selected = 0.0;
+      for(int shift = right + 1; shift <= swingLookback + right; shift++)
+      {
+         double swingLevel = 0.0;
+         if(bias == BIAS_BUY)
+         {
+            if(!m_structure.IsSwingLow(shift, left, right))
+               continue;
+
+            swingLevel = iLow(_Symbol, InpSignalTimeframe, shift);
+            if(swingLevel <= 0.0 || low1 >= swingLevel || close1 <= swingLevel)
+               continue;
+
+            double candidate = MathMin(low1, swingLevel);
+            if(!found || candidate > selected)
+               selected = candidate;
+            found = true;
+         }
+         else if(bias == BIAS_SELL)
+         {
+            if(!m_structure.IsSwingHigh(shift, left, right))
+               continue;
+
+            swingLevel = iHigh(_Symbol, InpSignalTimeframe, shift);
+            if(swingLevel <= 0.0 || high1 <= swingLevel || close1 >= swingLevel)
+               continue;
+
+            double candidate = MathMax(high1, swingLevel);
+            if(!found || candidate < selected)
+               selected = candidate;
+            found = true;
+         }
+      }
+
+      if(found)
+         level = selected;
+      return found;
+   }
+
+   bool FlatMonthLiquidityRecentRetestLevel(const ENUM_TRADE_BIAS bias,
+                                            const double atr,
+                                            const int lookback,
+                                            double &level)
+   {
+      level = 0.0;
+      if(!InpFlatMonthLiquidityReclaimAllowRecentRetest ||
+         bias == BIAS_NONE ||
+         atr <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range1;
+      if(bodyPercent < MathMax(0.0, InpFlatMonthLiquidityReclaimRetestMinBodyPercent))
+         return false;
+
+      double tolerance = MathMax(atr * MathMax(0.0, InpFlatMonthLiquidityReclaimRetestToleranceATR),
+                                 _Point * MathMax(0.0, InpFlatMonthLiquidityReclaimRetestTolerancePoints));
+      if(tolerance <= 0.0)
+         tolerance = _Point;
+
+      int retestBars = MathMax(1, InpFlatMonthLiquidityReclaimRetestLookbackBars);
+      int scanLookback = MathMax(4, lookback);
+      for(int shift = 2; shift <= retestBars + 1; shift++)
+      {
+         double sweepHigh = iHigh(_Symbol, InpSignalTimeframe, shift);
+         double sweepLow = iLow(_Symbol, InpSignalTimeframe, shift);
+         double sweepClose = iClose(_Symbol, InpSignalTimeframe, shift);
+         if(sweepHigh <= 0.0 || sweepLow <= 0.0 || sweepClose <= 0.0)
+            continue;
+
+         double reference = 0.0;
+         if(bias == BIAS_BUY &&
+            m_structure.LowestLow(shift + 1, scanLookback, reference) &&
+            sweepLow < reference &&
+            sweepClose > reference &&
+            low1 <= reference + tolerance &&
+            close1 > reference)
+         {
+            level = MathMin(sweepLow, reference);
+            return true;
+         }
+
+         if(bias == BIAS_SELL &&
+            m_structure.HighestHigh(shift + 1, scanLookback, reference) &&
+            sweepHigh > reference &&
+            sweepClose < reference &&
+            high1 >= reference - tolerance &&
+            close1 < reference)
+         {
+            level = MathMax(sweepHigh, reference);
+            return true;
+         }
+      }
+
+      return false;
+   }
+
+   bool FlatMonthLiquidityShelfRetestCandidate(const ENUM_TRADE_BIAS bias,
+                                               const double shelfLevel,
+                                               const string sourceName,
+                                               const double atr,
+                                               const double high1,
+                                               const double low1,
+                                               const double open1,
+                                               const double close1,
+                                               const double range1,
+                                               double &selectedStopLevel,
+                                               double &selectedDistance,
+                                               string &selectedSource)
+   {
+      if(bias == BIAS_NONE ||
+         shelfLevel <= 0.0 ||
+         atr <= 0.0 ||
+         high1 <= 0.0 ||
+         low1 <= 0.0 ||
+         open1 <= 0.0 ||
+         close1 <= 0.0 ||
+         range1 <= _Point)
+         return false;
+
+      bool directionalBody = (bias == BIAS_BUY && close1 > open1) ||
+                             (bias == BIAS_SELL && close1 < open1);
+      if(!directionalBody)
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range1;
+      if(bodyPercent < MathMax(0.0, InpFlatMonthLiquidityReclaimShelfRetestMinBodyPercent))
+         return false;
+
+      double closeLocation = (bias == BIAS_BUY)
+                             ? (close1 - low1) / range1
+                             : (high1 - close1) / range1;
+      if(closeLocation < MathMin(0.95, MathMax(0.50, InpFlatMonthLiquidityReclaimShelfRetestMinCloseLocation)))
+         return false;
+
+      double tolerance = MathMax(atr * MathMax(0.0, InpFlatMonthLiquidityReclaimShelfRetestToleranceATR),
+                                 _Point * MathMax(0.0, InpFlatMonthLiquidityReclaimShelfRetestTolerancePoints));
+      if(tolerance <= 0.0)
+         tolerance = _Point;
+
+      if(bias == BIAS_BUY)
+      {
+         if(close1 <= shelfLevel ||
+            low1 > shelfLevel + tolerance ||
+            low1 < shelfLevel - tolerance)
+            return false;
+      }
+      else if(bias == BIAS_SELL)
+      {
+         if(close1 >= shelfLevel ||
+            high1 < shelfLevel - tolerance ||
+            high1 > shelfLevel + tolerance)
+            return false;
+      }
+      else
+         return false;
+
+      int retestBars = MathMax(1, InpFlatMonthLiquidityReclaimShelfRetestLookbackBars);
+      double selectedStop = 0.0;
+      bool found = false;
+      for(int shift = 2; shift <= retestBars + 1; shift++)
+      {
+         double sweepHigh = iHigh(_Symbol, InpSignalTimeframe, shift);
+         double sweepLow = iLow(_Symbol, InpSignalTimeframe, shift);
+         double sweepClose = iClose(_Symbol, InpSignalTimeframe, shift);
+         if(sweepHigh <= 0.0 || sweepLow <= 0.0 || sweepClose <= 0.0)
+            continue;
+
+         if(bias == BIAS_BUY &&
+            sweepLow < shelfLevel - _Point &&
+            sweepClose > shelfLevel)
+         {
+            selectedStop = MathMin(MathMin(sweepLow, low1), shelfLevel);
+            found = selectedStop > 0.0 && selectedStop < close1;
+            break;
+         }
+
+         if(bias == BIAS_SELL &&
+            sweepHigh > shelfLevel + _Point &&
+            sweepClose < shelfLevel)
+         {
+            selectedStop = MathMax(MathMax(sweepHigh, high1), shelfLevel);
+            found = selectedStop > close1;
+            break;
+         }
+      }
+
+      if(!found || selectedStop <= 0.0)
+         return false;
+
+      double distance = MathAbs(close1 - shelfLevel);
+      if(selectedDistance <= 0.0 || distance < selectedDistance)
+      {
+         selectedDistance = distance;
+         selectedStopLevel = selectedStop;
+         selectedSource = sourceName;
+      }
+
+      return true;
+   }
+
+   bool FlatMonthLiquidityShelfRetestLevel(const ENUM_TRADE_BIAS bias,
+                                           const double atr,
+                                           const int lookback,
+                                           double &level,
+                                           string &source)
+   {
+      level = 0.0;
+      source = "";
+      if((!InpFlatMonthLiquidityReclaimUseShelfRetest &&
+          !InpFlatMonthLiquidityReclaimRequireShelfRetest) ||
+         bias == BIAS_NONE ||
+         atr <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
+         return false;
+
+      bool found = false;
+      double selectedDistance = 0.0;
+      double shelfLevel = 0.0;
+      int scanLookback = MathMax(4, lookback);
+
+      if(InpFlatMonthLiquidityReclaimUseEqualLevels &&
+         EqualLiquidityStopLevel(bias, scanLookback, shelfLevel) &&
+         FlatMonthLiquidityShelfRetestCandidate(bias,
+                                                shelfLevel,
+                                                "equal-level shelf",
+                                                atr,
+                                                high1,
+                                                low1,
+                                                open1,
+                                                close1,
+                                                range1,
+                                                level,
+                                                selectedDistance,
+                                                source))
+      {
+         found = true;
+      }
+
+      if(InpFlatMonthLiquidityReclaimUsePreviousDay &&
+         PreviousPeriodLiquidityStopLevel(bias, PERIOD_D1, close1, shelfLevel) &&
+         FlatMonthLiquidityShelfRetestCandidate(bias,
+                                                shelfLevel,
+                                                "previous-day shelf",
+                                                atr,
+                                                high1,
+                                                low1,
+                                                open1,
+                                                close1,
+                                                range1,
+                                                level,
+                                                selectedDistance,
+                                                source))
+      {
+         found = true;
+      }
+
+      if(InpFlatMonthLiquidityReclaimUsePreviousWeek &&
+         PreviousPeriodLiquidityStopLevel(bias, PERIOD_W1, close1, shelfLevel) &&
+         FlatMonthLiquidityShelfRetestCandidate(bias,
+                                                shelfLevel,
+                                                "previous-week shelf",
+                                                atr,
+                                                high1,
+                                                low1,
+                                                open1,
+                                                close1,
+                                                range1,
+                                                level,
+                                                selectedDistance,
+                                                source))
+      {
+         found = true;
+      }
+
+      if(InpFlatMonthLiquidityReclaimHTFUsePreviousMonth &&
+         PreviousPeriodLiquidityStopLevel(bias, PERIOD_MN1, close1, shelfLevel) &&
+         FlatMonthLiquidityShelfRetestCandidate(bias,
+                                                shelfLevel,
+                                                "previous-month shelf",
+                                                atr,
+                                                high1,
+                                                low1,
+                                                open1,
+                                                close1,
+                                                range1,
+                                                level,
+                                                selectedDistance,
+                                                source))
+      {
+         found = true;
+      }
+
+      if(InpFlatMonthLiquidityReclaimUsePreviousDay)
+      {
+         shelfLevel = iOpen(_Symbol, PERIOD_D1, 0);
+         if(FlatMonthLiquidityShelfRetestCandidate(bias,
+                                                   shelfLevel,
+                                                   "daily-open shelf",
+                                                   atr,
+                                                   high1,
+                                                   low1,
+                                                   open1,
+                                                   close1,
+                                                   range1,
+                                                   level,
+                                                   selectedDistance,
+                                                   source))
+            found = true;
+      }
+
+      if(InpFlatMonthLiquidityReclaimUsePreviousWeek)
+      {
+         shelfLevel = iOpen(_Symbol, PERIOD_W1, 0);
+         if(FlatMonthLiquidityShelfRetestCandidate(bias,
+                                                   shelfLevel,
+                                                   "weekly-open shelf",
+                                                   atr,
+                                                   high1,
+                                                   low1,
+                                                   open1,
+                                                   close1,
+                                                   range1,
+                                                   level,
+                                                   selectedDistance,
+                                                   source))
+            found = true;
+      }
+
+      if(InpFlatMonthLiquidityReclaimHTFUsePreviousMonth)
+      {
+         shelfLevel = iOpen(_Symbol, PERIOD_MN1, 0);
+         if(FlatMonthLiquidityShelfRetestCandidate(bias,
+                                                   shelfLevel,
+                                                   "monthly-open shelf",
+                                                   atr,
+                                                   high1,
+                                                   low1,
+                                                   open1,
+                                                   close1,
+                                                   range1,
+                                                   level,
+                                                   selectedDistance,
+                                                   source))
+            found = true;
+      }
+
+      if(InpFlatMonthLiquidityReclaimTargetUseAsianRange)
+      {
+         double asianHigh = 0.0;
+         double asianLow = 0.0;
+         if(m_structure.AsianRangeLevels(asianHigh, asianLow))
+         {
+            shelfLevel = (bias == BIAS_BUY) ? asianLow : asianHigh;
+            if(FlatMonthLiquidityShelfRetestCandidate(bias,
+                                                      shelfLevel,
+                                                      "Asian-range shelf",
+                                                      atr,
+                                                      high1,
+                                                      low1,
+                                                      open1,
+                                                      close1,
+                                                      range1,
+                                                      level,
+                                                      selectedDistance,
+                                                      source))
+               found = true;
+         }
+      }
+
+      if(InpFlatMonthLiquidityReclaimTargetUseSessionRange)
+      {
+         int seconds = PeriodSeconds(InpSignalTimeframe);
+         if(seconds <= 0)
+            seconds = 60;
+         int hours = MathMax(1, InpFlatMonthLiquidityReclaimTargetSessionLookbackHours);
+         int bars = MathMax(4, (int)MathCeil((hours * 3600.0) / seconds));
+         double rollingHigh = 0.0;
+         double rollingLow = 0.0;
+         if(m_structure.HighestHigh(2, bars, rollingHigh) &&
+            m_structure.LowestLow(2, bars, rollingLow))
+         {
+            shelfLevel = (bias == BIAS_BUY) ? rollingLow : rollingHigh;
+            if(FlatMonthLiquidityShelfRetestCandidate(bias,
+                                                      shelfLevel,
+                                                      "rolling-range shelf",
+                                                      atr,
+                                                      high1,
+                                                      low1,
+                                                      open1,
+                                                      close1,
+                                                      range1,
+                                                      level,
+                                                      selectedDistance,
+                                                      source))
+               found = true;
+         }
+      }
+
+      return found && level > 0.0;
+   }
+
+   bool FlatMonthLiquidityContinuationRetestLevel(const ENUM_TRADE_BIAS bias,
+                                                  const double atr,
+                                                  const int lookback,
+                                                  double &level)
+   {
+      level = 0.0;
+      if(!InpFlatMonthLiquidityReclaimUseContinuationRetest ||
+         bias == BIAS_NONE ||
+         atr <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range1;
+      if(bodyPercent < MathMax(0.0, InpFlatMonthLiquidityReclaimContinuationMinBodyPercent))
+         return false;
+
+      double maxPullback = MathMax(0.0, InpFlatMonthLiquidityReclaimContinuationMaxPullbackATR) * atr;
+      if(maxPullback <= 0.0)
+         maxPullback = atr;
+
+      bool emaHold = false;
+      double fastEma = 0.0;
+      if(indicators.FastTrendEMA(1, fastEma) && fastEma > 0.0)
+      {
+         emaHold = (bias == BIAS_BUY)
+                   ? (low1 <= fastEma + maxPullback && close1 > fastEma)
+                   : (high1 >= fastEma - maxPullback && close1 < fastEma);
+      }
+
+      bool vwapHold = false;
+      double vwap = 0.0;
+      if(m_structure.VWAPValue(InpVWAPLookbackBars, vwap) && vwap > 0.0)
+      {
+         vwapHold = (bias == BIAS_BUY)
+                    ? (low1 <= vwap + maxPullback && close1 > vwap)
+                    : (high1 >= vwap - maxPullback && close1 < vwap);
+      }
+
+      if(InpFlatMonthLiquidityReclaimContinuationRequireEMAHold && !emaHold)
+         return false;
+      if(InpFlatMonthLiquidityReclaimContinuationRequireVWAPHold && !vwapHold)
+         return false;
+
+      double tolerance = MathMax(atr * MathMax(0.0, InpFlatMonthLiquidityReclaimRetestToleranceATR),
+                                 _Point * MathMax(0.0, InpFlatMonthLiquidityReclaimRetestTolerancePoints));
+      if(tolerance <= 0.0)
+         tolerance = _Point;
+
+      int retestBars = MathMax(1, InpFlatMonthLiquidityReclaimContinuationLookbackBars);
+      int scanLookback = MathMax(4, lookback);
+      for(int shift = 2; shift <= retestBars + 1; shift++)
+      {
+         double sweepHigh = iHigh(_Symbol, InpSignalTimeframe, shift);
+         double sweepLow = iLow(_Symbol, InpSignalTimeframe, shift);
+         double sweepClose = iClose(_Symbol, InpSignalTimeframe, shift);
+         if(sweepHigh <= 0.0 || sweepLow <= 0.0 || sweepClose <= 0.0)
+            continue;
+
+         double reference = 0.0;
+         if(bias == BIAS_BUY &&
+            m_structure.LowestLow(shift + 1, scanLookback, reference) &&
+            sweepLow < reference &&
+            sweepClose > reference &&
+            low1 <= reference + tolerance &&
+            close1 > reference &&
+            close1 - reference <= maxPullback)
+         {
+            level = MathMin(sweepLow, reference);
+            return true;
+         }
+
+         if(bias == BIAS_SELL &&
+            m_structure.HighestHigh(shift + 1, scanLookback, reference) &&
+            sweepHigh > reference &&
+            sweepClose < reference &&
+            high1 >= reference - tolerance &&
+            close1 < reference &&
+            reference - close1 <= maxPullback)
+         {
+            level = MathMax(sweepHigh, reference);
+            return true;
+         }
+      }
+
+      return false;
+   }
+
+   bool FlatMonthLiquidityCompressionBreakoutLevel(const ENUM_TRADE_BIAS bias,
+                                                   const double atr,
+                                                   double &stopLevel,
+                                                   double &boxRange)
+   {
+      stopLevel = 0.0;
+      boxRange = 0.0;
+      if(!InpFlatMonthLiquidityReclaimUseCompressionBreakout ||
+         bias == BIAS_NONE ||
+         atr <= 0.0)
+         return false;
+
+      int lookback = MathMax(4, InpFlatMonthLiquidityReclaimCompressionLookbackBars);
+      double boxHigh = 0.0;
+      double boxLow = 0.0;
+      if(!m_structure.HighestHigh(2, lookback, boxHigh) ||
+         !m_structure.LowestLow(2, lookback, boxLow))
+         return false;
+
+      boxRange = boxHigh - boxLow;
+      if(boxRange <= _Point)
+         return false;
+
+      double maxRange = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimCompressionMaxRangeATR);
+      if(maxRange > 0.0 && boxRange > maxRange)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
+         return false;
+
+      double minBreakRange = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimCompressionMinBreakRangeATR);
+      if(minBreakRange > 0.0 && range1 < minBreakRange)
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range1;
+      if(bodyPercent < MathMax(0.0, InpFlatMonthLiquidityReclaimCompressionMinBodyPercent))
+         return false;
+
+      double closeLocation = (bias == BIAS_BUY)
+                             ? (close1 - low1) / range1
+                             : (high1 - close1) / range1;
+      if(closeLocation < MathMin(0.95, MathMax(0.50, InpFlatMonthLiquidityReclaimCompressionMinCloseLocation)))
+         return false;
+
+      double buffer = MathMax(0.0, InpFlatMonthLiquidityReclaimCompressionBreakBufferPoints) * _Point;
+      if(bias == BIAS_BUY &&
+         close1 > open1 &&
+         close1 > boxHigh + buffer)
+      {
+         stopLevel = boxLow;
+         return true;
+      }
+
+      if(bias == BIAS_SELL &&
+         close1 < open1 &&
+         close1 < boxLow - buffer)
+      {
+         stopLevel = boxHigh;
+         return true;
+      }
+
+      return false;
+   }
+
+   bool FlatMonthLiquidityBreakoutRetestLevel(const ENUM_TRADE_BIAS bias,
+                                              const double atr,
+                                              double &stopLevel,
+                                              double &breakLevel,
+                                              int &breakAgeBars,
+                                              double &boxRange,
+                                              double &volumeRatio)
+   {
+      stopLevel = 0.0;
+      breakLevel = 0.0;
+      breakAgeBars = 0;
+      boxRange = 0.0;
+      volumeRatio = 0.0;
+      if((!InpFlatMonthLiquidityReclaimUseBreakoutRetest &&
+          !InpFlatMonthLiquidityReclaimRequireBreakoutRetest) ||
+         bias == BIAS_NONE ||
+         atr <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
+         return false;
+
+      bool retestDirection = (bias == BIAS_BUY && close1 > open1) ||
+                             (bias == BIAS_SELL && close1 < open1);
+      if(!retestDirection)
+         return false;
+
+      double retestBodyPercent = 100.0 * MathAbs(close1 - open1) / range1;
+      if(retestBodyPercent < MathMax(0.0, InpFlatMonthLiquidityReclaimRetestMinBodyPercent))
+         return false;
+
+      double retestCloseLocation = (bias == BIAS_BUY)
+                                   ? (close1 - low1) / range1
+                                   : (high1 - close1) / range1;
+      if(retestCloseLocation < MathMin(0.95, MathMax(0.50, InpFlatMonthLiquidityReclaimBreakoutRetestMinCloseLocation)))
+         return false;
+
+      double tolerance = MathMax(atr * MathMax(0.0, InpFlatMonthLiquidityReclaimBreakoutRetestToleranceATR),
+                                 _Point * MathMax(0.0, InpFlatMonthLiquidityReclaimBreakoutRetestTolerancePoints));
+      if(tolerance <= 0.0)
+         tolerance = _Point;
+
+      double maxRetest = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimBreakoutRetestMaxRetestATR);
+      if(maxRetest <= 0.0)
+         maxRetest = atr;
+
+      int breakoutLookback = MathMax(2, InpFlatMonthLiquidityReclaimBreakoutRetestLookbackBars);
+      int boxLookback = MathMax(4, InpFlatMonthLiquidityReclaimCompressionLookbackBars);
+      double buffer = MathMax(0.0, InpFlatMonthLiquidityReclaimCompressionBreakBufferPoints) * _Point;
+      double maxBoxRange = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimCompressionMaxRangeATR);
+      double minBreakRange = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimCompressionMinBreakRangeATR);
+      double minVolumeRatio = MathMax(0.0, InpFlatMonthLiquidityReclaimBreakoutRetestMinVolumeRatio);
+      int volumeLookback = MathMax(3, InpFlatMonthLiquidityReclaimSweepBOSVolumeLookbackBars);
+
+      for(int shift = 2; shift <= breakoutLookback + 1; shift++)
+      {
+         double boxHigh = 0.0;
+         double boxLow = 0.0;
+         if(!m_structure.HighestHigh(shift + 1, boxLookback, boxHigh) ||
+            !m_structure.LowestLow(shift + 1, boxLookback, boxLow) ||
+            boxHigh <= boxLow)
+            continue;
+
+         double candidateBoxRange = boxHigh - boxLow;
+         if(candidateBoxRange <= _Point)
+            continue;
+         if(maxBoxRange > 0.0 && candidateBoxRange > maxBoxRange)
+            continue;
+
+         double breakHigh = iHigh(_Symbol, InpSignalTimeframe, shift);
+         double breakLow = iLow(_Symbol, InpSignalTimeframe, shift);
+         double breakOpen = iOpen(_Symbol, InpSignalTimeframe, shift);
+         double breakClose = iClose(_Symbol, InpSignalTimeframe, shift);
+         double breakRange = breakHigh - breakLow;
+         if(breakHigh <= 0.0 || breakLow <= 0.0 || breakOpen <= 0.0 || breakClose <= 0.0 || breakRange <= _Point)
+            continue;
+
+         if(minBreakRange > 0.0 && breakRange < minBreakRange)
+            continue;
+
+         double breakBodyPercent = 100.0 * MathAbs(breakClose - breakOpen) / breakRange;
+         if(breakBodyPercent < MathMax(0.0, InpFlatMonthLiquidityReclaimCompressionMinBodyPercent))
+            continue;
+
+         double breakCloseLocation = (bias == BIAS_BUY)
+                                     ? (breakClose - breakLow) / breakRange
+                                     : (breakHigh - breakClose) / breakRange;
+         if(breakCloseLocation < MathMin(0.95, MathMax(0.50, InpFlatMonthLiquidityReclaimCompressionMinCloseLocation)))
+            continue;
+
+         double candidateVolumeRatio = 0.0;
+         if(minVolumeRatio > 0.0)
+         {
+            double averagePriorVolume = 0.0;
+            for(int volumeShift = shift + 1; volumeShift <= shift + volumeLookback; volumeShift++)
+               averagePriorVolume += (double)iVolume(_Symbol, InpSignalTimeframe, volumeShift);
+
+            averagePriorVolume /= MathMax(1, volumeLookback);
+            if(averagePriorVolume <= 0.0)
+               continue;
+
+            candidateVolumeRatio = (double)iVolume(_Symbol, InpSignalTimeframe, shift) / averagePriorVolume;
+            if(candidateVolumeRatio < minVolumeRatio)
+               continue;
+         }
+
+         if(bias == BIAS_BUY &&
+            breakClose > breakOpen &&
+            breakClose > boxHigh + buffer &&
+            low1 <= boxHigh + tolerance &&
+            close1 > boxHigh &&
+            close1 - boxHigh <= maxRetest &&
+            boxHigh - low1 <= maxRetest &&
+            low1 >= boxLow - tolerance)
+         {
+            stopLevel = boxLow;
+            breakLevel = boxHigh;
+            breakAgeBars = shift - 1;
+            boxRange = candidateBoxRange;
+            volumeRatio = candidateVolumeRatio;
+            return true;
+         }
+
+         if(bias == BIAS_SELL &&
+            breakClose < breakOpen &&
+            breakClose < boxLow - buffer &&
+            high1 >= boxLow - tolerance &&
+            close1 < boxLow &&
+            boxLow - close1 <= maxRetest &&
+            high1 - boxLow <= maxRetest &&
+            high1 <= boxHigh + tolerance)
+         {
+            stopLevel = boxHigh;
+            breakLevel = boxLow;
+            breakAgeBars = shift - 1;
+            boxRange = candidateBoxRange;
+            volumeRatio = candidateVolumeRatio;
+            return true;
+         }
+      }
+
+      return false;
+   }
+
+   bool FlatMonthLiquidityFailedBreakoutTrapLevel(const ENUM_TRADE_BIAS bias,
+                                                  const double atr,
+                                                  double &stopLevel,
+                                                  double &trapLevel,
+                                                  double &targetLevel,
+                                                  int &trapAgeBars,
+                                                  double &boxRange,
+                                                  double &volumeRatio)
+   {
+      stopLevel = 0.0;
+      trapLevel = 0.0;
+      targetLevel = 0.0;
+      trapAgeBars = 0;
+      boxRange = 0.0;
+      volumeRatio = 0.0;
+      if((!InpFlatMonthLiquidityReclaimUseFailedBreakoutTrap &&
+          !InpFlatMonthLiquidityReclaimRequireFailedBreakoutTrap) ||
+         bias == BIAS_NONE ||
+         atr <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
+         return false;
+
+      bool snapbackDirection = (bias == BIAS_BUY && close1 > open1) ||
+                               (bias == BIAS_SELL && close1 < open1);
+      if(!snapbackDirection)
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range1;
+      if(bodyPercent < MathMax(0.0, InpFlatMonthLiquidityReclaimRetestMinBodyPercent))
+         return false;
+
+      double closeLocation = (bias == BIAS_BUY)
+                             ? (close1 - low1) / range1
+                             : (high1 - close1) / range1;
+      if(closeLocation < MathMin(0.95, MathMax(0.50, InpFlatMonthLiquidityReclaimBreakoutRetestMinCloseLocation)))
+         return false;
+
+      double minVolumeRatio = MathMax(0.0, InpFlatMonthLiquidityReclaimFailedBreakoutMinVolumeRatio);
+      if(minVolumeRatio > 0.0)
+      {
+         int volumeLookback = MathMax(3, InpFlatMonthLiquidityReclaimSweepBOSVolumeLookbackBars);
+         double priorVolume = 0.0;
+         for(int volumeShift = 2; volumeShift <= volumeLookback + 1; volumeShift++)
+            priorVolume += (double)iVolume(_Symbol, InpSignalTimeframe, volumeShift);
+
+         double averagePriorVolume = priorVolume / MathMax(1, volumeLookback);
+         if(averagePriorVolume <= 0.0)
+            return false;
+
+         volumeRatio = (double)iVolume(_Symbol, InpSignalTimeframe, 1) / averagePriorVolume;
+         if(volumeRatio < minVolumeRatio)
+            return false;
+      }
+
+      int trapLookback = MathMax(2, InpFlatMonthLiquidityReclaimFailedBreakoutLookbackBars);
+      int boxLookback = MathMax(4, InpFlatMonthLiquidityReclaimCompressionLookbackBars);
+      double buffer = MathMax(0.0, InpFlatMonthLiquidityReclaimCompressionBreakBufferPoints) * _Point;
+      double tolerance = MathMax(atr * MathMax(0.0, InpFlatMonthLiquidityReclaimBreakoutRetestToleranceATR),
+                                 _Point * MathMax(0.0, InpFlatMonthLiquidityReclaimBreakoutRetestTolerancePoints));
+      if(tolerance <= 0.0)
+         tolerance = _Point;
+
+      double maxBoxRange = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimFailedBreakoutMaxBoxRangeATR);
+      double minBreakRange = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimCompressionMinBreakRangeATR);
+      double minReclaimRatio = MathMin(0.95,
+                                       MathMax(0.0, InpFlatMonthLiquidityReclaimFailedBreakoutMinReclaimRatio));
+      double maxSnapback = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimBreakoutRetestMaxRetestATR);
+      if(maxSnapback <= 0.0)
+         maxSnapback = atr;
+
+      for(int shift = 2; shift <= trapLookback + 1; shift++)
+      {
+         double boxHigh = 0.0;
+         double boxLow = 0.0;
+         if(!m_structure.HighestHigh(shift + 1, boxLookback, boxHigh) ||
+            !m_structure.LowestLow(shift + 1, boxLookback, boxLow) ||
+            boxHigh <= boxLow)
+            continue;
+
+         double candidateBoxRange = boxHigh - boxLow;
+         if(candidateBoxRange <= _Point)
+            continue;
+         if(maxBoxRange > 0.0 && candidateBoxRange > maxBoxRange)
+            continue;
+
+         double breakHigh = iHigh(_Symbol, InpSignalTimeframe, shift);
+         double breakLow = iLow(_Symbol, InpSignalTimeframe, shift);
+         double breakClose = iClose(_Symbol, InpSignalTimeframe, shift);
+         double breakRange = breakHigh - breakLow;
+         if(breakHigh <= 0.0 || breakLow <= 0.0 || breakClose <= 0.0 || breakRange <= _Point)
+            continue;
+         if(minBreakRange > 0.0 && breakRange < minBreakRange)
+            continue;
+
+         if(bias == BIAS_BUY &&
+            breakLow < boxLow - buffer &&
+            breakClose < boxLow - buffer &&
+            low1 <= boxLow + tolerance &&
+            close1 > boxLow + candidateBoxRange * minReclaimRatio &&
+            close1 < boxHigh - _Point &&
+            close1 - boxLow <= maxSnapback)
+         {
+            stopLevel = MathMin(MathMin(breakLow, low1), boxLow);
+            trapLevel = boxLow;
+            targetLevel = boxHigh;
+            trapAgeBars = shift - 1;
+            boxRange = candidateBoxRange;
+            return stopLevel > 0.0 && stopLevel < close1;
+         }
+
+         if(bias == BIAS_SELL &&
+            breakHigh > boxHigh + buffer &&
+            breakClose > boxHigh + buffer &&
+            high1 >= boxHigh - tolerance &&
+            close1 < boxHigh - candidateBoxRange * minReclaimRatio &&
+            close1 > boxLow + _Point &&
+            boxHigh - close1 <= maxSnapback)
+         {
+            stopLevel = MathMax(MathMax(breakHigh, high1), boxHigh);
+            trapLevel = boxHigh;
+            targetLevel = boxLow;
+            trapAgeBars = shift - 1;
+            boxRange = candidateBoxRange;
+            return stopLevel > 0.0 && stopLevel > close1;
+         }
+      }
+
+      return false;
+   }
+
+   bool FlatMonthLiquiditySessionRangeExpansionCandidate(const ENUM_TRADE_BIAS bias,
+                                                         const double atr,
+                                                         const double boxHigh,
+                                                         const double boxLow,
+                                                         const string sourceName,
+                                                         const double high1,
+                                                         const double low1,
+                                                         const double open1,
+                                                         const double close1,
+                                                         const double range1,
+                                                         double &selectedStopLevel,
+                                                         double &selectedBoxRange,
+                                                         string &selectedSource)
+   {
+      if(bias == BIAS_NONE ||
+         atr <= 0.0 ||
+         boxHigh <= 0.0 ||
+         boxLow <= 0.0 ||
+         boxHigh <= boxLow ||
+         range1 <= _Point)
+         return false;
+
+      double boxRange = boxHigh - boxLow;
+      double maxRange = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimSessionBreakoutMaxRangeATR);
+      if(maxRange > 0.0 && boxRange > maxRange)
+         return false;
+
+      double minBreakRange = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimSessionBreakoutMinBreakRangeATR);
+      if(minBreakRange > 0.0 && range1 < minBreakRange)
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range1;
+      if(bodyPercent < MathMax(0.0, InpFlatMonthLiquidityReclaimSessionBreakoutMinBodyPercent))
+         return false;
+
+      double closeLocation = (bias == BIAS_BUY)
+                             ? (close1 - low1) / range1
+                             : (high1 - close1) / range1;
+      if(closeLocation < MathMin(0.95, MathMax(0.50, InpFlatMonthLiquidityReclaimSessionBreakoutMinCloseLocation)))
+         return false;
+
+      double buffer = MathMax(0.0, InpFlatMonthLiquidityReclaimSessionBreakoutBufferPoints) * _Point;
+      double candidateStop = 0.0;
+      if(bias == BIAS_BUY &&
+         close1 > open1 &&
+         close1 > boxHigh + buffer)
+      {
+         candidateStop = boxLow;
+      }
+      else if(bias == BIAS_SELL &&
+              close1 < open1 &&
+              close1 < boxLow - buffer)
+      {
+         candidateStop = boxHigh;
+      }
+      else
+         return false;
+
+      if(selectedBoxRange <= 0.0 || boxRange < selectedBoxRange)
+      {
+         selectedBoxRange = boxRange;
+         selectedStopLevel = candidateStop;
+         selectedSource = sourceName;
+      }
+
+      return true;
+   }
+
+   bool FlatMonthLiquiditySessionRangeExpansionLevel(const ENUM_TRADE_BIAS bias,
+                                                     const double atr,
+                                                     double &stopLevel,
+                                                     double &boxRange,
+                                                     string &source)
+   {
+      stopLevel = 0.0;
+      boxRange = 0.0;
+      source = "";
+      if(!InpFlatMonthLiquidityReclaimUseSessionRangeBreakout ||
+         bias == BIAS_NONE ||
+         atr <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
+         return false;
+
+      bool found = false;
+      if(InpFlatMonthLiquidityReclaimSessionBreakoutUseAsianRange)
+      {
+         double asianHigh = 0.0;
+         double asianLow = 0.0;
+         if(m_structure.AsianRangeLevels(asianHigh, asianLow))
+         {
+            if(FlatMonthLiquiditySessionRangeExpansionCandidate(bias,
+                                                                atr,
+                                                                asianHigh,
+                                                                asianLow,
+                                                                "Asian",
+                                                                high1,
+                                                                low1,
+                                                                open1,
+                                                                close1,
+                                                                range1,
+                                                                stopLevel,
+                                                                boxRange,
+                                                                source))
+               found = true;
+         }
+      }
+
+      if(InpFlatMonthLiquidityReclaimSessionBreakoutUseRollingRange)
+      {
+         int seconds = PeriodSeconds(InpSignalTimeframe);
+         if(seconds <= 0)
+            seconds = 60;
+         int hours = MathMax(1, InpFlatMonthLiquidityReclaimSessionBreakoutLookbackHours);
+         int bars = MathMax(4, (int)MathCeil((hours * 3600.0) / seconds));
+         double rollingHigh = 0.0;
+         double rollingLow = 0.0;
+         if(m_structure.HighestHigh(2, bars, rollingHigh) &&
+            m_structure.LowestLow(2, bars, rollingLow))
+         {
+            if(FlatMonthLiquiditySessionRangeExpansionCandidate(bias,
+                                                                atr,
+                                                                rollingHigh,
+                                                                rollingLow,
+                                                                "Rolling",
+                                                                high1,
+                                                                low1,
+                                                                open1,
+                                                                close1,
+                                                                range1,
+                                                                stopLevel,
+                                                                boxRange,
+                                                                source))
+               found = true;
+         }
+      }
+
+      return found && stopLevel > 0.0 && boxRange > 0.0;
+   }
+
+   bool FlatMonthLiquidityOpeningRangeLevels(double &rangeHigh,
+                                             double &rangeLow,
+                                             string &source)
+   {
+      rangeHigh = 0.0;
+      rangeLow = 0.0;
+      source = "";
+
+      datetime currentBar = iTime(_Symbol, InpSignalTimeframe, 1);
+      if(currentBar <= 0)
+         return false;
+
+      MqlDateTime dt;
+      TimeToStruct(currentBar, dt);
+      dt.hour = MathMin(23, MathMax(0, InpFlatMonthLiquidityReclaimOpeningRangeStartHour));
+      dt.min = MathMin(59, MathMax(0, InpFlatMonthLiquidityReclaimOpeningRangeStartMinute));
+      dt.sec = 0;
+      datetime rangeStart = StructToTime(dt);
+      datetime rangeEnd = rangeStart + MathMax(1, InpFlatMonthLiquidityReclaimOpeningRangeMinutes) * 60;
+      if(currentBar <= rangeEnd)
+         return false;
+
+      int seconds = PeriodSeconds(InpSignalTimeframe);
+      if(seconds <= 0)
+         seconds = 60;
+      int maxBarsAfter = MathMax(1, InpFlatMonthLiquidityReclaimOpeningRangeMaxBarsAfter);
+      if((currentBar - rangeEnd) > maxBarsAfter * seconds)
+         return false;
+
+      int rangeBars = 0;
+      for(int shift = 1; shift <= 500; shift++)
+      {
+         datetime barTime = iTime(_Symbol, InpSignalTimeframe, shift);
+         if(barTime <= 0)
+            break;
+         if(barTime < rangeStart)
+            break;
+         if(barTime >= rangeStart && barTime < rangeEnd)
+         {
+            double high = iHigh(_Symbol, InpSignalTimeframe, shift);
+            double low = iLow(_Symbol, InpSignalTimeframe, shift);
+            if(high <= 0.0 || low <= 0.0)
+               continue;
+            rangeHigh = (rangeBars == 0) ? high : MathMax(rangeHigh, high);
+            rangeLow = (rangeBars == 0) ? low : MathMin(rangeLow, low);
+            rangeBars++;
+         }
+      }
+
+      if(rangeBars <= 0 || rangeHigh <= rangeLow)
+         return false;
+
+      source = "opening";
+      return true;
+   }
+
+   bool FlatMonthLiquidityOpeningRangeReclaimLevel(const ENUM_TRADE_BIAS bias,
+                                                   const double atr,
+                                                   double &stopLevel,
+                                                   double &targetLevel,
+                                                   double &boxRange,
+                                                   string &source)
+   {
+      stopLevel = 0.0;
+      targetLevel = 0.0;
+      boxRange = 0.0;
+      source = "";
+      if(!InpFlatMonthLiquidityReclaimUseOpeningRangeReclaim ||
+         bias == BIAS_NONE ||
+         atr <= 0.0)
+         return false;
+
+      double boxHigh = 0.0;
+      double boxLow = 0.0;
+      if(!FlatMonthLiquidityOpeningRangeLevels(boxHigh, boxLow, source))
+         return false;
+
+      boxRange = boxHigh - boxLow;
+      if(boxRange <= _Point)
+         return false;
+
+      double maxRange = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimOpeningRangeMaxRangeATR);
+      if(maxRange > 0.0 && boxRange > maxRange)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range1;
+      if(bodyPercent < MathMax(0.0, InpFlatMonthLiquidityReclaimOpeningRangeMinBodyPercent))
+         return false;
+
+      double closeLocation = (bias == BIAS_BUY)
+                             ? (close1 - low1) / range1
+                             : (high1 - close1) / range1;
+      if(closeLocation < MathMin(0.95, MathMax(0.50, InpFlatMonthLiquidityReclaimOpeningRangeMinCloseLocation)))
+         return false;
+
+      double buffer = MathMax(0.0, InpFlatMonthLiquidityReclaimOpeningRangeBreakBufferPoints) * _Point;
+      double reclaim = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimOpeningRangeMinReclaimATR);
+
+      if(bias == BIAS_BUY &&
+         low1 < boxLow - buffer &&
+         close1 > open1 &&
+         close1 >= boxLow + reclaim &&
+         close1 < boxHigh)
+      {
+         stopLevel = MathMin(low1, boxLow);
+         targetLevel = boxHigh;
+         return stopLevel > 0.0 && targetLevel > 0.0;
+      }
+
+      if(bias == BIAS_SELL &&
+         high1 > boxHigh + buffer &&
+         close1 < open1 &&
+         close1 <= boxHigh - reclaim &&
+         close1 > boxLow)
+      {
+         stopLevel = MathMax(high1, boxHigh);
+         targetLevel = boxLow;
+         return stopLevel > 0.0 && targetLevel > 0.0;
+      }
+
+      return false;
+   }
+
+   bool FlatMonthLiquidityVWAPDeviationReclaimLevel(const ENUM_TRADE_BIAS bias,
+                                                    const double atr,
+                                                    double &stopLevel,
+                                                    double &targetLevel,
+                                                    double &deviationATR)
+   {
+      stopLevel = 0.0;
+      targetLevel = 0.0;
+      deviationATR = 0.0;
+      if(!InpFlatMonthLiquidityReclaimUseVWAPDeviationReclaim ||
+         bias == BIAS_NONE ||
+         atr <= 0.0)
+         return false;
+
+      double vwap = 0.0;
+      int vwapLookback = MathMax(5, InpFlatMonthLiquidityReclaimVWAPDeviationLookbackBars);
+      if(!m_structure.VWAPValue(vwapLookback, vwap) || vwap <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range1;
+      if(bodyPercent < MathMax(0.0, InpFlatMonthLiquidityReclaimVWAPDeviationMinBodyPercent))
+         return false;
+
+      double closeLocation = (bias == BIAS_BUY)
+                             ? (close1 - low1) / range1
+                             : (high1 - close1) / range1;
+      if(closeLocation < MathMin(0.95, MathMax(0.50, InpFlatMonthLiquidityReclaimVWAPDeviationMinCloseLocation)))
+         return false;
+
+      double deviation = 0.0;
+      double candidateStop = 0.0;
+      int stopLookback = MathMax(2, InpFlatMonthLiquidityReclaimVWAPDeviationStopLookbackBars);
+      if(bias == BIAS_BUY &&
+         low1 < vwap &&
+         close1 > open1 &&
+         close1 < vwap)
+      {
+         deviation = vwap - low1;
+         double localLow = 0.0;
+         if(m_structure.LowestLow(2, stopLookback, localLow) && localLow > 0.0)
+            candidateStop = MathMin(low1, localLow);
+         else
+            candidateStop = low1;
+      }
+      else if(bias == BIAS_SELL &&
+              high1 > vwap &&
+              close1 < open1 &&
+              close1 > vwap)
+      {
+         deviation = high1 - vwap;
+         double localHigh = 0.0;
+         if(m_structure.HighestHigh(2, stopLookback, localHigh) && localHigh > 0.0)
+            candidateStop = MathMax(high1, localHigh);
+         else
+            candidateStop = high1;
+      }
+      else
+         return false;
+
+      deviationATR = deviation / atr;
+      double minDeviation = MathMax(0.0, InpFlatMonthLiquidityReclaimVWAPDeviationMinATR);
+      if(minDeviation > 0.0 && deviationATR < minDeviation)
+         return false;
+
+      double maxDeviation = MathMax(0.0, InpFlatMonthLiquidityReclaimVWAPDeviationMaxATR);
+      if(maxDeviation > 0.0 && deviationATR > maxDeviation)
+         return false;
+
+      stopLevel = candidateStop;
+      targetLevel = vwap;
+      return stopLevel > 0.0 && targetLevel > 0.0;
+   }
+
+   bool FlatMonthLiquidityRangeFailureCandidate(const ENUM_TRADE_BIAS bias,
+                                                const double atr,
+                                                const double boxHigh,
+                                                const double boxLow,
+                                                const string sourceName,
+                                                const double high1,
+                                                const double low1,
+                                                const double open1,
+                                                const double close1,
+                                                const double range1,
+                                                double &selectedStopLevel,
+                                                double &selectedTargetLevel,
+                                                double &selectedBoxRange,
+                                                string &selectedSource)
+   {
+      if(bias == BIAS_NONE ||
+         atr <= 0.0 ||
+         boxHigh <= 0.0 ||
+         boxLow <= 0.0 ||
+         boxHigh <= boxLow ||
+         range1 <= _Point)
+         return false;
+
+      double boxRange = boxHigh - boxLow;
+      double maxRange = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimRangeFailureMaxRangeATR);
+      if(maxRange > 0.0 && boxRange > maxRange)
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range1;
+      if(bodyPercent < MathMax(0.0, InpFlatMonthLiquidityReclaimRangeFailureMinBodyPercent))
+         return false;
+
+      double closeLocation = (bias == BIAS_BUY)
+                             ? (close1 - low1) / range1
+                             : (high1 - close1) / range1;
+      if(closeLocation < MathMin(0.95, MathMax(0.50, InpFlatMonthLiquidityReclaimRangeFailureMinCloseLocation)))
+         return false;
+
+      double buffer = MathMax(0.0, InpFlatMonthLiquidityReclaimRangeFailureBreakBufferPoints) * _Point;
+      double reclaimDepth = boxRange * MathMin(0.80, MathMax(0.0, InpFlatMonthLiquidityReclaimRangeFailureMinReclaimPercent));
+      double candidateStop = 0.0;
+      double candidateTarget = 0.0;
+      if(bias == BIAS_BUY &&
+         low1 < boxLow - buffer &&
+         close1 > open1 &&
+         close1 >= boxLow + reclaimDepth &&
+         close1 < boxHigh)
+      {
+         candidateStop = MathMin(low1, boxLow);
+         candidateTarget = boxHigh;
+      }
+      else if(bias == BIAS_SELL &&
+              high1 > boxHigh + buffer &&
+              close1 < open1 &&
+              close1 <= boxHigh - reclaimDepth &&
+              close1 > boxLow)
+      {
+         candidateStop = MathMax(high1, boxHigh);
+         candidateTarget = boxLow;
+      }
+      else
+         return false;
+
+      if(candidateStop <= 0.0 || candidateTarget <= 0.0)
+         return false;
+
+      if(selectedBoxRange <= 0.0 || boxRange < selectedBoxRange)
+      {
+         selectedBoxRange = boxRange;
+         selectedStopLevel = candidateStop;
+         selectedTargetLevel = candidateTarget;
+         selectedSource = sourceName;
+      }
+
+      return true;
+   }
+
+   bool FlatMonthLiquidityRangeFailureReclaimLevel(const ENUM_TRADE_BIAS bias,
+                                                   const double atr,
+                                                   double &stopLevel,
+                                                   double &targetLevel,
+                                                   double &boxRange,
+                                                   string &source)
+   {
+      stopLevel = 0.0;
+      targetLevel = 0.0;
+      boxRange = 0.0;
+      source = "";
+      if(!InpFlatMonthLiquidityReclaimUseRangeFailureReclaim ||
+         bias == BIAS_NONE ||
+         atr <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
+         return false;
+
+      bool found = false;
+      if(InpFlatMonthLiquidityReclaimRangeFailureUseAsianRange)
+      {
+         double asianHigh = 0.0;
+         double asianLow = 0.0;
+         if(m_structure.AsianRangeLevels(asianHigh, asianLow))
+         {
+            if(FlatMonthLiquidityRangeFailureCandidate(bias,
+                                                       atr,
+                                                       asianHigh,
+                                                       asianLow,
+                                                       "Asian failed",
+                                                       high1,
+                                                       low1,
+                                                       open1,
+                                                       close1,
+                                                       range1,
+                                                       stopLevel,
+                                                       targetLevel,
+                                                       boxRange,
+                                                       source))
+               found = true;
+         }
+      }
+
+      if(InpFlatMonthLiquidityReclaimRangeFailureUseRollingRange)
+      {
+         int seconds = PeriodSeconds(InpSignalTimeframe);
+         if(seconds <= 0)
+            seconds = 60;
+         int hours = MathMax(1, InpFlatMonthLiquidityReclaimRangeFailureLookbackHours);
+         int bars = MathMax(4, (int)MathCeil((hours * 3600.0) / seconds));
+         double rollingHigh = 0.0;
+         double rollingLow = 0.0;
+         if(m_structure.HighestHigh(2, bars, rollingHigh) &&
+            m_structure.LowestLow(2, bars, rollingLow))
+         {
+            if(FlatMonthLiquidityRangeFailureCandidate(bias,
+                                                       atr,
+                                                       rollingHigh,
+                                                       rollingLow,
+                                                       "Rolling failed",
+                                                       high1,
+                                                       low1,
+                                                       open1,
+                                                       close1,
+                                                       range1,
+                                                       stopLevel,
+                                                       targetLevel,
+                                                       boxRange,
+                                                       source))
+               found = true;
+         }
+      }
+
+      return found && stopLevel > 0.0 && targetLevel > 0.0 && boxRange > 0.0;
+   }
+
+   bool FlatMonthLiquidityHTFReclaimCandidate(const ENUM_TRADE_BIAS bias,
+                                              const ENUM_TIMEFRAMES timeframe,
+                                              const string sourceName,
+                                              const double atr,
+                                              const double high1,
+                                              const double low1,
+                                              const double open1,
+                                              const double close1,
+                                              const double range1,
+                                              double &selectedStopLevel,
+                                              double &selectedTargetLevel,
+                                              double &selectedSweptLevel,
+                                              double &selectedLevelDistance,
+                                              string &selectedSource)
+   {
+      if(bias == BIAS_NONE ||
+         atr <= 0.0 ||
+         range1 <= _Point)
+         return false;
+
+      double periodHigh = iHigh(_Symbol, timeframe, 1);
+      double periodLow = iLow(_Symbol, timeframe, 1);
+      if(periodHigh <= 0.0 || periodLow <= 0.0 || periodHigh <= periodLow)
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range1;
+      if(bodyPercent < MathMax(0.0, InpFlatMonthLiquidityReclaimHTFMinBodyPercent))
+         return false;
+
+      double closeLocation = (bias == BIAS_BUY)
+                             ? (close1 - low1) / range1
+                             : (high1 - close1) / range1;
+      if(closeLocation < MathMin(0.95, MathMax(0.50, InpFlatMonthLiquidityReclaimHTFMinCloseLocation)))
+         return false;
+
+      double buffer = MathMax(0.0, InpFlatMonthLiquidityReclaimHTFBreakBufferPoints) * _Point;
+      double reclaim = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimHTFMinReclaimATR);
+      double candidateStop = 0.0;
+      double candidateTarget = 0.0;
+      double sweptLevel = 0.0;
+      double levelDistance = 0.0;
+
+      if(bias == BIAS_BUY &&
+         low1 < periodLow - buffer &&
+         close1 > open1 &&
+         close1 >= periodLow + reclaim)
+      {
+         sweptLevel = periodLow;
+         candidateStop = MathMin(low1, periodLow);
+         candidateTarget = periodHigh;
+         levelDistance = MathAbs(close1 - periodLow);
+      }
+      else if(bias == BIAS_SELL &&
+              high1 > periodHigh + buffer &&
+              close1 < open1 &&
+              close1 <= periodHigh - reclaim)
+      {
+         sweptLevel = periodHigh;
+         candidateStop = MathMax(high1, periodHigh);
+         candidateTarget = periodLow;
+         levelDistance = MathAbs(close1 - periodHigh);
+      }
+      else
+         return false;
+
+      double maxLevelDistance = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimHTFMaxLevelDistanceATR);
+      if(maxLevelDistance > 0.0 && levelDistance > maxLevelDistance)
+         return false;
+
+      if(candidateStop <= 0.0 || candidateTarget <= 0.0 || sweptLevel <= 0.0)
+         return false;
+
+      if(selectedLevelDistance <= 0.0 || levelDistance < selectedLevelDistance)
+      {
+         selectedLevelDistance = levelDistance;
+         selectedStopLevel = candidateStop;
+         selectedTargetLevel = candidateTarget;
+         selectedSweptLevel = sweptLevel;
+         selectedSource = sourceName;
+      }
+
+      return true;
+   }
+
+   bool FlatMonthLiquidityHTFReclaimLevel(const ENUM_TRADE_BIAS bias,
+                                          const double atr,
+                                          double &stopLevel,
+                                          double &targetLevel,
+                                          double &sweptLevel,
+                                          double &levelDistance,
+                                          string &source)
+   {
+      stopLevel = 0.0;
+      targetLevel = 0.0;
+      sweptLevel = 0.0;
+      levelDistance = 0.0;
+      source = "";
+      if(!InpFlatMonthLiquidityReclaimUseHTFLiquidityReclaim ||
+         bias == BIAS_NONE ||
+         atr <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
+         return false;
+
+      bool found = false;
+      if(InpFlatMonthLiquidityReclaimHTFUsePreviousDay)
+      {
+         if(FlatMonthLiquidityHTFReclaimCandidate(bias,
+                                                  PERIOD_D1,
+                                                  "previous day",
+                                                  atr,
+                                                  high1,
+                                                  low1,
+                                                  open1,
+                                                  close1,
+                                                  range1,
+                                                  stopLevel,
+                                                  targetLevel,
+                                                  sweptLevel,
+                                                  levelDistance,
+                                                  source))
+            found = true;
+      }
+      if(InpFlatMonthLiquidityReclaimHTFUsePreviousWeek)
+      {
+         if(FlatMonthLiquidityHTFReclaimCandidate(bias,
+                                                  PERIOD_W1,
+                                                  "previous week",
+                                                  atr,
+                                                  high1,
+                                                  low1,
+                                                  open1,
+                                                  close1,
+                                                  range1,
+                                                  stopLevel,
+                                                  targetLevel,
+                                                  sweptLevel,
+                                                  levelDistance,
+                                                  source))
+            found = true;
+      }
+      if(InpFlatMonthLiquidityReclaimHTFUsePreviousMonth)
+      {
+         if(FlatMonthLiquidityHTFReclaimCandidate(bias,
+                                                  PERIOD_MN1,
+                                                  "previous month",
+                                                  atr,
+                                                  high1,
+                                                  low1,
+                                                  open1,
+                                                  close1,
+                                                  range1,
+                                                  stopLevel,
+                                                  targetLevel,
+                                                  sweptLevel,
+                                                  levelDistance,
+                                                  source))
+            found = true;
+      }
+
+      return found && stopLevel > 0.0 && targetLevel > 0.0 && sweptLevel > 0.0;
+   }
+
+   bool FlatMonthLiquiditySweepVolumeExpansion(double &volumeRatio)
+   {
+      volumeRatio = 0.0;
+      int lookback = MathMax(3, InpFlatMonthLiquidityReclaimSweepBOSVolumeLookbackBars);
+      long currentVolume = iVolume(_Symbol, InpSignalTimeframe, 1);
+      if(currentVolume <= 0)
+         return false;
+
+      double averageVolume = 0.0;
+      int valid = 0;
+      for(int shift = 2; shift <= lookback + 1; shift++)
+      {
+         long volume = iVolume(_Symbol, InpSignalTimeframe, shift);
+         if(volume <= 0)
+            continue;
+         averageVolume += (double)volume;
+         valid++;
+      }
+
+      if(valid <= 0 || averageVolume <= 0.0)
+         return false;
+
+      averageVolume /= (double)valid;
+      volumeRatio = (double)currentVolume / averageVolume;
+      return volumeRatio >= MathMax(0.0, InpFlatMonthLiquidityReclaimSweepBOSMinVolumeRatio);
+   }
+
+   bool FlatMonthLiquidityRecentSweepStopLevel(const ENUM_TRADE_BIAS bias,
+                                               const int lookback,
+                                               double &stopLevel,
+                                               int &sweepAgeBars)
+   {
+      stopLevel = 0.0;
+      sweepAgeBars = 0;
+      if(bias == BIAS_NONE)
+         return false;
+
+      int maxAge = MathMax(0, InpFlatMonthLiquidityReclaimSweepBOSMaxSweepAgeBars);
+      int scanLookback = MathMax(4, lookback);
+      for(int shift = 1; shift <= maxAge + 1; shift++)
+      {
+         double sweepHigh = iHigh(_Symbol, InpSignalTimeframe, shift);
+         double sweepLow = iLow(_Symbol, InpSignalTimeframe, shift);
+         double sweepClose = iClose(_Symbol, InpSignalTimeframe, shift);
+         if(sweepHigh <= 0.0 || sweepLow <= 0.0 || sweepClose <= 0.0)
+            continue;
+
+         double reference = 0.0;
+         if(bias == BIAS_BUY &&
+            m_structure.LowestLow(shift + 1, scanLookback, reference) &&
+            sweepLow < reference &&
+            sweepClose > reference)
+         {
+            stopLevel = MathMin(sweepLow, reference);
+            sweepAgeBars = shift - 1;
+            return stopLevel > 0.0;
+         }
+
+         if(bias == BIAS_SELL &&
+            m_structure.HighestHigh(shift + 1, scanLookback, reference) &&
+            sweepHigh > reference &&
+            sweepClose < reference)
+         {
+            stopLevel = MathMax(sweepHigh, reference);
+            sweepAgeBars = shift - 1;
+            return stopLevel > 0.0;
+         }
+      }
+
+      return false;
+   }
+
+   bool FlatMonthLiquiditySweepDisplacementBOSLevel(const ENUM_TRADE_BIAS bias,
+                                                    const double atr,
+                                                    double &stopLevel,
+                                                    double &breakLevel,
+                                                    double &volumeRatio,
+                                                    bool &volumeExpansion,
+                                                    int &sweepAgeBars)
+   {
+      stopLevel = 0.0;
+      breakLevel = 0.0;
+      volumeRatio = 0.0;
+      volumeExpansion = false;
+      sweepAgeBars = 0;
+      if(!InpFlatMonthLiquidityReclaimUseSweepDisplacementBOS ||
+         bias == BIAS_NONE ||
+         atr <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
+         return false;
+
+      double minRange = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimSweepBOSMinRangeATR);
+      if(minRange > 0.0 && range1 < minRange)
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range1;
+      if(bodyPercent < MathMax(0.0, InpFlatMonthLiquidityReclaimSweepBOSMinBodyPercent))
+         return false;
+
+      double closeLocation = (bias == BIAS_BUY)
+                             ? (close1 - low1) / range1
+                             : (high1 - close1) / range1;
+      if(closeLocation < MathMin(0.95, MathMax(0.50, InpFlatMonthLiquidityReclaimSweepBOSMinCloseLocation)))
+         return false;
+
+      bool directionalBody = (bias == BIAS_BUY && close1 > open1) ||
+                             (bias == BIAS_SELL && close1 < open1);
+      if(!directionalBody)
+         return false;
+
+      int lookback = MathMax(4, InpFlatMonthLiquidityReclaimSweepBOSLookbackBars);
+      if(!FlatMonthLiquidityRecentSweepStopLevel(bias, lookback, stopLevel, sweepAgeBars))
+         return false;
+
+      double buffer = MathMax(0.0, InpFlatMonthLiquidityReclaimSweepBOSBreakBufferPoints) * _Point;
+      if(bias == BIAS_BUY)
+      {
+         if(!m_structure.HighestHigh(2, lookback, breakLevel) || close1 <= breakLevel + buffer)
+            return false;
+      }
+      else if(bias == BIAS_SELL)
+      {
+         if(!m_structure.LowestLow(2, lookback, breakLevel) || close1 >= breakLevel - buffer)
+            return false;
+      }
+      else
+         return false;
+
+      volumeExpansion = FlatMonthLiquiditySweepVolumeExpansion(volumeRatio);
+      if(InpFlatMonthLiquidityReclaimSweepBOSRequireVolumeExpansion && !volumeExpansion)
+         return false;
+
+      return stopLevel > 0.0 && breakLevel > 0.0;
+   }
+
+   bool FlatMonthLiquidityDisplacementPullbackLevel(const ENUM_TRADE_BIAS bias,
+                                                    const double atr,
+                                                    double &stopLevel,
+                                                    double &breakLevel,
+                                                    int &breakAgeBars)
+   {
+      stopLevel = 0.0;
+      breakLevel = 0.0;
+      breakAgeBars = 0;
+      if((!InpFlatMonthLiquidityReclaimUseDisplacementPullback &&
+          !InpFlatMonthLiquidityReclaimRequireDisplacementPullback) ||
+         bias == BIAS_NONE ||
+         atr <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
+         return false;
+
+      bool pullbackBody = (bias == BIAS_BUY && close1 > open1) ||
+                          (bias == BIAS_SELL && close1 < open1);
+      if(!pullbackBody)
+         return false;
+
+      double pullbackBodyPercent = 100.0 * MathAbs(close1 - open1) / range1;
+      if(pullbackBodyPercent < MathMax(0.0, InpFlatMonthLiquidityReclaimDisplacementPullbackMinBodyPercent))
+         return false;
+
+      double pullbackCloseLocation = (bias == BIAS_BUY)
+                                     ? (close1 - low1) / range1
+                                     : (high1 - close1) / range1;
+      if(pullbackCloseLocation < MathMin(0.95, MathMax(0.50, InpFMLRDispPBMinCloseLocation)))
+         return false;
+
+      double tolerance = MathMax(atr * MathMax(0.0, InpFlatMonthLiquidityReclaimDisplacementPullbackToleranceATR),
+                                 _Point * MathMax(0.0, InpFlatMonthLiquidityReclaimDisplacementPullbackTolerancePoints));
+      if(tolerance <= 0.0)
+         tolerance = _Point;
+
+      double maxPullback = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimDisplacementPullbackMaxPullbackATR);
+      if(maxPullback <= 0.0)
+         maxPullback = atr;
+
+      int pullbackLookback = MathMax(1, InpFlatMonthLiquidityReclaimDisplacementPullbackLookbackBars);
+      int breakLookback = MathMax(4, InpFMLRDispPBBreakLookbackBars);
+      double breakBuffer = MathMax(0.0, InpFMLRDispPBBreakBufferPoints) * _Point;
+      double selectedDistance = 0.0;
+      bool found = false;
+
+      for(int shift = 2; shift <= pullbackLookback + 1; shift++)
+      {
+         double breakHigh = iHigh(_Symbol, InpSignalTimeframe, shift);
+         double breakLow = iLow(_Symbol, InpSignalTimeframe, shift);
+         double breakOpen = iOpen(_Symbol, InpSignalTimeframe, shift);
+         double breakClose = iClose(_Symbol, InpSignalTimeframe, shift);
+         double breakRange = breakHigh - breakLow;
+         if(breakHigh <= 0.0 || breakLow <= 0.0 || breakOpen <= 0.0 || breakClose <= 0.0 || breakRange <= _Point)
+            continue;
+
+         bool breakBody = (bias == BIAS_BUY && breakClose > breakOpen) ||
+                          (bias == BIAS_SELL && breakClose < breakOpen);
+         if(!breakBody)
+            continue;
+
+         double minBreakRange = atr * MathMax(0.0, InpFMLRDispPBMinBreakRangeATR);
+         if(minBreakRange > 0.0 && breakRange < minBreakRange)
+            continue;
+
+         double breakBodyPercent = 100.0 * MathAbs(breakClose - breakOpen) / breakRange;
+         if(breakBodyPercent < MathMax(0.0, InpFMLRDispPBMinBreakBodyPercent))
+            continue;
+
+         double reference = 0.0;
+         double candidateStop = 0.0;
+         double distance = 0.0;
+         if(bias == BIAS_BUY)
+         {
+            if(!m_structure.HighestHigh(shift + 1, breakLookback, reference))
+               continue;
+            if(reference <= 0.0 || breakClose <= reference + breakBuffer)
+               continue;
+            if(low1 > reference + tolerance || low1 < reference - maxPullback || close1 <= reference)
+               continue;
+
+            candidateStop = MathMin(MathMin(low1, breakLow), reference);
+            if(candidateStop <= 0.0 || candidateStop >= close1)
+               continue;
+            distance = MathAbs(close1 - reference);
+         }
+         else if(bias == BIAS_SELL)
+         {
+            if(!m_structure.LowestLow(shift + 1, breakLookback, reference))
+               continue;
+            if(reference <= 0.0 || breakClose >= reference - breakBuffer)
+               continue;
+            if(high1 < reference - tolerance || high1 > reference + maxPullback || close1 >= reference)
+               continue;
+
+            candidateStop = MathMax(MathMax(high1, breakHigh), reference);
+            if(candidateStop <= 0.0 || candidateStop <= close1)
+               continue;
+            distance = MathAbs(close1 - reference);
+         }
+         else
+            continue;
+
+         if(!found || distance < selectedDistance)
+         {
+            stopLevel = candidateStop;
+            breakLevel = reference;
+            breakAgeBars = shift - 1;
+            selectedDistance = distance;
+            found = true;
+         }
+      }
+
+      return found && stopLevel > 0.0 && breakLevel > 0.0;
+   }
+
+   bool FlatMonthLiquidityEngulfingReclaimLevel(const ENUM_TRADE_BIAS bias,
+                                                const double atr,
+                                                double &stopLevel,
+                                                double &reclaimLevel)
+   {
+      stopLevel = 0.0;
+      reclaimLevel = 0.0;
+      if((!InpFlatMonthLiquidityReclaimUseEngulfingReclaim &&
+          !InpFlatMonthLiquidityReclaimRequireEngulfingReclaim) ||
+         bias == BIAS_NONE ||
+         atr <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double high2 = iHigh(_Symbol, InpSignalTimeframe, 2);
+      double low2 = iLow(_Symbol, InpSignalTimeframe, 2);
+      double open2 = iOpen(_Symbol, InpSignalTimeframe, 2);
+      double close2 = iClose(_Symbol, InpSignalTimeframe, 2);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 ||
+         high2 <= 0.0 || low2 <= 0.0 || open2 <= 0.0 || close2 <= 0.0 ||
+         range1 <= _Point)
+         return false;
+
+      bool directionalBody = (bias == BIAS_BUY && close1 > open1 && close2 < open2) ||
+                             (bias == BIAS_SELL && close1 < open1 && close2 > open2);
+      if(!directionalBody)
+         return false;
+
+      double body1 = MathAbs(close1 - open1);
+      double body2 = MathAbs(close2 - open2);
+      double bodyPercent = 100.0 * body1 / range1;
+      if(bodyPercent < MathMax(0.0, InpFlatMonthLiquidityReclaimEngulfingMinBodyPercent))
+         return false;
+
+      double minEngulfRatio = MathMax(0.0, InpFlatMonthLiquidityReclaimEngulfingMinEngulfRatio);
+      if(body2 > _Point && body1 < body2 * minEngulfRatio)
+         return false;
+
+      double closeLocation = (bias == BIAS_BUY)
+                             ? (close1 - low1) / range1
+                             : (high1 - close1) / range1;
+      if(closeLocation < MathMin(0.95, MathMax(0.50, InpFlatMonthLiquidityReclaimEngulfingMinCloseLocation)))
+         return false;
+
+      bool engulfedBody = (bias == BIAS_BUY && close1 >= open2 && open1 <= close2) ||
+                          (bias == BIAS_SELL && close1 <= open2 && open1 >= close2);
+      if(!engulfedBody)
+         return false;
+
+      int lookback = MathMax(4, InpFlatMonthLiquidityReclaimEngulfingLookbackBars);
+      double buffer = MathMax(0.0, InpFlatMonthLiquidityReclaimEngulfingBreakBufferPoints) * _Point;
+      double maxSweep = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimEngulfingMaxSweepATR);
+      if(maxSweep <= 0.0)
+         maxSweep = atr;
+
+      double reference = 0.0;
+      if(bias == BIAS_BUY)
+      {
+         if(!m_structure.LowestLow(2, lookback, reference) || reference <= 0.0)
+            return false;
+         if(low1 >= reference - buffer || close1 <= reference || reference - low1 > maxSweep)
+            return false;
+
+         stopLevel = MathMin(MathMin(low1, low2), reference);
+         reclaimLevel = reference;
+         return stopLevel > 0.0 && stopLevel < close1;
+      }
+      if(bias == BIAS_SELL)
+      {
+         if(!m_structure.HighestHigh(2, lookback, reference) || reference <= 0.0)
+            return false;
+         if(high1 <= reference + buffer || close1 >= reference || high1 - reference > maxSweep)
+            return false;
+
+         stopLevel = MathMax(MathMax(high1, high2), reference);
+         reclaimLevel = reference;
+         return stopLevel > 0.0 && stopLevel > close1;
+      }
+
+      return false;
+   }
+
+   bool FlatMonthLiquidityTickPressureReclaimLevel(const ENUM_TRADE_BIAS bias,
+                                                   const double atr,
+                                                   double &stopLevel,
+                                                   double &reclaimLevel,
+                                                   double &pressureRatio,
+                                                   double &volumeRatio,
+                                                   int &alignedBars)
+   {
+      stopLevel = 0.0;
+      reclaimLevel = 0.0;
+      pressureRatio = 0.0;
+      volumeRatio = 0.0;
+      alignedBars = 0;
+      if((!InpFlatMonthLiquidityReclaimUseTickPressureReclaim &&
+          !InpFlatMonthLiquidityReclaimRequireTickPressureReclaim) ||
+         bias == BIAS_NONE ||
+         atr <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
+         return false;
+
+      bool directionalBody = (bias == BIAS_BUY && close1 > open1) ||
+                             (bias == BIAS_SELL && close1 < open1);
+      if(!directionalBody)
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range1;
+      if(bodyPercent < MathMax(0.0, InpFlatMonthLiquidityReclaimTickPressureMinBodyPercent))
+         return false;
+
+      double closeLocation = (bias == BIAS_BUY)
+                             ? (close1 - low1) / range1
+                             : (high1 - close1) / range1;
+      if(closeLocation < MathMin(0.95, MathMax(0.50, InpFlatMonthLiquidityReclaimTickPressureMinCloseLocation)))
+         return false;
+
+      int lookback = MathMax(3, InpFlatMonthLiquidityReclaimTickPressureLookbackBars);
+      double alignedVolume = 0.0;
+      double oppositeVolume = 0.0;
+      double totalVolume = 0.0;
+      double priorVolume = 0.0;
+      int priorVolumeBars = 0;
+      for(int shift = 1; shift <= lookback; shift++)
+      {
+         double barOpen = iOpen(_Symbol, InpSignalTimeframe, shift);
+         double barClose = iClose(_Symbol, InpSignalTimeframe, shift);
+         double barVolume = (double)iVolume(_Symbol, InpSignalTimeframe, shift);
+         if(barOpen <= 0.0 || barClose <= 0.0 || barVolume <= 0.0)
+            continue;
+
+         bool aligned = (bias == BIAS_BUY && barClose >= barOpen) ||
+                        (bias == BIAS_SELL && barClose <= barOpen);
+         if(aligned)
+         {
+            alignedVolume += barVolume;
+            alignedBars++;
+         }
+         else
+         {
+            oppositeVolume += barVolume;
+         }
+         totalVolume += barVolume;
+
+         if(shift > 1)
+         {
+            priorVolume += barVolume;
+            priorVolumeBars++;
+         }
+      }
+
+      if(totalVolume <= 0.0)
+         return false;
+
+      pressureRatio = (alignedVolume - oppositeVolume) / totalVolume;
+      if(pressureRatio < MathMax(0.0, InpFlatMonthLiquidityReclaimTickPressureMinDeltaRatio))
+         return false;
+
+      int minAlignedBars = MathMin(lookback, MathMax(1, InpFlatMonthLiquidityReclaimTickPressureMinAlignedBars));
+      if(alignedBars < minAlignedBars)
+         return false;
+
+      double currentVolume = (double)iVolume(_Symbol, InpSignalTimeframe, 1);
+      double averagePriorVolume = (priorVolumeBars > 0) ? priorVolume / priorVolumeBars : 0.0;
+      if(currentVolume <= 0.0 || averagePriorVolume <= 0.0)
+         return false;
+
+      volumeRatio = currentVolume / averagePriorVolume;
+      if(volumeRatio < MathMax(0.0, InpFlatMonthLiquidityReclaimTickPressureMinVolumeRatio))
+         return false;
+
+      int structureLookback = MathMax(4, lookback);
+      double buffer = MathMax(0.0, InpFlatMonthLiquidityReclaimTickPressureBreakBufferPoints) * _Point;
+      double maxSweep = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimTickPressureMaxSweepATR);
+      if(maxSweep <= 0.0)
+         maxSweep = atr;
+
+      double reference = 0.0;
+      if(bias == BIAS_BUY)
+      {
+         if(!m_structure.LowestLow(2, structureLookback, reference) || reference <= 0.0)
+            return false;
+         if(low1 >= reference - buffer || close1 <= reference || reference - low1 > maxSweep)
+            return false;
+
+         stopLevel = MathMin(low1, reference);
+         reclaimLevel = reference;
+         return stopLevel > 0.0 && stopLevel < close1;
+      }
+      if(bias == BIAS_SELL)
+      {
+         if(!m_structure.HighestHigh(2, structureLookback, reference) || reference <= 0.0)
+            return false;
+         if(high1 <= reference + buffer || close1 >= reference || high1 - reference > maxSweep)
+            return false;
+
+         stopLevel = MathMax(high1, reference);
+         reclaimLevel = reference;
+         return stopLevel > 0.0 && stopLevel > close1;
+      }
+
+      return false;
+   }
+
+   bool FlatMonthLiquidityFvgRetestLevel(const ENUM_TRADE_BIAS bias,
+                                         const double atr,
+                                         double &stopLevel,
+                                         double &fvgLevel,
+                                         int &fvgAgeBars)
+   {
+      stopLevel = 0.0;
+      fvgLevel = 0.0;
+      fvgAgeBars = 0;
+      if((!InpFlatMonthLiquidityReclaimUseFvgRetest &&
+          !InpFlatMonthLiquidityReclaimRequireFvgRetest) ||
+         bias == BIAS_NONE ||
+         atr <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
+         return false;
+
+      bool retestBody = (bias == BIAS_BUY && close1 > open1) ||
+                        (bias == BIAS_SELL && close1 < open1);
+      if(!retestBody)
+         return false;
+
+      double closeLocation = (bias == BIAS_BUY)
+                             ? (close1 - low1) / range1
+                             : (high1 - close1) / range1;
+      if(closeLocation < MathMin(0.95, MathMax(0.50, InpFlatMonthLiquidityReclaimFvgRetestMinCloseLocation)))
+         return false;
+
+      double minGap = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimFvgRetestMinGapATR);
+      if(minGap <= 0.0)
+         minGap = _Point;
+
+      double tolerance = MathMax(atr * MathMax(0.0, InpFlatMonthLiquidityReclaimFvgRetestToleranceATR),
+                                 _Point * MathMax(0.0, InpFlatMonthLiquidityReclaimFvgRetestTolerancePoints));
+      if(tolerance <= 0.0)
+         tolerance = _Point;
+
+      double maxRetest = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimFvgRetestMaxRetestATR);
+      if(maxRetest <= 0.0)
+         maxRetest = atr;
+
+      int fvgLookback = MathMax(3, InpFlatMonthLiquidityReclaimFvgRetestLookbackBars);
+      int breakLookback = MathMax(4, InpFlatMonthLiquidityReclaimFvgRetestBreakLookbackBars);
+      double breakBuffer = MathMax(0.0, InpFlatMonthLiquidityReclaimFvgRetestBreakBufferPoints) * _Point;
+      double minImpulseRange = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimFvgRetestMinImpulseRangeATR);
+      double selectedDistance = 0.0;
+      bool found = false;
+
+      for(int shift = 2; shift <= fvgLookback + 1; shift++)
+      {
+         int impulseShift = shift + 1;
+         int olderShift = shift + 2;
+         double highOlder = iHigh(_Symbol, InpSignalTimeframe, olderShift);
+         double lowOlder = iLow(_Symbol, InpSignalTimeframe, olderShift);
+         double highRecent = iHigh(_Symbol, InpSignalTimeframe, shift);
+         double lowRecent = iLow(_Symbol, InpSignalTimeframe, shift);
+         double closeRecent = iClose(_Symbol, InpSignalTimeframe, shift);
+         double impulseOpen = iOpen(_Symbol, InpSignalTimeframe, impulseShift);
+         double impulseClose = iClose(_Symbol, InpSignalTimeframe, impulseShift);
+         double impulseHigh = iHigh(_Symbol, InpSignalTimeframe, impulseShift);
+         double impulseLow = iLow(_Symbol, InpSignalTimeframe, impulseShift);
+         double impulseRange = impulseHigh - impulseLow;
+         if(highOlder <= 0.0 || lowOlder <= 0.0 || highRecent <= 0.0 || lowRecent <= 0.0 ||
+            closeRecent <= 0.0 || impulseOpen <= 0.0 || impulseClose <= 0.0 ||
+            impulseHigh <= 0.0 || impulseLow <= 0.0 || impulseRange <= _Point)
+            continue;
+
+         bool impulseBody = (bias == BIAS_BUY && impulseClose > impulseOpen) ||
+                            (bias == BIAS_SELL && impulseClose < impulseOpen);
+         if(!impulseBody)
+            continue;
+         if(minImpulseRange > 0.0 && impulseRange < minImpulseRange)
+            continue;
+
+         double impulseBodyPercent = 100.0 * MathAbs(impulseClose - impulseOpen) / impulseRange;
+         if(impulseBodyPercent < MathMax(0.0, InpFlatMonthLiquidityReclaimFvgRetestMinImpulseBodyPercent))
+            continue;
+
+         double previousHigh = 0.0;
+         double previousLow = 0.0;
+         if(!m_structure.HighestHigh(olderShift + 1, breakLookback, previousHigh) ||
+            !m_structure.LowestLow(olderShift + 1, breakLookback, previousLow))
+            continue;
+         if(previousHigh <= 0.0 || previousLow <= 0.0)
+            continue;
+
+         double zoneLow = 0.0;
+         double zoneHigh = 0.0;
+         double candidateStop = 0.0;
+         bool validGap = false;
+         bool structuralBreak = false;
+         bool controlledRetest = false;
+         if(bias == BIAS_BUY)
+         {
+            validGap = lowRecent - highOlder >= minGap;
+            structuralBreak = MathMax(impulseClose, closeRecent) > previousHigh + breakBuffer;
+            zoneLow = highOlder;
+            zoneHigh = lowRecent;
+            controlledRetest = low1 <= zoneHigh + tolerance &&
+                               low1 >= zoneLow - maxRetest &&
+                               close1 >= zoneHigh;
+            candidateStop = MathMin(MathMin(low1, zoneLow), impulseLow);
+            if(!validGap || !structuralBreak || !controlledRetest ||
+               candidateStop <= 0.0 || candidateStop >= close1)
+               continue;
+         }
+         else if(bias == BIAS_SELL)
+         {
+            validGap = lowOlder - highRecent >= minGap;
+            structuralBreak = MathMin(impulseClose, closeRecent) < previousLow - breakBuffer;
+            zoneLow = highRecent;
+            zoneHigh = lowOlder;
+            controlledRetest = high1 >= zoneLow - tolerance &&
+                               high1 <= zoneHigh + maxRetest &&
+                               close1 <= zoneLow;
+            candidateStop = MathMax(MathMax(high1, zoneHigh), impulseHigh);
+            if(!validGap || !structuralBreak || !controlledRetest ||
+               candidateStop <= 0.0 || candidateStop <= close1)
+               continue;
+         }
+         else
+            continue;
+
+         double midpoint = 0.5 * (zoneLow + zoneHigh);
+         double distance = MathAbs(close1 - midpoint);
+         if(!found || distance < selectedDistance)
+         {
+            stopLevel = candidateStop;
+            fvgLevel = midpoint;
+            fvgAgeBars = shift - 1;
+            selectedDistance = distance;
+            found = true;
+         }
+      }
+
+      return found && stopLevel > 0.0 && fvgLevel > 0.0;
+   }
+
+   bool FlatMonthLiquidityOrderBlockRetestLevel(const ENUM_TRADE_BIAS bias,
+                                                const double atr,
+                                                double &stopLevel,
+                                                double &blockLevel,
+                                                int &blockAgeBars)
+   {
+      stopLevel = 0.0;
+      blockLevel = 0.0;
+      blockAgeBars = 0;
+      if((!InpFlatMonthLiquidityReclaimUseOrderBlockRetest &&
+          !InpFlatMonthLiquidityReclaimRequireOrderBlockRetest) ||
+         bias == BIAS_NONE ||
+         atr <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
+         return false;
+
+      bool retestBody = (bias == BIAS_BUY && close1 > open1) ||
+                        (bias == BIAS_SELL && close1 < open1);
+      if(!retestBody)
+         return false;
+
+      double closeLocation = (bias == BIAS_BUY)
+                             ? (close1 - low1) / range1
+                             : (high1 - close1) / range1;
+      if(closeLocation < MathMin(0.95, MathMax(0.50, InpFlatMonthLiquidityReclaimOrderBlockRetestMinCloseLocation)))
+         return false;
+
+      double tolerance = MathMax(atr * MathMax(0.0, InpFlatMonthLiquidityReclaimOrderBlockRetestToleranceATR),
+                                 _Point * MathMax(0.0, InpFlatMonthLiquidityReclaimOrderBlockRetestTolerancePoints));
+      if(tolerance <= 0.0)
+         tolerance = _Point;
+
+      double maxRetest = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimOrderBlockRetestMaxRetestATR);
+      if(maxRetest <= 0.0)
+         maxRetest = atr;
+
+      double maxBlockRange = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimOrderBlockRetestMaxBlockATR);
+      int blockLookback = MathMax(3, InpFlatMonthLiquidityReclaimOrderBlockRetestLookbackBars);
+      int breakLookback = MathMax(4, InpFlatMonthLiquidityReclaimOrderBlockRetestBreakLookbackBars);
+      double breakBuffer = MathMax(0.0, InpFlatMonthLiquidityReclaimOrderBlockRetestBreakBufferPoints) * _Point;
+      double selectedDistance = 0.0;
+      bool found = false;
+
+      for(int blockShift = 3; blockShift <= blockLookback + 2; blockShift++)
+      {
+         double blockOpen = iOpen(_Symbol, InpSignalTimeframe, blockShift);
+         double blockClose = iClose(_Symbol, InpSignalTimeframe, blockShift);
+         double blockHigh = iHigh(_Symbol, InpSignalTimeframe, blockShift);
+         double blockLow = iLow(_Symbol, InpSignalTimeframe, blockShift);
+         double blockRange = blockHigh - blockLow;
+         if(blockOpen <= 0.0 || blockClose <= 0.0 || blockHigh <= 0.0 || blockLow <= 0.0 || blockRange <= _Point)
+            continue;
+         if(maxBlockRange > 0.0 && blockRange > maxBlockRange)
+            continue;
+
+         bool oppositeBlock = (bias == BIAS_BUY && blockClose < blockOpen) ||
+                              (bias == BIAS_SELL && blockClose > blockOpen);
+         if(!oppositeBlock)
+            continue;
+
+         bool impulseBreak = false;
+         double impulseReference = 0.0;
+         for(int impulseShift = blockShift - 1; impulseShift >= 2; impulseShift--)
+         {
+            double impulseOpen = iOpen(_Symbol, InpSignalTimeframe, impulseShift);
+            double impulseClose = iClose(_Symbol, InpSignalTimeframe, impulseShift);
+            double impulseHigh = iHigh(_Symbol, InpSignalTimeframe, impulseShift);
+            double impulseLow = iLow(_Symbol, InpSignalTimeframe, impulseShift);
+            double impulseRange = impulseHigh - impulseLow;
+            if(impulseOpen <= 0.0 || impulseClose <= 0.0 || impulseHigh <= 0.0 || impulseLow <= 0.0 || impulseRange <= _Point)
+               continue;
+
+            bool impulseBody = (bias == BIAS_BUY && impulseClose > impulseOpen) ||
+                               (bias == BIAS_SELL && impulseClose < impulseOpen);
+            if(!impulseBody)
+               continue;
+
+            double minImpulseRange = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimOrderBlockRetestMinImpulseRangeATR);
+            if(minImpulseRange > 0.0 && impulseRange < minImpulseRange)
+               continue;
+
+            double impulseBodyPercent = 100.0 * MathAbs(impulseClose - impulseOpen) / impulseRange;
+            if(impulseBodyPercent < MathMax(0.0, InpFMLROBRetestMinImpulseBodyPercent))
+               continue;
+
+            if(bias == BIAS_BUY)
+            {
+               if(!m_structure.HighestHigh(impulseShift + 1, breakLookback, impulseReference))
+                  continue;
+               if(impulseReference <= 0.0 || impulseClose <= impulseReference + breakBuffer)
+                  continue;
+            }
+            else if(bias == BIAS_SELL)
+            {
+               if(!m_structure.LowestLow(impulseShift + 1, breakLookback, impulseReference))
+                  continue;
+               if(impulseReference <= 0.0 || impulseClose >= impulseReference - breakBuffer)
+                  continue;
+            }
+            else
+               continue;
+
+            impulseBreak = true;
+            break;
+         }
+
+         if(!impulseBreak)
+            continue;
+
+         double midpoint = 0.5 * (blockHigh + blockLow);
+         double candidateStop = 0.0;
+         double distance = 0.0;
+         if(bias == BIAS_BUY)
+         {
+            bool controlledRetest = low1 <= blockHigh + tolerance &&
+                                    low1 >= blockLow - maxRetest &&
+                                    close1 > midpoint;
+            if(!controlledRetest)
+               continue;
+
+            candidateStop = MathMin(blockLow, low1);
+            if(candidateStop <= 0.0 || candidateStop >= close1)
+               continue;
+            distance = MathAbs(close1 - midpoint);
+         }
+         else if(bias == BIAS_SELL)
+         {
+            bool controlledRetest = high1 >= blockLow - tolerance &&
+                                    high1 <= blockHigh + maxRetest &&
+                                    close1 < midpoint;
+            if(!controlledRetest)
+               continue;
+
+            candidateStop = MathMax(blockHigh, high1);
+            if(candidateStop <= 0.0 || candidateStop <= close1)
+               continue;
+            distance = MathAbs(close1 - midpoint);
+         }
+         else
+            continue;
+
+         if(!found || distance < selectedDistance)
+         {
+            stopLevel = candidateStop;
+            blockLevel = midpoint;
+            blockAgeBars = blockShift - 1;
+            selectedDistance = distance;
+            found = true;
+         }
+      }
+
+      return found && stopLevel > 0.0 && blockLevel > 0.0;
+   }
+
+   bool FlatMonthLiquidityChochRetestLevel(const ENUM_TRADE_BIAS bias,
+                                           const double atr,
+                                           double &stopLevel,
+                                           double &chochLevel,
+                                           int &chochAgeBars)
+   {
+      stopLevel = 0.0;
+      chochLevel = 0.0;
+      chochAgeBars = 0;
+      if((!InpFlatMonthLiquidityReclaimUseChochRetest &&
+          !InpFlatMonthLiquidityReclaimRequireChochRetest) ||
+         bias == BIAS_NONE ||
+         atr <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
+         return false;
+
+      bool retestBody = (bias == BIAS_BUY && close1 > open1) ||
+                        (bias == BIAS_SELL && close1 < open1);
+      if(!retestBody)
+         return false;
+
+      double closeLocation = (bias == BIAS_BUY)
+                             ? (close1 - low1) / range1
+                             : (high1 - close1) / range1;
+      if(closeLocation < MathMin(0.95, MathMax(0.50, InpFlatMonthLiquidityReclaimChochRetestMinCloseLocation)))
+         return false;
+
+      double tolerance = MathMax(atr * MathMax(0.0, InpFlatMonthLiquidityReclaimChochRetestToleranceATR),
+                                 _Point * MathMax(0.0, InpFlatMonthLiquidityReclaimChochRetestTolerancePoints));
+      if(tolerance <= 0.0)
+         tolerance = _Point;
+
+      double maxRetest = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimChochRetestMaxRetestATR);
+      if(maxRetest <= 0.0)
+         maxRetest = atr;
+
+      int retestLookback = MathMax(2, InpFlatMonthLiquidityReclaimChochRetestLookbackBars);
+      int breakLookback = MathMax(4, InpFlatMonthLiquidityReclaimChochRetestBreakLookbackBars);
+      double breakBuffer = MathMax(0.0, InpFlatMonthLiquidityReclaimChochRetestBreakBufferPoints) * _Point;
+      double minBreakRange = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimChochRetestMinBreakRangeATR);
+      double selectedDistance = 0.0;
+      bool found = false;
+
+      for(int breakShift = 2; breakShift <= retestLookback + 1; breakShift++)
+      {
+         double breakOpen = iOpen(_Symbol, InpSignalTimeframe, breakShift);
+         double breakClose = iClose(_Symbol, InpSignalTimeframe, breakShift);
+         double breakHigh = iHigh(_Symbol, InpSignalTimeframe, breakShift);
+         double breakLow = iLow(_Symbol, InpSignalTimeframe, breakShift);
+         double breakRange = breakHigh - breakLow;
+         if(breakOpen <= 0.0 || breakClose <= 0.0 || breakHigh <= 0.0 || breakLow <= 0.0 || breakRange <= _Point)
+            continue;
+
+         bool breakBody = (bias == BIAS_BUY && breakClose > breakOpen) ||
+                          (bias == BIAS_SELL && breakClose < breakOpen);
+         if(!breakBody)
+            continue;
+         if(minBreakRange > 0.0 && breakRange < minBreakRange)
+            continue;
+
+         double breakBodyPercent = 100.0 * MathAbs(breakClose - breakOpen) / breakRange;
+         if(breakBodyPercent < MathMax(0.0, InpFlatMonthLiquidityReclaimChochRetestMinBreakBodyPercent))
+            continue;
+
+         double previousHigh = 0.0;
+         double previousLow = 0.0;
+         double priorHigh = 0.0;
+         double priorLow = 0.0;
+         if(!m_structure.HighestHigh(breakShift + 1, breakLookback, previousHigh) ||
+            !m_structure.LowestLow(breakShift + 1, breakLookback, previousLow) ||
+            !m_structure.HighestHigh(breakShift + breakLookback + 1, breakLookback, priorHigh) ||
+            !m_structure.LowestLow(breakShift + breakLookback + 1, breakLookback, priorLow))
+            continue;
+         if(previousHigh <= 0.0 || previousLow <= 0.0 || priorHigh <= 0.0 || priorLow <= 0.0)
+            continue;
+
+         double candidateStop = 0.0;
+         double candidateLevel = 0.0;
+         double distance = 0.0;
+         if(bias == BIAS_BUY)
+         {
+            bool bearishContext = previousLow < priorLow;
+            bool chochBreak = breakClose > previousHigh + breakBuffer;
+            bool controlledRetest = low1 <= previousHigh + tolerance &&
+                                    low1 >= previousHigh - maxRetest &&
+                                    close1 > previousHigh;
+            if(!bearishContext || !chochBreak || !controlledRetest)
+               continue;
+
+            candidateStop = MathMin(MathMin(low1, previousLow), breakLow);
+            if(candidateStop <= 0.0 || candidateStop >= close1)
+               continue;
+            candidateLevel = previousHigh;
+            distance = MathAbs(close1 - candidateLevel);
+         }
+         else if(bias == BIAS_SELL)
+         {
+            bool bullishContext = previousHigh > priorHigh;
+            bool chochBreak = breakClose < previousLow - breakBuffer;
+            bool controlledRetest = high1 >= previousLow - tolerance &&
+                                    high1 <= previousLow + maxRetest &&
+                                    close1 < previousLow;
+            if(!bullishContext || !chochBreak || !controlledRetest)
+               continue;
+
+            candidateStop = MathMax(MathMax(high1, previousHigh), breakHigh);
+            if(candidateStop <= 0.0 || candidateStop <= close1)
+               continue;
+            candidateLevel = previousLow;
+            distance = MathAbs(close1 - candidateLevel);
+         }
+         else
+            continue;
+
+         if(!found || distance < selectedDistance)
+         {
+            stopLevel = candidateStop;
+            chochLevel = candidateLevel;
+            chochAgeBars = breakShift - 1;
+            selectedDistance = distance;
+            found = true;
+         }
+      }
+
+      return found && stopLevel > 0.0 && chochLevel > 0.0;
+   }
+
+   bool FlatMonthLiquidityImbalanceContinuationLevel(const ENUM_TRADE_BIAS bias,
+                                                      const double atr,
+                                                      double &stopLevel,
+                                                      string &source)
+   {
+      stopLevel = 0.0;
+      source = "";
+      if(!InpFlatMonthLiquidityReclaimUseImbalanceContinuation ||
+         bias == BIAS_NONE ||
+         atr <= 0.0)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
+         return false;
+
+      bool directionalBody = (bias == BIAS_BUY && close1 > open1) ||
+                             (bias == BIAS_SELL && close1 < open1);
+      if(!directionalBody)
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range1;
+      if(bodyPercent < MathMax(0.0, InpFlatMonthLiquidityReclaimRetestMinBodyPercent))
+         return false;
+
+      double closeLocation = (bias == BIAS_BUY)
+                             ? (close1 - low1) / range1
+                             : (high1 - close1) / range1;
+      if(closeLocation < MathMin(0.95, MathMax(0.50, InpFlatMonthLiquidityReclaimMinCloseLocation)))
+         return false;
+
+      int lookback = MathMax(3, InpFlatMonthLiquidityReclaimImbalanceLookbackBars);
+      bool structureBreak = m_structure.DisplacementBOS(bias, lookback, atr) ||
+                            m_structure.BOS(bias, lookback);
+      if(!structureBreak)
+         return false;
+
+      double selectedStop = 0.0;
+      bool found = false;
+      double minGap = atr * MathMax(0.0, InpFVGMinATR);
+      double fvgBuffer = atr * MathMax(0.0, InpFVGRetestBufferATR);
+      for(int shift = 2; shift <= lookback + 1; shift++)
+      {
+         double highOlder = iHigh(_Symbol, InpSignalTimeframe, shift + 2);
+         double lowOlder = iLow(_Symbol, InpSignalTimeframe, shift + 2);
+         double highRecent = iHigh(_Symbol, InpSignalTimeframe, shift);
+         double lowRecent = iLow(_Symbol, InpSignalTimeframe, shift);
+         if(highOlder <= 0.0 || lowOlder <= 0.0 || highRecent <= 0.0 || lowRecent <= 0.0)
+            continue;
+
+         if(bias == BIAS_BUY && lowRecent - highOlder >= minGap)
+         {
+            double zoneLow = highOlder;
+            double zoneHigh = lowRecent;
+            bool touchedZone = low1 <= zoneHigh + fvgBuffer && high1 >= zoneLow - fvgBuffer;
+            if(touchedZone && close1 >= zoneHigh)
+            {
+               double candidateStop = MathMin(low1, zoneLow);
+               if(candidateStop > 0.0 && (!found || candidateStop > selectedStop))
+               {
+                  selectedStop = candidateStop;
+                  source = "FVG";
+                  found = true;
+               }
+            }
+         }
+
+         if(bias == BIAS_SELL && lowOlder - highRecent >= minGap)
+         {
+            double zoneLow = highRecent;
+            double zoneHigh = lowOlder;
+            bool touchedZone = high1 >= zoneLow - fvgBuffer && low1 <= zoneHigh + fvgBuffer;
+            if(touchedZone && close1 <= zoneLow)
+            {
+               double candidateStop = MathMax(high1, zoneHigh);
+               if(candidateStop > 0.0 && (!found || candidateStop < selectedStop))
+               {
+                  selectedStop = candidateStop;
+                  source = "FVG";
+                  found = true;
+               }
+            }
+         }
+      }
+
+      double obBuffer = atr * MathMax(0.0, InpOrderBlockRetestATR);
+      for(int shift = 2; shift <= lookback + 1; shift++)
+      {
+         double open = iOpen(_Symbol, InpSignalTimeframe, shift);
+         double close = iClose(_Symbol, InpSignalTimeframe, shift);
+         double high = iHigh(_Symbol, InpSignalTimeframe, shift);
+         double low = iLow(_Symbol, InpSignalTimeframe, shift);
+         if(open <= 0.0 || close <= 0.0 || high <= 0.0 || low <= 0.0)
+            continue;
+
+         if(bias == BIAS_BUY &&
+            close < open &&
+            low1 <= high + obBuffer &&
+            close1 > high)
+         {
+            double candidateStop = MathMin(low1, low);
+            if(candidateStop > 0.0 && (!found || candidateStop > selectedStop))
+            {
+               selectedStop = candidateStop;
+               source = "order block";
+               found = true;
+            }
+         }
+
+         if(bias == BIAS_SELL &&
+            close > open &&
+            high1 >= low - obBuffer &&
+            close1 < low)
+         {
+            double candidateStop = MathMax(high1, high);
+            if(candidateStop > 0.0 && (!found || candidateStop < selectedStop))
+            {
+               selectedStop = candidateStop;
+               source = "order block";
+               found = true;
+            }
+         }
+      }
+
+      if(!found || selectedStop <= 0.0)
+         return false;
+
+      stopLevel = selectedStop;
+      return true;
+   }
+
+   bool FlatMonthLiquidityReclaimRangeQualityAllows(const double atr,
+                                                    double &netMoveATR,
+                                                    double &alternationPercent)
+   {
+      netMoveATR = 0.0;
+      alternationPercent = 0.0;
+      if(atr <= 0.0)
+         return false;
+
+      int lookback = MathMax(4, InpFlatMonthLiquidityReclaimPhaseLookbackBars);
+      double closeNow = iClose(_Symbol, InpSignalTimeframe, 1);
+      double closePast = iClose(_Symbol, InpSignalTimeframe, lookback + 1);
+      if(closeNow <= 0.0 || closePast <= 0.0)
+         return false;
+
+      netMoveATR = MathAbs(closeNow - closePast) / atr;
+
+      int directionalBars = 0;
+      int alternations = 0;
+      int previousDirection = 0;
+      for(int shift = 1; shift <= lookback; shift++)
+      {
+         double open = iOpen(_Symbol, InpSignalTimeframe, shift);
+         double close = iClose(_Symbol, InpSignalTimeframe, shift);
+         if(open <= 0.0 || close <= 0.0)
+            return false;
+
+         int direction = 0;
+         if(close > open)
+            direction = 1;
+         else if(close < open)
+            direction = -1;
+
+         if(direction == 0)
+            continue;
+
+         directionalBars++;
+         if(previousDirection != 0 && direction != previousDirection)
+            alternations++;
+         previousDirection = direction;
+      }
+
+      if(directionalBars >= 4)
+         alternationPercent = 100.0 * (double)alternations / (double)MathMax(1, directionalBars - 1);
+
+      double maxNetMoveATR = MathMax(0.0, InpFlatMonthLiquidityReclaimRangeMaxNetMoveATR);
+      if(maxNetMoveATR > 0.0 && netMoveATR > maxNetMoveATR)
+         return false;
+
+      double minAlternation = MathMax(0.0, InpFlatMonthLiquidityReclaimRangeMinAlternationPercent);
+      if(minAlternation > 0.0 && alternationPercent < minAlternation)
+         return false;
+
+      return true;
+   }
+
+   bool FlatMonthLiquidityReclaimTrendSlopeAllows(const ENUM_TRADE_BIAS bias,
+                                                  double &slopePoints)
+   {
+      slopePoints = 0.0;
+      if(!InpFlatMonthLiquidityReclaimTrendRequireEMASlope)
+         return true;
+
+      int lookback = MathMax(1, InpFlatMonthLiquidityReclaimPhaseLookbackBars);
+      double emaNow = 0.0;
+      double emaPast = 0.0;
+      if(!indicators.TrendEMA(1, emaNow) || !indicators.TrendEMA(1 + lookback, emaPast))
+         return false;
+
+      slopePoints = (emaNow - emaPast) / _Point;
+      double minSlope = MathMax(0.0, InpFlatMonthLiquidityReclaimTrendMinSlopePoints);
+      if(bias == BIAS_BUY)
+         return slopePoints >= minSlope;
+      if(bias == BIAS_SELL)
+         return slopePoints <= -minSlope;
+      return false;
+   }
+
+   bool FlatMonthLiquidityReclaimPhaseAllows(const ENUM_TRADE_BIAS bias,
+                                             const double atr,
+                                             bool &trendPhase,
+                                             bool &rangePhase,
+                                             bool &transitionPhase,
+                                             string &reason)
+   {
+      trendPhase = false;
+      rangePhase = false;
+      transitionPhase = false;
+      reason = "";
+      if(!InpFlatMonthLiquidityReclaimUsePhaseGate)
+         return true;
+      if(bias == BIAS_NONE || atr <= 0.0)
+         return false;
+
+      double adx = 0.0;
+      if(!indicators.ADX(1, adx))
+      {
+         reason = "FMLR phase ADX missing;";
+         return false;
+      }
+
+      if(adx >= MathMax(0.0, InpFlatMonthLiquidityReclaimTrendMinADX))
+      {
+         trendPhase = true;
+         if(!InpFlatMonthLiquidityReclaimAllowTrendPhase)
+         {
+            reason = "FMLR trend phase blocked;";
+            return false;
+         }
+
+         double slopePoints = 0.0;
+         if(!FlatMonthLiquidityReclaimTrendSlopeAllows(bias, slopePoints))
+         {
+            reason = "FMLR trend slope reject " + DoubleToString(slopePoints, 1) + ";";
+            return false;
+         }
+
+         reason = "FMLR trend phase adx " + DoubleToString(adx, 1) + ";";
+         return true;
+      }
+
+      if(adx <= MathMax(0.0, InpFlatMonthLiquidityReclaimRangeMaxADX))
+      {
+         rangePhase = true;
+         if(!InpFlatMonthLiquidityReclaimAllowRangePhase)
+         {
+            reason = "FMLR range phase blocked;";
+            return false;
+         }
+
+         double netMoveATR = 0.0;
+         double alternationPercent = 0.0;
+         if(!FlatMonthLiquidityReclaimRangeQualityAllows(atr, netMoveATR, alternationPercent))
+         {
+            reason = "FMLR range phase quality netATR " + DoubleToString(netMoveATR, 2) +
+                     " alt " + DoubleToString(alternationPercent, 1) + ";";
+            return false;
+         }
+
+         reason = "FMLR range phase adx " + DoubleToString(adx, 1) + ";";
+         return true;
+      }
+
+      transitionPhase = true;
+      if(!InpFlatMonthLiquidityReclaimAllowTransitionPhase)
+      {
+         reason = "FMLR transition phase blocked;";
+         return false;
+      }
+
+      reason = "FMLR transition phase adx " + DoubleToString(adx, 1) + ";";
+      return true;
+   }
+
+   int FlatMonthLiquidityReclaimStopClusterTouches(const ENUM_TRADE_BIAS bias,
+                                                   const double level,
+                                                   const double atr,
+                                                   const int lookback)
+   {
+      if(level <= 0.0 || atr <= 0.0)
+         return 0;
+
+      double atrProximity = MathMax(0.0, InpFlatMonthLiquidityReclaimStopClusterProximityATR) * atr;
+      double pointProximity = MathMax(0.0, InpFlatMonthLiquidityReclaimStopClusterProximityPoints) * _Point;
+      double proximity = MathMax(atrProximity, pointProximity);
+      if(proximity <= 0.0)
+         return 0;
+
+      int touches = 0;
+      int scanBars = MathMax(4, lookback);
+      for(int shift = 1; shift <= scanBars; shift++)
+      {
+         double candidate = (bias == BIAS_BUY) ? iLow(_Symbol, InpSignalTimeframe, shift)
+                                               : iHigh(_Symbol, InpSignalTimeframe, shift);
+         if(candidate <= 0.0)
+            continue;
+         if(MathAbs(candidate - level) <= proximity)
+            touches++;
+      }
+
+      return touches;
+   }
+
+   double FlatMonthLiquidityReclaimClusterAdjustedBuffer(const ENUM_TRADE_BIAS bias,
+                                                          const double stopLevel,
+                                                          const double baseBuffer,
+                                                          const double atr,
+                                                          const int lookback,
+                                                         bool &clusterAdjusted)
+   {
+      clusterAdjusted = false;
+      if(!InpFlatMonthLiquidityReclaimUseStopClusterBuffer)
+         return baseBuffer;
+
+      int minTouches = MathMax(2, InpFlatMonthLiquidityReclaimStopClusterMinTouches);
+      int touches = FlatMonthLiquidityReclaimStopClusterTouches(bias, stopLevel, atr, lookback);
+      if(touches < minTouches)
+         return baseBuffer;
+
+      double atrBuffer = MathMax(0.0, InpFlatMonthLiquidityReclaimStopClusterExtraBufferATR) * MathMax(0.0, atr);
+      double pointBuffer = MathMax(0.0, InpFlatMonthLiquidityReclaimStopClusterExtraBufferPoints) * _Point;
+      clusterAdjusted = true;
+      return baseBuffer + MathMax(atrBuffer, pointBuffer);
+   }
+
+   bool FlatMonthLiquidityReclaimSwingStopAnchorLevel(const ENUM_TRADE_BIAS bias,
+                                                       const double entry,
+                                                       const double atr,
+                                                       const int lookback,
+                                                       const double currentStopLevel,
+                                                       double &level)
+   {
+      level = 0.0;
+      if(!InpFlatMonthLiquidityReclaimUseStopPocketShift ||
+         bias == BIAS_NONE ||
+         entry <= 0.0 ||
+         atr <= 0.0 ||
+         currentStopLevel <= 0.0)
+         return false;
+
+      double atrProximity = MathMax(0.0, InpFlatMonthLiquidityReclaimStopPocketProximityATR) * atr;
+      double pointProximity = MathMax(0.0, InpFlatMonthLiquidityReclaimStopPocketProximityPoints) * _Point;
+      double maxExtension = MathMax(atrProximity, pointProximity);
+      if(maxExtension <= 0.0)
+         return false;
+
+      bool found = false;
+      double selected = 0.0;
+      int left = MathMax(1, InpFlatMonthLiquidityReclaimSwingLeftBars);
+      int right = MathMax(1, InpFlatMonthLiquidityReclaimSwingRightBars);
+      int swingLookback = MathMax(MathMax(4, lookback), InpFlatMonthLiquidityReclaimSwingLookbackBars);
+      for(int shift = right + 1; shift <= swingLookback + right; shift++)
+      {
+         bool swingMatch = (bias == BIAS_BUY)
+                           ? m_structure.IsSwingLow(shift, left, right)
+                           : m_structure.IsSwingHigh(shift, left, right);
+         if(!swingMatch)
+            continue;
+
+         double candidate = (bias == BIAS_BUY) ? iLow(_Symbol, InpSignalTimeframe, shift)
+                                               : iHigh(_Symbol, InpSignalTimeframe, shift);
+         if(candidate <= 0.0)
+            continue;
+
+         if(bias == BIAS_BUY)
+         {
+            if(candidate >= entry || candidate >= currentStopLevel)
+               continue;
+            if(currentStopLevel - candidate > maxExtension)
+               continue;
+            if(!found || candidate > selected)
+               selected = candidate;
+            found = true;
+         }
+         else if(bias == BIAS_SELL)
+         {
+            if(candidate <= entry || candidate <= currentStopLevel)
+               continue;
+            if(candidate - currentStopLevel > maxExtension)
+               continue;
+            if(!found || candidate < selected)
+               selected = candidate;
+            found = true;
+         }
+      }
+
+      if(found)
+         level = selected;
+      return found;
+   }
+
+   bool FlatMonthLiquidityReclaimOpenStopPocketCandidate(const ENUM_TRADE_BIAS bias,
+                                                         const double periodOpen,
+                                                         const string sourceName,
+                                                         const double entry,
+                                                         const double stopPrice,
+                                                         const double proximity,
+                                                         double &selectedLevel,
+                                                         string &selectedSource)
+   {
+      if(bias == BIAS_NONE ||
+         periodOpen <= 0.0 ||
+         entry <= 0.0 ||
+         stopPrice <= 0.0 ||
+         proximity <= 0.0)
+         return false;
+
+      if(MathAbs(stopPrice - periodOpen) > proximity)
+         return false;
+
+      if(bias == BIAS_BUY)
+      {
+         if(periodOpen >= entry)
+            return false;
+         if(selectedLevel <= 0.0 || periodOpen < selectedLevel)
+         {
+            selectedLevel = periodOpen;
+            selectedSource = sourceName;
+         }
+         return true;
+      }
+
+      if(bias == BIAS_SELL)
+      {
+         if(periodOpen <= entry)
+            return false;
+         if(selectedLevel <= 0.0 || periodOpen > selectedLevel)
+         {
+            selectedLevel = periodOpen;
+            selectedSource = sourceName;
+         }
+         return true;
+      }
+
+      return false;
+   }
+
+   bool FlatMonthLiquidityReclaimOpenStopPocketLevel(const ENUM_TRADE_BIAS bias,
+                                                     const double entry,
+                                                     const double stopPrice,
+                                                     const double proximity,
+                                                     double &level,
+                                                     string &source)
+   {
+      level = 0.0;
+      source = "";
+      if(bias == BIAS_NONE || entry <= 0.0 || stopPrice <= 0.0 || proximity <= 0.0)
+         return false;
+
+      bool found = false;
+      if(InpFlatMonthLiquidityReclaimUsePreviousDay)
+      {
+         double dailyOpen = iOpen(_Symbol, PERIOD_D1, 0);
+         if(FlatMonthLiquidityReclaimOpenStopPocketCandidate(bias,
+                                                             dailyOpen,
+                                                             "daily open",
+                                                             entry,
+                                                             stopPrice,
+                                                             proximity,
+                                                             level,
+                                                             source))
+            found = true;
+      }
+
+      if(InpFlatMonthLiquidityReclaimUsePreviousWeek)
+      {
+         double weeklyOpen = iOpen(_Symbol, PERIOD_W1, 0);
+         if(FlatMonthLiquidityReclaimOpenStopPocketCandidate(bias,
+                                                             weeklyOpen,
+                                                             "weekly open",
+                                                             entry,
+                                                             stopPrice,
+                                                             proximity,
+                                                             level,
+                                                             source))
+            found = true;
+      }
+
+      if(InpFlatMonthLiquidityReclaimHTFUsePreviousMonth)
+      {
+         double monthlyOpen = iOpen(_Symbol, PERIOD_MN1, 0);
+         if(FlatMonthLiquidityReclaimOpenStopPocketCandidate(bias,
+                                                             monthlyOpen,
+                                                             "monthly open",
+                                                             entry,
+                                                             stopPrice,
+                                                             proximity,
+                                                             level,
+                                                             source))
+            found = true;
+      }
+
+      return found && level > 0.0;
+   }
+
+   bool FlatMonthLiquidityReclaimStopPocketLevel(const ENUM_TRADE_BIAS bias,
+                                                  const double entry,
+                                                  const double stopDistance,
+                                                  const double atr,
+                                                  const int lookback,
+                                                  double &level,
+                                                  bool &swingPocket,
+                                                  bool &openPocket,
+                                                  string &openPocketSource)
+   {
+      level = 0.0;
+      swingPocket = false;
+      openPocket = false;
+      openPocketSource = "";
+      if(!InpFlatMonthLiquidityReclaimUseStopPocketShift ||
+         bias == BIAS_NONE ||
+         entry <= 0.0 ||
+         stopDistance <= 0.0 ||
+         atr <= 0.0)
+         return false;
+
+      double stopPrice = (bias == BIAS_BUY) ? entry - stopDistance
+                                            : entry + stopDistance;
+      if(stopPrice <= 0.0)
+         return false;
+
+      double atrProximity = MathMax(0.0, InpFlatMonthLiquidityReclaimStopPocketProximityATR) * atr;
+      double pointProximity = MathMax(0.0, InpFlatMonthLiquidityReclaimStopPocketProximityPoints) * _Point;
+      double proximity = MathMax(atrProximity, pointProximity);
+      if(proximity <= 0.0)
+         return false;
+
+      bool found = false;
+      bool swingFound = false;
+      double selected = 0.0;
+      double swingSelected = 0.0;
+      int scanBars = MathMax(4, lookback);
+      int left = MathMax(1, InpFlatMonthLiquidityReclaimSwingLeftBars);
+      int right = MathMax(1, InpFlatMonthLiquidityReclaimSwingRightBars);
+      for(int shift = 2; shift <= scanBars + 1; shift++)
+      {
+         double candidate = (bias == BIAS_BUY) ? iLow(_Symbol, InpSignalTimeframe, shift)
+                                               : iHigh(_Symbol, InpSignalTimeframe, shift);
+         if(candidate <= 0.0)
+            continue;
+
+         bool confirmedSwing = false;
+         if(shift > right)
+         {
+            confirmedSwing = (bias == BIAS_BUY)
+                              ? m_structure.IsSwingLow(shift, left, right)
+                              : m_structure.IsSwingHigh(shift, left, right);
+         }
+
+         if(bias == BIAS_BUY)
+         {
+            if(candidate >= entry)
+               continue;
+            if(MathAbs(stopPrice - candidate) <= proximity)
+            {
+               if(confirmedSwing)
+               {
+                  if(!swingFound || candidate < swingSelected)
+                     swingSelected = candidate;
+                  swingFound = true;
+               }
+               else if(!found || candidate < selected)
+               {
+                  selected = candidate;
+               }
+               found = true;
+            }
+         }
+         else if(bias == BIAS_SELL)
+         {
+            if(candidate <= entry)
+               continue;
+            if(MathAbs(stopPrice - candidate) <= proximity)
+            {
+               if(confirmedSwing)
+               {
+                  if(!swingFound || candidate > swingSelected)
+                     swingSelected = candidate;
+                  swingFound = true;
+               }
+               else if(!found || candidate > selected)
+               {
+                  selected = candidate;
+               }
+               found = true;
+            }
+         }
+      }
+
+      if(swingFound)
+      {
+         level = swingSelected;
+         swingPocket = true;
+         return true;
+      }
+
+      double openLevel = 0.0;
+      string openSource = "";
+      if(FlatMonthLiquidityReclaimOpenStopPocketLevel(bias,
+                                                      entry,
+                                                      stopPrice,
+                                                      proximity,
+                                                      openLevel,
+                                                      openSource))
+      {
+         level = openLevel;
+         openPocket = true;
+         openPocketSource = openSource;
+         return true;
+      }
+
+      if(found)
+         level = selected;
+      return found;
+   }
+
+   bool FlatMonthLiquidityReclaimApplyStopPocketShift(const ENUM_TRADE_BIAS bias,
+                                                       const double entry,
+                                                       const double atr,
+                                                       const int lookback,
+                                                       double &stopDistance,
+                                                       bool &swingPocket,
+                                                       bool &openPocket,
+                                                       string &openPocketSource)
+   {
+      swingPocket = false;
+      openPocket = false;
+      openPocketSource = "";
+      if(stopDistance <= 0.0)
+         return false;
+
+      double pocketLevel = 0.0;
+      int pocketLookback = MathMax(lookback, InpFlatMonthLiquidityReclaimStopPocketLookbackBars);
+      bool selectedSwingPocket = false;
+      bool selectedOpenPocket = false;
+      string selectedOpenPocketSource = "";
+      if(!FlatMonthLiquidityReclaimStopPocketLevel(bias,
+                                                   entry,
+                                                   stopDistance,
+                                                   atr,
+                                                   pocketLookback,
+                                                   pocketLevel,
+                                                   selectedSwingPocket,
+                                                   selectedOpenPocket,
+                                                   selectedOpenPocketSource))
+         return false;
+
+      double atrBuffer = MathMax(0.0, InpFlatMonthLiquidityReclaimStopPocketBufferATR) * MathMax(0.0, atr);
+      double pointBuffer = MathMax(0.0, InpFlatMonthLiquidityReclaimStopPocketBufferPoints) * _Point;
+      double buffer = MathMax(atrBuffer, pointBuffer);
+      double shiftedDistance = (bias == BIAS_BUY) ? entry - (pocketLevel - buffer)
+                                                  : (pocketLevel + buffer) - entry;
+      if(shiftedDistance > stopDistance)
+      {
+         stopDistance = shiftedDistance;
+         swingPocket = selectedSwingPocket;
+         openPocket = selectedOpenPocket;
+         openPocketSource = selectedOpenPocketSource;
+         return true;
+      }
+
+      return false;
+   }
+
+   bool FlatMonthLiquidityReclaimOpportunity(const ENUM_TRADE_BIAS bias,
+                                             const double atr,
+                                             int &score,
+                                             string &reasons,
+                                             double &stopDistance,
+                                             double &targetDistance)
+   {
+      score = 0;
+      reasons = "";
+      stopDistance = 0.0;
+      targetDistance = 0.0;
+      if(!InpUseFlatMonthLiquidityReclaimLane || atr <= 0.0 || bias == BIAS_NONE)
+         return false;
+      if(!FlatMonthOpportunityActive(true))
+         return false;
+      if(InpFlatMonthLiquidityReclaimRequireLiquidSession && !sessionFilter.LiquidSessionActive())
+      {
+         reasons += "FMLR non-liquid session;";
+         return false;
+      }
+
+      bool fmlrProtectedLossCatchUp = FlatMonthProtectedLossCatchUpActive();
+      bool fmlrCatchUpEntryRelaxation = FlatMonthCatchUpEntryRelaxationAllowed(true);
+      bool fmlrLateCatchUp = FlatMonthLateCatchUpActive(true);
+      double fmlrCatchUpProgress = FlatMonthCatchUpProgress(true);
+      if(fmlrLateCatchUp)
+         fmlrCatchUpProgress = MathMax(fmlrCatchUpProgress,
+                                       MathMax(0.0, InpFlatMonthLateCatchUpMinProgress));
+
+      int monthlyEntries = CurrentPeriodEntryCount(PERIOD_MN1);
+      int activeFmlrMaxMonthlyEntries = MathMax(0, InpFlatMonthLiquidityReclaimMaxMonthlyEntries);
+      if(fmlrLateCatchUp && InpFlatMonthLateCatchUpMaxMonthlyEntries > activeFmlrMaxMonthlyEntries)
+         activeFmlrMaxMonthlyEntries = InpFlatMonthLateCatchUpMaxMonthlyEntries;
+
+      if(activeFmlrMaxMonthlyEntries > 0 && monthlyEntries >= activeFmlrMaxMonthlyEntries)
+         return false;
+
+      datetime lastLaneEntry = LastSetupLaneEntryTime("FMLR;");
+      int spacingMinutes = MathMax(0, InpFlatMonthLiquidityReclaimSpacingMinutes);
+      int activeFmlrSpacingMinutes = spacingMinutes;
+      if(activeFmlrSpacingMinutes > 0 && fmlrCatchUpProgress > 0.0)
+      {
+         double spacingReduction = MathMin(0.50, 0.50 * MathMin(1.0, MathMax(0.0, fmlrCatchUpProgress)));
+         activeFmlrSpacingMinutes = MathMax(30,
+                                            (int)MathRound((double)spacingMinutes * (1.0 - spacingReduction)));
+      }
+      if(lastLaneEntry > 0 && spacingMinutes > 0 &&
+         TimeCurrent() - lastLaneEntry < activeFmlrSpacingMinutes * 60)
+         return false;
+
+      int activeFmlrMinScore = MathMax(1, InpFlatMonthLiquidityReclaimMinScore);
+      activeFmlrMinScore = MathMax(1,
+                                   activeFmlrMinScore -
+                                   MathMax(0, InpFlatMonthEntryScoreDiscount));
+      if(fmlrCatchUpEntryRelaxation)
+         activeFmlrMinScore = MathMax(1,
+                                      activeFmlrMinScore -
+                                      MathMax(0, InpFlatMonthCatchUpEntryScoreDiscount));
+      if(fmlrLateCatchUp)
+         activeFmlrMinScore = MathMax(1,
+                                      activeFmlrMinScore -
+                                      MathMax(0, InpFlatMonthLateCatchUpEntryScoreDiscount));
+      if(activeFmlrMaxMonthlyEntries > MathMax(0, InpFlatMonthLiquidityReclaimMaxMonthlyEntries))
+         reasons += "FMLR active monthly cap " + IntegerToString(activeFmlrMaxMonthlyEntries) + ";";
+      if(activeFmlrSpacingMinutes < spacingMinutes)
+         reasons += "FMLR active spacing " + IntegerToString(activeFmlrSpacingMinutes) + "m;";
+      if(fmlrProtectedLossCatchUp)
+         reasons += "FMLR protected loss catch-up;";
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range <= _Point)
+         return false;
+
+      int lookback = MathMax(4, InpFlatMonthLiquidityReclaimLookbackBars);
+      double sweepLevel = 0.0;
+      bool previousPeriodReclaim = false;
+      string previousPeriodReclaimSource = "";
+      bool dailyOpenReclaim = false;
+      bool higherOpenReclaim = false;
+      string higherOpenReclaimSource = "";
+      bool equalLevelReclaim = false;
+      bool sessionReclaim = false;
+      string sessionReclaimSource = "";
+      bool swingSweepReclaim = false;
+      bool recentRetest = false;
+      bool continuationRetest = false;
+      bool shelfRetest = false;
+      string shelfRetestSource = "";
+      bool htfReclaim = false;
+      double htfReclaimStopLevel = 0.0;
+      double htfReclaimTargetLevel = 0.0;
+      double htfReclaimSweptLevel = 0.0;
+      double htfReclaimLevelDistance = 0.0;
+      string htfReclaimSource = "";
+      bool rangeFailureReclaim = false;
+      double rangeFailureStopLevel = 0.0;
+      double rangeFailureTargetLevel = 0.0;
+      double rangeFailureBoxRange = 0.0;
+      string rangeFailureSource = "";
+      bool openingRangeReclaim = false;
+      double openingRangeStopLevel = 0.0;
+      double openingRangeTargetLevel = 0.0;
+      double openingRangeBoxRange = 0.0;
+      string openingRangeSource = "";
+      bool vwapDeviationReclaim = false;
+      double vwapDeviationStopLevel = 0.0;
+      double vwapDeviationTargetLevel = 0.0;
+      double vwapDeviationATR = 0.0;
+      bool sessionRangeBreakout = false;
+      double sessionRangeStopLevel = 0.0;
+      double sessionRangeBoxRange = 0.0;
+      string sessionRangeSource = "";
+      bool compressionBreakout = false;
+      double compressionStopLevel = 0.0;
+      double compressionBoxRange = 0.0;
+      bool breakoutRetest = false;
+      double breakoutRetestStopLevel = 0.0;
+      double breakoutRetestBreakLevel = 0.0;
+      int breakoutRetestAgeBars = 0;
+      double breakoutRetestBoxRange = 0.0;
+      double breakoutRetestVolumeRatio = 0.0;
+      bool failedBreakoutTrap = false;
+      double failedBreakoutTrapStopLevel = 0.0;
+      double failedBreakoutTrapLevel = 0.0;
+      double failedBreakoutTrapTargetLevel = 0.0;
+      int failedBreakoutTrapAgeBars = 0;
+      double failedBreakoutTrapBoxRange = 0.0;
+      double failedBreakoutTrapVolumeRatio = 0.0;
+      bool sweepDisplacementBOS = false;
+      double sweepDisplacementStopLevel = 0.0;
+      double sweepDisplacementBreakLevel = 0.0;
+      double sweepDisplacementVolumeRatio = 0.0;
+      bool sweepDisplacementVolumeExpansion = false;
+      int sweepDisplacementAgeBars = 0;
+      bool displacementPullback = false;
+      double displacementPullbackStopLevel = 0.0;
+      double displacementPullbackBreakLevel = 0.0;
+      int displacementPullbackAgeBars = 0;
+      bool engulfingReclaim = false;
+      double engulfingReclaimStopLevel = 0.0;
+      double engulfingReclaimLevel = 0.0;
+      bool tickPressureReclaim = false;
+      double tickPressureReclaimStopLevel = 0.0;
+      double tickPressureReclaimLevel = 0.0;
+      double tickPressureRatio = 0.0;
+      double tickPressureVolumeRatio = 0.0;
+      int tickPressureAlignedBars = 0;
+      bool fvgRetestSetup = false;
+      double fvgRetestStopLevel = 0.0;
+      double fvgRetestLevel = 0.0;
+      int fvgRetestAgeBars = 0;
+      bool orderBlockRetestSetup = false;
+      double orderBlockRetestStopLevel = 0.0;
+      double orderBlockRetestBlockLevel = 0.0;
+      int orderBlockRetestAgeBars = 0;
+      bool chochRetestSetup = false;
+      double chochRetestStopLevel = 0.0;
+      double chochRetestLevel = 0.0;
+      int chochRetestAgeBars = 0;
+      bool imbalanceContinuation = false;
+      double imbalanceContinuationStopLevel = 0.0;
+      string imbalanceContinuationSource = "";
+      htfReclaim = FlatMonthLiquidityHTFReclaimLevel(bias,
+                                                     atr,
+                                                     htfReclaimStopLevel,
+                                                     htfReclaimTargetLevel,
+                                                     htfReclaimSweptLevel,
+                                                     htfReclaimLevelDistance,
+                                                     htfReclaimSource);
+      rangeFailureReclaim = FlatMonthLiquidityRangeFailureReclaimLevel(bias,
+                                                                       atr,
+                                                                       rangeFailureStopLevel,
+                                                                       rangeFailureTargetLevel,
+                                                                       rangeFailureBoxRange,
+                                                                       rangeFailureSource);
+      openingRangeReclaim = FlatMonthLiquidityOpeningRangeReclaimLevel(bias,
+                                                                       atr,
+                                                                       openingRangeStopLevel,
+                                                                       openingRangeTargetLevel,
+                                                                       openingRangeBoxRange,
+                                                                       openingRangeSource);
+      vwapDeviationReclaim = FlatMonthLiquidityVWAPDeviationReclaimLevel(bias,
+                                                                         atr,
+                                                                         vwapDeviationStopLevel,
+                                                                         vwapDeviationTargetLevel,
+                                                                         vwapDeviationATR);
+      sessionRangeBreakout = FlatMonthLiquiditySessionRangeExpansionLevel(bias,
+                                                                          atr,
+                                                                          sessionRangeStopLevel,
+                                                                          sessionRangeBoxRange,
+                                                                          sessionRangeSource);
+      compressionBreakout = FlatMonthLiquidityCompressionBreakoutLevel(bias,
+                                                                       atr,
+                                                                       compressionStopLevel,
+                                                                       compressionBoxRange);
+      breakoutRetest = FlatMonthLiquidityBreakoutRetestLevel(bias,
+                                                             atr,
+                                                             breakoutRetestStopLevel,
+                                                             breakoutRetestBreakLevel,
+                                                             breakoutRetestAgeBars,
+                                                             breakoutRetestBoxRange,
+                                                             breakoutRetestVolumeRatio);
+      failedBreakoutTrap = FlatMonthLiquidityFailedBreakoutTrapLevel(bias,
+                                                                     atr,
+                                                                     failedBreakoutTrapStopLevel,
+                                                                     failedBreakoutTrapLevel,
+                                                                     failedBreakoutTrapTargetLevel,
+                                                                     failedBreakoutTrapAgeBars,
+                                                                     failedBreakoutTrapBoxRange,
+                                                                     failedBreakoutTrapVolumeRatio);
+      sweepDisplacementBOS = FlatMonthLiquiditySweepDisplacementBOSLevel(bias,
+                                                                         atr,
+                                                                         sweepDisplacementStopLevel,
+                                                                         sweepDisplacementBreakLevel,
+                                                                         sweepDisplacementVolumeRatio,
+                                                                         sweepDisplacementVolumeExpansion,
+                                                                         sweepDisplacementAgeBars);
+      displacementPullback = FlatMonthLiquidityDisplacementPullbackLevel(bias,
+                                                                         atr,
+                                                                         displacementPullbackStopLevel,
+                                                                         displacementPullbackBreakLevel,
+                                                                         displacementPullbackAgeBars);
+      engulfingReclaim = FlatMonthLiquidityEngulfingReclaimLevel(bias,
+                                                                  atr,
+                                                                  engulfingReclaimStopLevel,
+                                                                  engulfingReclaimLevel);
+      tickPressureReclaim = FlatMonthLiquidityTickPressureReclaimLevel(bias,
+                                                                        atr,
+                                                                        tickPressureReclaimStopLevel,
+                                                                        tickPressureReclaimLevel,
+                                                                        tickPressureRatio,
+                                                                        tickPressureVolumeRatio,
+                                                                        tickPressureAlignedBars);
+      fvgRetestSetup = FlatMonthLiquidityFvgRetestLevel(bias,
+                                                        atr,
+                                                        fvgRetestStopLevel,
+                                                        fvgRetestLevel,
+                                                        fvgRetestAgeBars);
+      orderBlockRetestSetup = FlatMonthLiquidityOrderBlockRetestLevel(bias,
+                                                                       atr,
+                                                                       orderBlockRetestStopLevel,
+                                                                       orderBlockRetestBlockLevel,
+                                                                       orderBlockRetestAgeBars);
+      chochRetestSetup = FlatMonthLiquidityChochRetestLevel(bias,
+                                                            atr,
+                                                            chochRetestStopLevel,
+                                                            chochRetestLevel,
+                                                            chochRetestAgeBars);
+      imbalanceContinuation = FlatMonthLiquidityImbalanceContinuationLevel(bias,
+                                                                           atr,
+                                                                           imbalanceContinuationStopLevel,
+                                                                           imbalanceContinuationSource);
+      if(!LastSweepStopLevel(bias, lookback, sweepLevel))
+      {
+         if(sweepDisplacementBOS)
+         {
+            sweepLevel = sweepDisplacementStopLevel;
+         }
+         else if(displacementPullback)
+         {
+            sweepLevel = displacementPullbackStopLevel;
+         }
+         else if(engulfingReclaim)
+         {
+            sweepLevel = engulfingReclaimStopLevel;
+         }
+          else if(tickPressureReclaim)
+          {
+             sweepLevel = tickPressureReclaimStopLevel;
+          }
+          else if(breakoutRetest)
+          {
+             sweepLevel = breakoutRetestStopLevel;
+          }
+          else if(failedBreakoutTrap)
+          {
+             sweepLevel = failedBreakoutTrapStopLevel;
+          }
+          else if(fvgRetestSetup)
+         {
+            sweepLevel = fvgRetestStopLevel;
+         }
+         else if(orderBlockRetestSetup)
+         {
+            sweepLevel = orderBlockRetestStopLevel;
+         }
+         else if(chochRetestSetup)
+         {
+            sweepLevel = chochRetestStopLevel;
+         }
+         else if(imbalanceContinuation)
+         {
+            sweepLevel = imbalanceContinuationStopLevel;
+         }
+         else if(openingRangeReclaim)
+         {
+            sweepLevel = openingRangeStopLevel;
+         }
+         else if(vwapDeviationReclaim)
+         {
+            sweepLevel = vwapDeviationStopLevel;
+         }
+         else if(htfReclaim)
+         {
+            sweepLevel = htfReclaimStopLevel;
+         }
+         else if(rangeFailureReclaim)
+         {
+            sweepLevel = rangeFailureStopLevel;
+         }
+         else if(sessionRangeBreakout)
+         {
+            sweepLevel = sessionRangeStopLevel;
+         }
+         else if(compressionBreakout)
+         {
+            sweepLevel = compressionStopLevel;
+         }
+         else if(FlatMonthLiquidityPreviousPeriodReclaimLevel(bias,
+                                                              sweepLevel,
+                                                              previousPeriodReclaimSource))
+         {
+            previousPeriodReclaim = true;
+            reasons += "FMLR " + previousPeriodReclaimSource + " reclaim;";
+         }
+         else if(FlatMonthLiquidityDailyOpenReclaimLevel(bias, sweepLevel))
+         {
+            dailyOpenReclaim = true;
+            reasons += "FMLR daily open reclaim;";
+         }
+         else if(FlatMonthLiquidityHigherOpenReclaimLevel(bias,
+                                                          sweepLevel,
+                                                          higherOpenReclaimSource))
+         {
+            higherOpenReclaim = true;
+            reasons += "FMLR " + higherOpenReclaimSource + " reclaim;";
+         }
+         else if(FlatMonthLiquidityEqualLevelReclaimLevel(bias, atr, lookback, sweepLevel))
+         {
+            equalLevelReclaim = true;
+         }
+         else if(FlatMonthLiquiditySessionReclaimLevel(bias,
+                                                       atr,
+                                                       sweepLevel,
+                                                       sessionReclaimSource))
+         {
+            sessionReclaim = true;
+            reasons += "FMLR " + sessionReclaimSource + " reclaim;";
+         }
+         else if(FlatMonthLiquiditySwingSweepReclaimLevel(bias, atr, sweepLevel))
+         {
+            swingSweepReclaim = true;
+         }
+         else if(FlatMonthLiquidityShelfRetestLevel(bias, atr, lookback, sweepLevel, shelfRetestSource))
+         {
+            recentRetest = true;
+            shelfRetest = true;
+            reasons += "FMLR " + shelfRetestSource + " retest;";
+         }
+         else if(FlatMonthLiquidityContinuationRetestLevel(bias, atr, lookback, sweepLevel))
+         {
+            recentRetest = true;
+            continuationRetest = true;
+         }
+         else
+         {
+            if(InpFlatMonthLiquidityReclaimRequireContinuationRetest)
+            {
+               reasons += "FMLR no continuation retest;";
+               return false;
+            }
+
+            if(!FlatMonthLiquidityRecentRetestLevel(bias, atr, lookback, sweepLevel))
+            {
+               reasons += "FMLR no sweep reclaim;";
+               return false;
+            }
+
+            recentRetest = true;
+         }
+      }
+      else if(InpFlatMonthLiquidityReclaimRequireContinuationRetest)
+      {
+         reasons += "FMLR no continuation retest;";
+         return false;
+      }
+
+      if(InpFlatMonthLiquidityReclaimRequireShelfRetest && !shelfRetest)
+      {
+         reasons += "FMLR no shelf retest;";
+         return false;
+      }
+
+      if(InpFlatMonthLiquidityReclaimRequireCompressionBreakout && !compressionBreakout)
+      {
+         reasons += "FMLR no compression breakout;";
+         return false;
+      }
+      if(InpFlatMonthLiquidityReclaimRequireHTFLiquidityReclaim && !htfReclaim)
+      {
+         reasons += "FMLR no HTF liquidity reclaim;";
+         return false;
+      }
+      if(InpFlatMonthLiquidityReclaimRequireSweepDisplacementBOS && !sweepDisplacementBOS)
+      {
+         reasons += "FMLR no sweep displacement BOS;";
+         return false;
+      }
+      if(InpFlatMonthLiquidityReclaimRequireDisplacementPullback && !displacementPullback)
+      {
+         reasons += "FMLR no displacement pullback;";
+         return false;
+      }
+      if(InpFlatMonthLiquidityReclaimRequireEngulfingReclaim && !engulfingReclaim)
+      {
+         reasons += "FMLR no engulfing reclaim;";
+         return false;
+      }
+      if(InpFlatMonthLiquidityReclaimRequireTickPressureReclaim && !tickPressureReclaim)
+      {
+         reasons += "FMLR no tick-pressure reclaim;";
+         return false;
+      }
+      if(InpFlatMonthLiquidityReclaimRequireBreakoutRetest && !breakoutRetest)
+      {
+         reasons += "FMLR no breakout retest;";
+         return false;
+      }
+      if(InpFlatMonthLiquidityReclaimRequireFailedBreakoutTrap && !failedBreakoutTrap)
+      {
+         reasons += "FMLR no failed breakout trap;";
+         return false;
+      }
+      if(InpFlatMonthLiquidityReclaimRequireFvgRetest && !fvgRetestSetup)
+      {
+         reasons += "FMLR no FVG structural retest;";
+         return false;
+      }
+      if(InpFlatMonthLiquidityReclaimRequireOrderBlockRetest && !orderBlockRetestSetup)
+      {
+         reasons += "FMLR no order block retest;";
+         return false;
+      }
+      if(InpFlatMonthLiquidityReclaimRequireChochRetest && !chochRetestSetup)
+      {
+         reasons += "FMLR no CHoCH retest;";
+         return false;
+      }
+      if(InpFlatMonthLiquidityReclaimRequireImbalanceContinuation && !imbalanceContinuation)
+      {
+         reasons += "FMLR no imbalance continuation;";
+         return false;
+      }
+      if(InpFlatMonthLiquidityReclaimRequireRangeFailureReclaim && !rangeFailureReclaim)
+      {
+         reasons += "FMLR no range failure reclaim;";
+         return false;
+      }
+      if(InpFlatMonthLiquidityReclaimRequireOpeningRangeReclaim && !openingRangeReclaim)
+      {
+         reasons += "FMLR no opening range reclaim;";
+         return false;
+      }
+      if(InpFlatMonthLiquidityReclaimRequireVWAPDeviationReclaim && !vwapDeviationReclaim)
+      {
+         reasons += "FMLR no VWAP deviation reclaim;";
+         return false;
+      }
+      if(InpFlatMonthLiquidityReclaimRequireSessionRangeBreakout && !sessionRangeBreakout)
+      {
+         reasons += "FMLR no session range breakout;";
+         return false;
+      }
+      if(sweepDisplacementBOS && atr > 0.0)
+         reasons += "FMLR sweep displacement BOS age " + IntegerToString(sweepDisplacementAgeBars) +
+                    " vol " + DoubleToString(sweepDisplacementVolumeRatio, 2) + ";";
+      if(displacementPullback && atr > 0.0)
+         reasons += "FMLR displacement pullback age " + IntegerToString(displacementPullbackAgeBars) +
+                    " level " + DoubleToString(MathAbs(close1 - displacementPullbackBreakLevel) / atr, 2) + "ATR;";
+      if(engulfingReclaim && atr > 0.0)
+         reasons += "FMLR engulfing reclaim level " +
+                    DoubleToString(MathAbs(close1 - engulfingReclaimLevel) / atr, 2) + "ATR;";
+      if(tickPressureReclaim && atr > 0.0)
+         reasons += "FMLR tick-pressure reclaim level " +
+                     DoubleToString(MathAbs(close1 - tickPressureReclaimLevel) / atr, 2) +
+                     "ATR pressure " + DoubleToString(tickPressureRatio, 2) +
+                     " vol " + DoubleToString(tickPressureVolumeRatio, 2) +
+                     " bars " + IntegerToString(tickPressureAlignedBars) + ";";
+      if(breakoutRetest && atr > 0.0)
+         reasons += "FMLR breakout retest age " + IntegerToString(breakoutRetestAgeBars) +
+                    " level " + DoubleToString(MathAbs(close1 - breakoutRetestBreakLevel) / atr, 2) +
+                    "ATR box " + DoubleToString(breakoutRetestBoxRange / atr, 2) +
+                    "ATR vol " + DoubleToString(breakoutRetestVolumeRatio, 2) + ";";
+      if(failedBreakoutTrap && atr > 0.0)
+         reasons += "FMLR failed breakout trap age " + IntegerToString(failedBreakoutTrapAgeBars) +
+                    " level " + DoubleToString(MathAbs(close1 - failedBreakoutTrapLevel) / atr, 2) +
+                    "ATR box " + DoubleToString(failedBreakoutTrapBoxRange / atr, 2) +
+                    "ATR vol " + DoubleToString(failedBreakoutTrapVolumeRatio, 2) + ";";
+      if(fvgRetestSetup && atr > 0.0)
+         reasons += "FMLR FVG structural retest age " + IntegerToString(fvgRetestAgeBars) +
+                    " level " + DoubleToString(MathAbs(close1 - fvgRetestLevel) / atr, 2) + "ATR;";
+      if(orderBlockRetestSetup && atr > 0.0)
+         reasons += "FMLR order block retest age " + IntegerToString(orderBlockRetestAgeBars) +
+                    " level " + DoubleToString(MathAbs(close1 - orderBlockRetestBlockLevel) / atr, 2) + "ATR;";
+      if(chochRetestSetup && atr > 0.0)
+         reasons += "FMLR CHoCH retest age " + IntegerToString(chochRetestAgeBars) +
+                    " level " + DoubleToString(MathAbs(close1 - chochRetestLevel) / atr, 2) + "ATR;";
+      if(imbalanceContinuation)
+         reasons += "FMLR " + imbalanceContinuationSource + " continuation;";
+      if(htfReclaim && atr > 0.0)
+         reasons += "FMLR " + htfReclaimSource + " liquidity reclaim " + DoubleToString(htfReclaimLevelDistance / atr, 2) + "ATR;";
+      if(rangeFailureReclaim && atr > 0.0)
+         reasons += "FMLR " + rangeFailureSource + " range failure box " + DoubleToString(rangeFailureBoxRange / atr, 2) + "ATR;";
+      if(openingRangeReclaim && atr > 0.0)
+         reasons += "FMLR " + openingRangeSource + " range reclaim box " + DoubleToString(openingRangeBoxRange / atr, 2) + "ATR;";
+      if(vwapDeviationReclaim && atr > 0.0)
+         reasons += "FMLR VWAP deviation reclaim " + DoubleToString(vwapDeviationATR, 2) + "ATR;";
+      if(sessionRangeBreakout && atr > 0.0)
+         reasons += "FMLR " + sessionRangeSource + " range box " + DoubleToString(sessionRangeBoxRange / atr, 2) + "ATR;";
+      if(compressionBreakout && atr > 0.0)
+         reasons += "FMLR compression box " + DoubleToString(compressionBoxRange / atr, 2) + "ATR;";
+
+      bool equalSweep = m_structure.EqualHighLowSweep(bias, InpEqualLevelLookbackBars);
+      bool sessionSweep = m_structure.SessionLevelSweep(bias);
+      bool asianSweep = m_structure.AsianRangeSweep(bias);
+      bool tickSpeedImpulse = TickSpeedImpulse(bias, atr);
+      bool tickSpeedReclaimContext = equalLevelReclaim ||
+                                     sessionReclaim ||
+                                     swingSweepReclaim ||
+                                     previousPeriodReclaim ||
+                                     dailyOpenReclaim ||
+                                     higherOpenReclaim ||
+                                     recentRetest ||
+                                     shelfRetest ||
+                                     continuationRetest ||
+                                     equalSweep ||
+                                     sessionSweep ||
+                                     asianSweep;
+      bool tickSpeedReclaim = InpUseTickSpeedImpulse &&
+                              tickSpeedImpulse &&
+                              tickSpeedReclaimContext;
+      if(tickSpeedReclaim && atr > 0.0)
+         reasons += "FMLR tick-speed reclaim impulse;";
+
+      double upperWick = high1 - MathMax(open1, close1);
+      double lowerWick = MathMin(open1, close1) - low1;
+      double rejectionWickPercent = (bias == BIAS_BUY)
+                                    ? 100.0 * lowerWick / range
+                                    : 100.0 * upperWick / range;
+      bool rejectionWick = rejectionWickPercent >= MathMax(0.0, InpFlatMonthLiquidityReclaimMinWickPercent);
+      if(!compressionBreakout && !breakoutRetest && !failedBreakoutTrap && !sessionRangeBreakout && !openingRangeReclaim && !vwapDeviationReclaim && !rangeFailureReclaim && !htfReclaim && !sweepDisplacementBOS && !displacementPullback && !engulfingReclaim && !tickPressureReclaim && !tickSpeedReclaim && !fvgRetestSetup && !orderBlockRetestSetup && !chochRetestSetup && !imbalanceContinuation && !shelfRetest && !rejectionWick)
+      {
+         reasons += "FMLR weak rejection wick;";
+         return false;
+      }
+
+      double closeLocation = (bias == BIAS_BUY)
+                             ? (close1 - low1) / range
+                             : (high1 - close1) / range;
+      if(!compressionBreakout && !breakoutRetest && !failedBreakoutTrap && !sessionRangeBreakout && !openingRangeReclaim && !vwapDeviationReclaim && !rangeFailureReclaim && !htfReclaim && !sweepDisplacementBOS && !displacementPullback && !engulfingReclaim && !tickPressureReclaim && !tickSpeedReclaim && !fvgRetestSetup && !orderBlockRetestSetup && !chochRetestSetup && !imbalanceContinuation && !shelfRetest && closeLocation < MathMax(0.0, InpFlatMonthLiquidityReclaimMinCloseLocation))
+      {
+         reasons += "FMLR weak reclaim close;";
+         return false;
+      }
+
+      double vwap = 0.0;
+      bool hasVwap = m_structure.VWAPValue(InpVWAPLookbackBars, vwap);
+      bool vwapReclaim = hasVwap &&
+                         ((bias == BIAS_BUY && low1 <= vwap && close1 > vwap) ||
+                          (bias == BIAS_SELL && high1 >= vwap && close1 < vwap));
+      if(InpFlatMonthLiquidityReclaimRequireVWAPReclaim && !vwapReclaim)
+      {
+         reasons += "FMLR no VWAP reclaim;";
+         return false;
+      }
+      if(hasVwap &&
+         InpFlatMonthLiquidityReclaimMaxVWAPDistanceATR > 0.0 &&
+         MathAbs(close1 - vwap) > atr * InpFlatMonthLiquidityReclaimMaxVWAPDistanceATR)
+      {
+         reasons += "FMLR VWAP distance;";
+         return false;
+      }
+
+      bool fmlrTrendPhase = false;
+      bool fmlrRangePhase = false;
+      bool fmlrTransitionPhase = false;
+      string fmlrPhaseReason = "";
+      if(!FlatMonthLiquidityReclaimPhaseAllows(bias,
+                                               atr,
+                                               fmlrTrendPhase,
+                                               fmlrRangePhase,
+                                               fmlrTransitionPhase,
+                                               fmlrPhaseReason))
+      {
+         reasons += fmlrPhaseReason;
+         return false;
+      }
+      if(InpFlatMonthLiquidityReclaimUsePhaseGate && StringLen(fmlrPhaseReason) > 0)
+         reasons += fmlrPhaseReason;
+
+      bool orderFlow = TickPressureCandle(bias) ||
+                       tickSpeedImpulse ||
+                       CumulativeDeltaProxy(bias) ||
+                       tickMicrostructure.Confirms(bias);
+      if(tickPressureReclaim || tickSpeedReclaim || breakoutRetest || failedBreakoutTrap)
+         orderFlow = true;
+      bool useImbalanceRetest = InpFlatMonthLiquidityReclaimUseImbalanceRetest ||
+                                InpFlatMonthLiquidityReclaimRequireImbalanceRetest ||
+                                InpFlatMonthLiquidityReclaimAllowImbalanceInsteadOfOrderFlow;
+      int imbalanceLookback = MathMax(3, InpFlatMonthLiquidityReclaimImbalanceLookbackBars);
+      bool fvgRetest = useImbalanceRetest &&
+                       m_structure.FairValueGapRetest(bias, imbalanceLookback, atr);
+      bool orderBlockRetest = useImbalanceRetest &&
+                              m_structure.OrderBlockRetest(bias, imbalanceLookback, atr);
+      bool imbalanceRetest = fvgRetest || orderBlockRetest;
+      if(InpFlatMonthLiquidityReclaimRequireImbalanceRetest && !imbalanceRetest)
+      {
+         reasons += "FMLR no imbalance retest;";
+         return false;
+      }
+      if(InpFlatMonthLiquidityReclaimRequireOrderFlow && !orderFlow)
+      {
+         if(!(InpFlatMonthLiquidityReclaimAllowImbalanceInsteadOfOrderFlow && imbalanceRetest))
+         {
+            reasons += "FMLR no order flow;";
+            return false;
+         }
+         reasons += "FMLR imbalance order-flow substitute;";
+      }
+
+      double entry = (bias == BIAS_BUY) ? SymbolInfoDouble(_Symbol, SYMBOL_ASK)
+                                        : SymbolInfoDouble(_Symbol, SYMBOL_BID);
+      if(entry <= 0.0)
+         entry = close1;
+
+      double swingTargetDistance = 0.0;
+      bool swingTarget = InpFlatMonthLiquidityReclaimTargetUseSwingLevels &&
+                         FlatMonthLiquidityReclaimSwingTargetDistance(bias, entry, 0.0, swingTargetDistance);
+      double openTargetDistance = 0.0;
+      bool openLiquidityTarget = FlatMonthLiquidityReclaimOpenTargetDistance(bias, entry, 0.0, openTargetDistance);
+      double previousMonthTargetDistance = 0.0;
+      bool previousMonthTarget = FlatMonthLiquidityReclaimPreviousMonthTargetDistance(bias,
+                                                                                    entry,
+                                                                                    previousMonthTargetDistance);
+      double forwardClearanceDistance = 0.0;
+      double minClearance = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimMinClearanceATR);
+      bool forwardClearance = FlatMonthLiquidityReclaimForwardLiquidityDistance(bias,
+                                                                                entry,
+                                                                                atr,
+                                                                                lookback,
+                                                                                false,
+                                                                                minClearance,
+                                                                                forwardClearanceDistance);
+      if(InpFlatMonthLiquidityReclaimRequireForwardClearance)
+      {
+         if(!forwardClearance || forwardClearanceDistance < minClearance)
+         {
+            reasons += "FMLR forward clearance;";
+            return false;
+         }
+      }
+
+      double stopLevel = sweepLevel;
+      double structuralLevel = 0.0;
+      bool equalLevelStopPool = false;
+      if(sweepDisplacementBOS &&
+         sweepDisplacementStopLevel > 0.0 &&
+         ((bias == BIAS_BUY && sweepDisplacementStopLevel < entry && sweepDisplacementStopLevel < stopLevel) ||
+          (bias == BIAS_SELL && sweepDisplacementStopLevel > entry && sweepDisplacementStopLevel > stopLevel)))
+      {
+         stopLevel = sweepDisplacementStopLevel;
+      }
+
+      if(displacementPullback &&
+         displacementPullbackStopLevel > 0.0 &&
+         ((bias == BIAS_BUY && displacementPullbackStopLevel < entry && displacementPullbackStopLevel < stopLevel) ||
+          (bias == BIAS_SELL && displacementPullbackStopLevel > entry && displacementPullbackStopLevel > stopLevel)))
+      {
+         stopLevel = displacementPullbackStopLevel;
+      }
+
+      if(engulfingReclaim &&
+         engulfingReclaimStopLevel > 0.0 &&
+         ((bias == BIAS_BUY && engulfingReclaimStopLevel < entry && engulfingReclaimStopLevel < stopLevel) ||
+          (bias == BIAS_SELL && engulfingReclaimStopLevel > entry && engulfingReclaimStopLevel > stopLevel)))
+      {
+         stopLevel = engulfingReclaimStopLevel;
+      }
+
+      if(tickPressureReclaim &&
+         tickPressureReclaimStopLevel > 0.0 &&
+         ((bias == BIAS_BUY && tickPressureReclaimStopLevel < entry && tickPressureReclaimStopLevel < stopLevel) ||
+          (bias == BIAS_SELL && tickPressureReclaimStopLevel > entry && tickPressureReclaimStopLevel > stopLevel)))
+      {
+         stopLevel = tickPressureReclaimStopLevel;
+      }
+
+      if(breakoutRetest &&
+         breakoutRetestStopLevel > 0.0 &&
+         ((bias == BIAS_BUY && breakoutRetestStopLevel < entry && breakoutRetestStopLevel < stopLevel) ||
+          (bias == BIAS_SELL && breakoutRetestStopLevel > entry && breakoutRetestStopLevel > stopLevel)))
+      {
+         stopLevel = breakoutRetestStopLevel;
+      }
+
+      if(failedBreakoutTrap &&
+         failedBreakoutTrapStopLevel > 0.0 &&
+         ((bias == BIAS_BUY && failedBreakoutTrapStopLevel < entry && failedBreakoutTrapStopLevel < stopLevel) ||
+          (bias == BIAS_SELL && failedBreakoutTrapStopLevel > entry && failedBreakoutTrapStopLevel > stopLevel)))
+      {
+         stopLevel = failedBreakoutTrapStopLevel;
+      }
+
+      if(fvgRetestSetup &&
+         fvgRetestStopLevel > 0.0 &&
+         ((bias == BIAS_BUY && fvgRetestStopLevel < entry && fvgRetestStopLevel < stopLevel) ||
+          (bias == BIAS_SELL && fvgRetestStopLevel > entry && fvgRetestStopLevel > stopLevel)))
+      {
+         stopLevel = fvgRetestStopLevel;
+      }
+
+      if(orderBlockRetestSetup &&
+         orderBlockRetestStopLevel > 0.0 &&
+         ((bias == BIAS_BUY && orderBlockRetestStopLevel < entry && orderBlockRetestStopLevel < stopLevel) ||
+          (bias == BIAS_SELL && orderBlockRetestStopLevel > entry && orderBlockRetestStopLevel > stopLevel)))
+      {
+         stopLevel = orderBlockRetestStopLevel;
+      }
+
+      if(chochRetestSetup &&
+         chochRetestStopLevel > 0.0 &&
+         ((bias == BIAS_BUY && chochRetestStopLevel < entry && chochRetestStopLevel < stopLevel) ||
+          (bias == BIAS_SELL && chochRetestStopLevel > entry && chochRetestStopLevel > stopLevel)))
+      {
+         stopLevel = chochRetestStopLevel;
+      }
+
+      if(imbalanceContinuation &&
+         imbalanceContinuationStopLevel > 0.0 &&
+         ((bias == BIAS_BUY && imbalanceContinuationStopLevel < entry && imbalanceContinuationStopLevel < stopLevel) ||
+          (bias == BIAS_SELL && imbalanceContinuationStopLevel > entry && imbalanceContinuationStopLevel > stopLevel)))
+      {
+         stopLevel = imbalanceContinuationStopLevel;
+      }
+
+      if(openingRangeReclaim &&
+         openingRangeStopLevel > 0.0 &&
+         ((bias == BIAS_BUY && openingRangeStopLevel < entry && openingRangeStopLevel < stopLevel) ||
+          (bias == BIAS_SELL && openingRangeStopLevel > entry && openingRangeStopLevel > stopLevel)))
+      {
+         stopLevel = openingRangeStopLevel;
+      }
+
+      if(vwapDeviationReclaim &&
+         vwapDeviationStopLevel > 0.0 &&
+         ((bias == BIAS_BUY && vwapDeviationStopLevel < entry && vwapDeviationStopLevel < stopLevel) ||
+          (bias == BIAS_SELL && vwapDeviationStopLevel > entry && vwapDeviationStopLevel > stopLevel)))
+      {
+         stopLevel = vwapDeviationStopLevel;
+      }
+
+      if(htfReclaim &&
+         htfReclaimStopLevel > 0.0 &&
+         ((bias == BIAS_BUY && htfReclaimStopLevel < entry && htfReclaimStopLevel < stopLevel) ||
+          (bias == BIAS_SELL && htfReclaimStopLevel > entry && htfReclaimStopLevel > stopLevel)))
+      {
+         stopLevel = htfReclaimStopLevel;
+      }
+
+      if(rangeFailureReclaim &&
+         rangeFailureStopLevel > 0.0 &&
+         ((bias == BIAS_BUY && rangeFailureStopLevel < entry && rangeFailureStopLevel < stopLevel) ||
+          (bias == BIAS_SELL && rangeFailureStopLevel > entry && rangeFailureStopLevel > stopLevel)))
+      {
+         stopLevel = rangeFailureStopLevel;
+      }
+
+      if(sessionRangeBreakout &&
+         sessionRangeStopLevel > 0.0 &&
+         ((bias == BIAS_BUY && sessionRangeStopLevel < entry && sessionRangeStopLevel < stopLevel) ||
+          (bias == BIAS_SELL && sessionRangeStopLevel > entry && sessionRangeStopLevel > stopLevel)))
+      {
+         stopLevel = sessionRangeStopLevel;
+      }
+
+      if(compressionBreakout &&
+         compressionStopLevel > 0.0 &&
+         ((bias == BIAS_BUY && compressionStopLevel < entry && compressionStopLevel < stopLevel) ||
+          (bias == BIAS_SELL && compressionStopLevel > entry && compressionStopLevel > stopLevel)))
+      {
+         stopLevel = compressionStopLevel;
+      }
+
+      if(InpFlatMonthLiquidityReclaimUseEqualLevels &&
+         EqualLiquidityStopLevel(bias, lookback, structuralLevel))
+      {
+         if((bias == BIAS_BUY && structuralLevel < entry && structuralLevel < stopLevel) ||
+            (bias == BIAS_SELL && structuralLevel > entry && structuralLevel > stopLevel))
+         {
+            stopLevel = structuralLevel;
+            equalLevelStopPool = true;
+         }
+      }
+      if(InpFlatMonthLiquidityReclaimUsePreviousDay &&
+         PreviousPeriodLiquidityStopLevel(bias, PERIOD_D1, entry, structuralLevel))
+      {
+         if((bias == BIAS_BUY && structuralLevel < entry && structuralLevel < stopLevel) ||
+            (bias == BIAS_SELL && structuralLevel > entry && structuralLevel > stopLevel))
+         {
+            stopLevel = structuralLevel;
+            equalLevelStopPool = false;
+         }
+      }
+      if(InpFlatMonthLiquidityReclaimUsePreviousWeek &&
+         PreviousPeriodLiquidityStopLevel(bias, PERIOD_W1, entry, structuralLevel))
+      {
+         if((bias == BIAS_BUY && structuralLevel < entry && structuralLevel < stopLevel) ||
+            (bias == BIAS_SELL && structuralLevel > entry && structuralLevel > stopLevel))
+         {
+            stopLevel = structuralLevel;
+            equalLevelStopPool = false;
+         }
+      }
+
+      double swingStopAnchorLevel = 0.0;
+      bool swingStopAnchor = FlatMonthLiquidityReclaimSwingStopAnchorLevel(bias,
+                                                                           entry,
+                                                                           atr,
+                                                                           lookback,
+                                                                           stopLevel,
+                                                                           swingStopAnchorLevel);
+      if(swingStopAnchor)
+      {
+         stopLevel = swingStopAnchorLevel;
+         equalLevelStopPool = false;
+         reasons += "FMLR swing stop anchor;";
+      }
+
+      double baseBuffer = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimStopBufferATR) +
+                          _Point * MathMax(0.0, InpFlatMonthLiquidityReclaimStopBufferPoints);
+      bool stopClusterAdjusted = false;
+      double buffer = FlatMonthLiquidityReclaimClusterAdjustedBuffer(bias,
+                                                                     stopLevel,
+                                                                     baseBuffer,
+                                                                     atr,
+                                                                     lookback,
+                                                                     stopClusterAdjusted);
+      bool equalLevelStopPoolAdjusted = false;
+      if(equalLevelStopPool && InpFlatMonthLiquidityReclaimUseStopClusterBuffer)
+      {
+         double poolAtrBuffer = MathMax(0.0, InpFlatMonthLiquidityReclaimStopClusterExtraBufferATR) * MathMax(0.0, atr);
+         double poolPointBuffer = MathMax(0.0, InpFlatMonthLiquidityReclaimStopClusterExtraBufferPoints) * _Point;
+         double poolExtraBuffer = MathMax(poolAtrBuffer, poolPointBuffer);
+         if(poolExtraBuffer > 0.0)
+         {
+            double poolBuffer = baseBuffer + poolExtraBuffer;
+            if(poolBuffer > buffer + _Point)
+               buffer = poolBuffer;
+            equalLevelStopPoolAdjusted = true;
+            reasons += "FMLR equal-level stop pool;";
+         }
+      }
+      stopDistance = (bias == BIAS_BUY) ? entry - (stopLevel - buffer)
+                                          : (stopLevel + buffer) - entry;
+      bool swingStopPocket = false;
+      bool openStopPocket = false;
+      string openStopPocketSource = "";
+      bool stopPocketShifted = FlatMonthLiquidityReclaimApplyStopPocketShift(bias,
+                                                                             entry,
+                                                                             atr,
+                                                                             lookback,
+                                                                             stopDistance,
+                                                                             swingStopPocket,
+                                                                             openStopPocket,
+                                                                             openStopPocketSource);
+      if(stopPocketShifted && swingStopPocket)
+         reasons += "FMLR swing stop pocket;";
+      else if(stopPocketShifted && openStopPocket)
+         reasons += "FMLR " + openStopPocketSource + " stop pocket;";
+      targetDistance = atr * MathMax(0.10, InpFlatMonthLiquidityReclaimTakeProfitATR);
+      bool structuralTargetFallback = false;
+      string structuralTargetFallbackReason = "";
+      bool htfReclaimTarget = false;
+      if(htfReclaim &&
+         InpFlatMonthLiquidityReclaimHTFUseOppositeTarget &&
+         htfReclaimTargetLevel > 0.0)
+      {
+         double candidateTargetDistance = (bias == BIAS_BUY) ? htfReclaimTargetLevel - entry
+                                                             : entry - htfReclaimTargetLevel;
+         double minTarget = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimHTFMinTargetATR);
+         if(candidateTargetDistance <= 0.0 || candidateTargetDistance < minTarget)
+         {
+            structuralTargetFallback = true;
+            structuralTargetFallbackReason = "FMLR HTF target;";
+         }
+         else
+         {
+            double maxTarget = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimHTFMaxTargetATR);
+            if(maxTarget > 0.0 && candidateTargetDistance > maxTarget)
+               candidateTargetDistance = maxTarget;
+
+            targetDistance = candidateTargetDistance;
+            htfReclaimTarget = true;
+            reasons += "FMLR HTF target;";
+         }
+      }
+      bool openingRangeTarget = false;
+      if(openingRangeReclaim &&
+         InpFlatMonthLiquidityReclaimOpeningRangeUseRangeTarget &&
+         openingRangeTargetLevel > 0.0)
+      {
+         double candidateTargetDistance = (bias == BIAS_BUY) ? openingRangeTargetLevel - entry
+                                                             : entry - openingRangeTargetLevel;
+         double minTarget = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimOpeningRangeMinTargetATR);
+         if(candidateTargetDistance <= 0.0 || candidateTargetDistance < minTarget)
+         {
+            structuralTargetFallback = true;
+            structuralTargetFallbackReason = "FMLR opening range target;";
+         }
+         else
+         {
+            double maxTarget = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimOpeningRangeMaxTargetATR);
+            if(maxTarget > 0.0 && candidateTargetDistance > maxTarget)
+               candidateTargetDistance = maxTarget;
+
+            targetDistance = candidateTargetDistance;
+            openingRangeTarget = true;
+            reasons += "FMLR opening range target;";
+         }
+      }
+      bool vwapDeviationTarget = false;
+      if(vwapDeviationReclaim &&
+         InpFlatMonthLiquidityReclaimVWAPDeviationUseVWAPTarget &&
+         vwapDeviationTargetLevel > 0.0)
+      {
+         double candidateTargetDistance = (bias == BIAS_BUY) ? vwapDeviationTargetLevel - entry
+                                                             : entry - vwapDeviationTargetLevel;
+         double minTarget = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimVWAPDeviationMinTargetATR);
+         if(candidateTargetDistance <= 0.0 || candidateTargetDistance < minTarget)
+         {
+            structuralTargetFallback = true;
+            structuralTargetFallbackReason = "FMLR VWAP deviation target;";
+         }
+         else
+         {
+            double maxTarget = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimVWAPDeviationMaxTargetATR);
+            if(maxTarget > 0.0 && candidateTargetDistance > maxTarget)
+               candidateTargetDistance = maxTarget;
+
+            targetDistance = candidateTargetDistance;
+            vwapDeviationTarget = true;
+            reasons += "FMLR VWAP deviation target;";
+         }
+      }
+      bool rangeFailureTarget = false;
+      if(rangeFailureReclaim &&
+         InpFlatMonthLiquidityReclaimRangeFailureUseRangeTarget &&
+         rangeFailureTargetLevel > 0.0)
+      {
+         double candidateTargetDistance = (bias == BIAS_BUY) ? rangeFailureTargetLevel - entry
+                                                             : entry - rangeFailureTargetLevel;
+         double minTarget = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimRangeFailureMinTargetATR);
+         if(candidateTargetDistance <= 0.0 || candidateTargetDistance < minTarget)
+         {
+            structuralTargetFallback = true;
+            structuralTargetFallbackReason = "FMLR range failure target;";
+         }
+         else
+         {
+            double maxTarget = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimRangeFailureMaxTargetATR);
+            if(maxTarget > 0.0 && candidateTargetDistance > maxTarget)
+               candidateTargetDistance = maxTarget;
+
+            targetDistance = candidateTargetDistance;
+            rangeFailureTarget = true;
+            reasons += "FMLR range failure target;";
+         }
+      }
+      bool failedBreakoutTrapTarget = false;
+      bool failedBreakoutTrapTargetFallback = false;
+      if(failedBreakoutTrap &&
+         InpFlatMonthLiquidityReclaimRangeFailureUseRangeTarget &&
+         failedBreakoutTrapTargetLevel > 0.0)
+      {
+         double candidateTargetDistance = (bias == BIAS_BUY) ? failedBreakoutTrapTargetLevel - entry
+                                                             : entry - failedBreakoutTrapTargetLevel;
+         double minTarget = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimRangeFailureMinTargetATR);
+         if(candidateTargetDistance <= 0.0 || candidateTargetDistance < minTarget)
+         {
+            failedBreakoutTrapTargetFallback = true;
+         }
+         else
+         {
+            double maxTarget = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimRangeFailureMaxTargetATR);
+            if(maxTarget > 0.0 && candidateTargetDistance > maxTarget)
+               candidateTargetDistance = maxTarget;
+
+            targetDistance = candidateTargetDistance;
+            failedBreakoutTrapTarget = true;
+            reasons += "FMLR failed breakout target;";
+         }
+      }
+      bool structuralTargetAccepted = htfReclaimTarget ||
+                                      openingRangeTarget ||
+                                      vwapDeviationTarget ||
+                                      rangeFailureTarget ||
+                                      failedBreakoutTrapTarget;
+      bool structuralTargetFallbackUsed = false;
+      bool structuralTargetPreserved = false;
+      bool structuralTargetExtended = false;
+      double liquidityTargetDistance = 0.0;
+      bool liquidityTarget = FlatMonthLiquidityReclaimTargetDistance(bias,
+                                                                     entry,
+                                                                     atr,
+                                                                     lookback,
+                                                                     liquidityTargetDistance);
+      if(liquidityTarget)
+      {
+         if(!failedBreakoutTrapTarget)
+         {
+            if(failedBreakoutTrapTargetFallback)
+            {
+               targetDistance = liquidityTargetDistance;
+               reasons += "FMLR failed breakout target fallback;";
+            }
+            else if(structuralTargetFallback && !structuralTargetAccepted)
+            {
+               targetDistance = liquidityTargetDistance;
+               structuralTargetFallbackUsed = true;
+               reasons += "FMLR structural target fallback;";
+            }
+            else if(structuralTargetAccepted &&
+                    liquidityTargetDistance <= targetDistance + _Point)
+            {
+               structuralTargetPreserved = true;
+               reasons += "FMLR structural target preserved;";
+            }
+            else
+            {
+               targetDistance = liquidityTargetDistance;
+               if(structuralTargetAccepted)
+                  structuralTargetExtended = true;
+
+               reasons += "FMLR liquidity target;";
+            }
+         }
+         else
+         {
+            reasons += "FMLR liquidity target preserved;";
+         }
+      }
+      else
+      {
+         if(failedBreakoutTrapTargetFallback)
+         {
+            reasons += "FMLR failed breakout target;";
+            return false;
+         }
+
+         if(structuralTargetFallback && !structuralTargetAccepted)
+         {
+            reasons += structuralTargetFallbackReason;
+            return false;
+         }
+      }
+
+      bool runnerTargetStretch = false;
+      bool runnerLiquidityStretch = false;
+      bool liquiditySweepRunner = false;
+      if(InpFlatMonthLiquidityReclaimUseRunnerTargetStretch &&
+         atr > 0.0 &&
+         targetDistance > 0.0)
+      {
+         bool structuralTargetFallbackRunnerSetup = structuralTargetFallbackUsed ||
+                                                    (failedBreakoutTrapTargetFallback && liquidityTarget);
+         bool structuralTargetRunnerSetup = structuralTargetAccepted ||
+                                            structuralTargetFallbackRunnerSetup;
+         bool structuralRunnerSetup = structuralTargetRunnerSetup ||
+                                       sweepDisplacementBOS ||
+                                       displacementPullback ||
+                                       engulfingReclaim ||
+                                       tickPressureReclaim ||
+                                       tickSpeedReclaim ||
+                                       breakoutRetest ||
+                                       failedBreakoutTrap ||
+                                       fvgRetestSetup ||
+                                       orderBlockRetestSetup ||
+                                       chochRetestSetup ||
+                                       imbalanceContinuation ||
+                                       sessionRangeBreakout ||
+                                       compressionBreakout;
+         bool sweepRunnerEvidence = equalLevelReclaim ||
+                                    sessionReclaim ||
+                                    swingSweepReclaim ||
+                                    previousPeriodReclaim ||
+                                    dailyOpenReclaim ||
+                                    higherOpenReclaim ||
+                                    equalSweep ||
+                                    sessionSweep ||
+                                    asianSweep;
+         bool sweepRunnerQuality = orderFlow ||
+                                   vwapReclaim ||
+                                   fmlrTrendPhase ||
+                                   fmlrRangePhase ||
+                                   fmlrTransitionPhase;
+         bool liquiditySweepRunnerSetup = !structuralRunnerSetup &&
+                                          forwardClearance &&
+                                          sweepRunnerEvidence &&
+                                          sweepRunnerQuality;
+         bool protectedTargetPath = forwardClearance ||
+                                     liquidityTarget ||
+                                     swingTarget ||
+                                     structuralTargetAccepted;
+         bool runnerPhase = !InpFlatMonthLiquidityReclaimUsePhaseGate ||
+                             fmlrTrendPhase ||
+                             structuralRunnerSetup ||
+                             (liquiditySweepRunnerSetup &&
+                              (fmlrRangePhase || fmlrTransitionPhase));
+         if((structuralRunnerSetup || liquiditySweepRunnerSetup) && protectedTargetPath && runnerPhase)
+         {
+            if(structuralTargetFallbackRunnerSetup)
+               reasons += "FMLR structural fallback runner;";
+            if(structuralTargetRunnerSetup)
+               reasons += "FMLR structural target runner;";
+
+            double multiplier = MathMax(1.0, InpFlatMonthLiquidityReclaimRunnerTargetMultiplier);
+            double maxRunnerATR = MathMax(MathMax(0.10, InpFlatMonthLiquidityReclaimMaxTargetATR),
+                                          InpFlatMonthLiquidityReclaimTakeProfitATR);
+            double maxRunnerTarget = atr * maxRunnerATR * multiplier;
+            double stretchedTarget = targetDistance * multiplier;
+            if(forwardClearance && forwardClearanceDistance > targetDistance)
+            {
+               double liquidityStretchTarget = forwardClearanceDistance;
+               if(maxRunnerTarget > 0.0 && liquidityStretchTarget > maxRunnerTarget)
+                  liquidityStretchTarget = maxRunnerTarget;
+
+               if(liquidityStretchTarget > stretchedTarget + _Point)
+               {
+                  stretchedTarget = liquidityStretchTarget;
+                  runnerLiquidityStretch = true;
+               }
+            }
+
+            if(maxRunnerTarget > 0.0 && stretchedTarget > maxRunnerTarget)
+               stretchedTarget = maxRunnerTarget;
+
+            if(stretchedTarget > targetDistance + _Point)
+            {
+               targetDistance = stretchedTarget;
+               runnerTargetStretch = true;
+               if(liquiditySweepRunnerSetup)
+                  liquiditySweepRunner = true;
+               reasons += runnerLiquidityStretch
+                          ? "FMLR runner liquidity stretch;"
+                          : "FMLR runner target stretch;";
+            }
+         }
+      }
+      double baseFmlrMinRR = MathMax(0.0, InpFlatMonthLiquidityReclaimMinRR);
+      double minimumFmlrRR = baseFmlrMinRR;
+      minimumFmlrRR = MathMax(0.0,
+                              minimumFmlrRR -
+                              MathMax(0.0, InpFlatMonthRRDiscount));
+      if(fmlrCatchUpEntryRelaxation)
+         minimumFmlrRR = MathMax(0.0,
+                                 minimumFmlrRR -
+                                 MathMax(0.0, InpFlatMonthCatchUpRRDiscount));
+      if(fmlrLateCatchUp)
+         minimumFmlrRR = MathMax(0.0,
+                                 minimumFmlrRR -
+                                 MathMax(0.0, InpFlatMonthLateCatchUpRRDiscount));
+      bool forwardRrTarget = false;
+      if(stopDistance > 0.0 &&
+         targetDistance > 0.0 &&
+         minimumFmlrRR > 0.0 &&
+         targetDistance / stopDistance < minimumFmlrRR &&
+         forwardClearance &&
+         forwardClearanceDistance > targetDistance + _Point)
+      {
+         double rrRepairTarget = forwardClearanceDistance;
+         double maxForwardTarget = atr * MathMax(0.0, InpFlatMonthLiquidityReclaimMaxTargetATR);
+         if(maxForwardTarget > 0.0 && rrRepairTarget > maxForwardTarget)
+            rrRepairTarget = maxForwardTarget;
+
+         if(rrRepairTarget > targetDistance + _Point &&
+            rrRepairTarget / stopDistance >= minimumFmlrRR)
+         {
+            targetDistance = rrRepairTarget;
+            forwardRrTarget = true;
+            reasons += "FMLR forward RR target;";
+         }
+      }
+      if(stopDistance <= 0.0 || targetDistance <= 0.0)
+         return false;
+      if(targetDistance / stopDistance < minimumFmlrRR)
+      {
+         reasons += "FMLR RR reject;";
+         return false;
+      }
+
+      AddSmartMoneyComponent(!compressionBreakout && !breakoutRetest && !failedBreakoutTrap && !sessionRangeBreakout && !openingRangeReclaim && !vwapDeviationReclaim && !rangeFailureReclaim && !htfReclaim && !sweepDisplacementBOS && !displacementPullback && !engulfingReclaim && !tickPressureReclaim && !tickSpeedReclaim && !fvgRetestSetup && !orderBlockRetestSetup && !chochRetestSetup && !imbalanceContinuation && !shelfRetest, 3, "FMLR sweep reclaim;", score, reasons);
+      AddSmartMoneyComponent(compressionBreakout, 3, "FMLR compression breakout;", score, reasons);
+      AddSmartMoneyComponent(breakoutRetest, 3, "FMLR breakout retest;", score, reasons);
+      AddSmartMoneyComponent(failedBreakoutTrap, 3, "FMLR failed breakout trap;", score, reasons);
+      AddSmartMoneyComponent(sessionRangeBreakout, 3, "FMLR session range breakout;", score, reasons);
+      AddSmartMoneyComponent(openingRangeReclaim, 3, "FMLR opening range reclaim;", score, reasons);
+      AddSmartMoneyComponent(vwapDeviationReclaim, 3, "FMLR VWAP deviation reclaim;", score, reasons);
+      AddSmartMoneyComponent(rangeFailureReclaim, 3, "FMLR range failure reclaim;", score, reasons);
+      AddSmartMoneyComponent(htfReclaim, 3, "FMLR HTF liquidity reclaim;", score, reasons);
+      AddSmartMoneyComponent(sweepDisplacementBOS, 3, "FMLR sweep displacement BOS;", score, reasons);
+      AddSmartMoneyComponent(displacementPullback, 3, "FMLR displacement pullback;", score, reasons);
+      AddSmartMoneyComponent(engulfingReclaim, 3, "FMLR engulfing reclaim;", score, reasons);
+      AddSmartMoneyComponent(tickPressureReclaim, 3, "FMLR tick-pressure reclaim;", score, reasons);
+      AddSmartMoneyComponent(tickSpeedReclaim, 3, "FMLR tick-speed reclaim;", score, reasons);
+      AddSmartMoneyComponent(fvgRetestSetup, 3, "FMLR FVG structural retest;", score, reasons);
+      AddSmartMoneyComponent(orderBlockRetestSetup, 3, "FMLR order block retest;", score, reasons);
+      AddSmartMoneyComponent(chochRetestSetup, 3, "FMLR CHoCH retest;", score, reasons);
+      AddSmartMoneyComponent(imbalanceContinuation, 3, "FMLR imbalance continuation;", score, reasons);
+      AddSmartMoneyComponent(previousPeriodReclaim, 1, "FMLR previous-period reclaim;", score, reasons);
+      AddSmartMoneyComponent(dailyOpenReclaim, 1, "FMLR daily open reclaim;", score, reasons);
+      AddSmartMoneyComponent(higherOpenReclaim, 1, "FMLR higher open reclaim;", score, reasons);
+      AddSmartMoneyComponent(equalLevelReclaim, 1, "FMLR equal-level reclaim;", score, reasons);
+      AddSmartMoneyComponent(sessionReclaim, 1, "FMLR session reclaim;", score, reasons);
+      AddSmartMoneyComponent(swingSweepReclaim, 1, "FMLR swing sweep reclaim;", score, reasons);
+      AddSmartMoneyComponent(rejectionWick, 2, "FMLR rejection wick;", score, reasons);
+      AddSmartMoneyComponent(recentRetest, 1, "FMLR recent sweep retest;", score, reasons);
+      AddSmartMoneyComponent(shelfRetest, 2, "FMLR shelf retest;", score, reasons);
+      AddSmartMoneyComponent(continuationRetest, 2, "FMLR continuation retest;", score, reasons);
+      AddSmartMoneyComponent(orderFlow, 1, "FMLR order flow;", score, reasons);
+      AddSmartMoneyComponent(sweepDisplacementVolumeExpansion,
+                             1,
+                             "FMLR sweep BOS volume expansion;",
+                             score,
+                             reasons);
+      AddSmartMoneyComponent(InpFlatMonthLiquidityReclaimUseImbalanceRetest && fvgRetest,
+                             1,
+                             "FMLR FVG retest;",
+                             score,
+                             reasons);
+      AddSmartMoneyComponent(InpFlatMonthLiquidityReclaimUseImbalanceRetest && orderBlockRetest,
+                             1,
+                             "FMLR order block retest;",
+                             score,
+                             reasons);
+      AddSmartMoneyComponent(vwapReclaim, 1, "FMLR VWAP reclaim;", score, reasons);
+      AddSmartMoneyComponent(equalSweep, 1, "FMLR equal liquidity;", score, reasons);
+      AddSmartMoneyComponent(sessionSweep, 1, "FMLR session sweep;", score, reasons);
+      AddSmartMoneyComponent(asianSweep, 1, "FMLR Asian sweep;", score, reasons);
+      AddSmartMoneyComponent(InpFlatMonthLiquidityReclaimUsePhaseGate && fmlrTrendPhase,
+                             1,
+                             "FMLR trend phase;",
+                             score,
+                             reasons);
+      AddSmartMoneyComponent(InpFlatMonthLiquidityReclaimUsePhaseGate && fmlrRangePhase,
+                             1,
+                             "FMLR range phase;",
+                             score,
+                             reasons);
+      AddSmartMoneyComponent(InpFlatMonthLiquidityReclaimUsePhaseGate && fmlrTransitionPhase,
+                             1,
+                             "FMLR transition phase;",
+                             score,
+                             reasons);
+      AddSmartMoneyComponent(InpFlatMonthLiquidityReclaimRequireForwardClearance && forwardClearance,
+                             1,
+                             "FMLR forward clearance;",
+                             score,
+                             reasons);
+      AddSmartMoneyComponent(liquidityTarget, 1, "FMLR forward liquidity target;", score, reasons);
+      AddSmartMoneyComponent(openLiquidityTarget, 1, "FMLR open liquidity target;", score, reasons);
+      AddSmartMoneyComponent(previousMonthTarget, 1, "FMLR previous-month target;", score, reasons);
+      AddSmartMoneyComponent(htfReclaimTarget, 1, "FMLR HTF opposite target;", score, reasons);
+      AddSmartMoneyComponent(openingRangeTarget, 1, "FMLR opening range target;", score, reasons);
+      AddSmartMoneyComponent(vwapDeviationTarget, 1, "FMLR VWAP mean target;", score, reasons);
+      AddSmartMoneyComponent(rangeFailureTarget, 1, "FMLR range failure range target;", score, reasons);
+      AddSmartMoneyComponent(failedBreakoutTrapTarget, 1, "FMLR failed breakout range target;", score, reasons);
+      AddSmartMoneyComponent(failedBreakoutTrapTargetFallback && liquidityTarget,
+                             1,
+                             "FMLR failed breakout target fallback;",
+                             score,
+                             reasons);
+      AddSmartMoneyComponent(structuralTargetFallbackUsed,
+                             1,
+                             "FMLR structural target fallback;",
+                             score,
+                             reasons);
+      AddSmartMoneyComponent(structuralTargetPreserved,
+                             1,
+                             "FMLR structural target preserved;",
+                             score,
+                             reasons);
+      AddSmartMoneyComponent(structuralTargetExtended,
+                             1,
+                             "FMLR structural target extended;",
+                             score,
+                             reasons);
+      AddSmartMoneyComponent(liquiditySweepRunner, 1, "FMLR sweep runner;", score, reasons);
+      AddSmartMoneyComponent(swingTarget, 1, "FMLR swing liquidity target;", score, reasons);
+      AddSmartMoneyComponent(runnerTargetStretch, 1, "FMLR runner target stretch;", score, reasons);
+      AddSmartMoneyComponent(runnerLiquidityStretch, 1, "FMLR runner liquidity stretch;", score, reasons);
+      AddSmartMoneyComponent(forwardRrTarget, 1, "FMLR forward RR target;", score, reasons);
+      AddSmartMoneyComponent(swingStopAnchor, 1, "FMLR swing stop anchor;", score, reasons);
+      AddSmartMoneyComponent(stopClusterAdjusted, 1, "FMLR stop cluster buffer;", score, reasons);
+      AddSmartMoneyComponent(equalLevelStopPoolAdjusted, 1, "FMLR equal-level stop pool;", score, reasons);
+      AddSmartMoneyComponent(stopPocketShifted, 1, "FMLR stop pocket shift;", score, reasons);
+      AddSmartMoneyComponent(openStopPocket, 1, "FMLR open stop pocket;", score, reasons);
+      if(activeFmlrMinScore < MathMax(1, InpFlatMonthLiquidityReclaimMinScore))
+         reasons += "FMLR active min score " + IntegerToString(activeFmlrMinScore) + ";";
+      if(minimumFmlrRR < baseFmlrMinRR)
+         reasons += "FMLR active min RR " + DoubleToString(minimumFmlrRR, 2) + ";";
+      reasons += "FMLR;Flat month liquidity reclaim;";
+
+      return score >= activeFmlrMinScore;
+   }
+
+   bool InSessionLiquidityPullbackOpportunity(const ENUM_TRADE_BIAS bias,
+                                              const double atr,
+                                              int &score,
+                                              string &reasons,
+                                              double &stopDistance,
+                                              double &targetDistance)
+   {
+      score = 0;
+      reasons = "";
+      stopDistance = 0.0;
+      targetDistance = 0.0;
+      if(!InpUseInSessionLiquidityPullbackLane || atr <= 0.0 || bias == BIAS_NONE)
+         return false;
+      if(InpInSessionLiquidityPullbackMinATR > 0.0 && atr < InpInSessionLiquidityPullbackMinATR)
+      {
+         reasons += "ISLP low ATR;";
+         return false;
+      }
+      if(!InSessionLiquidityPullbackMonthAllows())
+      {
+         reasons += "ISLP month filter;";
+         return false;
+      }
+      if(InpInSessionLiquidityPullbackRequireLiquidSession && !sessionFilter.LiquidSessionActive())
+      {
+         reasons += "ISLP non-liquid session;";
+         return false;
+      }
+      if(InpInSessionLiquidityPullbackMaxMonthlyEntries > 0 &&
+         CurrentPeriodEntryCount(PERIOD_MN1) >= InpInSessionLiquidityPullbackMaxMonthlyEntries)
+         return false;
+
+      datetime lastLaneEntry = LastSetupLaneEntryTime("ISLP;");
+      int spacingMinutes = MathMax(0, InpInSessionLiquidityPullbackSpacingMinutes);
+      if(lastLaneEntry > 0 && spacingMinutes > 0 &&
+         TimeCurrent() - lastLaneEntry < spacingMinutes * 60)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range <= _Point)
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range;
+      bool directionalBody = (bias == BIAS_BUY && close1 > open1) ||
+                             (bias == BIAS_SELL && close1 < open1);
+      if(!directionalBody || bodyPercent < MathMax(0.0, InpInSessionLiquidityPullbackMinBodyPercent))
+      {
+         reasons += "ISLP weak body;";
+         return false;
+      }
+
+      double fastEma = 0.0;
+      double trendEma = 0.0;
+      bool fastAligned = indicators.FastTrendEMA(1, fastEma) &&
+                         ((bias == BIAS_BUY && close1 > fastEma) ||
+                          (bias == BIAS_SELL && close1 < fastEma));
+      bool trendAligned = indicators.TrendEMA(1, trendEma) &&
+                          ((bias == BIAS_BUY && close1 > trendEma) ||
+                           (bias == BIAS_SELL && close1 < trendEma));
+      if(!fastAligned || !trendAligned)
+      {
+         reasons += "ISLP EMA alignment reject;";
+         return false;
+      }
+      AddSmartMoneyComponent(fastAligned, 1, "ISLP fast EMA;", score, reasons);
+      AddSmartMoneyComponent(trendAligned, 1, "ISLP trend EMA;", score, reasons);
+
+      if(InpInSessionLiquidityPullbackRequireMTFAlignment)
+      {
+         double mtfEma = 0.0;
+         bool mtfAligned = indicators.MTFEMA(1, mtfEma) &&
+                           ((bias == BIAS_BUY && close1 > mtfEma) ||
+                            (bias == BIAS_SELL && close1 < mtfEma));
+         if(!mtfAligned)
+         {
+            reasons += "ISLP MTF reject;";
+            return false;
+         }
+         AddSmartMoneyComponent(true, 1, "ISLP MTF EMA;", score, reasons);
+      }
+
+      double vwap = 0.0;
+      bool hasVwap = m_structure.VWAPValue(InpVWAPLookbackBars, vwap);
+      double maxPullback = atr * MathMax(0.0, InpInSessionLiquidityPullbackMaxPullbackATR);
+      bool emaPullback = maxPullback <= 0.0 ||
+                         MathAbs(close1 - fastEma) <= maxPullback ||
+                         (bias == BIAS_BUY && low1 <= fastEma + maxPullback && close1 > fastEma) ||
+                         (bias == BIAS_SELL && high1 >= fastEma - maxPullback && close1 < fastEma);
+      bool vwapPullback = hasVwap &&
+                          (maxPullback <= 0.0 ||
+                           MathAbs(close1 - vwap) <= maxPullback ||
+                           (bias == BIAS_BUY && low1 <= vwap + maxPullback && close1 > vwap) ||
+                           (bias == BIAS_SELL && high1 >= vwap - maxPullback && close1 < vwap));
+      if(!emaPullback && !vwapPullback)
+      {
+         reasons += "ISLP no pullback;";
+         return false;
+      }
+      AddSmartMoneyComponent(emaPullback, 2, "ISLP EMA pullback;", score, reasons);
+      AddSmartMoneyComponent(vwapPullback, 2, "ISLP VWAP pullback;", score, reasons);
+
+      bool liquidityEvent = m_structure.LiquiditySweep(bias, InpSweepLookbackBars) ||
+                            m_structure.SweepRejection(bias, InpSweepLookbackBars) ||
+                            m_structure.EqualHighLowSweep(bias, InpEqualLevelLookbackBars) ||
+                            m_structure.BreakoutRetest(bias, InpBreakoutRetestLookbackBars, atr) ||
+                            m_structure.SessionLevelSweep(bias);
+      if(InpInSessionLiquidityPullbackRequireLiquidity && !liquidityEvent)
+      {
+         reasons += "ISLP no liquidity/retest;";
+         return false;
+      }
+      AddSmartMoneyComponent(liquidityEvent, 2, "ISLP liquidity/retest;", score, reasons);
+
+      bool orderFlow = TickPressureCandle(bias) ||
+                       TickSpeedImpulse(bias, atr) ||
+                       CumulativeDeltaProxy(bias) ||
+                       tickMicrostructure.Confirms(bias);
+      if(InpInSessionLiquidityPullbackRequireOrderFlow && !orderFlow)
+      {
+         reasons += "ISLP no order flow;";
+         return false;
+      }
+      if(InpInSessionLiquidityPullbackLowATRRequireOrderFlow &&
+         InpInSessionLiquidityPullbackLowATRThreshold > 0.0 &&
+         atr < InpInSessionLiquidityPullbackLowATRThreshold &&
+         !orderFlow)
+      {
+         reasons += "ISLP low ATR no order flow;";
+         return false;
+      }
+      AddSmartMoneyComponent(orderFlow, 1, "ISLP order flow;", score, reasons);
+
+      double entry = (bias == BIAS_BUY) ? SymbolInfoDouble(_Symbol, SYMBOL_ASK)
+                                        : SymbolInfoDouble(_Symbol, SYMBOL_BID);
+      if(entry <= 0.0)
+         entry = close1;
+      int lookback = MathMax(3, InpInSessionLiquidityPullbackLookbackBars);
+      double buffer = atr * MathMax(0.0, InpInSessionLiquidityPullbackStopBufferATR) +
+                      _Point * MathMax(0.0, InpInSessionLiquidityPullbackStopBufferPoints);
+      double level = 0.0;
+      if(bias == BIAS_BUY)
+      {
+         for(int shift = 1; shift <= lookback; shift++)
+         {
+            double low = iLow(_Symbol, InpSignalTimeframe, shift);
+            if(low <= 0.0)
+               return false;
+            if(level <= 0.0 || low < level)
+               level = low;
+         }
+         stopDistance = entry - (level - buffer);
+      }
+      else
+      {
+         for(int shift = 1; shift <= lookback; shift++)
+         {
+            double high = iHigh(_Symbol, InpSignalTimeframe, shift);
+            if(high <= 0.0)
+               return false;
+            if(level <= 0.0 || high > level)
+               level = high;
+         }
+         stopDistance = (level + buffer) - entry;
+      }
+
+      targetDistance = atr * MathMax(0.10, InpInSessionLiquidityPullbackTakeProfitATR);
+      if(stopDistance <= 0.0 || targetDistance <= 0.0)
+         return false;
+      if(targetDistance / stopDistance < MathMax(0.0, InpInSessionLiquidityPullbackMinRR))
+      {
+         reasons += "ISLP RR reject;";
+         return false;
+      }
+
+      reasons += "ISLP;In-session liquidity pullback;";
+      return score >= MathMax(1, InpInSessionLiquidityPullbackMinScore);
+   }
+
+   bool HighEfficiencyTrendLaneQuality(const ENUM_TRADE_BIAS bias,
+                                       const double atr,
+                                       int &score,
+                                       string &reasons)
+   {
+      score = 0;
+      reasons = "";
+      if(!InpUseHighEfficiencyTrendLane || atr <= 0.0 || bias == BIAS_NONE)
+         return false;
+
+      int laneMode = MathMax(0, MathMin(4, InpHighEfficiencyTrendMode));
+      double minADX = 22.0;
+      int adxLookback = 4;
+      double minADXIncrease = 1.0;
+      int efficiencyLookback = 12;
+      double minEfficiency = 0.55;
+      double minRangeATR = 0.55;
+      double minBodyPercent = 45.0;
+      double maxOppositeWickPercent = 35.0;
+      int slopeLookback = 8;
+      double minSlopePoints = 25.0;
+      bool requireLiquidSession = true;
+      bool requireBOS = true;
+      bool requireLiquidityOrFvg = false;
+      bool requireOrderFlow = false;
+      if(laneMode == 1)
+      {
+         minADX = 25.0;
+         minEfficiency = 0.62;
+         minBodyPercent = 52.0;
+         requireLiquidityOrFvg = true;
+      }
+      else if(laneMode == 2)
+      {
+         minADX = 20.0;
+         minADXIncrease = 0.5;
+         minEfficiency = 0.50;
+         minRangeATR = 0.45;
+         minBodyPercent = 40.0;
+         minSlopePoints = 15.0;
+      }
+      else if(laneMode == 3)
+      {
+         requireOrderFlow = true;
+      }
+      else if(laneMode == 4)
+      {
+         minADX = 18.0;
+         minADXIncrease = 0.0;
+         minEfficiency = 0.42;
+         minRangeATR = 0.38;
+         minBodyPercent = 34.0;
+         maxOppositeWickPercent = 48.0;
+         minSlopePoints = 8.0;
+         requireLiquidSession = false;
+         requireBOS = false;
+      }
+
+      if(requireLiquidSession && !sessionFilter.LiquidSessionActive())
+      {
+         reasons += "HET non-liquid session;";
+         return false;
+      }
+
+      if(InpHighEfficiencyTrendMaxMonthlyEntries > 0 &&
+         CurrentPeriodEntryCount(PERIOD_MN1) >= InpHighEfficiencyTrendMaxMonthlyEntries)
+         return false;
+
+      string laneNeedle = "HET;";
+      int spacingMinutes = MathMax(0, InpHighEfficiencyTrendSpacingMinutes);
+      datetime lastLaneEntry = LastSetupLaneEntryTime(laneNeedle);
+      if(lastLaneEntry > 0 && spacingMinutes > 0 &&
+         TimeCurrent() - lastLaneEntry < spacingMinutes * 60)
+         return false;
+
+      double adxNow = 0.0;
+      adxLookback = MathMax(1, adxLookback);
+      double adxPast = 0.0;
+      if(!indicators.ADX(1, adxNow) ||
+         !indicators.ADX(1 + adxLookback, adxPast) ||
+         adxNow < MathMax(0.0, minADX) ||
+         adxNow - adxPast < MathMax(0.0, minADXIncrease))
+      {
+         reasons += "HET ADX reject;";
+         return false;
+      }
+      AddSmartMoneyComponent(true, 2, "HET ADX rising;", score, reasons);
+
+      efficiencyLookback = MathMax(3, efficiencyLookback);
+      double closeNow = iClose(_Symbol, InpSignalTimeframe, 1);
+      double closePast = iClose(_Symbol, InpSignalTimeframe, 1 + efficiencyLookback);
+      if(closeNow <= 0.0 || closePast <= 0.0)
+         return false;
+
+      double path = 0.0;
+      for(int shift = 1; shift <= efficiencyLookback; shift++)
+      {
+         double closeA = iClose(_Symbol, InpSignalTimeframe, shift);
+         double closeB = iClose(_Symbol, InpSignalTimeframe, shift + 1);
+         if(closeA <= 0.0 || closeB <= 0.0)
+            return false;
+         path += MathAbs(closeA - closeB);
+      }
+      if(path <= _Point)
+         return false;
+
+      double netMove = closeNow - closePast;
+      double directionalEfficiency = MathAbs(netMove) / path;
+      bool efficientDirection = directionalEfficiency >= MathMax(0.0, minEfficiency) &&
+                                ((bias == BIAS_BUY && netMove > 0.0) ||
+                                 (bias == BIAS_SELL && netMove < 0.0));
+      if(!efficientDirection)
+      {
+         reasons += "HET efficiency reject;";
+         return false;
+      }
+      AddSmartMoneyComponent(true, 2, "HET efficient travel;", score, reasons);
+
+      double emaNow = 0.0;
+      double emaPast = 0.0;
+      slopeLookback = MathMax(1, slopeLookback);
+      bool slopeAligned = MAValue(InpSignalTimeframe, InpTrendEMAPeriod, 1, emaNow) &&
+                          MAValue(InpSignalTimeframe, InpTrendEMAPeriod, 1 + slopeLookback, emaPast);
+      if(!slopeAligned)
+         return false;
+      double slopePoints = (emaNow - emaPast) / _Point;
+      if((bias == BIAS_BUY && slopePoints < MathMax(0.0, minSlopePoints)) ||
+         (bias == BIAS_SELL && slopePoints > -MathMax(0.0, minSlopePoints)))
+      {
+         reasons += "HET slope reject;";
+         return false;
+      }
+      AddSmartMoneyComponent(true, 1, "HET EMA slope;", score, reasons);
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range <= _Point)
+         return false;
+      if(range < atr * MathMax(0.0, minRangeATR))
+      {
+         reasons += "HET candle too small;";
+         return false;
+      }
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range;
+      double upperWick = high1 - MathMax(open1, close1);
+      double lowerWick = MathMin(open1, close1) - low1;
+      double oppositeWickPercent = (bias == BIAS_BUY)
+                                   ? 100.0 * upperWick / range
+                                   : 100.0 * lowerWick / range;
+      bool directionalBody = ((bias == BIAS_BUY && close1 > open1) ||
+                             (bias == BIAS_SELL && close1 < open1)) &&
+                             bodyPercent >= MathMax(0.0, minBodyPercent) &&
+                             oppositeWickPercent <= MathMax(0.0, maxOppositeWickPercent);
+      if(!directionalBody)
+      {
+         reasons += "HET candle anatomy reject;";
+         return false;
+      }
+      AddSmartMoneyComponent(true, 2, "HET candle anatomy;", score, reasons);
+
+      bool bos = m_structure.BOS(bias, InpBOSLookbackBars) ||
+                 m_structure.DisplacementBOS(bias, InpDisplacementBOSLookbackBars, atr) ||
+                 m_structure.RangeExpansionBreakout(bias, atr) ||
+                 m_structure.DonchianBreakout(bias);
+      bool liquidityOrFvg = m_structure.LiquiditySweep(bias, InpSweepLookbackBars) ||
+                            m_structure.EqualHighLowSweep(bias, InpEqualLevelLookbackBars) ||
+                            m_structure.FairValueGap(bias, InpFVGLookbackBars, atr) ||
+                            m_structure.FairValueGapRetest(bias, InpFVGLookbackBars, atr);
+      bool orderFlow = TickPressureCandle(bias) ||
+                       TickSpeedImpulse(bias, atr) ||
+                       CumulativeDeltaProxy(bias) ||
+                       tickMicrostructure.Confirms(bias);
+
+      AddSmartMoneyComponent(bos, 2, "HET structure break;", score, reasons);
+      AddSmartMoneyComponent(liquidityOrFvg, 1, "HET liquidity/FVG;", score, reasons);
+      AddSmartMoneyComponent(orderFlow, 1, "HET order flow;", score, reasons);
+
+      if(requireBOS && !bos)
+      {
+         reasons += "HET no structure break;";
+         return false;
+      }
+      if(requireLiquidityOrFvg && !liquidityOrFvg)
+      {
+         reasons += "HET no liquidity/FVG;";
+         return false;
+      }
+      if(requireOrderFlow && !orderFlow)
+      {
+         reasons += "HET no order flow;";
+         return false;
+      }
+
+      return score >= MathMax(1, InpHighEfficiencyTrendMinScore);
+   }
+
+public:
+   SSignal Build(const ENUM_TRADE_BIAS bias)
+   {
+      SSignal signal;
+      signal.bias = BIAS_NONE;
+      signal.confirmations = 0;
+      signal.qualityScore = 0;
+      signal.priceActionScore = 0;
+      signal.reasons = "";
+      signal.atr = 0;
+      signal.stopDistance = 0;
+      signal.takeProfitDistance = 0;
+      signal.isRangeReversion = false;
+      signal.isBandVWAPReversion = false;
+      signal.isBreakoutContinuation = false;
+      signal.rangeReversionStopPrice = 0.0;
+      signal.rangeReversionTargetPrice = 0.0;
+      signal.isPowerTrendContinuation = false;
+      signal.isSessionImpulse = false;
+      signal.isM5TightLiquidity = false;
+      signal.isDailyDonchianBreakout = false;
+      signal.isFlatMonthBreakoutProbe = false;
+      signal.isFlatMonthMicroReversion = false;
+      signal.isFlatMonthStructuralDisplacement = false;
+      signal.isFlatMonthLiquidityReclaim = false;
+      signal.isInSessionLiquidityPullback = false;
+      signal.isHighEfficiencyTrend = false;
+      signal.isDiagnosticFallback = false;
+      signal.useDirectStop = false;
+      signal.riskMultiplier = 1.0;
+
+      if(bias == BIAS_NONE)
+         return signal;
+
+      double atr = 0;
+      if(!indicators.ATR(1, atr) || atr <= 0)
+         return signal;
+
+      if(!EntryShockGuardAllows(atr))
+      {
+         signal.reasons += "Entry shock reject;";
+         return signal;
+      }
+
+      if(!DynamicATRRegimeAllows(atr))
+      {
+         signal.reasons += "ATR regime reject;";
+         return signal;
+      }
+
+      if(!GapRiskAllows(atr))
+      {
+         signal.reasons += "Gap risk reject;";
+         return signal;
+      }
+
+      if(!FailedBreakoutAllows(bias))
+      {
+         signal.reasons += "Failed breakout reject;";
+         return signal;
+      }
+
+      if(!SessionRangeExhaustionAllows(bias, atr))
+      {
+         signal.reasons += "Session range exhaustion reject;";
+         return signal;
+      }
+
+      if(!OpposingLevelDistanceAllows(bias, atr))
+      {
+         signal.reasons += "Level proximity reject;";
+         return signal;
+      }
+
+      if(!TickVolumeRegimeAllows())
+      {
+         signal.reasons += "Tick volume regime reject;";
+         return signal;
+      }
+
+      if(!VolumeDryUpAllows())
+      {
+         signal.reasons += "Volume dry-up reject;";
+         return signal;
+      }
+
+      if(!ChopFilterAllows(atr))
+      {
+         signal.reasons += "Chop reject;";
+         return signal;
+      }
+
+      if(!ImpulseExhaustionAllows(bias, atr))
+      {
+         signal.reasons += "Impulse exhaustion reject;";
+         return signal;
+      }
+
+      if(!ConsecutiveCandleExhaustionAllows(bias, atr))
+      {
+         signal.reasons += "Consecutive candle exhaustion reject;";
+         return signal;
+      }
+
+      if(!DailyRangeExhaustionAllows(bias))
+      {
+         signal.reasons += "Daily range exhaustion reject;";
+         return signal;
+      }
+
+      if(!OppositeWickAllows(bias))
+      {
+         signal.reasons += "Opposite wick reject;";
+         return signal;
+      }
+
+      if(!MarketPhaseAllows())
+      {
+         signal.reasons += "Market phase reject;";
+         return signal;
+      }
+
+      int adaptiveRegimeScore = 0;
+      string adaptiveRegimeReason = "";
+      if(!AdaptiveRegimeConfidenceAllows(bias, atr, adaptiveRegimeScore, adaptiveRegimeReason))
+      {
+         signal.reasons += "Adaptive regime reject score " + IntegerToString(adaptiveRegimeScore) + ";" + adaptiveRegimeReason;
+         return signal;
+      }
+
+      if(InpUseSwingRecencyFilter && !m_structure.RecentSwingAllows(bias))
+      {
+         signal.reasons += "Swing recency reject;";
+         return signal;
+      }
+
+      if(!RSIExhaustionAllows(bias))
+      {
+         signal.reasons += "RSI exhaustion reject;";
+         return signal;
+      }
+
+      if(!BollingerExtensionAllows(bias))
+      {
+         signal.reasons += "Bollinger extension reject;";
+         return signal;
+      }
+
+      if(!StochasticExhaustionAllows(bias))
+      {
+         signal.reasons += "Stochastic exhaustion reject;";
+         return signal;
+      }
+
+      if(!CCIExhaustionAllows(bias))
+      {
+         signal.reasons += "CCI exhaustion reject;";
+         return signal;
+      }
+
+      if(!MFIExhaustionAllows(bias))
+      {
+         signal.reasons += "MFI exhaustion reject;";
+         return signal;
+      }
+
+      if(!VWAPDistanceAllows(atr))
+      {
+         signal.reasons += "VWAP distance reject;";
+         return signal;
+      }
+
+      int smartMoneyScore = 0;
+      string smartMoneyReasons = "";
+      bool smartMoneyQuality = SmartMoneyQuality(bias, atr, smartMoneyScore, smartMoneyReasons);
+      if(InpUseSmartMoneyQualityGate && !smartMoneyQuality)
+      {
+         signal.reasons += "SMQ reject score " + IntegerToString(smartMoneyScore) + ";" + smartMoneyReasons;
+         return signal;
+      }
+
+      int priceActionScore = 0;
+      string priceActionReasons = "";
+      bool priceActionQuality = PriceActionCompositeQuality(bias, atr, priceActionScore, priceActionReasons);
+      signal.priceActionScore = priceActionScore;
+      if(InpUsePriceActionCompositeGate && !priceActionQuality)
+      {
+         signal.reasons += "PA composite reject score " + IntegerToString(priceActionScore) + ";" + priceActionReasons;
+         return signal;
+      }
+
+      AddConfirmation(InpUsePriceActionCompositeGate && priceActionQuality,
+                      InpWeightPriceActionComposite,
+                      "PA composite score " + IntegerToString(priceActionScore) + ";" + priceActionReasons,
+                      signal.confirmations,
+                      signal.qualityScore,
+                      signal.reasons);
+      int breakoutContinuationScore = 0;
+      string breakoutContinuationReasons = "";
+      bool breakoutContinuationQuality = BreakoutContinuationQuality(bias, atr, breakoutContinuationScore, breakoutContinuationReasons);
+      AddConfirmation(InpUseBreakoutContinuationQuality && breakoutContinuationQuality,
+                      InpWeightBreakoutContinuationQuality,
+                      "Breakout continuation score " + IntegerToString(breakoutContinuationScore) + ";" + breakoutContinuationReasons,
+                      signal.confirmations,
+                      signal.qualityScore,
+                      signal.reasons);
+      int powerTrendScore = 0;
+      string powerTrendReasons = "";
+      bool powerTrendContinuation = PowerTrendContinuationQuality(bias,
+                                                                  atr,
+                                                                  breakoutContinuationQuality,
+                                                                  breakoutContinuationScore,
+                                                                  powerTrendScore,
+                                                                  powerTrendReasons);
+      AddConfirmation(InpUsePowerTrendContinuation && powerTrendContinuation,
+                      InpWeightBreakoutContinuationQuality,
+                      "Power trend continuation score " + IntegerToString(powerTrendScore) + ";" + powerTrendReasons,
+                      signal.confirmations,
+                      signal.qualityScore,
+                      signal.reasons);
+      int sessionImpulseScore = 0;
+      string sessionImpulseReasons = "";
+      bool sessionImpulse = SessionImpulseLaneQuality(bias,
+                                                      atr,
+                                                      sessionImpulseScore,
+                                                      sessionImpulseReasons);
+      AddConfirmation(InpUseSessionImpulseLane && sessionImpulse,
+                      InpWeightSessionImpulseLane,
+                      "Session impulse lane score " + IntegerToString(sessionImpulseScore) + ";" + sessionImpulseReasons,
+                      signal.confirmations,
+                      signal.qualityScore,
+                      signal.reasons);
+      int highEfficiencyTrendScore = 0;
+      string highEfficiencyTrendReasons = "";
+      bool highEfficiencyTrend = HighEfficiencyTrendLaneQuality(bias,
+                                                                atr,
+                                                                highEfficiencyTrendScore,
+                                                                highEfficiencyTrendReasons);
+      AddConfirmation(InpUseHighEfficiencyTrendLane && highEfficiencyTrend,
+                      InpWeightBreakoutContinuationQuality,
+                      "High efficiency trend score " + IntegerToString(highEfficiencyTrendScore) + ";" + highEfficiencyTrendReasons,
+                      signal.confirmations,
+                      signal.qualityScore,
+                      signal.reasons);
+      int flatMonthBreakoutProbeScore = 0;
+      string flatMonthBreakoutProbeReasons = "";
+      double flatMonthBreakoutProbeStopDistance = 0.0;
+      double flatMonthBreakoutProbeTargetDistance = 0.0;
+      bool flatMonthBreakoutProbe = FlatMonthBreakoutProbeQuality(bias,
+                                                                   atr,
+                                                                   flatMonthBreakoutProbeScore,
+                                                                   flatMonthBreakoutProbeReasons,
+                                                                   flatMonthBreakoutProbeStopDistance,
+                                                                   flatMonthBreakoutProbeTargetDistance);
+      AddConfirmation(InpUseFlatMonthBreakoutProbe && flatMonthBreakoutProbe,
+                      InpWeightBreakoutContinuationQuality,
+                      "Flat month breakout probe score " + IntegerToString(flatMonthBreakoutProbeScore) + ";" + flatMonthBreakoutProbeReasons,
+                      signal.confirmations,
+                      signal.qualityScore,
+                      signal.reasons);
+      int flatMonthStructuralDisplacementScore = 0;
+      string flatMonthStructuralDisplacementReasons = "";
+      double flatMonthStructuralDisplacementStopDistance = 0.0;
+      double flatMonthStructuralDisplacementTargetDistance = 0.0;
+      bool flatMonthStructuralDisplacement = FlatMonthStructuralDisplacementOpportunity(bias,
+                                                                                        atr,
+                                                                                        flatMonthStructuralDisplacementScore,
+                                                                                        flatMonthStructuralDisplacementReasons,
+                                                                                        flatMonthStructuralDisplacementStopDistance,
+                                                                                        flatMonthStructuralDisplacementTargetDistance);
+      AddConfirmation(InpUseFlatMonthStructuralDisplacementLane && flatMonthStructuralDisplacement,
+                      InpWeightBreakoutContinuationQuality,
+                      "Flat month structural displacement score " + IntegerToString(flatMonthStructuralDisplacementScore) + ";" + flatMonthStructuralDisplacementReasons,
+                      signal.confirmations,
+                       signal.qualityScore,
+                       signal.reasons);
+      int flatMonthLiquidityReclaimScore = 0;
+      string flatMonthLiquidityReclaimReasons = "";
+      double flatMonthLiquidityReclaimStopDistance = 0.0;
+      double flatMonthLiquidityReclaimTargetDistance = 0.0;
+      bool flatMonthLiquidityReclaim = FlatMonthLiquidityReclaimOpportunity(bias,
+                                                                            atr,
+                                                                            flatMonthLiquidityReclaimScore,
+                                                                            flatMonthLiquidityReclaimReasons,
+                                                                            flatMonthLiquidityReclaimStopDistance,
+                                                                            flatMonthLiquidityReclaimTargetDistance);
+      AddConfirmation(InpUseFlatMonthLiquidityReclaimLane && flatMonthLiquidityReclaim,
+                      InpWeightRangeReversionOpportunity,
+                      "Flat month liquidity reclaim score " + IntegerToString(flatMonthLiquidityReclaimScore) + ";" + flatMonthLiquidityReclaimReasons,
+                      signal.confirmations,
+                      signal.qualityScore,
+                      signal.reasons);
+      int inSessionLiquidityPullbackScore = 0;
+      string inSessionLiquidityPullbackReasons = "";
+      double inSessionLiquidityPullbackStopDistance = 0.0;
+      double inSessionLiquidityPullbackTargetDistance = 0.0;
+      bool inSessionLiquidityPullback = InSessionLiquidityPullbackOpportunity(bias,
+                                                                             atr,
+                                                                             inSessionLiquidityPullbackScore,
+                                                                             inSessionLiquidityPullbackReasons,
+                                                                             inSessionLiquidityPullbackStopDistance,
+                                                                             inSessionLiquidityPullbackTargetDistance);
+      AddConfirmation(InpUseInSessionLiquidityPullbackLane && inSessionLiquidityPullback,
+                      InpWeightBreakoutContinuationQuality,
+                      "In-session liquidity pullback score " + IntegerToString(inSessionLiquidityPullbackScore) + ";" + inSessionLiquidityPullbackReasons,
+                      signal.confirmations,
+                      signal.qualityScore,
+                      signal.reasons);
+      int rangeReversionScore = 0;
+      string rangeReversionReasons = "";
+      double rangeReversionStopPrice = 0.0;
+      double rangeReversionTargetPrice = 0.0;
+      bool rangeReversionOpportunity = RangeReversionOpportunity(bias,
+                                                                 atr,
+                                                                 rangeReversionScore,
+                                                                 rangeReversionReasons,
+                                                                 rangeReversionStopPrice,
+                                                                 rangeReversionTargetPrice);
+      int flatMicroReversionScore = 0;
+      string flatMicroReversionReasons = "";
+      double flatMicroReversionStopPrice = 0.0;
+      double flatMicroReversionTargetPrice = 0.0;
+      bool flatMonthMicroReversion = FlatMonthMicroReversionOpportunity(bias,
+                                                                        atr,
+                                                                        flatMicroReversionScore,
+                                                                        flatMicroReversionReasons,
+                                                                        flatMicroReversionStopPrice,
+                                                                        flatMicroReversionTargetPrice);
+      bool effectiveRangeReversion = rangeReversionOpportunity || flatMonthMicroReversion;
+      if(!rangeReversionOpportunity && flatMonthMicroReversion)
+      {
+         rangeReversionScore = flatMicroReversionScore;
+         rangeReversionReasons = flatMicroReversionReasons;
+         rangeReversionStopPrice = flatMicroReversionStopPrice;
+         rangeReversionTargetPrice = flatMicroReversionTargetPrice;
+      }
+      AddConfirmation(InpUseRangeReversionOpportunity && rangeReversionOpportunity,
+                      InpWeightRangeReversionOpportunity,
+                      "Range reversion opportunity score " + IntegerToString(rangeReversionScore) + ";" + rangeReversionReasons,
+                      signal.confirmations,
+                      signal.qualityScore,
+                      signal.reasons);
+      AddConfirmation(InpUseFlatMonthMicroReversionLane && flatMonthMicroReversion,
+                      InpWeightRangeReversionOpportunity,
+                      "Flat month micro reversion score " + IntegerToString(flatMicroReversionScore) + ";" + flatMicroReversionReasons,
+                      signal.confirmations,
+                      signal.qualityScore,
+                      signal.reasons);
+      AddConfirmation(InpUseEMACrossEntry && EMACross(bias), InpWeightEMACross, "EMA cross;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseEMAPullbackContinuation && EMAPullbackContinuation(bias, atr), InpWeightEMAPullback, "EMA pullback;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseBOS && m_structure.BOS(bias, InpBOSLookbackBars), InpWeightBOS, "BOS;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseDisplacementBOS && m_structure.DisplacementBOS(bias, InpDisplacementBOSLookbackBars, atr), InpWeightDisplacementBOS, "Displacement BOS;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseBreakoutRetest && m_structure.BreakoutRetest(bias, InpBreakoutRetestLookbackBars, atr), InpWeightBreakoutRetest, "Breakout retest;", signal.confirmations, signal.qualityScore, signal.reasons);
+      bool liquiditySweepConfirmation = InpUseLiquiditySweep &&
+                                        m_structure.LiquiditySweep(bias, InpSweepLookbackBars);
+      AddConfirmation(liquiditySweepConfirmation, InpWeightLiquiditySweep, "Liquidity sweep;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseSweepRejection && m_structure.SweepRejection(bias, InpSweepLookbackBars), InpWeightSweepRejection, "Sweep rejection;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseCHoCH && m_structure.CHoCH(bias, InpCHoCHLookbackBars), InpWeightCHoCH, "CHoCH;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseFairValueGap && m_structure.FairValueGap(bias, InpFVGLookbackBars, atr), InpWeightFairValueGap, "FVG;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseFVGRetest && m_structure.FairValueGapRetest(bias, InpFVGLookbackBars, atr), InpWeightFVGRetest, "FVG retest;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseOrderBlock && m_structure.OrderBlockRetest(bias, InpOrderBlockLookbackBars, atr), InpWeightOrderBlock, "Order block;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseEqualHighLowSweep && m_structure.EqualHighLowSweep(bias, InpEqualLevelLookbackBars), InpWeightEqualLevelSweep, "Equal level sweep;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUsePreviousLevels && m_structure.PreviousLevels(bias), InpWeightPreviousLevels, "Previous level;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseSessionLevelSweep && m_structure.SessionLevelSweep(bias), InpWeightSessionLevelSweep, "Session level sweep;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseRoundNumberRejection && m_structure.RoundNumberRejection(bias), InpWeightRoundNumberRejection, "Round number;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseOpeningRangeBreakout && m_structure.OpeningRangeBreakout(bias), InpWeightOpeningRangeBreakout, "Opening range;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseAsianRangeSweep && m_structure.AsianRangeSweep(bias), InpWeightAsianRangeSweep, "Asian range sweep;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseCompressionBreakout && m_structure.CompressionBreakout(bias, atr), InpWeightCompressionBreakout, "Compression breakout;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseRangeExpansionBreakout && m_structure.RangeExpansionBreakout(bias, atr), InpWeightRangeExpansionBreakout, "Range expansion breakout;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseNarrowRangeBreakout && m_structure.NarrowRangeBreakout(bias, atr), InpWeightNarrowRangeBreakout, "Narrow range breakout;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseDonchianBreakout && m_structure.DonchianBreakout(bias), InpWeightDonchianBreakout, "Donchian breakout;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseFailedBreakoutReversal && FailedBreakoutReversal(bias), InpWeightFailedBreakoutReversal, "Failed breakout reversal;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseDailyOpenBias && m_structure.DailyOpenBias(bias), InpWeightDailyOpenBias, "Daily open bias;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUsePreviousDayRangeBias && m_structure.PreviousDayRangeBias(bias), InpWeightPreviousDayRangeBias, "Previous day range bias;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseRangeLocationBias && m_structure.RangeLocationBias(bias), InpWeightRangeLocationBias, "Range location bias;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseVWAPConfirmation && m_structure.VWAPConfluence(bias, InpVWAPLookbackBars, atr), InpWeightVWAP, "VWAP;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseVWAPPullbackContinuation && VWAPPullbackContinuation(bias, atr), InpWeightVWAPPullback, "VWAP pullback;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseMomentumCandle && MomentumCandle(bias, atr), InpWeightMomentum, "Momentum;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseEngulfing && Engulfing(bias), InpWeightEngulfing, "Engulfing;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUsePinBar && PinBar(bias), InpWeightPinBar, "Pin bar;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseATRExpansion && ATRExpansion(), InpWeightATRExpansion, "ATR expansion;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseVolumeConfirmation && VolumeConfirmation(), InpWeightVolume, "Volume;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseCandleAnatomy && CandleAnatomy(bias), InpWeightCandleAnatomy, "Candle anatomy;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseRSIConfirmation && RSIConfirmation(bias), InpWeightRSI, "RSI;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseMACDConfirmation && MACDConfirmation(bias), InpWeightMACD, "MACD;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseBollingerConfirmation && BollingerConfirmation(bias), InpWeightBollinger, "Bollinger;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseStochasticConfirmation && StochasticConfirmation(bias), InpWeightStochastic, "Stochastic;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseCCIConfirmation && CCIConfirmation(bias), InpWeightCCI, "CCI;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseMFIConfirmation && MFIConfirmation(bias), InpWeightMFI, "MFI;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseOBVConfirmation && OBVConfirmation(bias), InpWeightOBV, "OBV;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseDIDirectionConfirmation && DIDirectionConfirmation(bias), InpWeightDIDirection, "DI direction;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseADXStrengtheningConfirmation && ADXStrengtheningConfirmation(), InpWeightADXStrengthening, "ADX strengthening;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseCumulativeDeltaProxy && CumulativeDeltaProxy(bias), InpWeightCumulativeDelta, "Cumulative delta proxy;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseTickMicrostructure && tickMicrostructure.Confirms(bias), InpWeightTickMicrostructure, "Tick microstructure;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseDisplacementCandle && DisplacementCandle(bias, atr), InpWeightDisplacementCandle, "Displacement candle;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseTickPressureCandle && TickPressureCandle(bias), InpWeightTickPressureCandle, "Tick pressure candle;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseTickSpeedImpulse && TickSpeedImpulse(bias, atr), InpWeightTickSpeedImpulse, "Tick speed impulse;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseRegimeQualityScore && RegimeQuality(bias, atr), InpWeightRegimeQuality, "Regime quality;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseCorrelationConfirmation && CorrelationConfirmation(bias), InpWeightCorrelation, "Correlation;", signal.confirmations, signal.qualityScore, signal.reasons);
+      AddConfirmation(InpUseSmartMoneyQualityGate && smartMoneyQuality,
+                      InpWeightSmartMoneyQuality,
+                      "SMQ score " + IntegerToString(smartMoneyScore) + ";" + smartMoneyReasons,
+                      signal.confirmations,
+                      signal.qualityScore,
+                      signal.reasons);
+      string diagnosticFallbackSpreadReason = "";
+      bool diagnosticFallbackBase = DiagnosticTrendFallback(bias) &&
+                                    DiagnosticFallbackQualityAllows(bias,
+                                                                    atr,
+                                                                    priceActionScore,
+                                                                    smartMoneyScore);
+      if(diagnosticFallbackBase &&
+         InpDiagnosticFallbackBlockLiquiditySweep &&
+         StringFind(signal.reasons, "Liquidity sweep;") >= 0)
+      {
+         diagnosticFallbackBase = false;
+         signal.reasons += "Diagnostic fallback liquidity sweep reject;";
+      }
+      if(diagnosticFallbackBase &&
+         InpDiagnosticFallbackRejectLiquiditySweepSignal &&
+         StringFind(signal.reasons, "Liquidity sweep;") >= 0 &&
+         signal.confirmations <= MathMax(0, InpDiagnosticFallbackLiquidityRejectMaxConfirmations))
+      {
+         signal.reasons += "Diagnostic fallback liquidity signal reject;";
+         return signal;
+      }
+      if(diagnosticFallbackBase && InpUseDiagnosticFallbackLateSessionGuard)
+      {
+         MqlDateTime diagnosticFallbackTime;
+         TimeToStruct(TimeCurrent(), diagnosticFallbackTime);
+         bool pureDiagnosticFallback = (signal.confirmations <= 0);
+         if(diagnosticFallbackTime.hour >= MathMax(0, MathMin(23, InpDiagnosticFallbackLateSessionStartHour)) &&
+            (!InpDiagnosticFallbackLateSessionPureOnly || pureDiagnosticFallback))
+         {
+            diagnosticFallbackBase = false;
+            signal.reasons += "Diagnostic fallback late-session reject;";
+         }
+      }
+      bool diagnosticFallbackSpreadAllowed = !diagnosticFallbackBase ||
+                                             DiagnosticFallbackSpreadAllows(atr, diagnosticFallbackSpreadReason);
+      bool diagnosticFallback = diagnosticFallbackBase && diagnosticFallbackSpreadAllowed;
+      if(diagnosticFallbackBase && !diagnosticFallbackSpreadAllowed)
+      {
+         signal.reasons += "Diagnostic fallback spread reject;";
+         if(InpDiagnosticFallbackDebug)
+            Print("DIAG_FALLBACK_REJECT ", diagnosticFallbackSpreadReason);
+      }
+      signal.isDiagnosticFallback = diagnosticFallback;
+      AddConfirmation(diagnosticFallback,
+                      1,
+                      "Diagnostic trend fallback;",
+                      signal.confirmations,
+                      signal.qualityScore,
+                      signal.reasons);
+
+      if(!InpAllowStandaloneLiquiditySweepEntry &&
+         liquiditySweepConfirmation &&
+         !diagnosticFallback &&
+         signal.confirmations <= MathMax(1, InpWeightLiquiditySweep))
+      {
+         signal.reasons += "Standalone liquidity sweep reject;";
+         return signal;
+      }
+
+      bool flatMonthStaleEntryNudge = FlatMonthStaleEntryNudgeAllowed(powerTrendContinuation,
+                                                                      breakoutContinuationQuality,
+                                                                      sessionImpulse,
+                                                                      effectiveRangeReversion);
+      double flatMonthMissedMoveATR = 0.0;
+      bool flatMonthMissedMoveWakeUp = FlatMonthMissedMoveWakeUpAllowed(powerTrendContinuation,
+                                                                        breakoutContinuationQuality,
+                                                                        sessionImpulse,
+                                                                        flatMonthMissedMoveATR);
+      int requiredConfirmations = RequiredConfirmations(bias);
+      if(flatMonthStaleEntryNudge)
+         requiredConfirmations = MathMax(1,
+                                         requiredConfirmations -
+                                         MathMax(0, InpFlatMonthStaleEntryConfirmationDiscount));
+      if(flatMonthMissedMoveWakeUp)
+         requiredConfirmations = MathMax(1,
+                                         requiredConfirmations -
+                                         MathMax(0, InpFlatMonthMissedMoveScoreDiscount));
+      if(InpUseBreakoutContinuationQuality &&
+         InpBreakoutContinuationStandaloneEntry &&
+         breakoutContinuationQuality &&
+         breakoutContinuationScore >= ActiveFlatMonthCatchUpStandaloneMinScore(InpBreakoutContinuationStandaloneMinScore) &&
+         signal.confirmations < requiredConfirmations)
+      {
+         signal.confirmations = requiredConfirmations;
+         signal.reasons += "Breakout continuation standalone entry;";
+         if(FlatMonthCatchUpStandaloneRelaxationAllowed())
+            signal.reasons += "Flat month catch-up standalone relaxation;";
+      }
+
+      if(InpUsePowerTrendContinuation &&
+         InpPowerTrendContinuationStandaloneEntry &&
+         powerTrendContinuation &&
+         powerTrendScore >= ActiveFlatMonthCatchUpStandaloneMinScore(InpPowerTrendContinuationStandaloneMinScore) &&
+         signal.confirmations < requiredConfirmations)
+      {
+         signal.confirmations = requiredConfirmations;
+         signal.reasons += "Power trend continuation standalone entry;";
+         if(FlatMonthCatchUpStandaloneRelaxationAllowed())
+            signal.reasons += "Flat month catch-up standalone relaxation;";
+      }
+
+      if(InpUseSessionImpulseLane &&
+         InpSessionImpulseStandaloneEntry &&
+         sessionImpulse &&
+         sessionImpulseScore >= ActiveFlatMonthCatchUpStandaloneMinScore(InpSessionImpulseStandaloneMinScore) &&
+         signal.confirmations < requiredConfirmations)
+      {
+         signal.confirmations = requiredConfirmations;
+         signal.reasons += "Session impulse standalone entry;";
+         if(FlatMonthCatchUpStandaloneRelaxationAllowed())
+            signal.reasons += "Flat month catch-up standalone relaxation;";
+      }
+
+      if(InpUseHighEfficiencyTrendLane &&
+         highEfficiencyTrend &&
+         highEfficiencyTrendScore >= MathMax(1, InpHighEfficiencyTrendMinScore) &&
+         signal.confirmations < requiredConfirmations)
+      {
+         signal.confirmations = requiredConfirmations;
+         signal.reasons += "High efficiency trend standalone entry;";
+      }
+
+      if(InpUseFlatMonthBreakoutProbe &&
+         flatMonthBreakoutProbe &&
+         flatMonthBreakoutProbeScore >= MathMax(1, InpFlatMonthBreakoutProbeMinScore) &&
+         signal.confirmations < requiredConfirmations)
+      {
+         signal.confirmations = requiredConfirmations;
+         signal.reasons += "Flat month breakout probe standalone;";
+      }
+
+      if(InpUseFlatMonthStructuralDisplacementLane &&
+         flatMonthStructuralDisplacement &&
+         flatMonthStructuralDisplacementScore >= MathMax(1, InpFlatMonthStructuralDisplacementMinScore) &&
+         signal.confirmations < requiredConfirmations)
+      {
+         signal.confirmations = requiredConfirmations;
+         signal.reasons += "Flat month structural displacement standalone;";
+      }
+
+      if(InpUseFlatMonthLiquidityReclaimLane &&
+         flatMonthLiquidityReclaim &&
+         flatMonthLiquidityReclaimScore >= MathMax(1, InpFlatMonthLiquidityReclaimMinScore) &&
+         signal.confirmations < requiredConfirmations)
+      {
+         signal.confirmations = requiredConfirmations;
+         signal.reasons += "Flat month liquidity reclaim standalone;";
+      }
+
+      if(InpUseInSessionLiquidityPullbackLane &&
+         inSessionLiquidityPullback &&
+         inSessionLiquidityPullbackScore >= MathMax(1, InpInSessionLiquidityPullbackMinScore) &&
+         signal.confirmations < requiredConfirmations)
+      {
+         signal.confirmations = requiredConfirmations;
+         signal.reasons += "In-session liquidity pullback standalone;";
+      }
+
+      if(InpUseRangeReversionOpportunity &&
+         InpRangeReversionStandaloneEntry &&
+         effectiveRangeReversion &&
+         signal.confirmations < requiredConfirmations)
+      {
+         signal.confirmations = requiredConfirmations;
+         signal.reasons += "Range reversion standalone entry;";
+         if(flatMonthMicroReversion)
+            signal.reasons += "Flat month micro reversion standalone;";
+      }
+
+      bool flatMonthEliteFallback = FlatMonthEliteFallbackAllowed(signal.confirmations,
+                                                                  requiredConfirmations,
+                                                                  signal.qualityScore,
+                                                                  signal.priceActionScore);
+      if(flatMonthEliteFallback && signal.confirmations < requiredConfirmations)
+      {
+         signal.confirmations = requiredConfirmations;
+         signal.reasons += "Flat month elite fallback;";
+      }
+
+      if(signal.confirmations < requiredConfirmations)
+         return signal;
+      if(flatMonthStaleEntryNudge)
+         signal.reasons += "Flat month stale entry nudge;";
+      if(flatMonthMissedMoveWakeUp)
+         signal.reasons += "Flat month missed move wake-up " +
+                           DoubleToString(flatMonthMissedMoveATR, 2) + " ATR;";
+
+      bool flatMonthCatchUpRelaxLane =
+         (breakoutContinuationQuality && InpFlatMonthCatchUpRelaxBreakout) ||
+         (sessionImpulse && InpFlatMonthCatchUpRelaxBreakout) ||
+         (effectiveRangeReversion && InpFlatMonthCatchUpRelaxRangeReversion);
+
+      int activeMinimumEntryScore = ActiveMinimumEntryScore(flatMonthCatchUpRelaxLane);
+      if(flatMonthMissedMoveWakeUp)
+         activeMinimumEntryScore = MathMax(0,
+                                           activeMinimumEntryScore -
+                                           MathMax(0, InpFlatMonthMissedMoveScoreDiscount));
+      if(powerTrendContinuation)
+         activeMinimumEntryScore = MathMax(0, activeMinimumEntryScore - MathMax(0, InpPowerTrendContinuationEntryScoreDiscount));
+      if(sessionImpulse)
+         activeMinimumEntryScore = MathMax(0, activeMinimumEntryScore - MathMax(0, InpSessionImpulseEntryScoreDiscount));
+      if(highEfficiencyTrend)
+         activeMinimumEntryScore = MathMax(0, activeMinimumEntryScore - MathMax(0, InpPowerTrendContinuationEntryScoreDiscount));
+      if(inSessionLiquidityPullback)
+         activeMinimumEntryScore = MathMax(0, activeMinimumEntryScore - 1);
+      if(flatMonthLiquidityReclaim)
+         activeMinimumEntryScore = MathMax(0, activeMinimumEntryScore - 1);
+
+      if(InpUseWeightedEntryScore && signal.qualityScore < activeMinimumEntryScore)
+      {
+         signal.reasons += "Score reject;";
+         return signal;
+      }
+
+      if(InpUseEliteEntryQualityGate)
+      {
+         int eliteMinConfirmations = MathMax(0, InpEliteEntryMinConfirmations);
+         int eliteMinQualityScore = MathMax(0, InpEliteEntryMinQualityScore);
+         int eliteMinPriceActionScore = MathMax(0, InpEliteEntryMinPriceActionScore);
+         if(InpRangeReversionUseCustomEliteGate &&
+            effectiveRangeReversion &&
+            (InpUseRangeReversionOpportunity || InpUseFlatMonthMicroReversionLane))
+         {
+            eliteMinConfirmations = MathMax(0, InpRangeReversionEliteMinConfirmations);
+            eliteMinQualityScore = MathMax(0, InpRangeReversionEliteMinQualityScore);
+            eliteMinPriceActionScore = MathMax(0, InpRangeReversionEliteMinPriceActionScore);
+         }
+
+         if(signal.confirmations < eliteMinConfirmations ||
+            signal.qualityScore < eliteMinQualityScore ||
+            signal.priceActionScore < eliteMinPriceActionScore)
+         {
+            signal.reasons += "Elite entry quality reject;";
+            return signal;
+         }
+      }
+
+      signal.bias = bias;
+      signal.atr = atr;
+      signal.stopDistance = atr * InpStopATRMultiplier;
+      signal.takeProfitDistance = atr * InpTakeProfitATRMultiplier;
+      if((InpUseRangeReversionOpportunity && rangeReversionOpportunity) ||
+         (InpUseFlatMonthMicroReversionLane && flatMonthMicroReversion))
+      {
+         double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+         signal.isRangeReversion = true;
+         if(flatMonthMicroReversion)
+            signal.isFlatMonthMicroReversion = true;
+         signal.rangeReversionStopPrice = rangeReversionStopPrice;
+         signal.rangeReversionTargetPrice = rangeReversionTargetPrice;
+         if(flatMonthMicroReversion)
+            signal.riskMultiplier = MathMin(signal.riskMultiplier,
+                                            MathMax(0.0, InpFlatMonthMicroReversionRiskMultiplier));
+         if(InpRangeReversionUseStructuralStop && close1 > 0.0)
+            signal.stopDistance = MathAbs(close1 - rangeReversionStopPrice);
+         if(InpRangeReversionUseMeanTarget && close1 > 0.0)
+            signal.takeProfitDistance = MathAbs(rangeReversionTargetPrice - close1);
+         signal.reasons += "Range reversion stop/target;";
+      }
+      if(InpUseBreakoutContinuationQuality && breakoutContinuationQuality)
+         signal.isBreakoutContinuation = true;
+      if(InpUsePowerTrendContinuation && powerTrendContinuation)
+      {
+         signal.isPowerTrendContinuation = true;
+         signal.reasons += "Power trend continuation lane;";
+      }
+      if(InpUseSessionImpulseLane && sessionImpulse)
+      {
+         signal.isSessionImpulse = true;
+         signal.reasons += "Session impulse lane;";
+      }
+      if(InpUseHighEfficiencyTrendLane && highEfficiencyTrend)
+      {
+         signal.isHighEfficiencyTrend = true;
+         signal.isBreakoutContinuation = true;
+         signal.stopDistance = atr * MathMax(0.10, InpHighEfficiencyTrendStopATRMultiplier);
+         signal.takeProfitDistance = atr * MathMax(0.10, InpHighEfficiencyTrendTakeProfitATRMultiplier);
+         signal.riskMultiplier = MathMin(signal.riskMultiplier,
+                                         MathMax(0.0, InpHighEfficiencyTrendRiskMultiplier));
+         signal.reasons += "High efficiency trend lane;";
+      }
+      if(InpUseFlatMonthBreakoutProbe && flatMonthBreakoutProbe)
+      {
+         signal.isFlatMonthBreakoutProbe = true;
+         signal.isBreakoutContinuation = true;
+         if(InpFlatMonthBreakoutProbeUseStructuralStop &&
+            flatMonthBreakoutProbeStopDistance > 0.0 &&
+            flatMonthBreakoutProbeTargetDistance > 0.0)
+         {
+            signal.useDirectStop = true;
+            signal.stopDistance = flatMonthBreakoutProbeStopDistance;
+            signal.takeProfitDistance = flatMonthBreakoutProbeTargetDistance;
+         }
+         signal.riskMultiplier = MathMin(signal.riskMultiplier,
+                                          MathMax(0.0, InpFlatMonthBreakoutProbeRiskMultiplier));
+         signal.reasons += "Flat month breakout probe lane;";
+      }
+      if(InpUseFlatMonthStructuralDisplacementLane && flatMonthStructuralDisplacement)
+      {
+         signal.isFlatMonthStructuralDisplacement = true;
+         signal.isBreakoutContinuation = true;
+         signal.useDirectStop = true;
+         signal.stopDistance = flatMonthStructuralDisplacementStopDistance;
+         signal.takeProfitDistance = flatMonthStructuralDisplacementTargetDistance;
+         signal.riskMultiplier = MathMin(signal.riskMultiplier,
+                                          MathMax(0.0, InpFlatMonthStructuralDisplacementRiskMultiplier));
+         signal.reasons += "Flat month structural displacement lane;";
+      }
+      if(InpUseFlatMonthLiquidityReclaimLane && flatMonthLiquidityReclaim)
+      {
+         signal.isFlatMonthLiquidityReclaim = true;
+         signal.useDirectStop = true;
+         signal.stopDistance = flatMonthLiquidityReclaimStopDistance;
+         signal.takeProfitDistance = flatMonthLiquidityReclaimTargetDistance;
+         double baseFmlrRiskMultiplier = MathMax(0.0, InpFlatMonthLiquidityReclaimRiskMultiplier);
+         double activeFmlrRiskMultiplier = ActiveFlatMonthLiquidityReclaimRiskMultiplier();
+         signal.riskMultiplier = MathMin(signal.riskMultiplier,
+                                         activeFmlrRiskMultiplier);
+         signal.reasons += "Flat month liquidity reclaim lane;";
+         if(activeFmlrRiskMultiplier > baseFmlrRiskMultiplier + 0.0001)
+            signal.reasons += "FMLR active risk x" + DoubleToString(activeFmlrRiskMultiplier, 2) + ";";
+      }
+      if(InpUseInSessionLiquidityPullbackLane && inSessionLiquidityPullback)
+      {
+         signal.isInSessionLiquidityPullback = true;
+         signal.isBreakoutContinuation = true;
+         signal.useDirectStop = true;
+         signal.stopDistance = inSessionLiquidityPullbackStopDistance;
+         signal.takeProfitDistance = inSessionLiquidityPullbackTargetDistance;
+         signal.riskMultiplier = MathMin(signal.riskMultiplier,
+                                         MathMax(0.0, InpInSessionLiquidityPullbackRiskMultiplier));
+         signal.reasons += "In-session liquidity pullback lane;";
+      }
+
+      double minimumRR = signal.isRangeReversion ? MathMax(0.0, InpRangeReversionMinRR)
+                                                  : (signal.isFlatMonthBreakoutProbe
+                                                     ? MathMax(0.0, InpFlatMonthBreakoutProbeMinRR)
+                                                     : (signal.isFlatMonthStructuralDisplacement
+                                                        ? MathMax(0.0, InpFlatMonthStructuralDisplacementMinRR)
+                                                        : (signal.isFlatMonthLiquidityReclaim
+                                                           ? MathMax(0.0, InpFlatMonthLiquidityReclaimMinRR)
+                                                           : (signal.isInSessionLiquidityPullback
+                                                              ? MathMax(0.0, InpInSessionLiquidityPullbackMinRR)
+                                                              : (signal.isHighEfficiencyTrend
+                                                                 ? MathMax(0.0, InpHighEfficiencyTrendMinRR)
+                                                                 : ActiveMinimumRiskReward(flatMonthCatchUpRelaxLane,
+                                                                                           flatMonthMissedMoveWakeUp))))));
+      if(InpUseTakeProfit && signal.takeProfitDistance / signal.stopDistance < minimumRR)
+      {
+         signal.bias = BIAS_NONE;
+         signal.reasons += "RR reject;";
+      }
+
+      return signal;
+   }
+
+   SSignal BuildBandVWAPReversion()
+   {
+      SSignal signal;
+      signal.bias = BIAS_NONE;
+      signal.confirmations = 0;
+      signal.qualityScore = 0;
+      signal.priceActionScore = 0;
+      signal.reasons = "";
+      signal.atr = 0.0;
+      signal.stopDistance = 0.0;
+      signal.takeProfitDistance = 0.0;
+      signal.isRangeReversion = false;
+      signal.isBandVWAPReversion = false;
+      signal.isBreakoutContinuation = false;
+      signal.isPowerTrendContinuation = false;
+      signal.isSessionImpulse = false;
+      signal.isM5TightLiquidity = false;
+      signal.isDailyDonchianBreakout = false;
+      signal.isFlatMonthBreakoutProbe = false;
+      signal.isFlatMonthMicroReversion = false;
+      signal.isFlatMonthStructuralDisplacement = false;
+      signal.isFlatMonthLiquidityReclaim = false;
+      signal.isInSessionLiquidityPullback = false;
+      signal.isHighEfficiencyTrend = false;
+      signal.isDiagnosticFallback = false;
+      signal.useDirectStop = false;
+      signal.riskMultiplier = 1.0;
+      signal.rangeReversionStopPrice = 0.0;
+      signal.rangeReversionTargetPrice = 0.0;
+
+      if(!InpUseBandVWAPReversionLane)
+         return signal;
+      ENUM_TIMEFRAMES timeframe = InpBandVWAPReversionTimeframe;
+      datetime currentBandBarTime = iTime(_Symbol, timeframe, 0);
+      if(currentBandBarTime <= 0 || currentBandBarTime == g_lastBandReversionBarTime)
+         return signal;
+      g_lastBandReversionBarTime = currentBandBarTime;
+      int bandMonthlyEntries = InpUseLaneSpecificMonthlyEntryCaps
+                               ? SetupLaneEntryCount(PERIOD_MN1, "Band VWAP reversion;")
+                               : CurrentPeriodEntryCount(PERIOD_MN1);
+      if(InpBandVWAPReversionMaxMonthlyEntries > 0 &&
+         bandMonthlyEntries >= InpBandVWAPReversionMaxMonthlyEntries)
+         return signal;
+
+      datetime lastLaneEntry = LastSetupLaneEntryTime("Band VWAP reversion;");
+      int spacingMinutes = MathMax(0, InpBandVWAPReversionSpacingMinutes);
+      if(lastLaneEntry > 0 && spacingMinutes > 0 &&
+         TimeCurrent() - lastLaneEntry < spacingMinutes * 60)
+         return signal;
+
+      double atr = 0.0;
+      double adx = 0.0;
+      double rsi = 0.0;
+      double middle = 0.0;
+      double upper = 0.0;
+      double lower = 0.0;
+      if(!indicators.BandReversionATR(1, atr) || atr <= 0.0 ||
+         !indicators.BandReversionADX(1, adx) ||
+         !indicators.BandReversionRSI(1, rsi) ||
+         !indicators.BandReversionMiddle(1, middle) ||
+         !indicators.BandReversionUpper(1, upper) ||
+         !indicators.BandReversionLower(1, lower))
+         return signal;
+      if(adx > MathMax(0.0, InpBandVWAPReversionMaxADX))
+         return signal;
+
+      double bandWidthATR = (upper - lower) / atr;
+      if(bandWidthATR < MathMax(0.0, InpBandVWAPReversionMinBandWidthATR) ||
+         (InpBandVWAPReversionMaxBandWidthATR > 0.0 &&
+          bandWidthATR > InpBandVWAPReversionMaxBandWidthATR))
+         return signal;
+
+      double high1 = iHigh(_Symbol, timeframe, 1);
+      double low1 = iLow(_Symbol, timeframe, 1);
+      double open1 = iOpen(_Symbol, timeframe, 1);
+      double close1 = iClose(_Symbol, timeframe, 1);
+      double range1 = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range1 <= _Point)
+         return signal;
+
+      double penetration = atr * MathMax(0.0, InpBandVWAPReversionMinBandPenetrationATR);
+      double closeLocation = (close1 - low1) / range1;
+      double upperWickPercent = 100.0 * (high1 - MathMax(open1, close1)) / range1;
+      double lowerWickPercent = 100.0 * (MathMin(open1, close1) - low1) / range1;
+      double minWick = MathMax(0.0, InpBandVWAPReversionMinWickPercent);
+      double minCloseLocation = MathMin(0.95, MathMax(0.50, InpBandVWAPReversionMinCloseLocation));
+
+      bool buyReentry = low1 <= lower - penetration &&
+                        close1 > lower && close1 > open1 &&
+                        lowerWickPercent >= minWick &&
+                        closeLocation >= minCloseLocation &&
+                        rsi <= MathMax(0.0, InpBandVWAPReversionBuyMaxRSI);
+      bool sellReentry = high1 >= upper + penetration &&
+                         close1 < upper && close1 < open1 &&
+                         upperWickPercent >= minWick &&
+                         closeLocation <= 1.0 - minCloseLocation &&
+                         rsi >= MathMin(100.0, InpBandVWAPReversionSellMinRSI);
+      if(buyReentry == sellReentry)
+         return signal;
+
+      ENUM_TRADE_BIAS bias = buyReentry ? BIAS_BUY : BIAS_SELL;
+      if(InpBandVWAPReversionRequireVolumeExpansion && !VolumeConfirmationForTimeframe(timeframe))
+         return signal;
+
+      double spreadATRPercent = 100.0 * CLogger::SpreadPoints() / (atr / _Point);
+      if(InpBandVWAPReversionMaxSpreadATRPercent > 0.0 &&
+         spreadATRPercent > InpBandVWAPReversionMaxSpreadATRPercent)
+         return signal;
+
+      double vwap = 0.0;
+      bool hasVwap = m_structure.VWAPValueForTimeframe(timeframe,
+                                                      InpBandVWAPReversionVWAPLookbackBars,
+                                                      vwap);
+      if(InpBandVWAPReversionRequireVWAP && !hasVwap)
+         return signal;
+
+      double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+      double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+      double entry = (bias == BIAS_BUY) ? ask : bid;
+      if(entry <= 0.0)
+         return signal;
+
+      double targetPrice = middle;
+      if(InpBandVWAPReversionRequireVWAP)
+         targetPrice = vwap;
+      else if(hasVwap &&
+              ((bias == BIAS_BUY && vwap > targetPrice) ||
+               (bias == BIAS_SELL && vwap < targetPrice)))
+         targetPrice = vwap;
+
+      if((bias == BIAS_BUY && targetPrice <= entry) ||
+         (bias == BIAS_SELL && targetPrice >= entry))
+         return signal;
+
+      int stopLookback = MathMax(2, InpBandVWAPReversionStopLookbackBars);
+      double structuralExtreme = 0.0;
+      double stopBuffer = atr * MathMax(0.0, InpBandVWAPReversionStopBufferATR) +
+                          _Point * MathMax(0.0, InpBandVWAPReversionStopBufferPoints);
+      double stopPrice = 0.0;
+      if(bias == BIAS_BUY)
+      {
+         if(!m_structure.LowestLowForTimeframe(timeframe, 1, stopLookback, structuralExtreme))
+            return signal;
+         stopPrice = structuralExtreme - stopBuffer;
+      }
+      else
+      {
+         if(!m_structure.HighestHighForTimeframe(timeframe, 1, stopLookback, structuralExtreme))
+            return signal;
+         stopPrice = structuralExtreme + stopBuffer;
+      }
+
+      double stopDistance = (bias == BIAS_BUY) ? entry - stopPrice : stopPrice - entry;
+      double targetDistance = (bias == BIAS_BUY) ? targetPrice - entry : entry - targetPrice;
+      if(stopDistance <= 0.0 || targetDistance <= 0.0)
+         return signal;
+      if(InpBandVWAPReversionMaxStopATR > 0.0 &&
+         stopDistance > atr * InpBandVWAPReversionMaxStopATR)
+         return signal;
+      if(targetDistance < atr * MathMax(0.0, InpBandVWAPReversionMinTargetATR))
+         return signal;
+      if(targetDistance / stopDistance < MathMax(0.0, InpBandVWAPReversionMinRR))
+         return signal;
+
+      // Feature diagnostics plus optional, independently controlled research gates.
+      double adxPast = 0.0;
+      double plusDI = 0.0;
+      double minusDI = 0.0;
+      double atrPast = 0.0;
+      double trendEMA = 0.0;
+      double trendEMAPast = 0.0;
+      double fastTrendEMA = 0.0;
+      double mtfEMA = 0.0;
+      indicators.BandReversionADX(6, adxPast);
+      indicators.BandReversionPlusDI(1, plusDI);
+      indicators.BandReversionMinusDI(1, minusDI);
+      indicators.BandReversionATR(6, atrPast);
+      indicators.TrendEMA(1, trendEMA);
+      indicators.TrendEMA(6, trendEMAPast);
+      indicators.FastTrendEMA(1, fastTrendEMA);
+      indicators.MTFEMA(1, mtfEMA);
+
+      double direction = (bias == BIAS_BUY) ? 1.0 : -1.0;
+      double diEdge = direction * (plusDI - minusDI);
+      double atrRatio = (atrPast > 0.0) ? atr / atrPast : 0.0;
+      double trendDistanceATR = (trendEMA > 0.0) ? direction * (close1 - trendEMA) / atr : 0.0;
+      double trendSlopeATR = (trendEMA > 0.0 && trendEMAPast > 0.0)
+                             ? direction * (trendEMA - trendEMAPast) / atr
+                             : 0.0;
+      double fastTrendDistanceATR = (fastTrendEMA > 0.0)
+                                    ? direction * (close1 - fastTrendEMA) / atr
+                                    : 0.0;
+      double mtfDistanceATR = (mtfEMA > 0.0) ? direction * (close1 - mtfEMA) / atr : 0.0;
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range1;
+      double directionalWickPercent = (bias == BIAS_BUY) ? lowerWickPercent : upperWickPercent;
+      double stopATR = stopDistance / atr;
+      double targetATR = targetDistance / atr;
+      double tradeRR = targetDistance / stopDistance;
+
+      if(InpBandVWAPReversionUseDIEdgeGate &&
+         diEdge < InpBandVWAPReversionMinDIEdge)
+         return signal;
+
+      signal.bias = bias;
+      signal.confirmations = 2;
+      signal.qualityScore = 7 + (InpBandVWAPReversionRequireVolumeExpansion ? 1 : 0);
+      signal.priceActionScore = 6;
+      signal.reasons = "Band VWAP reversion;";
+      signal.reasons += (bias == BIAS_BUY) ? "Lower-band reclaim;" : "Upper-band reclaim;";
+      signal.reasons += "RSI " + DoubleToString(rsi, 1) + ";";
+      signal.reasons += "Band width " + DoubleToString(bandWidthATR, 2) + " ATR;";
+      signal.reasons += "ADX " + DoubleToString(adx, 2) + ";";
+      signal.reasons += "ADX delta " + DoubleToString(adx - adxPast, 2) + ";";
+      signal.reasons += "DI edge " + DoubleToString(diEdge, 2) + ";";
+      signal.reasons += "ATR ratio " + DoubleToString(atrRatio, 3) + ";";
+      signal.reasons += "Trend dist ATR " + DoubleToString(trendDistanceATR, 3) + ";";
+      signal.reasons += "Trend slope ATR " + DoubleToString(trendSlopeATR, 3) + ";";
+      signal.reasons += "Fast trend dist ATR " + DoubleToString(fastTrendDistanceATR, 3) + ";";
+      signal.reasons += "MTF dist ATR " + DoubleToString(mtfDistanceATR, 3) + ";";
+      signal.reasons += "Body pct " + DoubleToString(bodyPercent, 1) + ";";
+      signal.reasons += "Wick pct " + DoubleToString(directionalWickPercent, 1) + ";";
+      signal.reasons += "Close loc " + DoubleToString(closeLocation, 3) + ";";
+      signal.reasons += "Stop ATR " + DoubleToString(stopATR, 3) + ";";
+      signal.reasons += "Target ATR " + DoubleToString(targetATR, 3) + ";";
+      signal.reasons += "Trade RR " + DoubleToString(tradeRR, 3) + ";";
+      signal.reasons += "Spread ATR pct " + DoubleToString(spreadATRPercent, 2) + ";";
+      signal.atr = atr;
+      signal.stopDistance = stopDistance;
+      signal.takeProfitDistance = targetDistance;
+      signal.isRangeReversion = true;
+      signal.isBandVWAPReversion = true;
+      signal.riskMultiplier = MathMin(1.0, MathMax(0.0, InpBandVWAPReversionRiskMultiplier));
+      signal.rangeReversionStopPrice = stopPrice;
+      signal.rangeReversionTargetPrice = targetPrice;
+      return signal;
+   }
+};
+
+class CPositionManager
+{
+private:
+   CMarketStructure m_structure;
+
+   bool DailyDonchianChannelExitHit(const ENUM_POSITION_TYPE type,
+                                    string &reason)
+   {
+      reason = "";
+      if(!InpDailyDonchianUseChannelExit)
+         return false;
+
+      ENUM_TIMEFRAMES timeframe = InpDailyDonchianTimeframe;
+      int lookback = MathMax(2, InpDailyDonchianExitLookbackBars);
+      double close1 = iClose(_Symbol, timeframe, 1);
+      if(close1 <= 0.0)
+         return false;
+
+      double atr = 0.0;
+      if(!ATRValue(timeframe, InpATRPeriod, 1, atr) || atr <= 0.0)
+         return false;
+      double buffer = atr * MathMax(0.0, InpDailyDonchianExitBufferATR);
+
+      if(type == POSITION_TYPE_BUY)
+      {
+         int index = iLowest(_Symbol, timeframe, MODE_LOW, lookback, 2);
+         if(index < 0)
+            return false;
+         double level = iLow(_Symbol, timeframe, index);
+         if(level > 0.0 && close1 < level - buffer)
+         {
+            reason = "DDB daily channel exit buy";
+            return true;
+         }
+      }
+      else if(type == POSITION_TYPE_SELL)
+      {
+         int index = iHighest(_Symbol, timeframe, MODE_HIGH, lookback, 2);
+         if(index < 0)
+            return false;
+         double level = iHigh(_Symbol, timeframe, index);
+         if(level > 0.0 && close1 > level + buffer)
+         {
+            reason = "DDB daily channel exit sell";
+            return true;
+         }
+      }
+
+      return false;
+   }
+
+   bool AlreadyPartiallyClosed(const ulong ticket)
+   {
+      string key = "PXEA_PARTIAL_" + (string)ticket;
+      return GlobalVariableCheck(key);
+   }
+
+   void MarkPartialClose(const ulong ticket)
+   {
+      string key = "PXEA_PARTIAL_" + (string)ticket;
+      GlobalVariableSet(key, TimeCurrent());
+   }
+
+   string BasketHarvestKey(const ulong ticket)
+   {
+      return "PXEA_BASKET_HARVEST_" + (string)ticket;
+   }
+
+   bool AlreadyBasketHarvested(const ulong ticket)
+   {
+      return GlobalVariableCheck(BasketHarvestKey(ticket));
+   }
+
+   void MarkBasketHarvest(const ulong ticket)
+   {
+      GlobalVariableSet(BasketHarvestKey(ticket), TimeCurrent());
+   }
+
+   string PostPartialRunnerTPKey(const ulong ticket)
+   {
+      return "PXEA_POST_PARTIAL_TP_" + (string)ticket;
+   }
+
+   bool AlreadyPostPartialRunnerTPExpanded(const ulong ticket)
+   {
+      return GlobalVariableCheck(PostPartialRunnerTPKey(ticket));
+   }
+
+   void MarkPostPartialRunnerTPExpanded(const ulong ticket)
+   {
+      GlobalVariableSet(PostPartialRunnerTPKey(ticket), TimeCurrent());
+   }
+
+   string MFEKey(const ulong ticket)
+   {
+      return TradeMFEKey(ticket);
+   }
+
+   string MAEKey(const ulong ticket)
+   {
+      return TradeMAEKey(ticket);
+   }
+
+   double UpdateMaxFavorableR(const ulong ticket, const double r)
+   {
+      string key = MFEKey(ticket);
+      double maxR = r;
+      if(GlobalVariableCheck(key))
+         maxR = MathMax(GlobalVariableGet(key), r);
+      GlobalVariableSet(key, maxR);
+      return maxR;
+   }
+
+   double UpdateMaxAdverseR(const ulong ticket, const double r)
+   {
+      string key = MAEKey(ticket);
+      double minR = r;
+      if(GlobalVariableCheck(key))
+         minR = MathMin(GlobalVariableGet(key), r);
+      GlobalVariableSet(key, minR);
+      return minR;
+   }
+
+   double ProfitR(const ulong ticket, const ENUM_POSITION_TYPE type, const double openPrice, const double sl)
+   {
+      double current = (type == POSITION_TYPE_BUY) ? SymbolInfoDouble(_Symbol, SYMBOL_BID)
+                                                   : SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+      double risk = InitialRiskDistance(ticket, MathAbs(openPrice - sl));
+      if(risk <= 0)
+         return 0.0;
+
+      if(type == POSITION_TYPE_BUY)
+         return (current - openPrice) / risk;
+      return (openPrice - current) / risk;
+   }
+
+   double OpenBasketProfit(int &positions)
+   {
+      positions = 0;
+      double profit = 0.0;
+      for(int i = PositionsTotal() - 1; i >= 0; i--)
+      {
+         ulong ticket = PositionGetTicket(i);
+         if(ticket == 0 || !PositionSelectByTicket(ticket))
+            continue;
+         if(PositionGetString(POSITION_SYMBOL) != _Symbol ||
+            PositionGetInteger(POSITION_MAGIC) != InpMagicNumber)
+            continue;
+
+         positions++;
+         profit += PositionGetDouble(POSITION_PROFIT);
+         profit += PositionGetDouble(POSITION_SWAP);
+      }
+      return profit;
+   }
+
+   bool StopIsProtected(const ENUM_POSITION_TYPE type, const double openPrice, const double sl)
+   {
+      if(sl <= 0.0 || openPrice <= 0.0)
+         return false;
+      if(type == POSITION_TYPE_BUY)
+         return sl >= openPrice;
+      if(type == POSITION_TYPE_SELL)
+         return sl <= openPrice;
+      return false;
+   }
+
+   double EffectiveMFEGivebackR(const ENUM_POSITION_TYPE type,
+                                const double openPrice,
+                                const double sl)
+   {
+      double baseGiveback = MathMax(0.0, InpMFEGivebackMaxGivebackR);
+      if(!InpUseHouseMoneyMFEGivebackStretch)
+         return baseGiveback;
+      if(InpHouseMoneyMFEStretchRequireProtectedStop && !StopIsProtected(type, openPrice, sl))
+         return baseGiveback;
+      if(!riskManager.HouseMoneyAccelerationAllowed())
+         return baseGiveback;
+
+      double cushionPercent = riskManager.ProtectedFloorCushionPercent();
+      double startPercent = MathMax(0.0, InpHouseMoneyMFEStretchStartCushionPercent);
+      double fullPercent = MathMax(startPercent + 0.01, InpHouseMoneyMFEStretchFullCushionPercent);
+      if(cushionPercent <= startPercent)
+         return baseGiveback;
+
+      double progress = (cushionPercent - startPercent) / (fullPercent - startPercent);
+      progress = MathMin(1.0, MathMax(0.0, progress));
+      double maxGiveback = MathMax(baseGiveback, InpHouseMoneyMFEGivebackMaxR);
+      return baseGiveback + progress * (maxGiveback - baseGiveback);
+   }
+
+   ENUM_TRADE_BIAS PositionBias(const ENUM_POSITION_TYPE type)
+   {
+      if(type == POSITION_TYPE_BUY)
+         return BIAS_BUY;
+      if(type == POSITION_TYPE_SELL)
+         return BIAS_SELL;
+      return BIAS_NONE;
+   }
+
+   bool ContinuationStructureSupports(const ENUM_POSITION_TYPE type, const double atr)
+   {
+      ENUM_TRADE_BIAS bias = PositionBias(type);
+      if(bias == BIAS_NONE || atr <= 0.0)
+         return false;
+
+      int lookback = MathMax(8, InpDisplacementBOSLookbackBars);
+      if(m_structure.DisplacementBOS(bias, lookback, atr))
+         return true;
+      if(m_structure.BreakoutRetest(bias, MathMax(8, InpBreakoutRetestLookbackBars), atr))
+         return true;
+      if(m_structure.DonchianBreakout(bias))
+         return true;
+      return m_structure.BOS(bias, lookback);
+   }
+
+   bool RunnerExitPatienceAllows(const ENUM_POSITION_TYPE type,
+                                 const double openPrice,
+                                 const double sl,
+                                 const double r,
+                                 const double maxFavorableR,
+                                 const double atr)
+   {
+      if(!InpUseRunnerExitPatience)
+         return false;
+      if(r < MathMax(0.0, InpRunnerExitPatienceMinR))
+         return false;
+      if(maxFavorableR < MathMax(0.0, InpRunnerExitPatienceMinMFER))
+         return false;
+      if(InpRunnerExitPatienceRequireProtectedStop && !StopIsProtected(type, openPrice, sl))
+         return false;
+      if(InpRunnerExitPatienceRequireHouseMoney && !riskManager.HouseMoneyAccelerationAllowed())
+         return false;
+      if(InpRunnerExitPatienceRequireTrendRegime &&
+         TrendRegimeBoostProgress(InpTrendRegimeBoostRequiresEquityProfit) <= 0.0)
+         return false;
+      if(InpRunnerExitPatienceRequireContinuation && !ContinuationStructureSupports(type, atr))
+         return false;
+      return true;
+   }
+
+   bool PositionHasEntryTag(const long positionId, const string tag)
+   {
+      if(positionId <= 0 || StringLen(tag) <= 0)
+         return false;
+
+      HistorySelect(0, TimeCurrent());
+      int total = HistoryDealsTotal();
+      for(int i = total - 1; i >= 0; i--)
+      {
+         ulong deal = HistoryDealGetTicket(i);
+         if(deal == 0)
+            continue;
+         if(HistoryDealGetInteger(deal, DEAL_POSITION_ID) != positionId)
+            continue;
+         if(HistoryDealGetString(deal, DEAL_SYMBOL) != _Symbol)
+            continue;
+         if(HistoryDealGetInteger(deal, DEAL_MAGIC) != InpMagicNumber)
+            continue;
+         if(HistoryDealGetInteger(deal, DEAL_ENTRY) != DEAL_ENTRY_IN)
+            continue;
+
+         return StringFind(HistoryDealGetString(deal, DEAL_COMMENT), tag) >= 0;
+      }
+      return false;
+   }
+
+   bool FlatMonthLiquidityReclaimStructureTrailStop(const long positionId,
+                                                    const ENUM_POSITION_TYPE type,
+                                                    const double openPrice,
+                                                    const double sl,
+                                                    const double atr,
+                                                    const double r,
+                                                    double &trailStop,
+                                                    string &reason)
+   {
+      trailStop = 0.0;
+      reason = "";
+      if(!InpFlatMonthLiquidityReclaimUseStructureTrail)
+         return false;
+      if(!PositionHasEntryTag(positionId, "FMLR;"))
+         return false;
+      if(openPrice <= 0.0 || atr <= 0.0)
+         return false;
+      if(r < MathMax(0.0, InpFlatMonthLiquidityReclaimStructureTrailStartR))
+         return false;
+
+      ENUM_TRADE_BIAS bias = PositionBias(type);
+      if(bias == BIAS_NONE)
+         return false;
+
+      int left = MathMax(1, InpFlatMonthLiquidityReclaimSwingLeftBars);
+      int right = MathMax(1, InpFlatMonthLiquidityReclaimSwingRightBars);
+      int lookback = MathMax(right + 2, InpFlatMonthLiquidityReclaimSwingLookbackBars);
+      double buffer = MathMax(MathMax(0.0, InpFlatMonthLiquidityReclaimStopPocketBufferATR) * atr,
+                              MathMax(0.0, InpFlatMonthLiquidityReclaimStopPocketBufferPoints) * _Point);
+      double current = (type == POSITION_TYPE_BUY) ? SymbolInfoDouble(_Symbol, SYMBOL_BID)
+                                                   : SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+      if(current <= 0.0)
+         return false;
+
+      double structureTrailMinDistance = MinimumBrokerStopDistance();
+      bool found = false;
+      double selected = 0.0;
+      for(int shift = right + 1; shift <= lookback + right; shift++)
+      {
+         if(type == POSITION_TYPE_BUY)
+         {
+            if(!m_structure.IsSwingLow(shift, left, right))
+               continue;
+
+            double swingLow = iLow(_Symbol, InpSignalTimeframe, shift);
+            double candidate = swingLow - buffer;
+            if(candidate <= 0.0 || candidate >= current - structureTrailMinDistance)
+               continue;
+            if(sl > 0.0 && candidate <= sl + _Point * 2.0)
+               continue;
+            if(!found || candidate > selected)
+               selected = candidate;
+            found = true;
+         }
+         else if(type == POSITION_TYPE_SELL)
+         {
+            if(!m_structure.IsSwingHigh(shift, left, right))
+               continue;
+
+            double swingHigh = iHigh(_Symbol, InpSignalTimeframe, shift);
+            double candidate = swingHigh + buffer;
+            if(candidate <= 0.0 || candidate <= current + structureTrailMinDistance)
+               continue;
+            if(sl > 0.0 && candidate >= sl - _Point * 2.0)
+               continue;
+            if(!found || candidate < selected)
+               selected = candidate;
+            found = true;
+         }
+      }
+
+      if(!found)
+         return false;
+
+      trailStop = selected;
+      reason = "FMLR structure trail";
+      return true;
+   }
+
+   bool FlatMonthLiquidityReclaimStructureTrailFallbackStop(const long positionId,
+                                                           const ENUM_POSITION_TYPE type,
+                                                           const double openPrice,
+                                                           const double sl,
+                                                           const double atr,
+                                                           const double maxFavorableR,
+                                                           double &trailStop,
+                                                           string &reason)
+   {
+      trailStop = 0.0;
+      reason = "";
+      if(!InpFlatMonthLiquidityReclaimUseStructureTrail)
+         return false;
+      if(!PositionHasEntryTag(positionId, "FMLR;"))
+         return false;
+      if(openPrice <= 0.0)
+         return false;
+      if(maxFavorableR < MathMax(0.0, InpFlatMonthLiquidityReclaimStructureTrailStartR))
+         return false;
+
+      double buffer = MathMax(MathMax(0.0, InpBreakEvenBufferPoints) * _Point,
+                              MathMax(0.0, InpFlatMonthLiquidityReclaimStopPocketBufferPoints) * _Point);
+      if(buffer <= 0.0 && atr > 0.0)
+         buffer = atr * 0.02;
+      if(buffer <= 0.0)
+         return false;
+
+      double current = (type == POSITION_TYPE_BUY) ? SymbolInfoDouble(_Symbol, SYMBOL_BID)
+                                                   : SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+      if(current <= 0.0)
+         return false;
+
+      double minDistance = MinimumBrokerStopDistance();
+      double candidate = 0.0;
+      if(type == POSITION_TYPE_BUY)
+      {
+         candidate = openPrice + buffer;
+         if(candidate <= 0.0 || candidate >= current - minDistance)
+            return false;
+         if(sl > 0.0 && candidate <= sl + _Point * 2.0)
+            return false;
+      }
+      else if(type == POSITION_TYPE_SELL)
+      {
+         candidate = openPrice - buffer;
+         if(candidate <= 0.0 || candidate <= current + minDistance)
+            return false;
+         if(sl > 0.0 && candidate >= sl - _Point * 2.0)
+            return false;
+      }
+      else
+         return false;
+
+      trailStop = candidate;
+      reason = "FMLR structure trail fallback lock";
+      return true;
+   }
+
+   bool FlatMonthProbeFailureExitHit(const long positionId,
+                                     const double r,
+                                     const double maxFavorableR,
+                                     const int heldBars,
+                                     string &reason)
+   {
+      reason = "";
+      if(!InpUseFlatMonthProbeFailureExit)
+         return false;
+      if(!PositionHasEntryTag(positionId, "FMP;"))
+         return false;
+      if(heldBars < MathMax(1, InpFlatMonthProbeFailureBars))
+         return false;
+      if(maxFavorableR >= MathMax(0.0, InpFlatMonthProbeFailureMinMFER))
+         return false;
+      if(r > InpFlatMonthProbeFailureMaxCurrentR)
+         return false;
+
+      reason = "flat-month probe failure exit bars " + IntegerToString(heldBars) +
+               " MFE " + DoubleToString(maxFavorableR, 2) +
+               "R current " + DoubleToString(r, 2) + "R";
+      return true;
+   }
+
+   bool PowerTrendRunnerPatienceAllows(const long positionId,
+                                       const ENUM_POSITION_TYPE type,
+                                       const double openPrice,
+                                       const double sl,
+                                       const double r,
+                                       const double maxFavorableR,
+                                       const double atr)
+   {
+      if(!InpUsePowerTrendRunnerPatience)
+         return false;
+      if(!PositionHasEntryTag(positionId, "PTC;"))
+         return false;
+      if(r < MathMax(0.0, InpPowerTrendRunnerPatienceMinR))
+         return false;
+      if(maxFavorableR < MathMax(0.0, InpPowerTrendRunnerPatienceMinMFER))
+         return false;
+      if(InpPowerTrendRunnerRequireProtectedStop && !StopIsProtected(type, openPrice, sl))
+         return false;
+      if(InpPowerTrendRunnerRequireContinuation && !ContinuationStructureSupports(type, atr))
+         return false;
+      return true;
+   }
+
+   bool SessionImpulseRunnerPatienceAllows(const long positionId,
+                                           const ENUM_POSITION_TYPE type,
+                                           const double openPrice,
+                                           const double sl,
+                                           const double r,
+                                           const double maxFavorableR,
+                                           const double atr)
+   {
+      if(!InpUseSessionImpulseRunnerPatience)
+         return false;
+      if(!PositionHasEntryTag(positionId, "SIL;"))
+         return false;
+      if(r < MathMax(0.0, InpSessionImpulseRunnerPatienceMinR))
+         return false;
+      if(maxFavorableR < MathMax(0.0, InpSessionImpulseRunnerPatienceMinMFER))
+         return false;
+      if(InpSessionImpulseRunnerRequireProtectedStop && !StopIsProtected(type, openPrice, sl))
+         return false;
+      if(InpSessionImpulseRunnerRequireContinuation && !ContinuationStructureSupports(type, atr))
+         return false;
+      return true;
+   }
+
+   double EffectiveMFEProfitLockGivebackR(const ENUM_POSITION_TYPE type,
+                                          const double openPrice,
+                                          const double sl,
+                                          const long positionId,
+                                          const double r,
+                                          const double maxFavorableR,
+                                          const double atr)
+   {
+      double baseGiveback = MathMax(0.0, InpMFEProfitLockGivebackR);
+      double effectiveGiveback = baseGiveback;
+
+      if(InpUseHouseMoneyMFEProfitLockStretch)
+      {
+         bool protectedOk = !InpHouseMoneyMFELockStretchRequireProtectedStop || StopIsProtected(type, openPrice, sl);
+         if(protectedOk && riskManager.HouseMoneyAccelerationAllowed())
+         {
+            double cushionPercent = riskManager.ProtectedFloorCushionPercent();
+            double startPercent = MathMax(0.0, InpHouseMoneyMFELockStretchStartCushionPercent);
+            double fullPercent = MathMax(startPercent + 0.01, InpHouseMoneyMFELockStretchFullCushionPercent);
+            if(cushionPercent > startPercent)
+            {
+               double progress = (cushionPercent - startPercent) / (fullPercent - startPercent);
+               progress = MathMin(1.0, MathMax(0.0, progress));
+               double maxGiveback = MathMax(baseGiveback, InpHouseMoneyMFEProfitLockMaxGivebackR);
+               effectiveGiveback = baseGiveback + progress * (maxGiveback - baseGiveback);
+            }
+         }
+      }
+
+      if(InpUseRunnerMFEProfitLockPatience &&
+         RunnerExitPatienceAllows(type, openPrice, sl, r, maxFavorableR, atr))
+         effectiveGiveback *= MathMax(1.0, InpRunnerMFEProfitLockGivebackMultiplier);
+
+      if(InpUsePowerTrendMFEProfitLockPatience &&
+         PowerTrendRunnerPatienceAllows(positionId, type, openPrice, sl, r, maxFavorableR, atr))
+         effectiveGiveback *= MathMax(1.0, InpPowerTrendMFEProfitLockGivebackMultiplier);
+
+      if(InpUseSessionImpulseMFEProfitLockPatience &&
+         SessionImpulseRunnerPatienceAllows(positionId, type, openPrice, sl, r, maxFavorableR, atr))
+         effectiveGiveback *= MathMax(1.0, InpSessionImpulseMFEProfitLockGivebackMultiplier);
+
+      return effectiveGiveback;
+   }
+
+   double EffectiveATRTrailMultiplier(const ENUM_POSITION_TYPE type,
+                                      const double openPrice,
+                                      const double sl,
+                                      const double maxFavorableR)
+   {
+      double baseMultiplier = MathMax(0.0, InpTrailATRMultiplier);
+      if(!InpUseHouseMoneyATRTrailStretch)
+         return baseMultiplier;
+      if(maxFavorableR < MathMax(0.0, InpHouseMoneyATRTrailMinMFER))
+         return baseMultiplier;
+      if(InpHouseMoneyATRTrailRequireProtectedStop && !StopIsProtected(type, openPrice, sl))
+         return baseMultiplier;
+      if(!riskManager.HouseMoneyAccelerationAllowed())
+         return baseMultiplier;
+
+      double cushionPercent = riskManager.ProtectedFloorCushionPercent();
+      double startPercent = MathMax(0.0, InpHouseMoneyATRTrailStretchStartCushionPercent);
+      double fullPercent = MathMax(startPercent + 0.01, InpHouseMoneyATRTrailStretchFullCushionPercent);
+      if(cushionPercent <= startPercent)
+         return baseMultiplier;
+
+      double progress = (cushionPercent - startPercent) / (fullPercent - startPercent);
+      progress = MathMin(1.0, MathMax(0.0, progress));
+      double maxMultiplier = MathMax(baseMultiplier, InpHouseMoneyATRTrailMaxMultiplier);
+      return baseMultiplier + progress * (maxMultiplier - baseMultiplier);
+   }
+
+   void PostPartialRunnerTPExpansion(const ulong ticket,
+                                     const ENUM_POSITION_TYPE type,
+                                     const double openPrice,
+                                     const double sl,
+                                     const double tp,
+                                     const double volume,
+                                     const double r,
+                                     const double atr)
+   {
+      if(!InpUsePostPartialRunnerTPExpansion || InpPostPartialRunnerTPMultiplier <= 1.0)
+         return;
+      if(!AlreadyPartiallyClosed(ticket) && !AlreadyBasketHarvested(ticket))
+         return;
+      if(AlreadyPostPartialRunnerTPExpanded(ticket))
+         return;
+      if(tp <= 0.0 || openPrice <= 0.0 || volume <= 0.0)
+         return;
+      if(r < InpPostPartialRunnerMinR)
+         return;
+      if(InpPostPartialRunnerRequireProtectedStop && !StopIsProtected(type, openPrice, sl))
+         return;
+
+      double currentDistance = MathAbs(tp - openPrice);
+      if(currentDistance <= MinimumBrokerStopDistance())
+         return;
+
+      double multiplier = MathMax(1.0, InpPostPartialRunnerTPMultiplier);
+      double expandedDistance = currentDistance * multiplier;
+      double newTp = (type == POSITION_TYPE_BUY) ? openPrice + expandedDistance
+                                                 : openPrice - expandedDistance;
+      bool betterTp = (type == POSITION_TYPE_BUY) ? newTp > tp + _Point * 2
+                                                  : newTp < tp - _Point * 2;
+      if(!betterTp)
+         return;
+
+      newTp = NormalizeDouble(newTp, _Digits);
+      if(trade.PositionModify(ticket, sl, newTp))
+      {
+         MarkPostPartialRunnerTPExpanded(ticket);
+         logger.Write("modify", ticket, (type == POSITION_TYPE_BUY ? "buy" : "sell"), volume, openPrice, sl, newTp, r, PositionGetDouble(POSITION_PROFIT), "post partial runner TP expansion", atr);
+      }
+   }
+
+   void OpenBasketPartialHarvest()
+   {
+      if(!InpUseOpenBasketPartialHarvest || InpOpenBasketHarvestClosePercent <= 0.0)
+         return;
+
+      int positions = 0;
+      double basketProfit = OpenBasketProfit(positions);
+      if(positions < MathMax(1, InpOpenBasketHarvestMinPositions) || basketProfit <= 0.0)
+         return;
+
+      double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+      if(balance <= 0.0)
+         return;
+
+      double minProfitMoney = balance * MathMax(0.0, InpOpenBasketHarvestMinProfitPercent) / 100.0;
+      if(basketProfit < minProfitMoney)
+         return;
+
+      double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+      double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+      if(step <= 0.0)
+         step = 0.01;
+
+      for(int i = PositionsTotal() - 1; i >= 0; i--)
+      {
+         ulong ticket = PositionGetTicket(i);
+         if(ticket == 0 || !PositionSelectByTicket(ticket))
+            continue;
+         if(PositionGetString(POSITION_SYMBOL) != _Symbol ||
+            PositionGetInteger(POSITION_MAGIC) != InpMagicNumber)
+            continue;
+         if(AlreadyBasketHarvested(ticket))
+            continue;
+
+         double positionProfit = PositionGetDouble(POSITION_PROFIT) +
+                                 PositionGetDouble(POSITION_SWAP);
+         if(positionProfit <= 0.0)
+            continue;
+
+         ENUM_POSITION_TYPE type = (ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
+         double openPrice = PositionGetDouble(POSITION_PRICE_OPEN);
+         double sl = PositionGetDouble(POSITION_SL);
+         double tp = PositionGetDouble(POSITION_TP);
+         double volume = PositionGetDouble(POSITION_VOLUME);
+         double closeLots = volume * MathMin(100.0, MathMax(0.0, InpOpenBasketHarvestClosePercent)) / 100.0;
+         closeLots = MathFloor(closeLots / step) * step;
+
+         if(closeLots < minLot || volume - closeLots < minLot)
+            continue;
+
+         double atr = 0.0;
+         indicators.ATR(1, atr);
+         double r = ProfitR(ticket, type, openPrice, sl);
+         if(trade.PositionClosePartial(ticket, closeLots))
+         {
+            MarkBasketHarvest(ticket);
+            logger.Write("partial", ticket, (type == POSITION_TYPE_BUY ? "buy" : "sell"), closeLots, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), "open basket partial harvest", atr);
+
+            if(InpOpenBasketHarvestMoveStop && sl > 0.0)
+            {
+               double initialRisk = InitialRiskDistance(ticket, MathAbs(openPrice - sl));
+               double lockR = MathMax(0.0, InpOpenBasketHarvestStopLockR);
+               double protectedStop = (type == POSITION_TYPE_BUY) ? openPrice + initialRisk * lockR
+                                                                  : openPrice - initialRisk * lockR;
+               bool betterStop = (type == POSITION_TYPE_BUY) ? protectedStop > sl + _Point * 2
+                                                              : protectedStop < sl - _Point * 2;
+               if(initialRisk > 0.0 && betterStop)
+               {
+                  protectedStop = NormalizeDouble(protectedStop, _Digits);
+                  trade.PositionModify(ticket, protectedStop, tp);
+                  logger.Write("modify", ticket, (type == POSITION_TYPE_BUY ? "buy" : "sell"), PositionGetDouble(POSITION_VOLUME), openPrice, protectedStop, tp, r, PositionGetDouble(POSITION_PROFIT), "open basket harvest stop lock", atr);
+               }
+            }
+         }
+      }
+   }
+
+   ENUM_TRADE_BIAS OppositeBias(const ENUM_POSITION_TYPE type)
+   {
+      if(type == POSITION_TYPE_BUY)
+         return BIAS_SELL;
+      if(type == POSITION_TYPE_SELL)
+         return BIAS_BUY;
+      return BIAS_NONE;
+   }
+
+   bool ReversalPressure(const ENUM_POSITION_TYPE type, const double atr, string &reason)
+   {
+      ENUM_TRADE_BIAS opposite = OppositeBias(type);
+      if(opposite == BIAS_NONE)
+         return false;
+
+      int signals = 0;
+      int lookback = MathMax(4, InpReversalPressureLookbackBars);
+      reason = "";
+
+      if(m_structure.BOS(opposite, lookback))
+      {
+         signals++;
+         reason += "opposite BOS;";
+      }
+      if(m_structure.CHoCH(opposite, lookback))
+      {
+         signals++;
+         reason += "opposite CHoCH;";
+      }
+      if(m_structure.LiquiditySweep(opposite, lookback))
+      {
+         signals++;
+         reason += "opposite sweep;";
+      }
+      if(m_structure.EqualHighLowSweep(opposite, lookback))
+      {
+         signals++;
+         reason += "opposite equal sweep;";
+      }
+      if(atr > 0 && m_structure.BreakoutRetest(opposite, lookback, atr))
+      {
+         signals++;
+         reason += "opposite retest;";
+      }
+
+      return signals >= MathMax(1, InpReversalPressureMinSignals);
+   }
+
+   bool SpreadShockExitHit(const double atr, const double r, string &reason)
+   {
+      if(!InpUseSpreadShockExit || r > InpSpreadShockExitMaxR)
+         return false;
+
+      double spreadPoints = CLogger::SpreadPoints();
+      double maxPoints = MathMax(0.0, InpSpreadShockExitPoints);
+      if(maxPoints > 0.0 && spreadPoints >= maxPoints)
+      {
+         reason = "spread shock points " + DoubleToString(spreadPoints, 1);
+         return true;
+      }
+
+      double maxAtrPercent = MathMax(0.0, InpSpreadShockExitATRPercent);
+      if(maxAtrPercent > 0.0 && atr > 0.0)
+      {
+         double atrPoints = atr / _Point;
+         if(atrPoints > 0.0)
+         {
+            double spreadAtrPercent = 100.0 * spreadPoints / atrPoints;
+            if(spreadAtrPercent >= maxAtrPercent)
+            {
+               reason = "spread shock ATR " + DoubleToString(spreadAtrPercent, 1) + "%";
+               return true;
+            }
+         }
+      }
+
+      return false;
+   }
+
+   bool OppositeDisplacementExitHit(const ENUM_POSITION_TYPE type, const double atr, const double r)
+   {
+      if(!InpUseOppositeDisplacementExit || atr <= 0.0 || r < InpOppositeDisplacementExitMinR)
+         return false;
+
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range <= _Point)
+         return false;
+
+      if(range < atr * MathMax(0.0, InpOppositeDisplacementMinRangeATR))
+         return false;
+
+      double bodyPercent = 100.0 * MathAbs(close1 - open1) / range;
+      if(bodyPercent < MathMax(0.0, InpOppositeDisplacementMinBodyPercent))
+         return false;
+
+      if(type == POSITION_TYPE_BUY)
+         return close1 < open1;
+      if(type == POSITION_TYPE_SELL)
+         return close1 > open1;
+      return false;
+   }
+
+   bool SessionImpulseFailureExitHit(const long positionId,
+                                     const ENUM_POSITION_TYPE type,
+                                     const double atr,
+                                     const double r,
+                                     const double maxFavorableR,
+                                     const int heldBars,
+                                     string &reason)
+   {
+      reason = "";
+      if(!InpUseSessionImpulseFailureExit)
+         return false;
+      if(!PositionHasEntryTag(positionId, "SIL;"))
+         return false;
+      if(heldBars < MathMax(1, InpSessionImpulseFailureBars))
+         return false;
+      if(maxFavorableR >= MathMax(0.0, InpSessionImpulseFailureMinMFER))
+         return false;
+      if(r > InpSessionImpulseFailureMaxCurrentR)
+         return false;
+
+      bool oppositeCandle = true;
+      if(InpSessionImpulseFailureRequireOppositeCandle)
+      {
+         oppositeCandle = false;
+         if(atr <= 0.0)
+            return false;
+
+         double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+         double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+         double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+         double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+         double range = high1 - low1;
+         if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range <= _Point)
+            return false;
+
+         double bodyPercent = 100.0 * MathAbs(close1 - open1) / range;
+         if(range >= atr * MathMax(0.0, InpSessionImpulseFailureOppositeRangeATR) &&
+            bodyPercent >= MathMax(0.0, InpSessionImpulseFailureOppositeBodyPercent))
+         {
+            oppositeCandle = (type == POSITION_TYPE_BUY && close1 < open1) ||
+                             (type == POSITION_TYPE_SELL && close1 > open1);
+         }
+      }
+
+      if(!oppositeCandle)
+         return false;
+
+      reason = "SIL failure exit bars " + IntegerToString(heldBars) +
+               " MFE " + DoubleToString(maxFavorableR, 2) +
+               "R current " + DoubleToString(r, 2) + "R";
+      return true;
+   }
+
+   void AddThesisBreakComponent(const bool condition,
+                                const int weight,
+                                const string label,
+                                int &score,
+                                string &reason)
+   {
+      if(!condition)
+         return;
+      score += MathMax(0, weight);
+      reason += label;
+   }
+
+   bool SmartMoneyThesisBreakExitHit(const ENUM_POSITION_TYPE type,
+                                     const double atr,
+                                     const double r,
+                                     const int heldBars,
+                                     string &reason)
+   {
+      reason = "";
+      if(!InpUseSmartMoneyThesisBreakExit || atr <= 0.0)
+         return false;
+      if(r > InpSmartMoneyExitMaxR)
+         return false;
+      if(heldBars < MathMax(0, InpSmartMoneyExitMinHoldBars))
+         return false;
+
+      ENUM_TRADE_BIAS opposite = OppositeBias(type);
+      if(opposite == BIAS_NONE)
+         return false;
+
+      int score = 0;
+      int lookback = MathMax(4, InpReversalPressureLookbackBars);
+
+      bool bos = m_structure.BOS(opposite, lookback);
+      bool displacementBos = m_structure.DisplacementBOS(opposite, InpDisplacementBOSLookbackBars, atr);
+      bool choch = m_structure.CHoCH(opposite, lookback);
+      bool breakoutRetest = m_structure.BreakoutRetest(opposite, lookback, atr);
+      bool structure = bos || displacementBos || choch || breakoutRetest;
+
+      bool sweep = m_structure.LiquiditySweep(opposite, InpSweepLookbackBars);
+      bool sweepRejection = m_structure.SweepRejection(opposite, InpSweepLookbackBars);
+      bool equalSweep = m_structure.EqualHighLowSweep(opposite, InpEqualLevelLookbackBars);
+      bool fvg = m_structure.FairValueGap(opposite, InpFVGLookbackBars, atr);
+      bool fvgRetest = m_structure.FairValueGapRetest(opposite, InpFVGLookbackBars, atr);
+      bool orderBlock = m_structure.OrderBlockRetest(opposite, InpOrderBlockLookbackBars, atr);
+      bool liquidityOrImbalance = sweep || sweepRejection || equalSweep || fvg || fvgRetest || orderBlock;
+
+      bool oppositeDisplacement = false;
+      double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+      double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      double range = high1 - low1;
+      if(high1 > 0.0 && low1 > 0.0 && open1 > 0.0 && close1 > 0.0 && range > _Point)
+      {
+         double bodyPercent = 100.0 * MathAbs(close1 - open1) / range;
+         double minBody = MathMax(0.0, InpOppositeDisplacementMinBodyPercent);
+         if(range >= atr * MathMax(0.0, InpOppositeDisplacementMinRangeATR) && bodyPercent >= minBody)
+            oppositeDisplacement = (opposite == BIAS_BUY && close1 > open1) ||
+                                   (opposite == BIAS_SELL && close1 < open1);
+      }
+
+      bool execution = oppositeDisplacement || m_structure.VWAPConfluence(opposite, InpVWAPLookbackBars, atr);
+
+      AddThesisBreakComponent(bos, 2, "opposite BOS;", score, reason);
+      AddThesisBreakComponent(displacementBos, 2, "opposite displacement BOS;", score, reason);
+      AddThesisBreakComponent(choch, 2, "opposite CHoCH;", score, reason);
+      AddThesisBreakComponent(breakoutRetest, 1, "opposite retest;", score, reason);
+      AddThesisBreakComponent(sweep, 2, "opposite liquidity sweep;", score, reason);
+      AddThesisBreakComponent(sweepRejection, 2, "opposite sweep rejection;", score, reason);
+      AddThesisBreakComponent(equalSweep, 1, "opposite equal-level sweep;", score, reason);
+      AddThesisBreakComponent(fvg, 1, "opposite FVG;", score, reason);
+      AddThesisBreakComponent(fvgRetest, 2, "opposite FVG retest;", score, reason);
+      AddThesisBreakComponent(orderBlock, 2, "opposite order block;", score, reason);
+      AddThesisBreakComponent(oppositeDisplacement, 2, "opposite displacement candle;", score, reason);
+      AddThesisBreakComponent(m_structure.VWAPConfluence(opposite, InpVWAPLookbackBars, atr), 1, "opposite VWAP;", score, reason);
+
+      if(InpSmartMoneyExitRequireStructure && !structure)
+         return false;
+      if(InpSmartMoneyExitRequireLiquidityOrImbalance && !liquidityOrImbalance)
+         return false;
+      if(InpSmartMoneyExitRequireExecution && !execution)
+         return false;
+
+      reason = "SM thesis break score " + IntegerToString(score) + ";" + reason;
+      return score >= MathMax(1, InpSmartMoneyExitMinScore);
+   }
+
+   datetime BarOpenFromPositionTime(const datetime positionTime)
+   {
+      int shift = iBarShift(_Symbol, InpSignalTimeframe, positionTime, false);
+      if(shift < 0)
+         return 0;
+      return iTime(_Symbol, InpSignalTimeframe, shift);
+   }
+
+public:
+   void CloseAll(const string reason)
+   {
+      for(int i = PositionsTotal() - 1; i >= 0; i--)
+      {
+         ulong ticket = PositionGetTicket(i);
+         if(ticket == 0 || !PositionSelectByTicket(ticket))
+            continue;
+         if(PositionGetString(POSITION_SYMBOL) != _Symbol ||
+            PositionGetInteger(POSITION_MAGIC) != InpMagicNumber)
+            continue;
+
+         ENUM_POSITION_TYPE type = (ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
+         double openPrice = PositionGetDouble(POSITION_PRICE_OPEN);
+         double sl = PositionGetDouble(POSITION_SL);
+         double tp = PositionGetDouble(POSITION_TP);
+         double volume = PositionGetDouble(POSITION_VOLUME);
+         double profit = PositionGetDouble(POSITION_PROFIT);
+         double atr = 0;
+         indicators.ATR(1, atr);
+
+         if(trade.PositionClose(ticket))
+            logger.Write("risk_exit", ticket, (type == POSITION_TYPE_BUY ? "buy" : "sell"), volume, openPrice, sl, tp, 0, profit, reason, atr);
+      }
+   }
+
+   void Manage(const ENUM_TRADE_BIAS currentSignalBias)
+   {
+      OpenBasketPartialHarvest();
+
+      for(int i = PositionsTotal() - 1; i >= 0; i--)
+      {
+         ulong ticket = PositionGetTicket(i);
+         if(ticket == 0 || !PositionSelectByTicket(ticket))
+            continue;
+         if(PositionGetString(POSITION_SYMBOL) != _Symbol ||
+            PositionGetInteger(POSITION_MAGIC) != InpMagicNumber)
+            continue;
+
+         ENUM_POSITION_TYPE type = (ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
+         double openPrice = PositionGetDouble(POSITION_PRICE_OPEN);
+         double sl = PositionGetDouble(POSITION_SL);
+         double tp = PositionGetDouble(POSITION_TP);
+         double volume = PositionGetDouble(POSITION_VOLUME);
+         long positionId = PositionGetInteger(POSITION_IDENTIFIER);
+         datetime positionTime = (datetime)PositionGetInteger(POSITION_TIME);
+         double atr = 0;
+         indicators.ATR(1, atr);
+
+         string positionComment = PositionGetString(POSITION_COMMENT);
+         if(InpBandVWAPReversionUseIsolatedExecution &&
+            StringFind(positionComment, "Band VWAP reversion;") >= 0)
+            continue;
+
+         bool dailyDonchianPosition = StringFind(positionComment, "DDB;") >= 0;
+         if(dailyDonchianPosition)
+         {
+            double dailyAtr = 0.0;
+            if(ATRValue(InpDailyDonchianTimeframe, InpATRPeriod, 1, dailyAtr) && dailyAtr > 0.0)
+               atr = dailyAtr;
+
+            string dailyExitReason = "";
+            if(DailyDonchianChannelExitHit(type, dailyExitReason))
+            {
+               trade.PositionClose(ticket);
+               logger.Write("exit", ticket, "daily_channel", volume, openPrice, sl, tp, 0,
+                            PositionGetDouble(POSITION_PROFIT), dailyExitReason, atr);
+               continue;
+            }
+
+            if(InpDailyDonchianUseIsolatedExecution)
+               continue;
+         }
+
+         if(InpCloseOnOppositeSignal)
+         {
+            if((type == POSITION_TYPE_BUY && currentSignalBias == BIAS_SELL) ||
+               (type == POSITION_TYPE_SELL && currentSignalBias == BIAS_BUY))
+            {
+               trade.PositionClose(ticket);
+               logger.Write("exit", ticket, "opposite", volume, openPrice, sl, tp, 0, PositionGetDouble(POSITION_PROFIT), "opposite signal", atr);
+               continue;
+            }
+         }
+
+         if(InpUseTimeExit)
+         {
+            datetime barOpen = BarOpenFromPositionTime(positionTime);
+            int heldBars = iBarShift(_Symbol, InpSignalTimeframe, barOpen, false);
+            if(heldBars >= InpMaxHoldBars)
+            {
+               trade.PositionClose(ticket);
+               logger.Write("exit", ticket, "time", volume, openPrice, sl, tp, 0, PositionGetDouble(POSITION_PROFIT), "time exit", atr);
+               continue;
+            }
+         }
+
+         if(InpUseEMAExit)
+         {
+            double exitEma = 0;
+            double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+            if(indicators.ExitEMA(1, exitEma))
+            {
+               if((type == POSITION_TYPE_BUY && close1 < exitEma) ||
+                  (type == POSITION_TYPE_SELL && close1 > exitEma))
+               {
+                  trade.PositionClose(ticket);
+                  logger.Write("exit", ticket, "ema", volume, openPrice, sl, tp, 0, PositionGetDouble(POSITION_PROFIT), "EMA exit", atr);
+                  continue;
+               }
+            }
+         }
+
+         if(InpUseVolatilityExit && atr / _Point >= InpVolatilityExitATRPoints)
+         {
+            trade.PositionClose(ticket);
+            logger.Write("exit", ticket, "volatility", volume, openPrice, sl, tp, 0, PositionGetDouble(POSITION_PROFIT), "volatility exit", atr);
+            continue;
+         }
+
+         double r = ProfitR(ticket, type, openPrice, sl);
+         double maxFavorableR = UpdateMaxFavorableR(ticket, r);
+         UpdateMaxAdverseR(ticket, r);
+         datetime barOpenForExit = BarOpenFromPositionTime(positionTime);
+         int heldBarsForExit = 0;
+         if(barOpenForExit > 0)
+            heldBarsForExit = iBarShift(_Symbol, InpSignalTimeframe, barOpenForExit, false);
+
+         string thesisBreakReason = "";
+         if(SmartMoneyThesisBreakExitHit(type, atr, r, heldBarsForExit, thesisBreakReason))
+         {
+            trade.PositionClose(ticket);
+            logger.Write("exit", ticket, "smart_money_thesis_break", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), thesisBreakReason, atr);
+            continue;
+         }
+
+         if(OppositeDisplacementExitHit(type, atr, r))
+         {
+            trade.PositionClose(ticket);
+            logger.Write("exit", ticket, "opposite_displacement", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), "opposite displacement exit", atr);
+            continue;
+         }
+
+         if(InpUseSpreadShockExit)
+         {
+            string spreadShockReason = "";
+            if(SpreadShockExitHit(atr, r, spreadShockReason))
+            {
+               trade.PositionClose(ticket);
+               logger.Write("exit", ticket, "spread_shock", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), spreadShockReason, atr);
+               continue;
+            }
+         }
+
+         string sessionImpulseFailureReason = "";
+         if(SessionImpulseFailureExitHit(positionId,
+                                         type,
+                                         atr,
+                                         r,
+                                         maxFavorableR,
+                                         heldBarsForExit,
+                                         sessionImpulseFailureReason))
+         {
+            trade.PositionClose(ticket);
+            logger.Write("exit", ticket, "session_impulse_failure", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), sessionImpulseFailureReason, atr);
+            continue;
+         }
+
+         string flatMonthProbeFailureReason = "";
+         if(FlatMonthProbeFailureExitHit(positionId,
+                                         r,
+                                         maxFavorableR,
+                                         heldBarsForExit,
+                                         flatMonthProbeFailureReason))
+         {
+            trade.PositionClose(ticket);
+            logger.Write("exit", ticket, "flat_month_probe_failure", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), flatMonthProbeFailureReason, atr);
+            continue;
+         }
+
+         if(InpUseNoFollowThroughExit && InpNoFollowThroughBars > 0 &&
+            maxFavorableR < MathMax(0.0, InpNoFollowThroughMinMFER) &&
+            r <= InpNoFollowThroughMaxCurrentR)
+         {
+            datetime barOpen = BarOpenFromPositionTime(positionTime);
+            int heldBars = iBarShift(_Symbol, InpSignalTimeframe, barOpen, false);
+            if(heldBars >= InpNoFollowThroughBars &&
+               !RunnerExitPatienceAllows(type, openPrice, sl, r, maxFavorableR, atr))
+            {
+               trade.PositionClose(ticket);
+               logger.Write("exit", ticket, "no_follow_through", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), "no follow-through exit", atr);
+               continue;
+            }
+         }
+
+         if(InpUseMFEFailureExit && MFEFailureMonthAllows() &&
+            InpMFEFailureBars > 0 && maxFavorableR < InpMFEFailureMinMFER && r <= InpMFEFailureMaxCurrentR)
+         {
+            datetime barOpen = BarOpenFromPositionTime(positionTime);
+            int heldBars = iBarShift(_Symbol, InpSignalTimeframe, barOpen, false);
+            if(heldBars >= InpMFEFailureBars)
+            {
+               trade.PositionClose(ticket);
+               logger.Write("exit", ticket, "mfe_failure", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), "MFE failure exit", atr);
+               continue;
+            }
+         }
+
+         if(InpUseEarlyMFEReversalExit && maxFavorableR >= MathMax(0.0, InpEarlyMFEReversalStartR) && r <= InpEarlyMFEReversalExitR)
+         {
+            trade.PositionClose(ticket);
+            logger.Write("exit", ticket, "early_mfe_reversal", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), "Early MFE reversal exit", atr);
+            continue;
+         }
+
+         if(InpUseStagnationExit && InpStagnationExitBars > 0 && r <= InpStagnationExitMaxR)
+         {
+            datetime barOpen = BarOpenFromPositionTime(positionTime);
+            int heldBars = iBarShift(_Symbol, InpSignalTimeframe, barOpen, false);
+            if(heldBars >= InpStagnationExitBars &&
+               !RunnerExitPatienceAllows(type, openPrice, sl, r, maxFavorableR, atr))
+            {
+               trade.PositionClose(ticket);
+               logger.Write("exit", ticket, "stagnation", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), "stagnation exit", atr);
+               continue;
+            }
+         }
+
+         if(InpUseReversalPressureExit && r >= InpReversalPressureMinR)
+         {
+            string reversalReason = "";
+            if(ReversalPressure(type, atr, reversalReason))
+            {
+               trade.PositionClose(ticket);
+               logger.Write("exit", ticket, "reversal_pressure", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), reversalReason, atr);
+               continue;
+            }
+         }
+
+         if(InpUseMFEGivebackExit && maxFavorableR >= InpMFEGivebackStartR)
+         {
+            double effectiveGivebackR = EffectiveMFEGivebackR(type, openPrice, sl);
+            bool runnerPatience = RunnerExitPatienceAllows(type, openPrice, sl, r, maxFavorableR, atr);
+            bool powerTrendPatience = PowerTrendRunnerPatienceAllows(positionId, type, openPrice, sl, r, maxFavorableR, atr);
+            bool sessionImpulsePatience = SessionImpulseRunnerPatienceAllows(positionId, type, openPrice, sl, r, maxFavorableR, atr);
+            if(runnerPatience)
+               effectiveGivebackR *= MathMax(1.0, InpRunnerExitPatienceMFEGivebackMultiplier);
+            if(powerTrendPatience)
+               effectiveGivebackR *= MathMax(1.0, InpPowerTrendRunnerMFEGivebackMultiplier);
+            if(sessionImpulsePatience)
+               effectiveGivebackR *= MathMax(1.0, InpSessionImpulseRunnerMFEGivebackMultiplier);
+            double closeThresholdR = MathMax(InpMFEGivebackMinCloseR, maxFavorableR - effectiveGivebackR);
+            if(r <= closeThresholdR)
+            {
+               trade.PositionClose(ticket);
+               string givebackReason = "MFE giveback exit";
+               if(sessionImpulsePatience)
+                  givebackReason = "SIL runner patience MFE giveback exit " + DoubleToString(effectiveGivebackR, 2) + "R";
+               else if(powerTrendPatience)
+                  givebackReason = "PTC runner patience MFE giveback exit " + DoubleToString(effectiveGivebackR, 2) + "R";
+               else if(runnerPatience)
+                  givebackReason = "runner patience MFE giveback exit " + DoubleToString(effectiveGivebackR, 2) + "R";
+               else if(effectiveGivebackR > MathMax(0.0, InpMFEGivebackMaxGivebackR))
+                  givebackReason = "MFE giveback exit stretched " + DoubleToString(effectiveGivebackR, 2) + "R";
+               logger.Write("exit", ticket, "mfe_giveback", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), givebackReason, atr);
+               continue;
+            }
+         }
+
+         if(InpUseUnderwaterTimeExit && InpUnderwaterExitBars > 0 && r <= InpUnderwaterExitMaxR)
+         {
+            datetime barOpen = BarOpenFromPositionTime(positionTime);
+            int heldBars = iBarShift(_Symbol, InpSignalTimeframe, barOpen, false);
+            if(heldBars >= InpUnderwaterExitBars)
+            {
+               trade.PositionClose(ticket);
+               logger.Write("exit", ticket, "underwater_time", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), "underwater time exit", atr);
+               continue;
+            }
+         }
+
+         if(InpUseAdverseRExit && InpAdverseExitR > 0.0 && r <= -InpAdverseExitR)
+         {
+            trade.PositionClose(ticket);
+            logger.Write("exit", ticket, "adverse_r", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), "adverse R exit", atr);
+            continue;
+         }
+
+         if(InpUseRPartialProfitLock && RPartialProfitLockMonthAllows() &&
+            r >= InpRPartialProfitLockAtR && !AlreadyPartiallyClosed(ticket))
+         {
+            double closeLots = volume * InpRPartialProfitLockPercent / 100.0;
+            double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+            double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+            closeLots = MathFloor(closeLots / step) * step;
+
+            if(closeLots >= minLot && volume - closeLots >= minLot)
+            {
+               trade.PositionClosePartial(ticket, closeLots);
+               MarkPartialClose(ticket);
+               logger.Write("partial", ticket, (type == POSITION_TYPE_BUY ? "buy" : "sell"), closeLots, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), "R partial profit lock", atr);
+               if(InpRPartialProfitLockMoveStop && sl > 0.0)
+               {
+                  double initialRisk = InitialRiskDistance(ticket, MathAbs(openPrice - sl));
+                  double lockR = MathMax(0.0, InpRPartialProfitLockStopR);
+                  double protectedStop = (type == POSITION_TYPE_BUY) ? openPrice + initialRisk * lockR
+                                                                     : openPrice - initialRisk * lockR;
+                  bool betterStop = (type == POSITION_TYPE_BUY) ? protectedStop > sl + _Point * 2
+                                                                 : protectedStop < sl - _Point * 2;
+                  if(initialRisk > 0.0 && betterStop)
+                  {
+                     protectedStop = NormalizeDouble(protectedStop, _Digits);
+                     trade.PositionModify(ticket, protectedStop, tp);
+                     logger.Write("modify", ticket, (type == POSITION_TYPE_BUY ? "buy" : "sell"), PositionGetDouble(POSITION_VOLUME), openPrice, protectedStop, tp, r, PositionGetDouble(POSITION_PROFIT), "R partial profit lock stop", atr);
+                  }
+               }
+            }
+         }
+
+         if(InpUsePartialClose && r >= InpPartialCloseAtR && !AlreadyPartiallyClosed(ticket))
+         {
+            double closeLots = volume * InpPartialClosePercent / 100.0;
+            double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+            double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+            closeLots = MathFloor(closeLots / step) * step;
+
+            if(closeLots >= minLot && volume - closeLots >= minLot)
+            {
+               trade.PositionClosePartial(ticket, closeLots);
+               MarkPartialClose(ticket);
+               logger.Write("partial", ticket, (type == POSITION_TYPE_BUY ? "buy" : "sell"), closeLots, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), "partial close", atr);
+            }
+         }
+
+         if(InpUseProtectedRunnerPartialClose && tp == 0.0 &&
+            r >= InpProtectedRunnerPartialCloseAtR && !AlreadyPartiallyClosed(ticket))
+         {
+            double closeLots = volume * InpProtectedRunnerPartialClosePercent / 100.0;
+            double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+            double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+            closeLots = MathFloor(closeLots / step) * step;
+
+            if(closeLots >= minLot && volume - closeLots >= minLot)
+            {
+               trade.PositionClosePartial(ticket, closeLots);
+               MarkPartialClose(ticket);
+               logger.Write("partial", ticket, (type == POSITION_TYPE_BUY ? "buy" : "sell"), closeLots, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), "protected runner partial close", atr);
+               if(InpProtectedRunnerPartialMoveStop && sl > 0.0)
+               {
+                  double initialRisk = InitialRiskDistance(ticket, MathAbs(openPrice - sl));
+                  double lockR = MathMax(0.0, InpProtectedRunnerPartialStopLockR);
+                  double protectedStop = (type == POSITION_TYPE_BUY) ? openPrice + initialRisk * lockR
+                                                                     : openPrice - initialRisk * lockR;
+                  bool betterStop = (type == POSITION_TYPE_BUY) ? protectedStop > sl + _Point * 2
+                                                                 : protectedStop < sl - _Point * 2;
+                  if(initialRisk > 0.0 && betterStop)
+                  {
+                     protectedStop = NormalizeDouble(protectedStop, _Digits);
+                     trade.PositionModify(ticket, protectedStop, tp);
+                     logger.Write("modify", ticket, (type == POSITION_TYPE_BUY ? "buy" : "sell"), PositionGetDouble(POSITION_VOLUME), openPrice, protectedStop, tp, r, PositionGetDouble(POSITION_PROFIT), "protected runner partial stop lock", atr);
+                  }
+               }
+            }
+         }
+
+         PostPartialRunnerTPExpansion(ticket, type, openPrice, sl, tp, volume, r, atr);
+
+         double newSl = sl;
+         string stopModifyReason = "";
+
+         if(InpUseBreakEven && r >= InpBreakEvenTriggerR)
+         {
+            if(type == POSITION_TYPE_BUY)
+               newSl = MathMax(newSl, openPrice + InpBreakEvenBufferPoints * _Point);
+            else
+               newSl = (newSl == 0) ? openPrice - InpBreakEvenBufferPoints * _Point : MathMin(newSl, openPrice - InpBreakEvenBufferPoints * _Point);
+         }
+
+         if(InpUseProfitLockStop && atr > 0)
+         {
+            double current = (type == POSITION_TYPE_BUY) ? SymbolInfoDouble(_Symbol, SYMBOL_BID)
+                                                         : SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+            double move = (type == POSITION_TYPE_BUY) ? current - openPrice : openPrice - current;
+            if(move >= atr * InpProfitLockTriggerATR)
+            {
+               double protectedStop = (type == POSITION_TYPE_BUY) ? openPrice + atr * InpProfitLockATR
+                                                                  : openPrice - atr * InpProfitLockATR;
+               if(type == POSITION_TYPE_BUY)
+                  newSl = MathMax(newSl, protectedStop);
+               else
+                  newSl = (newSl == 0) ? protectedStop : MathMin(newSl, protectedStop);
+            }
+         }
+
+         if(InpUseRProfitLockStop && r >= InpRProfitLockTriggerR && InpRProfitLockR >= 0.0)
+         {
+            double initialRisk = InitialRiskDistance(ticket, MathAbs(openPrice - sl));
+            if(initialRisk > 0.0)
+            {
+               double protectedStop = (type == POSITION_TYPE_BUY) ? openPrice + initialRisk * InpRProfitLockR
+                                                                  : openPrice - initialRisk * InpRProfitLockR;
+               if(type == POSITION_TYPE_BUY)
+                  newSl = MathMax(newSl, protectedStop);
+               else
+                  newSl = (newSl == 0) ? protectedStop : MathMin(newSl, protectedStop);
+            }
+         }
+
+         if(InpUseMFEProfitLockStop && MFEProfitLockMonthAllows() &&
+            sl > 0.0 && maxFavorableR >= MathMax(0.0, InpMFEProfitLockStartR))
+         {
+            double initialRisk = InitialRiskDistance(ticket, MathAbs(openPrice - sl));
+            double effectiveLockGivebackR = EffectiveMFEProfitLockGivebackR(type, openPrice, sl, positionId, r, maxFavorableR, atr);
+            double lockedR = MathMax(MathMax(0.0, InpMFEProfitLockMinR),
+                                     maxFavorableR - effectiveLockGivebackR);
+            if(initialRisk > 0.0 && lockedR > 0.0)
+            {
+               double protectedStop = (type == POSITION_TYPE_BUY) ? openPrice + initialRisk * lockedR
+                                                                  : openPrice - initialRisk * lockedR;
+               if(type == POSITION_TYPE_BUY)
+                  newSl = MathMax(newSl, protectedStop);
+               else
+                  newSl = (newSl == 0) ? protectedStop : MathMin(newSl, protectedStop);
+            }
+         }
+
+         if(InpUseATRTrailing && atr > 0)
+         {
+            double effectiveTrailMultiplier = EffectiveATRTrailMultiplier(type, openPrice, sl, maxFavorableR);
+            if(type == POSITION_TYPE_BUY)
+            {
+               double trail = SymbolInfoDouble(_Symbol, SYMBOL_BID) - atr * effectiveTrailMultiplier;
+               newSl = MathMax(newSl, trail);
+            }
+            else
+            {
+               double trail = SymbolInfoDouble(_Symbol, SYMBOL_ASK) + atr * effectiveTrailMultiplier;
+               newSl = (newSl == 0) ? trail : MathMin(newSl, trail);
+            }
+         }
+
+         if(InpUseStructureTrailing)
+         {
+            double structure = 0;
+            if(type == POSITION_TYPE_BUY && m_structure.LowestLow(1, InpTrailStructureLookback, structure))
+               newSl = MathMax(newSl, structure);
+            if(type == POSITION_TYPE_SELL && m_structure.HighestHigh(1, InpTrailStructureLookback, structure))
+               newSl = (newSl == 0) ? structure : MathMin(newSl, structure);
+         }
+
+         double fmlrStructureTrailStop = 0.0;
+         string fmlrStructureTrailReason = "";
+         bool fmlrStructureTrailHandled = FlatMonthLiquidityReclaimStructureTrailStop(positionId,
+                                                                                      type,
+                                                                                      openPrice,
+                                                                                      sl,
+                                                                                      atr,
+                                                                                      r,
+                                                                                      fmlrStructureTrailStop,
+                                                                                      fmlrStructureTrailReason);
+         if(!fmlrStructureTrailHandled)
+         {
+            fmlrStructureTrailHandled = FlatMonthLiquidityReclaimStructureTrailFallbackStop(positionId,
+                                                                                           type,
+                                                                                           openPrice,
+                                                                                           sl,
+                                                                                           atr,
+                                                                                           maxFavorableR,
+                                                                                           fmlrStructureTrailStop,
+                                                                                           fmlrStructureTrailReason);
+         }
+         if(fmlrStructureTrailHandled)
+         {
+            if(type == POSITION_TYPE_BUY && fmlrStructureTrailStop > newSl + _Point * 2.0)
+            {
+               newSl = fmlrStructureTrailStop;
+               stopModifyReason = fmlrStructureTrailReason;
+            }
+            else if(type == POSITION_TYPE_SELL &&
+                    (newSl == 0.0 || fmlrStructureTrailStop < newSl - _Point * 2.0))
+            {
+               newSl = fmlrStructureTrailStop;
+               stopModifyReason = fmlrStructureTrailReason;
+            }
+         }
+
+         if(newSl > 0 && MathAbs(newSl - sl) > _Point * 2)
+         {
+            newSl = NormalizeDouble(newSl, _Digits);
+            if(trade.PositionModify(ticket, newSl, tp) && StringLen(stopModifyReason) > 0)
+               logger.Write("modify", ticket, (type == POSITION_TYPE_BUY ? "buy" : "sell"), volume, openPrice, newSl, tp, r, PositionGetDouble(POSITION_PROFIT), stopModifyReason, atr);
+         }
+      }
+   }
+};
+
+class CStatistics
+{
+public:
+   void Compute(double &profitFactor,
+                double &winRate,
+                double &expectancy,
+                double &maxDrawdown,
+                int &wins,
+                int &losses,
+                int &consecutiveWins,
+                int &consecutiveLosses)
+   {
+      HistorySelect(0, TimeCurrent());
+      double grossProfit = 0;
+      double grossLoss = 0;
+      double equity = 0;
+      double peak = 0;
+      maxDrawdown = 0;
+      wins = 0;
+      losses = 0;
+      consecutiveWins = 0;
+      consecutiveLosses = 0;
+      int currentWins = 0;
+      int currentLosses = 0;
+
+      int total = HistoryDealsTotal();
+      for(int i = 0; i < total; i++)
+      {
+         ulong ticket = HistoryDealGetTicket(i);
+         if(ticket == 0)
+            continue;
+         if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+            continue;
+         if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_OUT)
+            continue;
+
+         double p = HistoryDealGetDouble(ticket, DEAL_PROFIT) +
+                    HistoryDealGetDouble(ticket, DEAL_SWAP) +
+                    HistoryDealGetDouble(ticket, DEAL_COMMISSION);
+         equity += p;
+         peak = MathMax(peak, equity);
+         maxDrawdown = MathMax(maxDrawdown, peak - equity);
+
+         if(p > 0)
+         {
+            wins++;
+            grossProfit += p;
+            currentWins++;
+            currentLosses = 0;
+         }
+         else if(p < 0)
+         {
+            losses++;
+            grossLoss += MathAbs(p);
+            currentLosses++;
+            currentWins = 0;
+         }
+         consecutiveWins = MathMax(consecutiveWins, currentWins);
+         consecutiveLosses = MathMax(consecutiveLosses, currentLosses);
+      }
+
+      int trades = wins + losses;
+      profitFactor = (grossLoss > 0) ? grossProfit / grossLoss : 0;
+      winRate = (trades > 0) ? 100.0 * wins / trades : 0;
+      expectancy = (trades > 0) ? (grossProfit - grossLoss) / trades : 0;
+   }
+};
+
+CSessionFilter sessionFilter;
+CNewsFilter newsFilter;
+CRiskManager riskManager;
+CTrendFilter trendFilter;
+CEntryEngine entryEngine;
+CPositionManager positionManager;
+CStatistics stats;
+
+datetime g_lastBarTime = 0;
+string g_lastBlockReason = "";
+string g_lastTrendReason = "";
+ENUM_TRADE_BIAS g_lastTrendBias = BIAS_NONE;
+
+bool IndicatorBufferValue(const int handle, const int buffer, const int shift, double &value)
+{
+   if(handle == INVALID_HANDLE)
+      return false;
+
+   double data[];
+   ArraySetAsSeries(data, true);
+   if(CopyBuffer(handle, buffer, shift, 1, data) != 1)
+      return false;
+   value = data[0];
+   return true;
+}
+
+bool MAValue(const ENUM_TIMEFRAMES timeframe,
+             const int period,
+             const int shift,
+             double &value)
+{
+   int safePeriod = MathMax(1, period);
+   int warmupBars = MathMax(safePeriod * 3, safePeriod + 10);
+   int oldestShift = shift + warmupBars - 1;
+   double closeOldest = iClose(_Symbol, timeframe, oldestShift);
+   if(closeOldest <= 0.0)
+      return false;
+
+   double ema = closeOldest;
+   double alpha = 2.0 / (safePeriod + 1.0);
+   for(int i = oldestShift - 1; i >= shift; i--)
+   {
+      double closePrice = iClose(_Symbol, timeframe, i);
+      if(closePrice <= 0.0)
+         return false;
+      ema = closePrice * alpha + ema * (1.0 - alpha);
+   }
+
+   value = ema;
+   return true;
+}
+
+bool ATRValue(const ENUM_TIMEFRAMES timeframe,
+              const int period,
+              const int shift,
+              double &value)
+{
+   int safePeriod = MathMax(1, period);
+   double sum = 0.0;
+   for(int i = shift; i < shift + safePeriod; i++)
+   {
+      double high = iHigh(_Symbol, timeframe, i);
+      double low = iLow(_Symbol, timeframe, i);
+      double prevClose = iClose(_Symbol, timeframe, i + 1);
+      if(high <= 0.0 || low <= 0.0 || prevClose <= 0.0)
+         return false;
+      double tr = MathMax(high - low, MathMax(MathAbs(high - prevClose), MathAbs(low - prevClose)));
+      sum += tr;
+   }
+
+   value = sum / safePeriod;
+   return value > 0.0;
+}
+
+bool ADXValue(const ENUM_TIMEFRAMES timeframe,
+              const int period,
+              const int shift,
+              double &value)
+{
+   int safePeriod = MathMax(1, period);
+   double dxSum = 0.0;
+   int dxCount = 0;
+
+   for(int windowShift = shift; windowShift < shift + safePeriod; windowShift++)
+   {
+      double trSum = 0.0;
+      double plusDMSum = 0.0;
+      double minusDMSum = 0.0;
+
+      for(int i = windowShift; i < windowShift + safePeriod; i++)
+      {
+         double high = iHigh(_Symbol, timeframe, i);
+         double low = iLow(_Symbol, timeframe, i);
+         double prevHigh = iHigh(_Symbol, timeframe, i + 1);
+         double prevLow = iLow(_Symbol, timeframe, i + 1);
+         double prevClose = iClose(_Symbol, timeframe, i + 1);
+         if(high <= 0.0 || low <= 0.0 || prevHigh <= 0.0 || prevLow <= 0.0 || prevClose <= 0.0)
+            return false;
+
+         double upMove = high - prevHigh;
+         double downMove = prevLow - low;
+         double plusDM = (upMove > downMove && upMove > 0.0) ? upMove : 0.0;
+         double minusDM = (downMove > upMove && downMove > 0.0) ? downMove : 0.0;
+         double tr = MathMax(high - low, MathMax(MathAbs(high - prevClose), MathAbs(low - prevClose)));
+
+         trSum += tr;
+         plusDMSum += plusDM;
+         minusDMSum += minusDM;
+      }
+
+      if(trSum <= 0.0)
+         continue;
+
+      double plusDI = 100.0 * plusDMSum / trSum;
+      double minusDI = 100.0 * minusDMSum / trSum;
+      double diSum = plusDI + minusDI;
+      if(diSum <= 0.0)
+         continue;
+
+      dxSum += 100.0 * MathAbs(plusDI - minusDI) / diSum;
+      dxCount++;
+   }
+
+   if(dxCount <= 0)
+      return false;
+   value = dxSum / dxCount;
+   return true;
+}
+
+bool HighestHighOnTimeframe(const ENUM_TIMEFRAMES timeframe,
+                            const int startShift,
+                            const int bars,
+                            double &price)
+{
+   int safeBars = MathMax(1, bars);
+   int index = iHighest(_Symbol, timeframe, MODE_HIGH, safeBars, startShift);
+   if(index < 0)
+      return false;
+   price = iHigh(_Symbol, timeframe, index);
+   return price > 0.0;
+}
+
+bool LowestLowOnTimeframe(const ENUM_TIMEFRAMES timeframe,
+                          const int startShift,
+                          const int bars,
+                          double &price)
+{
+   int safeBars = MathMax(1, bars);
+   int index = iLowest(_Symbol, timeframe, MODE_LOW, safeBars, startShift);
+   if(index < 0)
+      return false;
+   price = iLow(_Symbol, timeframe, index);
+   return price > 0.0;
+}
+
+ENUM_TRADE_BIAS M5TightLiquidityBias(const ENUM_TRADE_BIAS primaryBias,
+                                     double &atr,
+                                     double &adx,
+                                     string &reason)
+{
+   ENUM_TIMEFRAMES timeframe = InpM5TightLiquidityTimeframe;
+   if(!ATRValue(timeframe, InpATRPeriod, 1, atr) || atr <= 0.0)
+      return BIAS_NONE;
+   if(!ADXValue(timeframe, InpADXPeriod, 1, adx))
+      return BIAS_NONE;
+   if(adx < MathMax(0.0, InpM5TightLiquidityMinADX))
+      return BIAS_NONE;
+
+   int adxLookback = MathMax(1, InpM5TightLiquidityADXStrengthLookback);
+   double adxPast = 0.0;
+   if(!ADXValue(timeframe, InpADXPeriod, 1 + adxLookback, adxPast))
+      return BIAS_NONE;
+   if(adx < adxPast + MathMax(0.0, InpM5TightLiquidityADXMinIncrease))
+      return BIAS_NONE;
+
+   double emaNow = 0.0;
+   double emaPast = 0.0;
+   int slopeLookback = MathMax(1, InpM5TightLiquidityTrendSlopeLookback);
+   if(!MAValue(timeframe, InpM5TightLiquidityTrendEMAPeriod, 1, emaNow) ||
+      !MAValue(timeframe, InpM5TightLiquidityTrendEMAPeriod, 1 + slopeLookback, emaPast))
+      return BIAS_NONE;
+
+   double close1 = iClose(_Symbol, timeframe, 1);
+   if(close1 <= 0.0)
+      return BIAS_NONE;
+
+   double slopePoints = (emaNow - emaPast) / _Point;
+   double minSlope = MathMax(0.0, InpM5TightLiquidityMinSlopePoints);
+
+   ENUM_TRADE_BIAS bias = BIAS_NONE;
+   if(close1 > emaNow && slopePoints >= minSlope)
+      bias = BIAS_BUY;
+   else if(close1 < emaNow && slopePoints <= -minSlope)
+      bias = BIAS_SELL;
+
+   if(bias == BIAS_NONE)
+      return BIAS_NONE;
+
+   if(InpM5TightLiquidityRequireM15Alignment &&
+      primaryBias != BIAS_NONE &&
+      primaryBias != bias)
+      return BIAS_NONE;
+
+   reason = "M5 ADX " + DoubleToString(adx, 1) +
+            " slope " + DoubleToString(slopePoints, 1) + ";";
+   return bias;
+}
+
+bool M5TightLiquidityBOS(const ENUM_TRADE_BIAS bias,
+                         const ENUM_TIMEFRAMES timeframe,
+                         const int lookback)
+{
+   double close1 = iClose(_Symbol, timeframe, 1);
+   if(close1 <= 0.0)
+      return false;
+
+   double level = 0.0;
+   int bars = MathMax(3, lookback);
+   if(bias == BIAS_BUY && HighestHighOnTimeframe(timeframe, 2, bars, level))
+      return close1 > level;
+   if(bias == BIAS_SELL && LowestLowOnTimeframe(timeframe, 2, bars, level))
+      return close1 < level;
+   return false;
+}
+
+bool M5TightLiquiditySweep(const ENUM_TRADE_BIAS bias,
+                           const ENUM_TIMEFRAMES timeframe,
+                           const int lookback)
+{
+   double high1 = iHigh(_Symbol, timeframe, 1);
+   double low1 = iLow(_Symbol, timeframe, 1);
+   double close1 = iClose(_Symbol, timeframe, 1);
+   if(high1 <= 0.0 || low1 <= 0.0 || close1 <= 0.0)
+      return false;
+
+   double level = 0.0;
+   int bars = MathMax(3, lookback);
+   if(bias == BIAS_BUY && LowestLowOnTimeframe(timeframe, 2, bars, level))
+      return low1 < level && close1 > level;
+   if(bias == BIAS_SELL && HighestHighOnTimeframe(timeframe, 2, bars, level))
+      return high1 > level && close1 < level;
+   return false;
+}
+
+double M5TightLiquidityStopDistance(const ENUM_TRADE_BIAS bias,
+                                    const ENUM_TIMEFRAMES timeframe,
+                                    const double entry,
+                                    const double atr)
+{
+   double fallback = atr * MathMax(0.10, InpM5TightLiquidityStopATRMultiplier);
+   double level = 0.0;
+   int bars = MathMax(3, InpM5TightLiquidityStopLookbackBars);
+   double buffer = atr * MathMax(0.0, InpM5TightLiquidityStopBufferATR) +
+                   _Point * MathMax(0.0, InpM5TightLiquidityStopBufferPoints);
+
+   if(bias == BIAS_BUY && LowestLowOnTimeframe(timeframe, 1, bars, level))
+   {
+      double stop = level - buffer;
+      if(stop > 0.0 && entry > stop)
+         return MathMax(fallback, entry - stop);
+   }
+   if(bias == BIAS_SELL && HighestHighOnTimeframe(timeframe, 1, bars, level))
+   {
+      double stop = level + buffer;
+      if(stop > entry)
+         return MathMax(fallback, stop - entry);
+   }
+   return fallback;
+}
+
+SSignal BuildM5TightLiquiditySecondarySignal(const ENUM_TRADE_BIAS primaryBias)
+{
+   SSignal signal;
+   signal.bias = BIAS_NONE;
+   signal.confirmations = 0;
+   signal.qualityScore = 0;
+   signal.priceActionScore = 0;
+   signal.reasons = "";
+   signal.atr = 0.0;
+   signal.stopDistance = 0.0;
+   signal.takeProfitDistance = 0.0;
+   signal.isRangeReversion = false;
+   signal.isBandVWAPReversion = false;
+   signal.isBreakoutContinuation = false;
+   signal.isPowerTrendContinuation = false;
+   signal.isSessionImpulse = false;
+   signal.isM5TightLiquidity = false;
+   signal.isDailyDonchianBreakout = false;
+   signal.isFlatMonthBreakoutProbe = false;
+   signal.isFlatMonthMicroReversion = false;
+   signal.isFlatMonthStructuralDisplacement = false;
+   signal.isFlatMonthLiquidityReclaim = false;
+   signal.isInSessionLiquidityPullback = false;
+   signal.isHighEfficiencyTrend = false;
+   signal.isDiagnosticFallback = false;
+   signal.useDirectStop = false;
+   signal.riskMultiplier = 1.0;
+   signal.rangeReversionStopPrice = 0.0;
+   signal.rangeReversionTargetPrice = 0.0;
+
+   if(!InpUseM5TightLiquiditySecondaryLane)
+      return signal;
+   if(InpM5TightLiquidityMaxMonthlyEntries > 0 &&
+      CurrentPeriodEntryCount(PERIOD_MN1) >= InpM5TightLiquidityMaxMonthlyEntries)
+      return signal;
+
+   double atr = 0.0;
+   double adx = 0.0;
+   string trendReason = "";
+   ENUM_TRADE_BIAS bias = M5TightLiquidityBias(primaryBias, atr, adx, trendReason);
+   if(bias == BIAS_NONE || atr <= 0.0)
+      return signal;
+
+   ENUM_TIMEFRAMES timeframe = InpM5TightLiquidityTimeframe;
+   bool bos = M5TightLiquidityBOS(bias, timeframe, InpM5TightLiquidityBOSLookbackBars);
+   bool sweep = M5TightLiquiditySweep(bias, timeframe, InpM5TightLiquiditySweepLookbackBars);
+   if(!bos && !sweep)
+      return signal;
+
+   double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   double entry = (bias == BIAS_BUY) ? ask : bid;
+   if(entry <= 0.0)
+      return signal;
+
+   double stopDistance = M5TightLiquidityStopDistance(bias, timeframe, entry, atr);
+   double tpDistance = atr * MathMax(0.10, InpM5TightLiquidityTakeProfitATRMultiplier);
+   if(stopDistance <= 0.0 || tpDistance <= 0.0)
+      return signal;
+   if(tpDistance / stopDistance < MathMax(0.0, InpM5TightLiquidityMinRR))
+      return signal;
+
+   signal.bias = bias;
+   signal.confirmations = 2;
+   signal.qualityScore = 6 + (bos ? 2 : 0) + (sweep ? 2 : 0);
+   signal.priceActionScore = 4 + (sweep ? 2 : 0);
+   signal.reasons = "M5 tight liquidity secondary;" + trendReason;
+   if(bos)
+      signal.reasons += "M5 BOS;";
+   if(sweep)
+      signal.reasons += "M5 liquidity sweep;";
+   signal.atr = atr;
+   signal.stopDistance = stopDistance;
+   signal.takeProfitDistance = tpDistance;
+   signal.isM5TightLiquidity = true;
+   signal.useDirectStop = true;
+   signal.riskMultiplier = MathMax(0.0, InpM5TightLiquidityRiskMultiplier);
+   return signal;
+}
+
+ENUM_TRADE_BIAS DailyDonchianBreakoutBias(double &atr,
+                                          double &breakoutLevel,
+                                          string &reason)
+{
+   atr = 0.0;
+   breakoutLevel = 0.0;
+   reason = "";
+
+   ENUM_TIMEFRAMES timeframe = InpDailyDonchianTimeframe;
+   if(!ATRValue(timeframe, InpATRPeriod, 1, atr) || atr <= 0.0)
+      return BIAS_NONE;
+
+   int lookback = MathMax(5, InpDailyDonchianLookbackBars);
+   double upper = 0.0;
+   double lower = 0.0;
+   if(!HighestHighOnTimeframe(timeframe, 2, lookback, upper) ||
+      !LowestLowOnTimeframe(timeframe, 2, lookback, lower))
+      return BIAS_NONE;
+
+   double close1 = iClose(_Symbol, timeframe, 1);
+   double emaNow = 0.0;
+   double emaPast = 0.0;
+   int slopeLookback = MathMax(1, InpDailyDonchianTrendSlopeLookback);
+   if(close1 <= 0.0 ||
+      !MAValue(timeframe, MathMax(2, InpDailyDonchianTrendEMAPeriod), 1, emaNow) ||
+      !MAValue(timeframe, MathMax(2, InpDailyDonchianTrendEMAPeriod), 1 + slopeLookback, emaPast))
+      return BIAS_NONE;
+
+   double adx = 0.0;
+   if(!ADXValue(timeframe, InpADXPeriod, 1, adx) ||
+      adx < MathMax(0.0, InpDailyDonchianMinADX))
+      return BIAS_NONE;
+
+   double buffer = atr * MathMax(0.0, InpDailyDonchianBreakBufferATR);
+   double minSlope = atr * MathMax(0.0, InpDailyDonchianMinTrendSlopeATR);
+   double slope = emaNow - emaPast;
+
+   if(close1 > upper + buffer && close1 > emaNow && slope >= minSlope)
+   {
+      breakoutLevel = upper;
+      reason = "DDB;Daily Donchian buy;ADX " + DoubleToString(adx, 1) + ";";
+      return BIAS_BUY;
+   }
+   if(close1 < lower - buffer && close1 < emaNow && slope <= -minSlope)
+   {
+      breakoutLevel = lower;
+      reason = "DDB;Daily Donchian sell;ADX " + DoubleToString(adx, 1) + ";";
+      return BIAS_SELL;
+   }
+
+   return BIAS_NONE;
+}
+
+SSignal BuildDailyDonchianBreakoutSignal()
+{
+   SSignal signal;
+   signal.bias = BIAS_NONE;
+   signal.confirmations = 0;
+   signal.qualityScore = 0;
+   signal.priceActionScore = 0;
+   signal.reasons = "";
+   signal.atr = 0.0;
+   signal.stopDistance = 0.0;
+   signal.takeProfitDistance = 0.0;
+   signal.isRangeReversion = false;
+   signal.isBandVWAPReversion = false;
+   signal.isBreakoutContinuation = false;
+   signal.isPowerTrendContinuation = false;
+   signal.isSessionImpulse = false;
+   signal.isM5TightLiquidity = false;
+   signal.isDailyDonchianBreakout = false;
+   signal.isFlatMonthBreakoutProbe = false;
+   signal.isFlatMonthMicroReversion = false;
+   signal.isFlatMonthStructuralDisplacement = false;
+   signal.isFlatMonthLiquidityReclaim = false;
+   signal.isInSessionLiquidityPullback = false;
+   signal.isHighEfficiencyTrend = false;
+   signal.isDiagnosticFallback = false;
+   signal.useDirectStop = false;
+   signal.riskMultiplier = 1.0;
+   signal.rangeReversionStopPrice = 0.0;
+   signal.rangeReversionTargetPrice = 0.0;
+
+   if(!InpUseDailyDonchianBreakoutLane)
+      return signal;
+   int dailyMonthlyEntries = InpUseLaneSpecificMonthlyEntryCaps
+                             ? SetupLaneEntryCount(PERIOD_MN1, "DDB;")
+                             : CurrentPeriodEntryCount(PERIOD_MN1);
+   if(InpDailyDonchianMaxMonthlyEntries > 0 &&
+      dailyMonthlyEntries >= InpDailyDonchianMaxMonthlyEntries)
+      return signal;
+
+   int spacingMinutes = MathMax(0, InpDailyDonchianSpacingMinutes);
+   datetime lastEntry = LastSetupLaneEntryTime("DDB;");
+   if(lastEntry > 0 && spacingMinutes > 0 &&
+      TimeCurrent() - lastEntry < spacingMinutes * 60)
+      return signal;
+
+   double atr = 0.0;
+   double breakoutLevel = 0.0;
+   string reason = "";
+   ENUM_TRADE_BIAS bias = DailyDonchianBreakoutBias(atr, breakoutLevel, reason);
+   if(bias == BIAS_NONE || atr <= 0.0 || breakoutLevel <= 0.0)
+      return signal;
+
+   double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   double entry = (bias == BIAS_BUY) ? ask : bid;
+   if(entry <= 0.0)
+      return signal;
+
+   double maxRetrace = atr * MathMax(0.0, InpDailyDonchianMaxRetraceATR);
+   double maxExtension = atr * MathMax(0.0, InpDailyDonchianMaxExtensionATR);
+   if((bias == BIAS_BUY &&
+       (entry < breakoutLevel - maxRetrace || entry > breakoutLevel + maxExtension)) ||
+      (bias == BIAS_SELL &&
+       (entry > breakoutLevel + maxRetrace || entry < breakoutLevel - maxExtension)))
+      return signal;
+
+   double stopDistance = atr * MathMax(0.10, InpDailyDonchianStopATRMultiplier);
+   double tpDistance = atr * MathMax(0.10, InpDailyDonchianTakeProfitATRMultiplier);
+   if(stopDistance <= 0.0 || tpDistance <= 0.0 ||
+      tpDistance / stopDistance < MathMax(0.0, InpDailyDonchianMinRR))
+      return signal;
+
+   signal.bias = bias;
+   signal.confirmations = 3;
+   signal.qualityScore = 9;
+   signal.priceActionScore = 7;
+   signal.reasons = reason;
+   signal.atr = atr;
+   signal.stopDistance = stopDistance;
+   signal.takeProfitDistance = tpDistance;
+   signal.isDailyDonchianBreakout = true;
+   signal.useDirectStop = true;
+   signal.riskMultiplier = MathMax(0.0, InpDailyDonchianRiskMultiplier);
+   return signal;
+}
+
+double MinimumBrokerStopDistance()
+{
+   long stopsLevel = SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL);
+   long freezeLevel = SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL);
+   long requiredPoints = ((stopsLevel > freezeLevel) ? stopsLevel : freezeLevel) + 2;
+   return requiredPoints * _Point;
+}
+
+double LiquidityStopBuffer(const double atrDistance)
+{
+   double atrBuffer = MathMax(0.0, InpLiquidityStopBufferATR) * MathMax(0.0, atrDistance);
+   double pointBuffer = MathMax(0.0, InpLiquidityStopBufferPoints) * _Point;
+   return MathMax(pointBuffer, atrBuffer);
+}
+
+double LiquidityClusterExtraBuffer(const double atrDistance)
+{
+   double atrBuffer = MathMax(0.0, InpLiquidityClusterExtraBufferATR) * MathMax(0.0, atrDistance);
+   double pointBuffer = MathMax(0.0, InpLiquidityClusterExtraBufferPoints) * _Point;
+   return MathMax(pointBuffer, atrBuffer);
+}
+
+int LiquidityClusterTouchesNear(const ENUM_TRADE_BIAS bias,
+                                const double level,
+                                const double atrDistance,
+                                const int lookback)
+{
+   if(level <= 0.0)
+      return 0;
+
+   double atrProximity = MathMax(0.0, InpLiquidityClusterProximityATR) * MathMax(0.0, atrDistance);
+   double pointProximity = MathMax(0.0, InpLiquidityClusterProximityPoints) * _Point;
+   double proximity = MathMax(atrProximity, pointProximity);
+   if(proximity <= 0.0)
+      return 0;
+
+   int touches = 0;
+   int scanBars = MathMax(4, lookback);
+   for(int shift = 1; shift <= scanBars; shift++)
+   {
+      double candidate = (bias == BIAS_BUY) ? iLow(_Symbol, InpSignalTimeframe, shift)
+                                            : iHigh(_Symbol, InpSignalTimeframe, shift);
+      if(candidate <= 0.0)
+         continue;
+      if(MathAbs(candidate - level) <= proximity)
+         touches++;
+   }
+   return touches;
+}
+
+double LiquidityClusterAdjustedBuffer(const ENUM_TRADE_BIAS bias,
+                                      const double liquidityLevel,
+                                      const double baseBuffer,
+                                      const double atrDistance,
+                                      const int lookback,
+                                      const bool forceCluster=false)
+{
+   if(!InpUseLiquidityClusterStopExtension)
+      return baseBuffer;
+
+   if(!forceCluster)
+   {
+      int minTouches = MathMax(2, InpLiquidityClusterMinTouches);
+      int touches = LiquidityClusterTouchesNear(bias, liquidityLevel, atrDistance, lookback);
+      if(touches < minTouches)
+         return baseBuffer;
+   }
+
+   return baseBuffer + LiquidityClusterExtraBuffer(atrDistance);
+}
+
+bool LastSweepStopLevel(const ENUM_TRADE_BIAS bias,
+                        const int lookback,
+                        double &level)
+{
+   CMarketStructure structure;
+   double reference = 0.0;
+   double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+   double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+   double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+   if(high1 <= 0.0 || low1 <= 0.0 || close1 <= 0.0)
+      return false;
+
+   if(bias == BIAS_BUY && structure.LowestLow(2, lookback, reference) &&
+      low1 < reference && close1 > reference)
+   {
+      level = MathMin(low1, reference);
+      return true;
+   }
+   if(bias == BIAS_SELL && structure.HighestHigh(2, lookback, reference) &&
+      high1 > reference && close1 < reference)
+   {
+      level = MathMax(high1, reference);
+      return true;
+   }
+   return false;
+}
+
+bool EqualLiquidityStopLevel(const ENUM_TRADE_BIAS bias,
+                             const int lookback,
+                             double &level)
+{
+   double tolerance = MathMax(0.0, InpEqualLevelTolerancePoints) * _Point;
+   if(tolerance <= 0.0)
+      return false;
+
+   bool found = false;
+   double selected = 0.0;
+   for(int a = 2; a <= lookback; a++)
+   {
+      double highA = iHigh(_Symbol, InpSignalTimeframe, a);
+      double lowA = iLow(_Symbol, InpSignalTimeframe, a);
+      if(highA <= 0.0 || lowA <= 0.0)
+         continue;
+
+      for(int b = a + 1; b <= lookback + 1; b++)
+      {
+         double highB = iHigh(_Symbol, InpSignalTimeframe, b);
+         double lowB = iLow(_Symbol, InpSignalTimeframe, b);
+         if(highB <= 0.0 || lowB <= 0.0)
+            continue;
+
+         if(bias == BIAS_BUY && MathAbs(lowA - lowB) <= tolerance)
+         {
+            double candidate = MathMin(lowA, lowB);
+            if(!found || candidate < selected)
+            {
+               selected = candidate;
+               found = true;
+            }
+         }
+         if(bias == BIAS_SELL && MathAbs(highA - highB) <= tolerance)
+         {
+            double candidate = MathMax(highA, highB);
+            if(!found || candidate > selected)
+            {
+               selected = candidate;
+               found = true;
+            }
+         }
+      }
+   }
+
+   if(found)
+      level = selected;
+   return found;
+}
+
+bool PreviousPeriodLiquidityStopLevel(const ENUM_TRADE_BIAS bias,
+                                      const ENUM_TIMEFRAMES timeframe,
+                                      const double entryPrice,
+                                      double &level)
+{
+   level = 0.0;
+   if(entryPrice <= 0.0)
+      return false;
+
+   double high = iHigh(_Symbol, timeframe, 1);
+   double low = iLow(_Symbol, timeframe, 1);
+   if(high <= 0.0 || low <= 0.0)
+      return false;
+
+   if(bias == BIAS_BUY && low < entryPrice)
+   {
+      level = low;
+      return true;
+   }
+   if(bias == BIAS_SELL && high > entryPrice)
+   {
+      level = high;
+      return true;
+   }
+   return false;
+}
+
+bool LiquidityPocketStopLevel(const ENUM_TRADE_BIAS bias,
+                              const double entryPrice,
+                              const double stopDistance,
+                              const double atrDistance,
+                              const int lookback,
+                              double &level)
+{
+   level = 0.0;
+   if(!InpUseLiquidityPocketStopShift || entryPrice <= 0.0 || stopDistance <= 0.0)
+      return false;
+
+   double stopPrice = (bias == BIAS_BUY) ? entryPrice - stopDistance
+                                         : entryPrice + stopDistance;
+   if(stopPrice <= 0.0)
+      return false;
+
+   double atrProximity = MathMax(0.0, InpLiquidityPocketProximityATR) * MathMax(0.0, atrDistance);
+   double pointProximity = MathMax(0.0, InpLiquidityPocketProximityPoints) * _Point;
+   double proximity = MathMax(atrProximity, pointProximity);
+   if(proximity <= 0.0)
+      return false;
+
+   bool found = false;
+   double selected = 0.0;
+   int scanBars = MathMax(4, lookback);
+   for(int shift = 2; shift <= scanBars + 1; shift++)
+   {
+      double candidate = (bias == BIAS_BUY) ? iLow(_Symbol, InpSignalTimeframe, shift)
+                                            : iHigh(_Symbol, InpSignalTimeframe, shift);
+      if(candidate <= 0.0)
+         continue;
+
+      if(bias == BIAS_BUY)
+      {
+         if(candidate >= entryPrice)
+            continue;
+         if(MathAbs(stopPrice - candidate) <= proximity)
+         {
+            if(!found || candidate < selected)
+               selected = candidate;
+            found = true;
+         }
+      }
+      else if(bias == BIAS_SELL)
+      {
+         if(candidate <= entryPrice)
+            continue;
+         if(MathAbs(stopPrice - candidate) <= proximity)
+         {
+            if(!found || candidate > selected)
+               selected = candidate;
+            found = true;
+         }
+      }
+   }
+
+   ENUM_TIMEFRAMES previousTimeframes[3] = { PERIOD_D1, PERIOD_W1, PERIOD_MN1 };
+   bool previousEnabled[3] = { InpLiquidityStopUsePreviousDay,
+                               InpLiquidityStopUsePreviousWeek,
+                               InpLiquidityStopUsePreviousMonth };
+   for(int i = 0; i < 3; i++)
+   {
+      if(!previousEnabled[i])
+         continue;
+
+      double previousLevel = 0.0;
+      if(!PreviousPeriodLiquidityStopLevel(bias, previousTimeframes[i], entryPrice, previousLevel))
+         continue;
+      if(MathAbs(stopPrice - previousLevel) > proximity)
+         continue;
+
+      if(bias == BIAS_BUY)
+      {
+         if(!found || previousLevel < selected)
+            selected = previousLevel;
+         found = true;
+      }
+      else if(bias == BIAS_SELL)
+      {
+         if(!found || previousLevel > selected)
+            selected = previousLevel;
+         found = true;
+      }
+   }
+
+   if(found)
+      level = selected;
+   return found;
+}
+
+bool LiquidityStopConflictGuardBlocks(const ENUM_TRADE_BIAS bias,
+                                      const double entryPrice,
+                                      const double stopDistance,
+                                      const double atrDistance,
+                                      const int qualityScore,
+                                      string &reason)
+{
+   reason = "";
+   if(!InpUseLiquidityStopConflictGuard || entryPrice <= 0.0 || stopDistance <= 0.0)
+      return false;
+   if(InpUseLiquidityStopConflictMonthFilter)
+   {
+      MqlDateTime now;
+      TimeToStruct(TimeCurrent(), now);
+      bool allowed[12] = { InpLiquidityStopConflictTradeJanuary,
+                           InpLiquidityStopConflictTradeFebruary,
+                           InpLiquidityStopConflictTradeMarch,
+                           InpLiquidityStopConflictTradeApril,
+                           InpLiquidityStopConflictTradeMay,
+                           InpLiquidityStopConflictTradeJune,
+                           InpLiquidityStopConflictTradeJuly,
+                           InpLiquidityStopConflictTradeAugust,
+                           InpLiquidityStopConflictTradeSeptember,
+                           InpLiquidityStopConflictTradeOctober,
+                           InpLiquidityStopConflictTradeNovember,
+                           InpLiquidityStopConflictTradeDecember };
+      int monthIndex = now.mon - 1;
+      if(monthIndex < 0 || monthIndex >= 12 || !allowed[monthIndex])
+         return false;
+   }
+   if(qualityScore >= MathMax(0, InpLiquidityStopConflictBypassQualityScore))
+      return false;
+
+   double stopPrice = (bias == BIAS_BUY) ? entryPrice - stopDistance
+                                         : entryPrice + stopDistance;
+   if(stopPrice <= 0.0)
+      return false;
+
+   double atrProximity = MathMax(0.0, InpLiquidityStopConflictProximityATR) * MathMax(0.0, atrDistance);
+   double pointProximity = MathMax(0.0, InpLiquidityStopConflictProximityPoints) * _Point;
+   double proximity = MathMax(atrProximity, pointProximity);
+   if(proximity <= 0.0)
+      return false;
+
+   int touches = 0;
+   int lookback = MathMax(4, InpLiquidityStopConflictLookbackBars);
+   int minTouches = MathMax(2, InpLiquidityStopConflictMinTouches);
+   for(int shift = 1; shift <= lookback; shift++)
+   {
+      double level = (bias == BIAS_BUY) ? iLow(_Symbol, InpSignalTimeframe, shift)
+                                        : iHigh(_Symbol, InpSignalTimeframe, shift);
+      if(level <= 0.0)
+         continue;
+      if(MathAbs(level - stopPrice) <= proximity)
+         touches++;
+      if(touches >= minTouches)
+      {
+         reason = "liquidity stop conflict touches " + IntegerToString(touches);
+         return true;
+      }
+   }
+
+   return false;
+}
+
+bool IsNewBar()
+{
+   datetime barTime = iTime(_Symbol, InpSignalTimeframe, 0);
+   if(barTime <= 0)
+      return false;
+   if(barTime == g_lastBarTime)
+      return false;
+   g_lastBarTime = barTime;
+   return true;
+}
+
+bool ConfirmedSwingPivotStopLevel(const ENUM_TRADE_BIAS bias,
+                                  const double entryPrice,
+                                  double &level)
+{
+   level = 0.0;
+   if(!InpUseConfirmedSwingPivotStop || entryPrice <= 0.0)
+      return false;
+
+   CMarketStructure structure;
+   int left = MathMax(1, InpSwingPivotStopLeftBars);
+   int right = MathMax(1, InpSwingPivotStopRightBars);
+   int lookback = MathMax(right + 2, InpSwingPivotStopLookbackBars);
+
+   bool found = false;
+   double selected = 0.0;
+   for(int shift = right + 1; shift <= lookback + right; shift++)
+   {
+      if(bias == BIAS_BUY && structure.IsSwingLow(shift, left, right))
+      {
+         double candidate = iLow(_Symbol, InpSignalTimeframe, shift);
+         if(candidate > 0.0 && candidate < entryPrice)
+         {
+            if(!found || candidate > selected)
+               selected = candidate;
+            found = true;
+         }
+      }
+      else if(bias == BIAS_SELL && structure.IsSwingHigh(shift, left, right))
+      {
+         double candidate = iHigh(_Symbol, InpSignalTimeframe, shift);
+         if(candidate > 0.0 && candidate > entryPrice)
+         {
+            if(!found || candidate < selected)
+               selected = candidate;
+            found = true;
+         }
+      }
+   }
+
+   if(found)
+      level = selected;
+   return found;
+}
+
+double StructureStopDistance(const ENUM_TRADE_BIAS bias,
+                             const double entryPrice,
+                             const double atrDistance,
+                             bool &usedLiquidityStop)
+{
+   usedLiquidityStop = false;
+   if(!InpUseStructureStop)
+      return atrDistance;
+
+   CMarketStructure structure;
+   double level = 0;
+   double stopDistance = atrDistance;
+   if(bias == BIAS_BUY && structure.LowestLow(1, InpStructureLookbackBars, level))
+      stopDistance = MathMax(atrDistance * 0.60, entryPrice - level);
+   if(bias == BIAS_SELL && structure.HighestHigh(1, InpStructureLookbackBars, level))
+      stopDistance = MathMax(atrDistance * 0.60, level - entryPrice);
+
+   double pivotLevel = 0.0;
+   if(ConfirmedSwingPivotStopLevel(bias, entryPrice, pivotLevel))
+   {
+      double pivotBuffer = MathMax(MathMax(0.0, InpSwingPivotStopBufferATR) * MathMax(0.0, atrDistance),
+                                   MathMax(0.0, InpSwingPivotStopBufferPoints) * _Point);
+      double pivotDistance = (bias == BIAS_BUY) ? entryPrice - (pivotLevel - pivotBuffer)
+                                                : (pivotLevel + pivotBuffer) - entryPrice;
+      double minDistance = MathMax(0.0, InpSwingPivotStopMinATR) * MathMax(0.0, atrDistance);
+      double maxDistance = MathMax(minDistance, InpSwingPivotStopMaxATR * MathMax(0.0, atrDistance));
+
+      if(pivotDistance >= minDistance && pivotDistance <= maxDistance)
+      {
+         if(InpSwingPivotStopTightenOnly)
+            stopDistance = MathMin(stopDistance, pivotDistance);
+         else
+            stopDistance = pivotDistance;
+      }
+   }
+
+   if(InpUseLiquidityAwareStructureStop)
+   {
+      int liquidityLookback = MathMax(4, InpLiquidityStopLookbackBars);
+      double buffer = LiquidityStopBuffer(atrDistance);
+      double liquidityLevel = 0.0;
+
+      if(InpLiquidityStopUseLastSweep &&
+         LastSweepStopLevel(bias, liquidityLookback, liquidityLevel))
+      {
+         double adjustedBuffer = LiquidityClusterAdjustedBuffer(bias, liquidityLevel, buffer, atrDistance, liquidityLookback);
+         double distance = (bias == BIAS_BUY) ? entryPrice - (liquidityLevel - adjustedBuffer)
+                                              : (liquidityLevel + adjustedBuffer) - entryPrice;
+         if(distance > 0.0)
+         {
+            stopDistance = MathMax(stopDistance, distance);
+            usedLiquidityStop = true;
+         }
+      }
+
+      if(InpLiquidityStopUseEqualLevels &&
+         EqualLiquidityStopLevel(bias, liquidityLookback, liquidityLevel))
+      {
+         double adjustedBuffer = LiquidityClusterAdjustedBuffer(bias, liquidityLevel, buffer, atrDistance, liquidityLookback, true);
+         double distance = (bias == BIAS_BUY) ? entryPrice - (liquidityLevel - adjustedBuffer)
+                                              : (liquidityLevel + adjustedBuffer) - entryPrice;
+         if(distance > 0.0)
+         {
+            stopDistance = MathMax(stopDistance, distance);
+            usedLiquidityStop = true;
+         }
+      }
+
+      ENUM_TIMEFRAMES previousTimeframes[3] = { PERIOD_D1, PERIOD_W1, PERIOD_MN1 };
+      bool previousEnabled[3] = { InpLiquidityStopUsePreviousDay,
+                                  InpLiquidityStopUsePreviousWeek,
+                                  InpLiquidityStopUsePreviousMonth };
+      for(int i = 0; i < 3; i++)
+      {
+         if(!previousEnabled[i])
+            continue;
+         if(PreviousPeriodLiquidityStopLevel(bias, previousTimeframes[i], entryPrice, liquidityLevel))
+         {
+            double adjustedBuffer = LiquidityClusterAdjustedBuffer(bias, liquidityLevel, buffer, atrDistance, liquidityLookback);
+            double distance = (bias == BIAS_BUY) ? entryPrice - (liquidityLevel - adjustedBuffer)
+                                                 : (liquidityLevel + adjustedBuffer) - entryPrice;
+            if(distance > 0.0)
+            {
+               stopDistance = MathMax(stopDistance, distance);
+               usedLiquidityStop = true;
+            }
+         }
+      }
+
+      if(InpUseLiquidityPocketStopShift &&
+         LiquidityPocketStopLevel(bias,
+                                  entryPrice,
+                                  stopDistance,
+                                  atrDistance,
+                                  MathMax(liquidityLookback, InpLiquidityPocketLookbackBars),
+                                  liquidityLevel))
+      {
+         double pocketBuffer = MathMax(MathMax(0.0, InpLiquidityPocketBufferATR) * MathMax(0.0, atrDistance),
+                                       MathMax(0.0, InpLiquidityPocketBufferPoints) * _Point);
+         double distance = (bias == BIAS_BUY) ? entryPrice - (liquidityLevel - pocketBuffer)
+                                              : (liquidityLevel + pocketBuffer) - entryPrice;
+         if(distance > 0.0)
+         {
+            stopDistance = MathMax(stopDistance, distance);
+            usedLiquidityStop = true;
+         }
+      }
+   }
+
+   return stopDistance;
+}
+
+bool MTFSlopePoints(const int lookbackBars, double &slopePoints)
+{
+   double emaNow = 0;
+   double emaPast = 0;
+   if(!indicators.MTFEMA(1, emaNow) || !indicators.MTFEMA(1 + lookbackBars, emaPast))
+      return false;
+   slopePoints = (emaNow - emaPast) / _Point;
+   return true;
+}
+
+bool MTFTrendQualityAllows(const ENUM_TRADE_BIAS bias, const double atr, string &reason)
+{
+   if(!InpUseMTFTrendQualityGuard)
+      return true;
+
+   int lookback = MathMax(1, InpMTFQualitySlopeLookback);
+   double slopePoints = 0.0;
+   if(!MTFSlopePoints(lookback, slopePoints))
+      return true;
+
+   double minSlope = MathMax(0.0, InpMTFQualityMinSlopePoints);
+   if(bias == BIAS_BUY && slopePoints < minSlope)
+   {
+      reason = "MTF trend quality slope";
+      return false;
+   }
+   if(bias == BIAS_SELL && slopePoints > -minSlope)
+   {
+      reason = "MTF trend quality slope";
+      return false;
+   }
+
+   if(atr > 0.0 && InpMTFQualityMaxDistanceATR > 0.0)
+   {
+      double mtfEma = 0.0;
+      double signalClose = iClose(_Symbol, InpSignalTimeframe, 1);
+      if(indicators.MTFEMA(1, mtfEma) && signalClose > 0.0 && mtfEma > 0.0)
+      {
+         double distance = MathAbs(signalClose - mtfEma);
+         if(distance > atr * InpMTFQualityMaxDistanceATR)
+         {
+            reason = "MTF trend quality extension";
+            return false;
+         }
+      }
+   }
+
+   return true;
+}
+
+double QualityRiskMultiplier(const int qualityScore)
+{
+   if(!InpUseQualityRiskScaling)
+      return 1.0;
+
+   double minMultiplier = MathMax(0.0, InpMinQualityRiskMultiplier);
+   double maxMultiplier = MathMax(minMultiplier, InpMaxQualityRiskMultiplier);
+   if(InpQualityRiskFullScore <= InpQualityRiskMinScore)
+      return minMultiplier;
+
+   double progress = ((double)qualityScore - (double)InpQualityRiskMinScore) /
+                     ((double)InpQualityRiskFullScore - (double)InpQualityRiskMinScore);
+   progress = MathMin(1.0, MathMax(0.0, progress));
+   return minMultiplier + progress * (maxMultiplier - minMultiplier);
+}
+
+double PriceActionRiskMultiplier(const int priceActionScore)
+{
+   if(!InpUsePriceActionRiskScaling)
+      return 1.0;
+
+   double minMultiplier = MathMax(0.0, InpMinPriceActionRiskMultiplier);
+   double maxMultiplier = MathMax(minMultiplier, InpMaxPriceActionRiskMultiplier);
+   if(InpPriceActionRiskFullScore <= InpPriceActionRiskMinScore)
+      return minMultiplier;
+
+   double progress = ((double)priceActionScore - (double)InpPriceActionRiskMinScore) /
+                     ((double)InpPriceActionRiskFullScore - (double)InpPriceActionRiskMinScore);
+   progress = MathMin(1.0, MathMax(0.0, progress));
+   return minMultiplier + progress * (maxMultiplier - minMultiplier);
+}
+
+double MediocreSetupRiskMultiplier(const SSignal &signal)
+{
+   if(!InpUseMediocreSetupRiskThrottle)
+      return 1.0;
+   if(InpMediocreSetupBypassWithHouseMoney && riskManager.HouseMoneyAccelerationAllowed())
+      return 1.0;
+   if(signal.qualityScore >= InpMediocreSetupMinQualityScore &&
+      signal.priceActionScore >= InpMediocreSetupMinPriceActionScore)
+      return 1.0;
+   return MathMax(0.0, MathMin(1.0, InpMediocreSetupRiskMultiplier));
+}
+
+double VolatilityRiskMultiplier(const double currentAtr)
+{
+   if(!InpUseVolatilityRiskScaling)
+      return 1.0;
+   if(currentAtr <= 0.0)
+      return 1.0;
+
+   int lookback = MathMax(3, InpVolatilityRiskLookbackBars);
+   double atrAverage = 0.0;
+   int samples = 0;
+   for(int shift = 2; shift < 2 + lookback; shift++)
+   {
+      double sampleAtr = 0.0;
+      if(!indicators.ATR(shift, sampleAtr) || sampleAtr <= 0.0)
+         continue;
+      atrAverage += sampleAtr;
+      samples++;
+   }
+
+   if(samples <= 0 || atrAverage <= 0.0)
+      return 1.0;
+
+   atrAverage /= (double)samples;
+   double ratio = currentAtr / atrAverage;
+   double startRatio = MathMax(0.01, InpVolatilityRiskStartRatio);
+   double fullRatio = MathMax(startRatio + 0.01, InpVolatilityRiskFullRatio);
+   if(ratio <= startRatio)
+      return 1.0;
+
+   double minMultiplier = MathMax(0.0, MathMin(1.0, InpMinVolatilityRiskMultiplier));
+   double progress = (ratio - startRatio) / (fullRatio - startRatio);
+   progress = MathMin(1.0, MathMax(0.0, progress));
+   return 1.0 - progress * (1.0 - minMultiplier);
+}
+
+double SpreadRiskMultiplier()
+{
+   if(!InpUseSpreadRiskScaling)
+      return 1.0;
+
+   double currentSpread = CLogger::SpreadPoints();
+   double startPoints = MathMax(0.0, InpSpreadRiskStartPoints);
+   double fullPoints = MathMax(startPoints + 1.0, InpMaxSpreadPoints);
+   if(currentSpread <= startPoints)
+      return 1.0;
+
+   double minMultiplier = MathMax(0.0, MathMin(1.0, InpMinSpreadRiskMultiplier));
+   double progress = (currentSpread - startPoints) / (fullPoints - startPoints);
+   progress = MathMin(1.0, MathMax(0.0, progress));
+   return 1.0 - progress * (1.0 - minMultiplier);
+}
+
+double DiagnosticFallbackSpreadRiskMultiplier(const SSignal &signal)
+{
+   if(!InpUseDiagnosticFallbackSpreadRiskScaling || !signal.isDiagnosticFallback)
+      return 1.0;
+
+   double currentSpread = CLogger::SpreadPoints();
+   double startPoints = MathMax(0.0, InpDiagnosticFallbackSpreadRiskStartPoints);
+   double fullPoints = MathMax(startPoints + 1.0, InpDiagnosticFallbackSpreadRiskFullPoints);
+   if(currentSpread <= startPoints)
+      return 1.0;
+
+   double minMultiplier = MathMax(0.0, MathMin(1.0, InpDiagnosticFallbackMinSpreadRiskMultiplier));
+   double progress = (currentSpread - startPoints) / (fullPoints - startPoints);
+   progress = MathMin(1.0, MathMax(0.0, progress));
+   return 1.0 - progress * (1.0 - minMultiplier);
+}
+
+double DiagnosticFallbackCushionRiskMultiplier(const SSignal &signal)
+{
+   if(!InpUseDiagnosticFallbackCushionRiskThrottle || !signal.isDiagnosticFallback)
+      return 1.0;
+
+   double initialBalance = riskManager.InitialBalance();
+   if(initialBalance <= 0.0)
+      return 1.0;
+
+   double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+   if(balance <= 0.0)
+      return 1.0;
+
+   double closedProfitPercent = 100.0 * (balance - initialBalance) / initialBalance;
+   if(closedProfitPercent >= MathMax(0.0, InpDiagnosticFallbackCushionProfitPercent))
+      return 1.0;
+
+   return MathMax(0.0, MathMin(1.0, InpDiagnosticFallbackNoCushionRiskMultiplier));
+}
+
+bool DiagnosticFallbackNoCushionLossBlockAllows(const SSignal &signal, string &reason)
+{
+   reason = "";
+   if(!InpUseDiagnosticFallbackNoCushionLossBlock || !signal.isDiagnosticFallback)
+      return true;
+
+   double initialBalance = riskManager.InitialBalance();
+   if(initialBalance <= 0.0)
+      return true;
+
+   double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+   if(balance <= 0.0)
+      return true;
+
+   double closedProfitPercent = 100.0 * (balance - initialBalance) / initialBalance;
+   if(closedProfitPercent >= MathMax(0.0, InpDiagnosticFallbackLossBlockCushionPercent))
+      return true;
+
+   double averageR = 0.0;
+   int sampleTrades = 0;
+   datetime latestCloseTime = 0;
+   if(!riskManager.DiagnosticFallbackRecentAverageR(MathMax(1, InpDiagnosticFallbackLossBlockLookbackTrades),
+                                                    MathMax(1, InpDiagnosticFallbackLossBlockMinTrades),
+                                                    averageR,
+                                                    sampleTrades,
+                                                    latestCloseTime))
+      return true;
+
+   int maxAgeDays = MathMax(0, InpDiagnosticFallbackLossBlockMaxAgeDays);
+   if(maxAgeDays > 0 && latestCloseTime > 0 &&
+      TimeCurrent() - latestCloseTime > maxAgeDays * 86400)
+      return true;
+
+   if(averageR > InpDiagnosticFallbackLossBlockMaxAverageR)
+      return true;
+
+   reason = "DGF no-cushion loss block avgR " + DoubleToString(averageR, 2) +
+            " samples " + IntegerToString(sampleTrades) +
+            " ageDays " + IntegerToString(maxAgeDays) +
+            " cushion " + DoubleToString(closedProfitPercent, 2) + "%";
+   return false;
+}
+
+double CurrentPeriodProfit(const ENUM_TIMEFRAMES period)
+{
+   datetime start = iTime(_Symbol, period, 0);
+   if(start <= 0)
+      return 0.0;
+   if(!HistorySelect(start, TimeCurrent()))
+      return 0.0;
+
+   double profit = 0.0;
+   int total = HistoryDealsTotal();
+   for(int i = 0; i < total; i++)
+   {
+      ulong ticket = HistoryDealGetTicket(i);
+      if(ticket == 0)
+         continue;
+      if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_OUT)
+         continue;
+      profit += HistoryDealGetDouble(ticket, DEAL_PROFIT) +
+                HistoryDealGetDouble(ticket, DEAL_SWAP) +
+                HistoryDealGetDouble(ticket, DEAL_COMMISSION);
+   }
+   return profit;
+}
+
+int CurrentPeriodEntryCount(const ENUM_TIMEFRAMES period)
+{
+   datetime start = iTime(_Symbol, period, 0);
+   if(start <= 0)
+      return 0;
+   if(!HistorySelect(start, TimeCurrent()))
+      return 0;
+
+   int count = 0;
+   int total = HistoryDealsTotal();
+   for(int i = 0; i < total; i++)
+   {
+      ulong ticket = HistoryDealGetTicket(i);
+      if(ticket == 0)
+         continue;
+      if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_ENTRY) == DEAL_ENTRY_IN)
+         count++;
+   }
+   return count;
+}
+
+int SetupLaneEntryCount(const ENUM_TIMEFRAMES period, const string laneNeedle)
+{
+   if(StringLen(laneNeedle) <= 0)
+      return 0;
+
+   datetime start = iTime(_Symbol, period, 0);
+   if(start <= 0 || !HistorySelect(start, TimeCurrent()))
+      return 0;
+
+   int count = 0;
+   int total = HistoryDealsTotal();
+   for(int i = 0; i < total; i++)
+   {
+      ulong ticket = HistoryDealGetTicket(i);
+      if(ticket == 0)
+         continue;
+      if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_IN)
+         continue;
+      if(StringFind(HistoryDealGetString(ticket, DEAL_COMMENT), laneNeedle) < 0)
+         continue;
+      count++;
+   }
+   return count;
+}
+
+datetime CurrentLastEntryTime()
+{
+   HistorySelect(0, TimeCurrent());
+   int total = HistoryDealsTotal();
+   for(int i = total - 1; i >= 0; i--)
+   {
+      ulong ticket = HistoryDealGetTicket(i);
+      if(ticket == 0)
+         continue;
+      if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_IN)
+         continue;
+
+      return (datetime)HistoryDealGetInteger(ticket, DEAL_TIME);
+   }
+   return 0;
+}
+
+int SignalBarShiftForTime(const datetime when)
+{
+   if(when <= 0)
+      return -1;
+   int shift = iBarShift(_Symbol, InpSignalTimeframe, when, false);
+   if(shift < 1)
+      shift = 1;
+   return shift;
+}
+
+bool FlatMonthCatchUpControlsEnabled()
+{
+   return (InpUseFlatMonthCatchUpEntryRelaxation ||
+           InpUseFlatMonthCatchUpStandaloneRelaxation ||
+           InpUseFlatMonthLateCatchUp ||
+           InpUseFlatMonthCatchUpRiskRamp);
+}
+
+double FlatMonthProtectedLossCatchUpCeilingPercent()
+{
+   double maxMonthlyLossPercent = MathMax(0.0, InpMaxMonthlyLossPercent);
+   if(maxMonthlyLossPercent <= 0.0)
+      return 0.0;
+
+   double catchUpFullGap = MathMax(0.0, InpFlatMonthCatchUpFullGapPercent);
+   double lossCapShare = maxMonthlyLossPercent * 0.35;
+   return MathMin(lossCapShare, MathMax(0.05, catchUpFullGap));
+}
+
+bool FlatMonthProtectedLossCatchUpAllowed(const double monthlyProfitPercent)
+{
+   if(monthlyProfitPercent >= 0.0 || !InpFlatMonthRequireNoMonthlyLoss)
+      return true;
+   if(!FlatMonthCatchUpControlsEnabled())
+      return false;
+
+   double lossPercent = -monthlyProfitPercent;
+   double lossCeiling = FlatMonthProtectedLossCatchUpCeilingPercent();
+   if(lossCeiling <= 0.0 || lossPercent > lossCeiling)
+      return false;
+
+   if(InpFlatMonthCatchUpRequiresProtectedFloor)
+   {
+      double protectedFloor = riskManager.ProtectedEquityFloor();
+      if(protectedFloor > 0.0 && AccountInfoDouble(ACCOUNT_EQUITY) <= protectedFloor)
+         return false;
+   }
+
+   bool requireLiquidSession = (InpFlatMonthCatchUpRequireLiquidSession ||
+                                InpFlatMonthCatchUpStandaloneRequireLiquidSession ||
+                                InpFlatMonthLateCatchUpRequireLiquidSession ||
+                                InpFlatMonthCatchUpRiskRequiresLiquidSession);
+   if(requireLiquidSession && !sessionFilter.LiquidSessionActive())
+      return false;
+
+   return true;
+}
+
+bool FlatMonthProtectedLossCatchUpActive()
+{
+   if(!InpFlatMonthRequireNoMonthlyLoss)
+      return false;
+
+   double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+   if(balance <= 0.0)
+      return false;
+
+   double monthlyProfitPercent = 100.0 * CurrentPeriodProfit(PERIOD_MN1) / balance;
+   return (monthlyProfitPercent < 0.0 &&
+           FlatMonthProtectedLossCatchUpAllowed(monthlyProfitPercent));
+}
+
+bool FlatMonthOpportunityActive(const bool allowProtectedLossCatchUp=false)
+{
+   if(!InpUseFlatMonthOpportunityMode)
+      return false;
+   if(InpFlatMonthOpportunityOnlyOutsideMonthFilter && MonthFilterAllows())
+      return false;
+
+   MqlDateTime dt;
+   TimeToStruct(TimeCurrent(), dt);
+   if(dt.day < MathMax(1, InpFlatMonthMinDayOfMonth))
+      return false;
+
+   double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+   if(balance <= 0.0)
+      return false;
+
+   double monthlyProfitPercent = 100.0 * CurrentPeriodProfit(PERIOD_MN1) / balance;
+   if(InpFlatMonthRequireNoMonthlyLoss && monthlyProfitPercent < 0.0 &&
+      (!allowProtectedLossCatchUp ||
+       !FlatMonthProtectedLossCatchUpAllowed(monthlyProfitPercent)))
+      return false;
+
+   double maxActiveProfit = MathMin(MathMax(0.0, InpFlatMonthTargetPercent),
+                                    MathMax(0.0, InpFlatMonthMaxProfitPercent));
+   if(monthlyProfitPercent > maxActiveProfit)
+      return false;
+
+   int monthlyEntries = CurrentPeriodEntryCount(PERIOD_MN1);
+   if(InpFlatMonthMaxEntryCount > 0 && monthlyEntries > InpFlatMonthMaxEntryCount)
+      return false;
+
+   return true;
+}
+
+bool FlatMonthMicroReversionActive()
+{
+   if(!InpFlatMonthMicroReversionStandaloneActive)
+      return FlatMonthOpportunityActive();
+   if(!FlatMonthMicroReversionMonthFilterAllows())
+      return false;
+
+   MqlDateTime dt;
+   TimeToStruct(TimeCurrent(), dt);
+   if(dt.day < MathMax(1, InpFlatMonthMinDayOfMonth))
+      return false;
+
+   double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+   if(balance <= 0.0)
+      return false;
+
+   double monthlyProfitPercent = 100.0 * CurrentPeriodProfit(PERIOD_MN1) / balance;
+   if(InpFlatMonthRequireNoMonthlyLoss && monthlyProfitPercent < 0.0)
+      return false;
+
+   double maxActiveProfit = MathMin(MathMax(0.0, InpFlatMonthTargetPercent),
+                                    MathMax(0.0, InpFlatMonthMaxProfitPercent));
+   if(monthlyProfitPercent > maxActiveProfit)
+      return false;
+
+   int monthlyEntries = CurrentPeriodEntryCount(PERIOD_MN1);
+   if(InpFlatMonthMaxEntryCount > 0 && monthlyEntries > InpFlatMonthMaxEntryCount)
+      return false;
+
+   return true;
+}
+
+bool FlatMonthStaleEntryNudgeAllowed(const bool powerTrendContinuation,
+                                     const bool breakoutContinuationQuality,
+                                     const bool sessionImpulse,
+                                     const bool rangeReversionOpportunity)
+{
+   if(!InpUseFlatMonthStaleEntryNudge)
+      return false;
+   if(!FlatMonthOpportunityActive())
+      return false;
+   if(InpFlatMonthStaleEntryRequireLiquidSession && !sessionFilter.LiquidSessionActive())
+      return false;
+
+   int monthlyEntries = CurrentPeriodEntryCount(PERIOD_MN1);
+   if(InpFlatMonthStaleEntryMaxMonthlyEntries > 0 &&
+      monthlyEntries >= InpFlatMonthStaleEntryMaxMonthlyEntries)
+      return false;
+
+   bool allowedLane = (powerTrendContinuation && InpFlatMonthStaleAllowPowerTrend) ||
+                      (breakoutContinuationQuality && InpFlatMonthStaleAllowBreakout) ||
+                      (sessionImpulse && InpFlatMonthStaleAllowSessionImpulse) ||
+                      (rangeReversionOpportunity && InpFlatMonthStaleAllowRangeReversion);
+   if(!allowedLane)
+      return false;
+
+   datetime lastEntryTime = CurrentLastEntryTime();
+   int minHours = MathMax(0, InpFlatMonthStaleEntryMinHours);
+   if(lastEntryTime > 0 && minHours > 0 &&
+      TimeCurrent() - lastEntryTime < minHours * 3600)
+      return false;
+
+   return true;
+}
+
+bool FlatMonthMissedMoveWakeUpAllowed(const bool powerTrendContinuation,
+                                      const bool breakoutContinuationQuality,
+                                      const bool sessionImpulse,
+                                      double &moveATR)
+{
+   moveATR = 0.0;
+   if(!InpUseFlatMonthMissedMoveWakeUp)
+      return false;
+   if(!FlatMonthOpportunityActive())
+      return false;
+   if(InpFlatMonthMissedMoveRequireLiquidSession && !sessionFilter.LiquidSessionActive())
+      return false;
+
+   int monthlyEntries = CurrentPeriodEntryCount(PERIOD_MN1);
+   if(InpFlatMonthMissedMoveMaxMonthlyEntries > 0 &&
+      monthlyEntries >= InpFlatMonthMissedMoveMaxMonthlyEntries)
+      return false;
+
+   bool allowedLane = (powerTrendContinuation && InpFlatMonthMissedMoveAllowPowerTrend) ||
+                      (breakoutContinuationQuality && InpFlatMonthMissedMoveAllowBreakout) ||
+                      (sessionImpulse && InpFlatMonthMissedMoveAllowSessionImpulse);
+   if(!allowedLane)
+      return false;
+
+   datetime referenceTime = CurrentLastEntryTime();
+   datetime monthStart = iTime(_Symbol, PERIOD_MN1, 0);
+   if(referenceTime <= 0 || referenceTime < monthStart)
+      referenceTime = monthStart;
+   if(referenceTime <= 0)
+      return false;
+
+   int minHours = MathMax(0, InpFlatMonthMissedMoveMinHours);
+   if(minHours > 0 && TimeCurrent() - referenceTime < minHours * 3600)
+      return false;
+
+   int shift = SignalBarShiftForTime(referenceTime);
+   if(shift < 1)
+      return false;
+
+   double referenceClose = iClose(_Symbol, InpSignalTimeframe, shift);
+   double currentClose = iClose(_Symbol, InpSignalTimeframe, 1);
+   double atr = 0.0;
+   if(referenceClose <= 0.0 || currentClose <= 0.0 ||
+      !indicators.ATR(1, atr) || atr <= 0.0)
+      return false;
+
+   moveATR = MathAbs(currentClose - referenceClose) / atr;
+   return moveATR >= MathMax(0.0, InpFlatMonthMissedMoveMinATR);
+}
+
+bool FlatMonthEliteFallbackAllowed(const int confirmations,
+                                   const int requiredConfirmations,
+                                   const int qualityScore,
+                                   const int priceActionScore)
+{
+   if(!InpUseFlatMonthEliteFallback)
+      return false;
+   if(!FlatMonthOpportunityActive())
+      return false;
+   if(InpFlatMonthEliteFallbackRequireLiquidSession && !sessionFilter.LiquidSessionActive())
+      return false;
+
+   int monthlyEntries = CurrentPeriodEntryCount(PERIOD_MN1);
+   if(InpFlatMonthEliteFallbackMaxMonthlyEntries > 0 &&
+      monthlyEntries >= InpFlatMonthEliteFallbackMaxMonthlyEntries)
+      return false;
+
+   datetime lastEntryTime = CurrentLastEntryTime();
+   int minHours = MathMax(0, InpFlatMonthEliteFallbackMinHours);
+   if(lastEntryTime > 0 && minHours > 0 &&
+      TimeCurrent() - lastEntryTime < minHours * 3600)
+      return false;
+
+   int shortfall = requiredConfirmations - confirmations;
+   if(shortfall <= 0)
+      return false;
+   if(shortfall > MathMax(1, InpFlatMonthEliteFallbackMaxConfirmationShortfall))
+      return false;
+   if(qualityScore < MathMax(1, InpFlatMonthEliteFallbackMinQualityScore))
+      return false;
+   if(priceActionScore < MathMax(0, InpFlatMonthEliteFallbackMinPriceActionScore))
+      return false;
+
+   return true;
+}
+
+int DaysInMonth(const int year, const int month)
+{
+   if(month == 2)
+   {
+      bool leap = ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0));
+      return leap ? 29 : 28;
+   }
+   if(month == 4 || month == 6 || month == 9 || month == 11)
+      return 30;
+   return 31;
+}
+
+double FlatMonthCatchUpProgress(const bool allowProtectedLossCatchUp=false)
+{
+   if(!FlatMonthOpportunityActive(allowProtectedLossCatchUp))
+      return 0.0;
+
+   double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+   if(balance <= 0.0)
+      return 0.0;
+
+   MqlDateTime dt;
+   TimeToStruct(TimeCurrent(), dt);
+   int elapsedDays = MathMax(1, dt.day);
+   int paceDays = MathMax(28, DaysInMonth(dt.year, dt.mon));
+   double targetPercent = MathMax(0.0, InpFlatMonthTargetPercent);
+   double targetPacePercent = targetPercent * MathMin(1.0, (double)elapsedDays / (double)paceDays);
+   double monthlyProfitPercent = 100.0 * CurrentPeriodProfit(PERIOD_MN1) / balance;
+   double catchUpGap = targetPacePercent - monthlyProfitPercent;
+   double startGap = MathMax(0.0, InpFlatMonthCatchUpStartGapPercent);
+   if(catchUpGap <= startGap)
+      return 0.0;
+
+   double fullGap = MathMax(startGap + 0.01, InpFlatMonthCatchUpFullGapPercent);
+   double progress = (catchUpGap - startGap) / (fullGap - startGap);
+   return MathMin(1.0, MathMax(0.0, progress));
+}
+
+bool FlatMonthLateCatchUpActive(const bool allowProtectedLossCatchUp=false)
+{
+   if(!InpUseFlatMonthLateCatchUp)
+      return false;
+   if(!FlatMonthOpportunityActive(allowProtectedLossCatchUp))
+      return false;
+
+   MqlDateTime dt;
+   TimeToStruct(TimeCurrent(), dt);
+   if(dt.day < MathMax(1, InpFlatMonthLateCatchUpMinDay))
+      return false;
+
+   int monthlyEntries = CurrentPeriodEntryCount(PERIOD_MN1);
+   if(InpFlatMonthLateCatchUpMaxMonthlyEntries > 0 &&
+      monthlyEntries >= InpFlatMonthLateCatchUpMaxMonthlyEntries)
+      return false;
+
+   if(InpFlatMonthLateCatchUpRequireLiquidSession && !sessionFilter.LiquidSessionActive())
+      return false;
+
+   double progress = FlatMonthCatchUpProgress(allowProtectedLossCatchUp);
+   return progress >= MathMax(0.0, InpFlatMonthLateCatchUpMinProgress);
+}
+
+bool FlatMonthProbeActive()
+{
+   if(!InpUseFlatMonthProbeMode)
+      return false;
+   if(!FlatMonthOpportunityActive())
+      return false;
+
+   int monthlyEntries = CurrentPeriodEntryCount(PERIOD_MN1);
+   if(InpFlatMonthProbeMaxEntryCount > 0 &&
+      monthlyEntries >= InpFlatMonthProbeMaxEntryCount)
+      return false;
+
+   return true;
+}
+
+bool FlatMonthProbeQualityCapBypassAllowed(const SSignal &signal)
+{
+   if(!InpUseFlatMonthProbeMode || !InpUseFlatMonthProbeQualityCapBypass)
+      return false;
+   if(!FlatMonthOpportunityActive())
+      return false;
+   if(signal.qualityScore < MathMax(1, InpFlatMonthProbeCapBypassMinQualityScore))
+      return false;
+   if(InpFlatMonthProbeCapBypassRequireLiquidSession && !sessionFilter.LiquidSessionActive())
+      return false;
+   if(InpFlatMonthProbeCapBypassRequireProtectedFloor)
+   {
+      double protectedFloor = riskManager.ProtectedEquityFloor();
+      if(protectedFloor > 0.0 && AccountInfoDouble(ACCOUNT_EQUITY) <= protectedFloor)
+         return false;
+   }
+
+   int monthlyEntries = CurrentPeriodEntryCount(PERIOD_MN1);
+   if(InpFlatMonthProbeMaxEntryCount <= 0)
+      return false;
+   if(monthlyEntries < InpFlatMonthProbeMaxEntryCount)
+      return false;
+   if(InpFlatMonthProbeCapBypassMaxMonthlyEntries > 0 &&
+      monthlyEntries >= InpFlatMonthProbeCapBypassMaxMonthlyEntries)
+      return false;
+
+   return true;
+}
+
+bool FlatMonthCatchUpEntryRelaxationAllowed(const bool allowProtectedLossCatchUp=false)
+{
+   if(!InpUseFlatMonthCatchUpEntryRelaxation)
+      return false;
+   if(FlatMonthCatchUpProgress(allowProtectedLossCatchUp) <= 0.0)
+      return false;
+   if(InpFlatMonthCatchUpRequireLiquidSession && !sessionFilter.LiquidSessionActive())
+      return false;
+   return true;
+}
+
+bool FlatMonthCatchUpStandaloneRelaxationAllowed()
+{
+   if(!InpUseFlatMonthCatchUpStandaloneRelaxation)
+      return false;
+   if(!FlatMonthOpportunityActive())
+      return false;
+   if(InpFlatMonthCatchUpStandaloneRequireLiquidSession && !sessionFilter.LiquidSessionActive())
+      return false;
+
+   double progress = FlatMonthCatchUpProgress();
+   if(FlatMonthLateCatchUpActive())
+      progress = MathMax(progress, MathMax(0.0, InpFlatMonthLateCatchUpMinProgress));
+   return progress >= MathMax(0.0, InpFlatMonthCatchUpStandaloneMinProgress);
+}
+
+int ActiveFlatMonthCatchUpStandaloneMinScore(const int baseScore)
+{
+   int score = MathMax(1, baseScore);
+   if(FlatMonthCatchUpStandaloneRelaxationAllowed())
+      score = MathMax(1, score - MathMax(0, InpFlatMonthCatchUpStandaloneScoreDiscount));
+   return score;
+}
+
+int ActiveMinimumEntryScore(const bool catchUpLane=false)
+{
+   int score = MathMax(0, InpMinimumEntryScore);
+   if(FlatMonthOpportunityActive())
+      score = MathMax(0, score - MathMax(0, InpFlatMonthEntryScoreDiscount));
+   if(FlatMonthProbeActive())
+      score = MathMax(0, score - MathMax(0, InpFlatMonthProbeScoreDiscount));
+   if(catchUpLane && FlatMonthCatchUpEntryRelaxationAllowed())
+      score = MathMax(0, score - MathMax(0, InpFlatMonthCatchUpEntryScoreDiscount));
+   if(FlatMonthLateCatchUpActive())
+      score = MathMax(0, score - MathMax(0, InpFlatMonthLateCatchUpEntryScoreDiscount));
+   return score;
+}
+
+double ActiveMinimumRiskReward(const bool catchUpLane=false,
+                               const bool missedMoveWakeUp=false)
+{
+   double rr = MathMax(0.0, InpMinRiskReward);
+   if(FlatMonthOpportunityActive())
+      rr = MathMax(0.0, rr - MathMax(0.0, InpFlatMonthRRDiscount));
+   if(FlatMonthProbeActive())
+      rr = MathMax(0.0, rr - MathMax(0.0, InpFlatMonthProbeRRDiscount));
+   if(catchUpLane && FlatMonthCatchUpEntryRelaxationAllowed())
+      rr = MathMax(0.0, rr - MathMax(0.0, InpFlatMonthCatchUpRRDiscount));
+   if(missedMoveWakeUp)
+      rr = MathMax(0.0, rr - MathMax(0.0, InpFlatMonthMissedMoveRRDiscount));
+   if(FlatMonthLateCatchUpActive())
+      rr = MathMax(0.0, rr - MathMax(0.0, InpFlatMonthLateCatchUpRRDiscount));
+   return rr;
+}
+
+double FlatMonthOpportunityRiskMultiplier()
+{
+   if(!FlatMonthOpportunityActive())
+      return 1.0;
+
+   double baseMultiplier = MathMax(1.0, InpFlatMonthRiskMultiplier);
+   if(!InpUseFlatMonthCatchUpRiskRamp ||
+      InpFlatMonthCatchUpMaxRiskMultiplier <= baseMultiplier)
+      return baseMultiplier;
+
+   if(InpFlatMonthCatchUpRequiresProtectedFloor)
+   {
+      double protectedFloor = riskManager.ProtectedEquityFloor();
+      if(protectedFloor > 0.0 && AccountInfoDouble(ACCOUNT_EQUITY) <= protectedFloor)
+         return baseMultiplier;
+   }
+
+   if(InpFlatMonthCatchUpRiskRequiresLiquidSession && !sessionFilter.LiquidSessionActive())
+      return baseMultiplier;
+
+   double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+   if(balance <= 0.0)
+      return baseMultiplier;
+
+   double progress = FlatMonthCatchUpProgress();
+   if(progress <= 0.0)
+      return baseMultiplier;
+
+   double maxMultiplier = MathMax(baseMultiplier, InpFlatMonthCatchUpMaxRiskMultiplier);
+   double multiplier = baseMultiplier + progress * (maxMultiplier - baseMultiplier);
+   if(FlatMonthLateCatchUpActive())
+      multiplier *= MathMax(1.0, InpFlatMonthLateCatchUpRiskMultiplier);
+   return multiplier;
+}
+
+double ActiveFlatMonthLiquidityReclaimRiskMultiplier()
+{
+   double baseMultiplier = MathMax(0.0, InpFlatMonthLiquidityReclaimRiskMultiplier);
+   if(baseMultiplier <= 0.0)
+      return 0.0;
+   if(!InpUseFlatMonthCatchUpRiskRamp || !FlatMonthOpportunityActive(true))
+      return baseMultiplier;
+
+   double progress = FlatMonthCatchUpProgress(true);
+   bool lateCatchUp = FlatMonthLateCatchUpActive(true);
+   if(lateCatchUp)
+      progress = MathMax(progress, MathMax(0.0, InpFlatMonthLateCatchUpMinProgress));
+   if(progress <= 0.0)
+      return baseMultiplier;
+
+   if(InpFlatMonthCatchUpRequiresProtectedFloor)
+   {
+      double protectedFloor = riskManager.ProtectedEquityFloor();
+      if(protectedFloor > 0.0 && AccountInfoDouble(ACCOUNT_EQUITY) <= protectedFloor)
+         return baseMultiplier;
+   }
+
+   if(InpFlatMonthCatchUpRiskRequiresLiquidSession && !sessionFilter.LiquidSessionActive())
+      return baseMultiplier;
+
+   double catchUpCap = MathMax(baseMultiplier,
+                               MathMax(0.0, InpFlatMonthProbeRiskMultiplier));
+   if(catchUpCap <= baseMultiplier + 0.0001)
+      return baseMultiplier;
+
+   progress = MathMin(1.0, MathMax(0.0, progress));
+   double activeMultiplier = baseMultiplier + progress * (catchUpCap - baseMultiplier);
+   if(lateCatchUp)
+      activeMultiplier *= MathMax(1.0, InpFlatMonthLateCatchUpRiskMultiplier);
+
+   return MathMin(catchUpCap, MathMax(baseMultiplier, activeMultiplier));
+}
+
+double FlatMonthProbeRiskMultiplier(const SSignal &signal)
+{
+   bool probeActive = FlatMonthProbeActive();
+   bool capBypass = FlatMonthProbeQualityCapBypassAllowed(signal);
+   if(!probeActive && !capBypass)
+      return 1.0;
+
+   double baseMultiplier = MathMax(0.0, MathMin(1.0, InpFlatMonthProbeRiskMultiplier));
+   if(signal.isRangeReversion)
+      return FlatMonthProbeQualityRiskMultiplier(signal, baseMultiplier);
+
+   if(signal.isBreakoutContinuation &&
+      InpFlatMonthProbeAllowBreakoutContinuation &&
+      signal.qualityScore >= MathMax(1, InpFlatMonthProbeBreakoutMinQualityScore))
+   {
+      double breakoutMultiplier = MathMax(0.0, MathMin(1.0, InpFlatMonthProbeBreakoutRiskMultiplier));
+      return FlatMonthProbeQualityRiskMultiplier(signal, breakoutMultiplier);
+   }
+
+   if(InpFlatMonthProbeRangeOnly)
+      return 1.0;
+
+   return FlatMonthProbeQualityRiskMultiplier(signal, baseMultiplier);
+}
+
+double FlatMonthProbeQualityRiskMultiplier(const SSignal &signal,
+                                           const double baseMultiplier)
+{
+   double base = MathMax(0.0, MathMin(1.0, baseMultiplier));
+   if(!InpUseFlatMonthProbeQualityRiskRamp)
+      return base;
+   if(InpFlatMonthProbeQualityRampRequireProtectedFloor)
+   {
+      double protectedFloor = riskManager.ProtectedEquityFloor();
+      if(protectedFloor > 0.0 && AccountInfoDouble(ACCOUNT_EQUITY) <= protectedFloor)
+         return base;
+   }
+
+   int minScore = MathMax(1, InpFlatMonthProbeBreakoutMinQualityScore);
+   int fullScore = MathMax(minScore + 1, InpFlatMonthProbeQualityRiskFullScore);
+   if(signal.qualityScore <= minScore)
+      return base;
+
+   double maxMultiplier = MathMax(base, MathMin(1.0, InpFlatMonthProbeMaxRiskMultiplier));
+   double progress = ((double)signal.qualityScore - (double)minScore) /
+                     ((double)fullScore - (double)minScore);
+   progress = MathMin(1.0, MathMax(0.0, progress));
+   return base + progress * (maxMultiplier - base);
+}
+
+string SetupLaneNeedle(const SSignal &signal)
+{
+   if(signal.isHighEfficiencyTrend)
+      return "HET;";
+   if(signal.isPowerTrendContinuation)
+      return "PTC;";
+   if(signal.isSessionImpulse)
+      return "SIL;";
+   if(signal.isM5TightLiquidity)
+      return "M5L;";
+   if(signal.isDailyDonchianBreakout)
+      return "DDB;";
+   if(signal.isFlatMonthLiquidityReclaim)
+      return "FMLR;";
+   if(signal.isFlatMonthStructuralDisplacement)
+      return "FSD;";
+   if(signal.isFlatMonthBreakoutProbe)
+      return "FMB;";
+   if(signal.isRangeReversion)
+      return "RRO;";
+   if(signal.isBreakoutContinuation)
+      return "BCQ;";
+   if(signal.isDiagnosticFallback)
+      return "DGF;";
+   return "";
+}
+
+string CompactTradeComment(const SSignal &signal)
+{
+   string comment = SetupLaneNeedle(signal);
+   if(StringLen(comment) <= 0)
+      comment = "PXEA;";
+   if((InpUseFlatMonthProbeMode && FlatMonthProbeRiskMultiplier(signal) < 1.0) ||
+      StringFind(signal.reasons, "Flat month probe risk") >= 0 ||
+      StringFind(signal.reasons, "Flat month probe cap bypass") >= 0)
+      comment += "FMP;";
+   if(StringFind(signal.reasons, "Adaptive reverse guarded;") >= 0)
+      comment += "AR;";
+
+   string reasons = signal.reasons;
+   int remaining = 30 - StringLen(comment);
+   if(remaining > 0)
+      comment += StringSubstr(reasons, 0, remaining);
+   return comment;
+}
+
+datetime LastSetupLaneEntryTime(const string laneNeedle)
+{
+   if(StringLen(laneNeedle) <= 0)
+      return 0;
+
+   HistorySelect(0, TimeCurrent());
+   int total = HistoryDealsTotal();
+   for(int i = total - 1; i >= 0; i--)
+   {
+      ulong ticket = HistoryDealGetTicket(i);
+      if(ticket == 0)
+         continue;
+      if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_IN)
+         continue;
+
+      string comment = HistoryDealGetString(ticket, DEAL_COMMENT);
+      if(StringFind(comment, laneNeedle) >= 0)
+         return (datetime)HistoryDealGetInteger(ticket, DEAL_TIME);
+   }
+   return 0;
+}
+
+bool FlatMonthProbeLaneSpacingAllows(const SSignal &signal, string &reason)
+{
+   reason = "";
+   if(!InpUseFlatMonthProbeLaneSpacing || InpFlatMonthProbeLaneSpacingMinutes <= 0)
+      return true;
+   if(FlatMonthProbeRiskMultiplier(signal) >= 1.0)
+      return true;
+
+   string laneNeedle = SetupLaneNeedle(signal);
+   if(StringLen(laneNeedle) <= 0)
+      return true;
+
+   datetime lastLaneEntry = LastSetupLaneEntryTime(laneNeedle);
+   if(lastLaneEntry <= 0)
+      return true;
+
+   if(TimeCurrent() - lastLaneEntry < InpFlatMonthProbeLaneSpacingMinutes * 60)
+   {
+      reason = "flat-month probe lane spacing";
+      return false;
+   }
+   return true;
+}
+
+double CorrelationRiskMultiplier(const ENUM_TRADE_BIAS bias)
+{
+   if(!InpUseCorrelationRiskScaling || bias == BIAS_NONE)
+      return 1.0;
+
+   string symbol = InpCorrelationSymbol;
+   StringTrimLeft(symbol);
+   StringTrimRight(symbol);
+   if(StringLen(symbol) == 0)
+      return 1.0;
+
+   SymbolSelect(symbol, true);
+   int lookback = MathMax(1, InpCorrelationLookbackBars);
+   double closeNow = iClose(symbol, InpCorrelationTimeframe, 1);
+   double closePast = iClose(symbol, InpCorrelationTimeframe, 1 + lookback);
+   double point = SymbolInfoDouble(symbol, SYMBOL_POINT);
+   if(closeNow <= 0.0 || closePast <= 0.0 || point <= 0.0)
+      return 1.0;
+
+   double movePoints = (closeNow - closePast) / point;
+   if(InpCorrelationMode == CORRELATION_INVERSE_DIRECTION)
+      movePoints = -movePoints;
+
+   double weakMultiplier = MathMax(0.0, MathMin(1.0, InpCorrelationWeakRiskMultiplier));
+   double conflictMultiplier = MathMax(0.0, MathMin(weakMultiplier, InpCorrelationConflictRiskMultiplier));
+   if(MathAbs(movePoints) < MathMax(0.0, InpCorrelationMinMovePoints))
+      return weakMultiplier;
+
+   bool confirms = (bias == BIAS_BUY && movePoints > 0.0) ||
+                   (bias == BIAS_SELL && movePoints < 0.0);
+   return confirms ? 1.0 : conflictMultiplier;
+}
+
+double MarketPhaseRiskMultiplier()
+{
+   if(!InpUseMarketPhaseRiskScaling)
+      return 1.0;
+
+   double adx = 0.0;
+   if(!indicators.ADX(1, adx))
+      return 1.0;
+
+   double trendMultiplier = MathMax(0.0, MathMin(1.0, InpTrendPhaseRiskMultiplier));
+   double transitionMultiplier = MathMax(0.0, MathMin(trendMultiplier, InpTransitionPhaseRiskMultiplier));
+   double rangeMultiplier = MathMax(0.0, MathMin(transitionMultiplier, InpRangePhaseRiskMultiplier));
+
+   if(adx >= InpTrendADXThreshold)
+      return trendMultiplier;
+   if(adx <= InpRangeADXThreshold)
+      return rangeMultiplier;
+   return transitionMultiplier;
+}
+
+double TrendRegimeBoostProgress(const bool requireEquityProfit)
+{
+   if(requireEquityProfit && !riskManager.EquityAboveStarting())
+      return 0.0;
+
+   double adx = 0.0;
+   if(!indicators.ADX(1, adx) || adx < InpTrendRegimeBoostADX)
+      return 0.0;
+
+   double currentATR = 0.0;
+   if(!indicators.ATR(1, currentATR) || currentATR <= 0.0)
+      return 0.0;
+
+   int samples = MathMax(3, InpTrendRegimeBoostATRLookbackBars);
+   double atrSum = 0.0;
+   int valid = 0;
+   for(int shift = 2; shift < 2 + samples; shift++)
+   {
+      double atr = 0.0;
+      if(indicators.ATR(shift, atr) && atr > 0.0)
+      {
+         atrSum += atr;
+         valid++;
+      }
+   }
+
+   if(valid < MathMax(3, samples / 2) || atrSum <= 0.0)
+      return 0.0;
+
+   double averageATR = atrSum / (double)valid;
+   double atrRatio = currentATR / averageATR;
+   if(atrRatio <= InpTrendRegimeBoostMinATRRatio)
+      return 0.0;
+
+   double fullRatio = MathMax(InpTrendRegimeBoostMinATRRatio + 0.01, InpTrendRegimeBoostFullATRRatio);
+   double progress = (atrRatio - InpTrendRegimeBoostMinATRRatio) /
+                     (fullRatio - InpTrendRegimeBoostMinATRRatio);
+   return MathMin(1.0, MathMax(0.0, progress));
+}
+
+double TrendRegimeRiskMultiplier()
+{
+   if(!InpUseTrendRegimeRiskBoost || InpMaxTrendRegimeRiskMultiplier <= 1.0)
+      return 1.0;
+   if(!riskManager.HouseMoneyAccelerationAllowed())
+      return 1.0;
+
+   double progress = TrendRegimeBoostProgress(InpTrendRegimeBoostRequiresEquityProfit);
+   if(progress <= 0.0)
+      return 1.0;
+
+   double maxMultiplier = MathMax(1.0, InpMaxTrendRegimeRiskMultiplier);
+   return 1.0 + progress * (maxMultiplier - 1.0);
+}
+
+double PowerTrendContinuationRiskMultiplier(const SSignal &signal)
+{
+   if(!InpUsePowerTrendContinuation || !signal.isPowerTrendContinuation)
+      return 1.0;
+   if(InpPowerTrendContinuationRequireHouseMoney && !riskManager.HouseMoneyAccelerationAllowed())
+      return 1.0;
+   if(InpPowerTrendContinuationRequireLiquidSession && !sessionFilter.LiquidSessionActive())
+      return 1.0;
+
+   double baseMultiplier = MathMax(0.0, InpPowerTrendContinuationRiskMultiplier);
+   if(!InpUsePowerTrendQualityRiskRamp || InpPowerTrendQualityMaxRiskMultiplier <= baseMultiplier)
+      return baseMultiplier;
+
+   int minScore = MathMax(1, InpPowerTrendContinuationMinScore);
+   int fullScore = MathMax(minScore + 1, InpPowerTrendQualityRiskFullScore);
+   if(signal.qualityScore <= minScore)
+      return baseMultiplier;
+
+   double progress = ((double)signal.qualityScore - (double)minScore) /
+                     ((double)fullScore - (double)minScore);
+   progress = MathMin(1.0, MathMax(0.0, progress));
+   double maxMultiplier = MathMax(baseMultiplier, InpPowerTrendQualityMaxRiskMultiplier);
+   return baseMultiplier + progress * (maxMultiplier - baseMultiplier);
+}
+
+double SessionImpulseRiskMultiplier(const SSignal &signal)
+{
+   if(!InpUseSessionImpulseLane || !signal.isSessionImpulse)
+      return 1.0;
+   if(InpSessionImpulseRequireLiquidSession && !sessionFilter.LiquidSessionActive())
+      return 1.0;
+
+   double baseMultiplier = MathMax(0.0, InpSessionImpulseRiskMultiplier);
+   if(!InpUseSessionImpulseQualityRiskRamp ||
+      InpSessionImpulseQualityMaxRiskMultiplier <= baseMultiplier)
+      return baseMultiplier;
+
+   int minScore = MathMax(1, InpSessionImpulseMinScore);
+   int fullScore = MathMax(minScore + 1, InpSessionImpulseQualityRiskFullScore);
+   if(signal.qualityScore <= minScore)
+      return baseMultiplier;
+
+   double progress = ((double)signal.qualityScore - (double)minScore) /
+                     ((double)fullScore - (double)minScore);
+   progress = MathMin(1.0, MathMax(0.0, progress));
+   double maxMultiplier = MathMax(baseMultiplier, InpSessionImpulseQualityMaxRiskMultiplier);
+   return baseMultiplier + progress * (maxMultiplier - baseMultiplier);
+}
+
+double EliteContinuationRiskAccelerationMultiplier(const SSignal &signal)
+{
+   if(!InpUseEliteContinuationRiskAcceleration || InpEliteContinuationMaxRiskMultiplier <= 1.0)
+      return 1.0;
+   if(!riskManager.HouseMoneyAccelerationAllowed())
+      return 1.0;
+   if(InpEliteContinuationRequireLiquidSession && !sessionFilter.LiquidSessionActive())
+      return 1.0;
+   if(InpEliteContinuationRequireClosedProfit && !riskManager.ClosedProfitAboveStarting())
+      return 1.0;
+
+   bool allowedLane = (signal.isBreakoutContinuation && InpEliteContinuationAllowBreakout) ||
+                      (signal.isPowerTrendContinuation && InpEliteContinuationAllowPowerTrend) ||
+                      (signal.isSessionImpulse && InpEliteContinuationAllowSessionImpulse);
+   if(!allowedLane)
+      return 1.0;
+   if(signal.qualityScore < MathMax(1, InpEliteContinuationMinQualityScore))
+      return 1.0;
+   if(signal.priceActionScore < MathMax(0, InpEliteContinuationMinPriceActionScore))
+      return 1.0;
+
+   double cushionPercent = riskManager.ProtectedFloorCushionPercent();
+   double startPercent = MathMax(0.0, InpEliteContinuationStartCushionPercent);
+   double fullPercent = MathMax(startPercent + 0.01, InpEliteContinuationFullCushionPercent);
+   if(cushionPercent <= startPercent)
+      return 1.0;
+
+   double cushionProgress = (cushionPercent - startPercent) / (fullPercent - startPercent);
+   cushionProgress = MathMin(1.0, MathMax(0.0, cushionProgress));
+
+   int minScore = MathMax(1, InpEliteContinuationMinQualityScore);
+   int fullScore = MathMax(minScore + 1, minScore + 4);
+   double qualityProgress = ((double)signal.qualityScore - (double)minScore) /
+                            ((double)fullScore - (double)minScore);
+   qualityProgress = MathMin(1.0, MathMax(0.0, qualityProgress));
+
+   double progress = MathMin(cushionProgress, qualityProgress);
+   double maxMultiplier = MathMax(1.0, InpEliteContinuationMaxRiskMultiplier);
+   return 1.0 + progress * (maxMultiplier - 1.0);
+}
+
+bool QualityTPMonthAllows()
+{
+   if(!InpUseQualityTPMonthFilter)
+      return true;
+
+   MqlDateTime dt;
+   TimeToStruct(TimeCurrent(), dt);
+   switch(dt.mon)
+   {
+      case 1:  return InpQualityTPTradeJanuary;
+      case 2:  return InpQualityTPTradeFebruary;
+      case 3:  return InpQualityTPTradeMarch;
+      case 4:  return InpQualityTPTradeApril;
+      case 5:  return InpQualityTPTradeMay;
+      case 6:  return InpQualityTPTradeJune;
+      case 7:  return InpQualityTPTradeJuly;
+      case 8:  return InpQualityTPTradeAugust;
+      case 9:  return InpQualityTPTradeSeptember;
+      case 10: return InpQualityTPTradeOctober;
+      case 11: return InpQualityTPTradeNovember;
+      case 12: return InpQualityTPTradeDecember;
+   }
+
+   return true;
+}
+
+bool RPartialProfitLockMonthAllows()
+{
+   if(!InpUseRPartialProfitLockMonthFilter)
+      return true;
+
+   MqlDateTime dt;
+   TimeToStruct(TimeCurrent(), dt);
+   switch(dt.mon)
+   {
+      case 1:  return InpRPartialProfitLockTradeJanuary;
+      case 2:  return InpRPartialProfitLockTradeFebruary;
+      case 3:  return InpRPartialProfitLockTradeMarch;
+      case 4:  return InpRPartialProfitLockTradeApril;
+      case 5:  return InpRPartialProfitLockTradeMay;
+      case 6:  return InpRPartialProfitLockTradeJune;
+      case 7:  return InpRPartialProfitLockTradeJuly;
+      case 8:  return InpRPartialProfitLockTradeAugust;
+      case 9:  return InpRPartialProfitLockTradeSeptember;
+      case 10: return InpRPartialProfitLockTradeOctober;
+      case 11: return InpRPartialProfitLockTradeNovember;
+      case 12: return InpRPartialProfitLockTradeDecember;
+   }
+
+   return true;
+}
+
+bool MFEProfitLockMonthAllows()
+{
+   if(!InpUseMFEProfitLockMonthFilter)
+      return true;
+
+   MqlDateTime dt;
+   TimeToStruct(TimeCurrent(), dt);
+   switch(dt.mon)
+   {
+      case 1:  return InpMFEProfitLockTradeJanuary;
+      case 2:  return InpMFEProfitLockTradeFebruary;
+      case 3:  return InpMFEProfitLockTradeMarch;
+      case 4:  return InpMFEProfitLockTradeApril;
+      case 5:  return InpMFEProfitLockTradeMay;
+      case 6:  return InpMFEProfitLockTradeJune;
+      case 7:  return InpMFEProfitLockTradeJuly;
+      case 8:  return InpMFEProfitLockTradeAugust;
+      case 9:  return InpMFEProfitLockTradeSeptember;
+      case 10: return InpMFEProfitLockTradeOctober;
+      case 11: return InpMFEProfitLockTradeNovember;
+      case 12: return InpMFEProfitLockTradeDecember;
+   }
+
+   return true;
+}
+
+bool MFEFailureMonthAllows()
+{
+   if(!InpUseMFEFailureMonthFilter)
+      return true;
+
+   MqlDateTime dt;
+   TimeToStruct(TimeCurrent(), dt);
+   switch(dt.mon)
+   {
+      case 1:  return InpMFEFailureTradeJanuary;
+      case 2:  return InpMFEFailureTradeFebruary;
+      case 3:  return InpMFEFailureTradeMarch;
+      case 4:  return InpMFEFailureTradeApril;
+      case 5:  return InpMFEFailureTradeMay;
+      case 6:  return InpMFEFailureTradeJune;
+      case 7:  return InpMFEFailureTradeJuly;
+      case 8:  return InpMFEFailureTradeAugust;
+      case 9:  return InpMFEFailureTradeSeptember;
+      case 10: return InpMFEFailureTradeOctober;
+      case 11: return InpMFEFailureTradeNovember;
+      case 12: return InpMFEFailureTradeDecember;
+   }
+
+   return true;
+}
+
+bool PowerTrendContinuationMonthAllows()
+{
+   if(!InpUsePowerTrendContinuationMonthFilter)
+      return true;
+
+   MqlDateTime dt;
+   TimeToStruct(TimeCurrent(), dt);
+   switch(dt.mon)
+   {
+      case 1:  return InpPowerTrendTradeJanuary;
+      case 2:  return InpPowerTrendTradeFebruary;
+      case 3:  return InpPowerTrendTradeMarch;
+      case 4:  return InpPowerTrendTradeApril;
+      case 5:  return InpPowerTrendTradeMay;
+      case 6:  return InpPowerTrendTradeJune;
+      case 7:  return InpPowerTrendTradeJuly;
+      case 8:  return InpPowerTrendTradeAugust;
+      case 9:  return InpPowerTrendTradeSeptember;
+      case 10: return InpPowerTrendTradeOctober;
+      case 11: return InpPowerTrendTradeNovember;
+      case 12: return InpPowerTrendTradeDecember;
+   }
+
+   return true;
+}
+
+double QualityTakeProfitMultiplier(const int qualityScore)
+{
+   if(!InpUseQualityTakeProfitScaling)
+      return 1.0;
+   if(!QualityTPMonthAllows())
+      return 1.0;
+
+   double minMultiplier = MathMax(0.0, InpMinQualityTPMultiplier);
+   double maxMultiplier = MathMax(minMultiplier, InpMaxQualityTPMultiplier);
+   if(InpQualityTPFullScore <= InpQualityTPMinScore)
+      return minMultiplier;
+
+   double progress = ((double)qualityScore - (double)InpQualityTPMinScore) /
+                     ((double)InpQualityTPFullScore - (double)InpQualityTPMinScore);
+   progress = MathMin(1.0, MathMax(0.0, progress));
+   return minMultiplier + progress * (maxMultiplier - minMultiplier);
+}
+
+double RunnerTakeProfitMultiplier(const SSignal &signal)
+{
+   if(!InpUseRunnerTakeProfitExpansion)
+      return 1.0;
+   if(InpRunnerRequireTrailing && !InpUseATRTrailing && !InpUseStructureTrailing && !InpUseMFEGivebackExit)
+      return 1.0;
+   if(signal.qualityScore < InpRunnerMinQualityScore)
+      return 1.0;
+   if(signal.priceActionScore < InpRunnerMinPriceActionScore)
+      return 1.0;
+   return MathMax(1.0, InpRunnerTakeProfitMultiplier);
+}
+
+double TrendRegimeTakeProfitMultiplier(const SSignal &signal)
+{
+   if(!InpUseTrendRegimeTakeProfitExpansion || InpTrendRegimeTPMultiplier <= 1.0)
+      return 1.0;
+   if(!riskManager.HouseMoneyAccelerationAllowed())
+      return 1.0;
+   if(InpTrendRegimeTPRequireTrailing && !InpUseATRTrailing && !InpUseStructureTrailing && !InpUseMFEGivebackExit)
+      return 1.0;
+   if(signal.qualityScore < InpTrendRegimeTPMinQualityScore)
+      return 1.0;
+   if(signal.priceActionScore < InpTrendRegimeTPMinPriceActionScore)
+      return 1.0;
+
+   double progress = TrendRegimeBoostProgress(InpTrendRegimeTPRequiresEquityProfit);
+   if(progress <= 0.0)
+      return 1.0;
+
+   double maxMultiplier = MathMax(1.0, InpTrendRegimeTPMultiplier);
+   return 1.0 + progress * (maxMultiplier - 1.0);
+}
+
+double FlatMonthCatchUpTakeProfitMultiplier(const SSignal &signal)
+{
+   if(!InpUseFlatMonthCatchUpTakeProfitExpansion || InpFlatMonthCatchUpTPMultiplier <= 1.0)
+      return 1.0;
+   if(!FlatMonthOpportunityActive())
+      return 1.0;
+   if(InpFlatMonthCatchUpTPRequireLiquidSession && !sessionFilter.LiquidSessionActive())
+      return 1.0;
+   if(InpFlatMonthCatchUpTPRequireTrailing && !InpUseATRTrailing && !InpUseStructureTrailing && !InpUseMFEGivebackExit)
+      return 1.0;
+   if(signal.qualityScore < MathMax(1, InpFlatMonthCatchUpTPMinQualityScore))
+      return 1.0;
+   if(signal.priceActionScore < MathMax(0, InpFlatMonthCatchUpTPMinPriceActionScore))
+      return 1.0;
+
+   double progress = FlatMonthCatchUpProgress();
+   if(FlatMonthLateCatchUpActive())
+      progress = MathMax(progress, MathMax(0.0, InpFlatMonthLateCatchUpMinProgress));
+   if(progress <= 0.0)
+      return 1.0;
+
+   progress = MathMin(1.0, MathMax(0.0, progress));
+   double maxMultiplier = MathMax(1.0, InpFlatMonthCatchUpTPMultiplier);
+   return 1.0 + progress * (maxMultiplier - 1.0);
+}
+
+double FlatMonthMissedMoveTakeProfitMultiplier(const SSignal &signal)
+{
+   if(!InpUseFlatMonthMissedMoveTPExpansion || InpFlatMonthMissedMoveTPMultiplier <= 1.0)
+      return 1.0;
+   if(StringFind(signal.reasons, "Flat month missed move wake-up") < 0)
+      return 1.0;
+   if(InpFlatMonthMissedMoveTPRequireTrailing &&
+      !InpUseATRTrailing && !InpUseStructureTrailing && !InpUseMFEGivebackExit)
+      return 1.0;
+   if(signal.qualityScore < MathMax(1, InpFlatMonthMissedMoveTPMinQualityScore))
+      return 1.0;
+   if(signal.priceActionScore < MathMax(0, InpFlatMonthMissedMoveTPMinPriceActionScore))
+      return 1.0;
+
+   return MathMax(1.0, InpFlatMonthMissedMoveTPMultiplier);
+}
+
+double PowerTrendContinuationTakeProfitMultiplier(const SSignal &signal)
+{
+   if(!InpUsePowerTrendContinuation || !signal.isPowerTrendContinuation)
+      return 1.0;
+   return MathMax(1.0, InpPowerTrendContinuationTPMultiplier);
+}
+
+double SessionImpulseTakeProfitMultiplier(const SSignal &signal)
+{
+   if(!InpUseSessionImpulseLane || !signal.isSessionImpulse)
+      return 1.0;
+   return MathMax(1.0, InpSessionImpulseTPMultiplier);
+}
+
+double ProtectedCushionTakeProfitMultiplier(const SSignal &signal)
+{
+   if(!InpUseProtectedCushionTakeProfitExpansion || InpProtectedCushionTPMultiplier <= 1.0)
+      return 1.0;
+   if(!riskManager.HouseMoneyAccelerationAllowed())
+      return 1.0;
+   if(InpProtectedCushionTPRequireTrailing && !InpUseATRTrailing && !InpUseStructureTrailing && !InpUseMFEGivebackExit)
+      return 1.0;
+   if(signal.qualityScore < InpProtectedCushionTPMinQualityScore)
+      return 1.0;
+   if(signal.priceActionScore < InpProtectedCushionTPMinPriceActionScore)
+      return 1.0;
+
+   double cushionPercent = riskManager.ProtectedFloorCushionPercent();
+   double startPercent = MathMax(0.0, InpProtectedCushionTPStartPercent);
+   double fullPercent = MathMax(startPercent + 0.01, InpProtectedCushionTPFullPercent);
+   if(cushionPercent <= startPercent)
+      return 1.0;
+
+   double progress = (cushionPercent - startPercent) / (fullPercent - startPercent);
+   progress = MathMin(1.0, MathMax(0.0, progress));
+   double maxMultiplier = MathMax(1.0, InpProtectedCushionTPMultiplier);
+   return 1.0 + progress * (maxMultiplier - 1.0);
+}
+
+double DirectionalHourTakeProfitMultiplier(const SSignal &signal)
+{
+   if(!InpUseDirectionalHourTakeProfitExpansion || InpDirectionalHourTPMultiplier <= 1.0)
+      return 1.0;
+   if(!riskManager.HouseMoneyAccelerationAllowed())
+      return 1.0;
+   if(InpDirectionalHourTPRequireTrailing && !InpUseATRTrailing && !InpUseStructureTrailing && !InpUseMFEGivebackExit)
+      return 1.0;
+   if(InpDirectionalHourTPRequiresClosedProfit && !riskManager.ClosedProfitAboveStarting())
+      return 1.0;
+   if(signal.qualityScore < InpDirectionalHourTPMinQualityScore)
+      return 1.0;
+   if(signal.priceActionScore < InpDirectionalHourTPMinPriceActionScore)
+      return 1.0;
+
+   double netPercent = 0.0;
+   int sampleTrades = 0;
+   if(!riskManager.DirectionalHourPerformanceSample(signal.bias, netPercent, sampleTrades))
+      return 1.0;
+
+   double startPercent = MathMax(0.0, InpDirectionalHourTPMinNetPercent);
+   if(netPercent <= startPercent)
+      return 1.0;
+
+   double strongPercent = MathMax(startPercent + 0.01, InpDirectionalHourPerformanceStrongNetPercent);
+   double progress = (netPercent - startPercent) / (strongPercent - startPercent);
+   progress = MathMin(1.0, MathMax(0.0, progress));
+   double maxMultiplier = MathMax(1.0, InpDirectionalHourTPMultiplier);
+   return 1.0 + progress * (maxMultiplier - 1.0);
+}
+
+double ClosedProfitTakeProfitMultiplier(const SSignal &signal)
+{
+   if(!InpUseClosedProfitTakeProfitExpansion || InpClosedProfitTPMultiplier <= 1.0)
+      return 1.0;
+   if(!riskManager.HouseMoneyAccelerationAllowed())
+      return 1.0;
+   if(InpClosedProfitTPRequireTrailing && !InpUseATRTrailing && !InpUseStructureTrailing && !InpUseMFEGivebackExit)
+      return 1.0;
+   if(signal.qualityScore < InpClosedProfitTPMinQualityScore)
+      return 1.0;
+   if(signal.priceActionScore < InpClosedProfitTPMinPriceActionScore)
+      return 1.0;
+
+   double initialBalance = riskManager.InitialBalance();
+   if(initialBalance <= 0.0)
+      return 1.0;
+
+   double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+   if(balance <= initialBalance)
+      return 1.0;
+   if(InpClosedProfitTPRequiresProtectedFloor)
+   {
+      double protectedFloor = riskManager.ProtectedEquityFloor();
+      if(protectedFloor <= 0.0 || AccountInfoDouble(ACCOUNT_EQUITY) <= protectedFloor)
+         return 1.0;
+   }
+
+   double profitPercent = 100.0 * (balance - initialBalance) / initialBalance;
+   double startPercent = MathMax(0.0, InpClosedProfitTPStartPercent);
+   double fullPercent = MathMax(startPercent + 0.01, InpClosedProfitTPFullPercent);
+   if(profitPercent <= startPercent)
+      return 1.0;
+
+   double progress = (profitPercent - startPercent) / (fullPercent - startPercent);
+   progress = MathMin(1.0, MathMax(0.0, progress));
+   double maxMultiplier = MathMax(1.0, InpClosedProfitTPMultiplier);
+   return 1.0 + progress * (maxMultiplier - 1.0);
+}
+
+double EliteConfluenceTakeProfitMultiplier(const SSignal &signal)
+{
+   if(!InpUseEliteConfluenceTakeProfitExpansion || InpEliteConfluenceTPMultiplier <= 1.0)
+      return 1.0;
+   if(InpEliteConfluenceTPRequireTrailing && !InpUseATRTrailing && !InpUseStructureTrailing && !InpUseMFEGivebackExit)
+      return 1.0;
+   if(InpEliteConfluenceTPRequiresHouseMoney && !riskManager.HouseMoneyAccelerationAllowed())
+      return 1.0;
+   if(signal.qualityScore < MathMax(0, InpEliteConfluenceTPMinQualityScore))
+      return 1.0;
+   if(signal.priceActionScore < MathMax(0, InpEliteConfluenceTPMinPriceActionScore))
+      return 1.0;
+   return MathMax(1.0, InpEliteConfluenceTPMultiplier);
+}
+
+bool ProtectedCushionUnlimitedRunnerAllows(const SSignal &signal)
+{
+   if(!InpUseProtectedCushionUnlimitedRunner)
+      return false;
+   if(!riskManager.HouseMoneyAccelerationAllowed())
+      return false;
+   if(signal.qualityScore < InpProtectedRunnerMinQualityScore)
+      return false;
+   if(signal.priceActionScore < InpProtectedRunnerMinPriceActionScore)
+      return false;
+   if(riskManager.ProtectedFloorCushionPercent() < MathMax(0.0, InpProtectedRunnerMinCushionPercent))
+      return false;
+   if(InpProtectedRunnerRequireTrendRegime &&
+      TrendRegimeBoostProgress(InpTrendRegimeBoostRequiresEquityProfit) <= 0.0)
+      return false;
+   if(InpProtectedRunnerRequireTrailing && !InpUseATRTrailing && !InpUseStructureTrailing && !InpUseMFEGivebackExit)
+      return false;
+   if(InpProtectedRunnerRequireProfitLock && !InpUseMFEProfitLockStop && !InpUseRProfitLockStop && !InpUseProfitLockStop)
+      return false;
+
+   return true;
+}
+
+bool EliteContinuationUnlimitedRunnerAllows(const SSignal &signal)
+{
+   if(!InpUseEliteContinuationUnlimitedRunner)
+      return false;
+   if(!riskManager.HouseMoneyAccelerationAllowed())
+      return false;
+
+   bool continuationLane = signal.isBreakoutContinuation ||
+                           signal.isPowerTrendContinuation ||
+                           signal.isSessionImpulse;
+   if(!continuationLane)
+      return false;
+   if(InpEliteContinuationRunnerRequireRiskAcceleration &&
+      EliteContinuationRiskAccelerationMultiplier(signal) <= 1.0)
+      return false;
+   if(signal.qualityScore < MathMax(1, InpEliteContinuationRunnerMinQualityScore))
+      return false;
+   if(signal.priceActionScore < MathMax(0, InpEliteContinuationRunnerMinPriceActionScore))
+      return false;
+   if(riskManager.ProtectedFloorCushionPercent() < MathMax(0.0, InpEliteContinuationRunnerMinCushionPercent))
+      return false;
+   if(InpEliteContinuationRunnerRequireTrailing && !InpUseATRTrailing && !InpUseStructureTrailing && !InpUseMFEGivebackExit)
+      return false;
+   if(InpEliteContinuationRunnerRequireProfitLock && !InpUseMFEProfitLockStop && !InpUseRProfitLockStop && !InpUseProfitLockStop)
+      return false;
+
+   return true;
+}
+
+bool FlatMonthLiquidityReclaimUnlimitedRunnerAllows(const SSignal &signal)
+{
+   if(!signal.isFlatMonthLiquidityReclaim)
+      return false;
+   if(!InpFlatMonthLiquidityReclaimUseStructureTrail ||
+      !InpFlatMonthLiquidityReclaimUseRunnerTargetStretch)
+      return false;
+   bool runnerStretchEvidence = StringFind(signal.reasons, "FMLR runner target stretch") >= 0 ||
+                                StringFind(signal.reasons, "FMLR runner liquidity stretch") >= 0;
+   if(!runnerStretchEvidence)
+      return false;
+
+   bool strictSweepRunner = InpFlatMonthLiquidityReclaimUseLiquidityTarget &&
+                            InpFlatMonthLiquidityReclaimRequireForwardClearance &&
+                            InpFlatMonthLiquidityReclaimRequireSweepDisplacementBOS;
+   bool structuralTargetRunner = InpFlatMonthLiquidityReclaimRequireForwardClearance &&
+                                 StringFind(signal.reasons, "FMLR structural target runner") >= 0 &&
+                                 StringFind(signal.reasons, "FMLR forward clearance") >= 0;
+   bool liquiditySweepRunner = InpFlatMonthLiquidityReclaimUseLiquidityTarget &&
+                               InpFlatMonthLiquidityReclaimRequireForwardClearance &&
+                               StringFind(signal.reasons, "FMLR sweep runner") >= 0 &&
+                               StringFind(signal.reasons, "FMLR forward clearance") >= 0;
+   if(!strictSweepRunner && !structuralTargetRunner && !liquiditySweepRunner)
+      return false;
+   if(signal.qualityScore < MathMax(8, InpFlatMonthLiquidityReclaimMinScore))
+      return false;
+   if(signal.priceActionScore < MathMax(0, InpFlatMonthLiquidityReclaimBypassMinPriceActionScore))
+      return false;
+   if(InpFlatMonthLiquidityReclaimRequireLiquidSession && !sessionFilter.LiquidSessionActive())
+      return false;
+   return true;
+}
+
+bool DrawdownQualityAllows(const int qualityScore, string &reason)
+{
+   if(!InpUseDrawdownQualityGate)
+      return true;
+
+   double drawdownPercent = riskManager.CurrentEquityDrawdownPercent();
+   if(drawdownPercent < InpDrawdownQualityStartPercent)
+      return true;
+
+   double startPercent = MathMax(0.0, InpDrawdownQualityStartPercent);
+   double fullPercent = MathMax(startPercent + 0.01, InpDrawdownQualityFullPercent);
+   double progress = (drawdownPercent - startPercent) / (fullPercent - startPercent);
+   progress = MathMin(1.0, MathMax(0.0, progress));
+
+   int minScore = MathMax(0, InpDrawdownQualityMinScore);
+   int maxScore = MathMax(minScore, InpDrawdownQualityMaxScore);
+   int requiredScore = (int)MathRound((double)minScore + progress * (double)(maxScore - minScore));
+   if(qualityScore < requiredScore)
+   {
+      reason = "drawdown quality";
+      return false;
+   }
+
+   return true;
+}
+
+bool MarginGuardAllows(const ENUM_TRADE_BIAS bias,
+                       const double lots,
+                       const double entryPrice,
+                       string &reason)
+{
+   if(!InpUseMarginGuard)
+      return true;
+
+   double marginLevel = AccountInfoDouble(ACCOUNT_MARGIN_LEVEL);
+   if(InpMinMarginLevelPercent > 0.0 && marginLevel > 0.0 && marginLevel < InpMinMarginLevelPercent)
+   {
+      reason = "margin level";
+      return false;
+   }
+
+   double freeMargin = AccountInfoDouble(ACCOUNT_MARGIN_FREE);
+   if(freeMargin <= 0.0)
+   {
+      reason = "free margin";
+      return false;
+   }
+
+   ENUM_ORDER_TYPE orderType = (bias == BIAS_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+   double requiredMargin = 0.0;
+   if(!OrderCalcMargin(orderType, _Symbol, lots, entryPrice, requiredMargin))
+   {
+      reason = "margin calculation";
+      return false;
+   }
+
+   if(requiredMargin <= 0.0)
+      return true;
+   if(requiredMargin > freeMargin)
+   {
+      reason = "insufficient margin";
+      return false;
+   }
+   if(InpMaxTradeMarginFreePercent > 0.0 &&
+      requiredMargin > freeMargin * InpMaxTradeMarginFreePercent / 100.0)
+   {
+      reason = "trade margin cap";
+      return false;
+   }
+
+   return true;
+}
+
+double MarginPressureRiskMultiplier()
+{
+   if(!InpUseMarginPressureRiskScaling || InpMinMarginLevelPercent <= 0.0)
+      return 1.0;
+
+   double marginLevel = AccountInfoDouble(ACCOUNT_MARGIN_LEVEL);
+   if(marginLevel <= 0.0)
+      return 1.0;
+
+   double startLevel = MathMax(InpMinMarginLevelPercent + 1.0, InpMarginPressureStartLevelPercent);
+   if(marginLevel >= startLevel)
+      return 1.0;
+
+   double minMultiplier = MathMax(0.0, MathMin(1.0, InpMinMarginPressureRiskMultiplier));
+   double progress = (startLevel - marginLevel) / (startLevel - InpMinMarginLevelPercent);
+   progress = MathMin(1.0, MathMax(0.0, progress));
+   return 1.0 - progress * (1.0 - minMultiplier);
+}
+
+double TradeMarginRiskMultiplier(const ENUM_TRADE_BIAS bias,
+                                 const double lots,
+                                 const double entryPrice)
+{
+   if(!InpUseTradeMarginRiskScaling || InpMaxTradeMarginFreePercent <= 0.0 || lots <= 0.0)
+      return 1.0;
+
+   double freeMargin = AccountInfoDouble(ACCOUNT_MARGIN_FREE);
+   if(freeMargin <= 0.0)
+      return 1.0;
+
+   ENUM_ORDER_TYPE orderType = (bias == BIAS_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+   double requiredMargin = 0.0;
+   if(!OrderCalcMargin(orderType, _Symbol, lots, entryPrice, requiredMargin))
+      return 1.0;
+
+   if(requiredMargin <= 0.0)
+      return 1.0;
+
+   double marginPercent = 100.0 * requiredMargin / freeMargin;
+   double startFraction = MathMax(0.0, MathMin(0.95, InpTradeMarginRiskStartFraction));
+   double startPercent = InpMaxTradeMarginFreePercent * startFraction;
+   double fullPercent = MathMax(startPercent + 0.01, InpMaxTradeMarginFreePercent);
+   if(marginPercent <= startPercent)
+      return 1.0;
+
+   double minMultiplier = MathMax(0.0, MathMin(1.0, InpMinTradeMarginRiskMultiplier));
+   double progress = (marginPercent - startPercent) / (fullPercent - startPercent);
+   progress = MathMin(1.0, MathMax(0.0, progress));
+   return 1.0 - progress * (1.0 - minMultiplier);
+}
+
+double MarginAwareCappedLots(const ENUM_TRADE_BIAS bias,
+                             const double lots,
+                             const double entryPrice)
+{
+   if(!InpUseMarginAwareLotCap || InpMaxTradeMarginFreePercent <= 0.0 || lots <= 0.0 || entryPrice <= 0.0)
+      return lots;
+
+   double freeMargin = AccountInfoDouble(ACCOUNT_MARGIN_FREE);
+   if(freeMargin <= 0.0)
+      return lots;
+
+   double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+   double maxLot = MathMin(SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX), InpMaxPositionLots);
+   double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+   if(step <= 0.0)
+      step = 0.01;
+   if(minLot <= 0.0 || maxLot < minLot)
+      return 0.0;
+
+   double allowedMargin = freeMargin * InpMaxTradeMarginFreePercent / 100.0;
+   if(allowedMargin <= 0.0)
+      return 0.0;
+
+   ENUM_ORDER_TYPE orderType = (bias == BIAS_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+   double cappedLots = MathMin(lots, maxLot);
+   cappedLots = MathFloor(cappedLots / step) * step;
+   if(cappedLots < minLot)
+      return InpAllowMinLotRiskOverflow ? minLot : 0.0;
+
+   double requiredMargin = 0.0;
+   if(OrderCalcMargin(orderType, _Symbol, cappedLots, entryPrice, requiredMargin) &&
+      requiredMargin > 0.0 &&
+      requiredMargin <= allowedMargin)
+      return NormalizeDouble(cappedLots, 2);
+
+   double low = 0.0;
+   double high = cappedLots;
+   double best = 0.0;
+   for(int i = 0; i < 24; i++)
+   {
+      double mid = (low + high) * 0.5;
+      double stepped = MathFloor(mid / step) * step;
+      if(stepped < minLot)
+      {
+         low = mid;
+         continue;
+      }
+
+      requiredMargin = 0.0;
+      if(OrderCalcMargin(orderType, _Symbol, stepped, entryPrice, requiredMargin) &&
+         requiredMargin > 0.0 &&
+         requiredMargin <= allowedMargin)
+      {
+         best = stepped;
+         low = mid;
+      }
+      else
+      {
+         high = mid;
+      }
+   }
+
+   if(best >= minLot)
+      return NormalizeDouble(best, 2);
+
+   if(!InpAllowMinLotRiskOverflow)
+      return 0.0;
+
+   requiredMargin = 0.0;
+   if(OrderCalcMargin(orderType, _Symbol, minLot, entryPrice, requiredMargin) &&
+      requiredMargin > 0.0 &&
+      requiredMargin <= freeMargin)
+      return NormalizeDouble(minLot, 2);
+
+   return 0.0;
+}
+
+double MoneyForDistanceLots(const double distance, const double lots)
+{
+   if(distance <= 0.0 || lots <= 0.0)
+      return 0.0;
+
+   double tickValue = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE);
+   double tickSize = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
+   if(tickValue <= 0.0 || tickSize <= 0.0)
+      return 0.0;
+
+   return (distance / tickSize) * tickValue * lots;
+}
+
+bool TradingCostGuardAllows(const double stopDistance,
+                            const double lots,
+                            string &reason)
+{
+   if(!InpUseTradingCostGuard)
+      return true;
+
+   double riskMoney = MoneyForDistanceLots(stopDistance, lots);
+   if(riskMoney <= 0.0)
+   {
+      reason = "cost risk unavailable";
+      return false;
+   }
+
+   double spreadCost = MoneyForDistanceLots(CLogger::SpreadPoints() * _Point, lots);
+   double commissionCost = MathMax(0.0, InpEstimatedRoundTurnCommissionPerLot) * lots;
+   double totalCost = spreadCost + commissionCost;
+   if(totalCost <= 0.0)
+      return true;
+
+   double costRiskPercent = 100.0 * totalCost / riskMoney;
+   if(InpMaxTradingCostRiskPercent > 0.0 && costRiskPercent > InpMaxTradingCostRiskPercent)
+   {
+      reason = "trading cost risk";
+      return false;
+   }
+
+   return true;
+}
+
+bool SpreadRegimeAllows()
+{
+   if(!InpUseSpreadRegimeGuard)
+      return true;
+
+   double currentSpread = CLogger::SpreadPoints();
+   if(currentSpread < MathMax(0.0, InpMinSpreadRegimePoints))
+      return true;
+
+   int lookback = MathMax(3, InpSpreadRegimeLookbackBars);
+   MqlRates rates[];
+   ArraySetAsSeries(rates, true);
+   int copied = CopyRates(_Symbol, InpSignalTimeframe, 1, lookback, rates);
+   if(copied < 3)
+      return true;
+
+   double averageSpread = 0.0;
+   int samples = 0;
+   for(int i = 0; i < copied; i++)
+   {
+      if(rates[i].spread <= 0)
+         continue;
+      averageSpread += (double)rates[i].spread;
+      samples++;
+   }
+
+   if(samples < 3)
+      return true;
+
+   averageSpread /= (double)samples;
+   if(averageSpread <= 0.0)
+      return true;
+
+   return currentSpread <= averageSpread * MathMax(1.0, InpMaxSpreadRegimeRatio);
+}
+
+bool SpreadShockEntryAllows()
+{
+   if(!InpUseM1SpreadShockGuard)
+      return true;
+
+   double currentSpread = CLogger::SpreadPoints();
+   if(currentSpread < MathMax(0.0, InpM1SpreadShockMinPoints))
+      return true;
+
+   int lookback = MathMax(5, InpM1SpreadShockLookbackBars);
+   MqlRates rates[];
+   ArraySetAsSeries(rates, true);
+   int copied = CopyRates(_Symbol, PERIOD_M1, 1, lookback, rates);
+   if(copied < 5)
+      return true;
+
+   double averageSpread = 0.0;
+   int samples = 0;
+   for(int i = 0; i < copied; i++)
+   {
+      if(rates[i].spread <= 0)
+         continue;
+      averageSpread += (double)rates[i].spread;
+      samples++;
+   }
+
+   if(samples < 5)
+      return true;
+
+   averageSpread /= (double)samples;
+   if(averageSpread <= 0.0)
+      return true;
+
+   return currentSpread <= averageSpread * MathMax(1.0, InpM1SpreadShockMaxRatio);
+}
+
+bool MonthFilterAllows()
+{
+   if(!InpUseMonthFilter)
+      return true;
+
+   MqlDateTime parts;
+   TimeToStruct(TimeCurrent(), parts);
+
+   switch(parts.mon)
+   {
+      case 1:  return InpTradeJanuary;
+      case 2:  return InpTradeFebruary;
+      case 3:  return InpTradeMarch;
+      case 4:  return InpTradeApril;
+      case 5:  return InpTradeMay;
+      case 6:  return InpTradeJune;
+      case 7:  return InpTradeJuly;
+      case 8:  return InpTradeAugust;
+      case 9:  return InpTradeSeptember;
+      case 10: return InpTradeOctober;
+      case 11: return InpTradeNovember;
+      case 12: return InpTradeDecember;
+   }
+
+   return false;
+}
+
+bool DayInsideMonthWindow(const int day, const int minDay, const int maxDay)
+{
+   int effectiveMin = MathMax(1, minDay);
+   int effectiveMax = MathMax(effectiveMin, maxDay);
+   return day >= effectiveMin && day <= effectiveMax;
+}
+
+bool MonthDayWindowAllows()
+{
+   if(!InpUseMonthDayWindowFilter)
+      return true;
+
+   MqlDateTime parts;
+   TimeToStruct(TimeCurrent(), parts);
+
+   switch(parts.mon)
+   {
+      case 1:  return DayInsideMonthWindow(parts.day, InpJanuaryMinDay, InpJanuaryMaxDay);
+      case 2:  return DayInsideMonthWindow(parts.day, InpFebruaryMinDay, InpFebruaryMaxDay);
+      case 3:  return DayInsideMonthWindow(parts.day, InpMarchMinDay, InpMarchMaxDay);
+      case 4:  return DayInsideMonthWindow(parts.day, InpAprilMinDay, InpAprilMaxDay);
+      case 5:  return DayInsideMonthWindow(parts.day, InpMayMinDay, InpMayMaxDay);
+      case 6:  return DayInsideMonthWindow(parts.day, InpJuneMinDay, InpJuneMaxDay);
+      case 7:  return DayInsideMonthWindow(parts.day, InpJulyMinDay, InpJulyMaxDay);
+      case 8:  return DayInsideMonthWindow(parts.day, InpAugustMinDay, InpAugustMaxDay);
+      case 9:  return DayInsideMonthWindow(parts.day, InpSeptemberMinDay, InpSeptemberMaxDay);
+      case 10: return DayInsideMonthWindow(parts.day, InpOctoberMinDay, InpOctoberMaxDay);
+      case 11: return DayInsideMonthWindow(parts.day, InpNovemberMinDay, InpNovemberMaxDay);
+      case 12: return DayInsideMonthWindow(parts.day, InpDecemberMinDay, InpDecemberMaxDay);
+   }
+
+   return false;
+}
+
+bool FlatMonthProbeMonthFilterAllows()
+{
+   if(!InpUseFlatMonthProbeMonthFilter)
+      return true;
+
+   MqlDateTime parts;
+   TimeToStruct(TimeCurrent(), parts);
+
+   switch(parts.mon)
+   {
+      case 1:  return InpFlatProbeTradeJanuary;
+      case 2:  return InpFlatProbeTradeFebruary;
+      case 3:  return InpFlatProbeTradeMarch;
+      case 4:  return InpFlatProbeTradeApril;
+      case 5:  return InpFlatProbeTradeMay;
+      case 6:  return InpFlatProbeTradeJune;
+      case 7:  return InpFlatProbeTradeJuly;
+      case 8:  return InpFlatProbeTradeAugust;
+      case 9:  return InpFlatProbeTradeSeptember;
+      case 10: return InpFlatProbeTradeOctober;
+      case 11: return InpFlatProbeTradeNovember;
+      case 12: return InpFlatProbeTradeDecember;
+   }
+
+   return false;
+}
+
+bool FlatMonthMicroReversionMonthFilterAllows()
+{
+   if(!InpUseFlatMonthMicroReversionMonthFilter)
+      return true;
+
+   MqlDateTime parts;
+   TimeToStruct(TimeCurrent(), parts);
+
+   switch(parts.mon)
+   {
+      case 1:  return InpFlatMicroRevTradeJanuary;
+      case 2:  return InpFlatMicroRevTradeFebruary;
+      case 3:  return InpFlatMicroRevTradeMarch;
+      case 4:  return InpFlatMicroRevTradeApril;
+      case 5:  return InpFlatMicroRevTradeMay;
+      case 6:  return InpFlatMicroRevTradeJune;
+      case 7:  return InpFlatMicroRevTradeJuly;
+      case 8:  return InpFlatMicroRevTradeAugust;
+      case 9:  return InpFlatMicroRevTradeSeptember;
+      case 10: return InpFlatMicroRevTradeOctober;
+      case 11: return InpFlatMicroRevTradeNovember;
+      case 12: return InpFlatMicroRevTradeDecember;
+   }
+
+   return false;
+}
+
+bool InSessionLiquidityPullbackMonthAllows()
+{
+   if(!InpUseInSessionLiquidityPullbackMonthFilter)
+      return true;
+
+   MqlDateTime parts;
+   TimeToStruct(TimeCurrent(), parts);
+
+   switch(parts.mon)
+   {
+      case 1:  return InpISLPTradeJanuary;
+      case 2:  return InpISLPTradeFebruary;
+      case 3:  return InpISLPTradeMarch;
+      case 4:  return InpISLPTradeApril;
+      case 5:  return InpISLPTradeMay;
+      case 6:  return InpISLPTradeJune;
+      case 7:  return InpISLPTradeJuly;
+      case 8:  return InpISLPTradeAugust;
+      case 9:  return InpISLPTradeSeptember;
+      case 10: return InpISLPTradeOctober;
+      case 11: return InpISLPTradeNovember;
+      case 12: return InpISLPTradeDecember;
+   }
+
+   return false;
+}
+
+bool PriorMonthDefensiveRegimeActive(string &reason)
+{
+   if(!InpUsePriorMonthDefensiveRegime)
+      return false;
+
+   double open = iOpen(_Symbol, PERIOD_MN1, 1);
+   double high = iHigh(_Symbol, PERIOD_MN1, 1);
+   double low = iLow(_Symbol, PERIOD_MN1, 1);
+   double close = iClose(_Symbol, PERIOD_MN1, 1);
+   double range = high - low;
+   if(open <= 0.0 || high <= 0.0 || low <= 0.0 || close <= 0.0 || range <= _Point)
+      return false;
+
+   int score = 0;
+   double bodyPercent = 100.0 * MathAbs(close - open) / range;
+   if(bodyPercent <= MathMax(0.0, InpPriorMonthDefensiveMaxBodyPercent))
+      score++;
+
+   double monthlyATR = 0.0;
+   if(ATRValue(PERIOD_MN1, MathMax(2, InpPriorMonthDefensiveATRPeriod), 1, monthlyATR) &&
+      monthlyATR > 0.0)
+   {
+      double rangeATR = range / monthlyATR;
+      if(rangeATR <= MathMax(0.0, InpPriorMonthDefensiveMaxRangeATR))
+         score++;
+
+      reason = "prior month defensive score " + IntegerToString(score) +
+               " body " + DoubleToString(bodyPercent, 1) +
+               " rangeATR " + DoubleToString(rangeATR, 2);
+   }
+   else
+   {
+      reason = "prior month defensive score " + IntegerToString(score) +
+               " body " + DoubleToString(bodyPercent, 1);
+   }
+
+   return score >= MathMax(1, InpPriorMonthDefensiveMinScore);
+}
+
+bool MonthStartFilterAllows()
+{
+   string priorMonthReason = "";
+   bool priorMonthDefensive = InpPriorMonthDefensiveUseMonthStart &&
+                              PriorMonthDefensiveRegimeActive(priorMonthReason);
+   if(!InpUseMonthStartFilter && !priorMonthDefensive)
+      return true;
+
+   MqlDateTime parts;
+   TimeToStruct(TimeCurrent(), parts);
+   int minDay = MathMax(1, InpMonthStartMinDay);
+   if(priorMonthDefensive)
+      minDay = MathMax(minDay, MathMax(1, InpPriorMonthDefensiveMonthStartMinDay));
+   return parts.day >= minDay;
+}
+
+bool MonthStartFallbackGuardAllows(const SSignal &signal)
+{
+   if(!InpUseMonthStartFallbackGuard)
+      return true;
+   if(StringFind(signal.reasons, "Diagnostic trend fallback") < 0)
+      return true;
+
+   MqlDateTime parts;
+   TimeToStruct(TimeCurrent(), parts);
+   return parts.day >= MathMax(1, InpMonthStartFallbackMinDay);
+}
+
+bool MonthlyOpenDiscoveryGuardAllows(const SSignal &signal, string &reason)
+{
+   if(!InpUseMonthlyOpenDiscoveryGuard)
+      return true;
+
+   MqlDateTime parts;
+   TimeToStruct(TimeCurrent(), parts);
+   if(parts.day > MathMax(1, InpMonthlyOpenGuardMaxDay))
+      return true;
+
+   int startHour = MathMax(0, MathMin(23, InpMonthlyOpenGuardStartHour));
+   int endHour = MathMax(0, MathMin(23, InpMonthlyOpenGuardEndHour));
+   if(startHour <= endHour)
+   {
+      if(parts.hour < startHour || parts.hour > endHour)
+         return true;
+   }
+   else
+   {
+      if(parts.hour < startHour && parts.hour > endHour)
+         return true;
+   }
+
+   if(signal.qualityScore >= MathMax(1, InpMonthlyOpenGuardQualityBypassScore))
+      return true;
+
+   if(InpMonthlyOpenGuardAllowStrongBOS &&
+      (StringFind(signal.reasons, "BOS") >= 0 ||
+       StringFind(signal.reasons, "Break of structure") >= 0 ||
+       StringFind(signal.reasons, "Displacement BOS") >= 0))
+      return true;
+
+   if(InpMonthlyOpenGuardAllowLiquiditySweep &&
+      (StringFind(signal.reasons, "Sweep") >= 0 ||
+       StringFind(signal.reasons, "sweep") >= 0 ||
+       StringFind(signal.reasons, "Liquidity") >= 0 ||
+       StringFind(signal.reasons, "liquidity") >= 0))
+      return true;
+
+   double atr = signal.atr;
+   if(atr <= 0.0 && !ATRValue(InpSignalTimeframe, InpATRPeriod, 1, atr))
+      return true;
+   if(atr <= 0.0)
+      return true;
+
+   MqlDateTime dayStartParts = parts;
+   dayStartParts.hour = 0;
+   dayStartParts.min = 0;
+   dayStartParts.sec = 0;
+   datetime dayStart = StructToTime(dayStartParts);
+
+   int lookback = MathMax(3, InpMonthlyOpenGuardOpeningRangeBars);
+   MqlRates rates[];
+   ArraySetAsSeries(rates, true);
+   int copied = CopyRates(_Symbol, InpSignalTimeframe, 1, lookback + 1, rates);
+   if(copied < MathMax(3, InpMonthlyOpenGuardMinPriorBars) + 1)
+      return true;
+
+   double signalHigh = rates[0].high;
+   double signalLow = rates[0].low;
+   double signalOpen = rates[0].open;
+   double signalClose = rates[0].close;
+   double signalRange = signalHigh - signalLow;
+   if(signalHigh <= 0.0 || signalLow <= 0.0 || signalOpen <= 0.0 ||
+      signalClose <= 0.0 || signalRange <= _Point)
+      return true;
+
+   double rangeHigh = -DBL_MAX;
+   double rangeLow = DBL_MAX;
+   int priorBars = 0;
+   for(int i = 1; i < copied; i++)
+   {
+      if(rates[i].time < dayStart)
+         continue;
+      if(rates[i].high <= 0.0 || rates[i].low <= 0.0)
+         continue;
+
+      rangeHigh = MathMax(rangeHigh, rates[i].high);
+      rangeLow = MathMin(rangeLow, rates[i].low);
+      priorBars++;
+   }
+
+   if(priorBars < MathMax(1, InpMonthlyOpenGuardMinPriorBars) ||
+      rangeHigh <= -DBL_MAX / 2.0 || rangeLow >= DBL_MAX / 2.0 ||
+      rangeHigh <= rangeLow)
+      return true;
+
+   double buffer = atr * MathMax(0.0, InpMonthlyOpenGuardMinBreakoutATR);
+   bool confirmedBreakout = false;
+   if(signal.bias == BIAS_BUY)
+      confirmedBreakout = signalClose > rangeHigh + buffer;
+   else if(signal.bias == BIAS_SELL)
+      confirmedBreakout = signalClose < rangeLow - buffer;
+   else
+      return true;
+
+   double upperWick = signalHigh - MathMax(signalOpen, signalClose);
+   double lowerWick = MathMin(signalOpen, signalClose) - signalLow;
+   double oppositeWickPercent = 0.0;
+   if(signal.bias == BIAS_BUY)
+      oppositeWickPercent = 100.0 * upperWick / signalRange;
+   else
+      oppositeWickPercent = 100.0 * lowerWick / signalRange;
+
+   bool wickRejected = oppositeWickPercent > MathMax(0.0, InpMonthlyOpenGuardMaxOppositeWickPercent);
+   if(confirmedBreakout && !wickRejected)
+      return true;
+
+   reason = "monthly open discovery guard";
+   if(!confirmedBreakout)
+      reason += " no opening range breakout";
+   if(wickRejected)
+      reason += " opposite wick " + DoubleToString(oppositeWickPercent, 1);
+   reason += " priorBars " + IntegerToString(priorBars);
+   return false;
+}
+
+bool EarlyMonthOpenBiasGuardAllows(const SSignal &signal, string &reason)
+{
+   if(!InpUseEarlyMonthOpenBiasGuard || signal.bias == BIAS_NONE)
+      return true;
+
+   MqlDateTime parts;
+   TimeToStruct(TimeCurrent(), parts);
+   if(parts.day > MathMax(1, InpEarlyMonthOpenBiasMaxDay))
+      return true;
+
+   if(signal.qualityScore >= MathMax(1, InpEarlyMonthOpenBiasBypassQualityScore))
+      return true;
+
+   double monthlyOpen = iOpen(_Symbol, PERIOD_MN1, 0);
+   double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+   if(monthlyOpen <= 0.0 || close1 <= 0.0 || signal.atr <= 0.0)
+      return true;
+
+   double buffer = MathMax(0.0, InpEarlyMonthOpenBiasBufferATR) * signal.atr +
+                   MathMax(0.0, InpEarlyMonthOpenBiasBufferPoints) * _Point;
+
+   if(signal.bias == BIAS_SELL && close1 > monthlyOpen + buffer)
+   {
+      reason = "early month sell against monthly open";
+      return false;
+   }
+   if(signal.bias == BIAS_BUY && close1 < monthlyOpen - buffer)
+   {
+      reason = "early month buy against monthly open";
+      return false;
+   }
+
+   return true;
+}
+
+bool EarlyMonthLargeStopGuardBlocks(const SSignal &signal,
+                                    const double stopDistance,
+                                    string &reason)
+{
+   if(!InpUseEarlyMonthLargeStopGuard || stopDistance <= 0.0)
+      return false;
+
+   MqlDateTime parts;
+   TimeToStruct(TimeCurrent(), parts);
+   if(parts.day > MathMax(1, InpEarlyMonthLargeStopMaxDay))
+      return false;
+
+   if(signal.qualityScore >= MathMax(1, InpEarlyMonthLargeStopBypassQualityScore))
+      return false;
+
+   double maxStop = MathMax(0.0, InpEarlyMonthLargeStopMaxPoints);
+   if(maxStop <= 0.0)
+      return false;
+
+   double stopPoints = stopDistance / _Point;
+   double maxStopPoints = maxStop / _Point;
+   if(stopPoints <= maxStopPoints)
+      return false;
+
+   reason = "early month large stop " + DoubleToString(stopDistance, _Digits);
+   return true;
+}
+
+bool EarlyMonthAdverseRejectionGuardBlocks(const SSignal &signal, string &reason)
+{
+   if(!InpUseEarlyMonthAdverseRejectionGuard || signal.bias == BIAS_NONE)
+      return false;
+
+   MqlDateTime parts;
+   TimeToStruct(TimeCurrent(), parts);
+   if(parts.day > MathMax(1, InpEarlyMonthAdverseRejectionMaxDay))
+      return false;
+
+   if(signal.qualityScore >= MathMax(1, InpEarlyMonthAdverseRejectionBypassQualityScore))
+      return false;
+
+   double atr = signal.atr;
+   if(atr <= 0.0 && !ATRValue(InpSignalTimeframe, InpATRPeriod, 1, atr))
+      return false;
+
+   double high1 = iHigh(_Symbol, InpSignalTimeframe, 1);
+   double low1 = iLow(_Symbol, InpSignalTimeframe, 1);
+   double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+   double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+   double range = high1 - low1;
+   if(high1 <= 0.0 || low1 <= 0.0 || open1 <= 0.0 || close1 <= 0.0 || range <= _Point)
+      return false;
+
+   double bodyPercent = 100.0 * MathAbs(close1 - open1) / range;
+   double upperPercent = 100.0 * (high1 - MathMax(open1, close1)) / range;
+   double lowerPercent = 100.0 * (MathMin(open1, close1) - low1) / range;
+   double closeLocation = (close1 - low1) / range;
+   double minBody = MathMax(0.0, InpEarlyMonthAdverseRejectionMinBodyPercent);
+   double minWick = MathMax(0.0, InpEarlyMonthAdverseRejectionMinWickPercent);
+   double closeThreshold = MathMin(0.95, MathMax(0.50, InpEarlyMonthAdverseRejectionMinCloseLocation));
+   double buffer = MathMax(0.0, InpEarlyMonthAdverseRejectionBufferPoints) * _Point;
+   int lookback = MathMax(3, InpEarlyMonthAdverseRejectionLookbackBars);
+   double recentHigh = -DBL_MAX;
+   double recentLow = DBL_MAX;
+   for(int shift = 2; shift < 2 + lookback; shift++)
+   {
+      double high = iHigh(_Symbol, InpSignalTimeframe, shift);
+      double low = iLow(_Symbol, InpSignalTimeframe, shift);
+      if(high > 0.0)
+         recentHigh = MathMax(recentHigh, high);
+      if(low > 0.0)
+         recentLow = MathMin(recentLow, low);
+   }
+   bool hasRecentHigh = recentHigh > -DBL_MAX / 2.0;
+   bool hasRecentLow = recentLow < DBL_MAX / 2.0;
+
+   if(signal.bias == BIAS_SELL)
+   {
+      bool bullishRejection = close1 > open1 &&
+                              bodyPercent >= minBody &&
+                              lowerPercent >= minWick &&
+                              closeLocation >= closeThreshold;
+      bool failedLowBreak = hasRecentLow &&
+                            low1 < recentLow - buffer &&
+                            close1 > recentLow;
+      bool adverseImpulse = atr > 0.0 &&
+                            close1 > open1 &&
+                            range >= atr * 0.45 &&
+                            closeLocation >= closeThreshold;
+      if((bullishRejection && failedLowBreak) || (bullishRejection && adverseImpulse))
+      {
+         reason = "early month adverse bullish rejection";
+         return true;
+      }
+   }
+
+   if(signal.bias == BIAS_BUY)
+   {
+      bool bearishRejection = close1 < open1 &&
+                              bodyPercent >= minBody &&
+                              upperPercent >= minWick &&
+                              closeLocation <= (1.0 - closeThreshold);
+      bool failedHighBreak = hasRecentHigh &&
+                             high1 > recentHigh + buffer &&
+                             close1 < recentHigh;
+      bool adverseImpulse = atr > 0.0 &&
+                            close1 < open1 &&
+                            range >= atr * 0.45 &&
+                            closeLocation <= (1.0 - closeThreshold);
+      if((bearishRejection && failedHighBreak) || (bearishRejection && adverseImpulse))
+      {
+         reason = "early month adverse bearish rejection";
+         return true;
+      }
+   }
+
+   return false;
+}
+
+bool WeakRegimeEntryBlockActive(const SSignal &signal, string &reason)
+{
+   string priorMonthReason = "";
+   bool priorMonthDefensive = InpPriorMonthDefensiveUseWeakRegimeBlock &&
+                              PriorMonthDefensiveRegimeActive(priorMonthReason);
+   if(!InpUseWeakRegimeEntryBlock && !priorMonthDefensive)
+      return false;
+
+   if(signal.qualityScore >= MathMax(1, InpWeakRegimeQualityBypassScore))
+      return false;
+
+   if(!InpWeakRegimeBlockDiagnosticFallback &&
+      StringFind(signal.reasons, "Diagnostic trend fallback") >= 0)
+      return false;
+
+   if(InpWeakRegimeAllowLiquiditySweep &&
+      (StringFind(signal.reasons, "Sweep") >= 0 ||
+       StringFind(signal.reasons, "sweep") >= 0 ||
+       StringFind(signal.reasons, "Liquidity") >= 0 ||
+       StringFind(signal.reasons, "liquidity") >= 0))
+      return false;
+
+   double atr = signal.atr;
+   if(atr <= 0.0 && !ATRValue(InpSignalTimeframe, InpATRPeriod, 1, atr))
+      return false;
+   if(atr <= 0.0)
+      return false;
+
+   int lookback = MathMax(4, InpWeakRegimeLookbackBars);
+   double closeNow = iClose(_Symbol, InpSignalTimeframe, 1);
+   double closePast = iClose(_Symbol, InpSignalTimeframe, lookback);
+   if(closeNow <= 0.0 || closePast <= 0.0)
+      return false;
+
+   int score = 0;
+   double netMoveATR = MathAbs(closeNow - closePast) / atr;
+   if(netMoveATR <= MathMax(0.0, InpWeakRegimeMaxNetMoveATR))
+      score++;
+
+   int directionalBars = 0;
+   int alternations = 0;
+   int previousDirection = 0;
+   for(int shift = 1; shift <= lookback; shift++)
+   {
+      double open = iOpen(_Symbol, InpSignalTimeframe, shift);
+      double close = iClose(_Symbol, InpSignalTimeframe, shift);
+      if(open <= 0.0 || close <= 0.0)
+         return false;
+
+      int direction = 0;
+      if(close > open)
+         direction = 1;
+      else if(close < open)
+         direction = -1;
+
+      if(direction == 0)
+         continue;
+
+      directionalBars++;
+      if(previousDirection != 0 && direction != previousDirection)
+         alternations++;
+      previousDirection = direction;
+   }
+
+   double alternationPercent = 0.0;
+   if(directionalBars >= 4)
+   {
+      alternationPercent = 100.0 * (double)alternations / (double)MathMax(1, directionalBars - 1);
+      if(alternationPercent >= MathMax(0.0, InpWeakRegimeMinAlternationPercent))
+         score++;
+   }
+
+   double adx = 0.0;
+   if(ADXValue(InpSignalTimeframe, InpADXPeriod, 1, adx) &&
+      adx <= MathMax(0.0, InpWeakRegimeMaxADX))
+      score++;
+
+   int slopeLookback = MathMax(1, InpWeakRegimeSlopeLookbackBars);
+   double emaNow = 0.0;
+   double emaPast = 0.0;
+   if(MAValue(InpSignalTimeframe, InpTrendEMAPeriod, 1, emaNow) &&
+      MAValue(InpSignalTimeframe, InpTrendEMAPeriod, 1 + slopeLookback, emaPast))
+   {
+      double slopePoints = MathAbs(emaNow - emaPast) / _Point;
+      if(slopePoints <= MathMax(0.0, InpWeakRegimeMaxSlopePoints))
+         score++;
+   }
+
+   if(score < MathMax(1, InpWeakRegimeMinScore))
+      return false;
+
+   reason = "weak regime score " + IntegerToString(score) +
+            " netATR " + DoubleToString(netMoveATR, 2) +
+            " alt " + DoubleToString(alternationPercent, 1) +
+            " adx " + DoubleToString(adx, 1);
+   if(priorMonthDefensive)
+      reason += "; " + priorMonthReason;
+   return true;
+}
+
+void RegisterInitialRiskForNewestPosition(const ENUM_TRADE_BIAS bias, const double riskDistance)
+{
+   if(riskDistance <= 0.0)
+      return;
+
+   long desiredType = (bias == BIAS_BUY) ? POSITION_TYPE_BUY : POSITION_TYPE_SELL;
+   datetime newestTime = 0;
+   ulong newestTicket = 0;
+
+   for(int i = PositionsTotal() - 1; i >= 0; i--)
+   {
+      ulong ticket = PositionGetTicket(i);
+      if(ticket == 0 || !PositionSelectByTicket(ticket))
+         continue;
+      if(PositionGetString(POSITION_SYMBOL) != _Symbol ||
+         PositionGetInteger(POSITION_MAGIC) != InpMagicNumber)
+         continue;
+      if(PositionGetInteger(POSITION_TYPE) != desiredType)
+         continue;
+
+      datetime positionTime = (datetime)PositionGetInteger(POSITION_TIME);
+      if(positionTime >= newestTime)
+      {
+         newestTime = positionTime;
+         newestTicket = ticket;
+      }
+   }
+
+   StoreInitialRisk(newestTicket, riskDistance);
+}
+
+int CountIndependentReversionSlotPositions(const bool bandSlot)
+{
+   int count = 0;
+   for(int i = PositionsTotal() - 1; i >= 0; i--)
+   {
+      ulong ticket = PositionGetTicket(i);
+      if(ticket == 0 || !PositionSelectByTicket(ticket))
+         continue;
+      if(PositionGetString(POSITION_SYMBOL) != _Symbol ||
+         PositionGetInteger(POSITION_MAGIC) != InpMagicNumber)
+         continue;
+
+      string comment = PositionGetString(POSITION_COMMENT);
+      bool isBandPosition = StringFind(comment, "RRO;Band VWAP reversion") >= 0;
+      if(isBandPosition == bandSlot)
+         count++;
+   }
+   return count;
+}
+
+bool IndependentReversionSlotAllows(const bool bandSlot, string &reason)
+{
+   reason = "";
+   if(!InpBandVWAPReversionIndependentAttempt)
+      return true;
+   if(CountIndependentReversionSlotPositions(bandSlot) < 1)
+      return true;
+
+   reason = bandSlot ? "band reversion slot occupied" : "primary strategy slot occupied";
+   return false;
+}
+
+bool OpenIsolatedBandVWAPReversionSignal(const SSignal &signal)
+{
+   if(signal.bias == BIAS_NONE || !signal.isBandVWAPReversion)
+      return false;
+
+   if(!SpreadRegimeAllows())
+   {
+      g_lastBlockReason = "band reversion spread regime";
+      return false;
+   }
+
+   string blockReason = "";
+   if(!IndependentReversionSlotAllows(true, blockReason))
+   {
+      g_lastBlockReason = blockReason;
+      return false;
+   }
+   if(!riskManager.CanOpen(blockReason, true))
+   {
+      g_lastBlockReason = blockReason;
+      return false;
+   }
+   if((signal.bias == BIAS_BUY && !InpAllowBuy) ||
+      (signal.bias == BIAS_SELL && !InpAllowSell))
+   {
+      g_lastBlockReason = "band reversion direction disabled";
+      return false;
+   }
+
+   double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   double entry = (signal.bias == BIAS_BUY) ? ask : bid;
+   if(entry <= 0.0 || signal.rangeReversionStopPrice <= 0.0 ||
+      signal.rangeReversionTargetPrice <= 0.0)
+   {
+      g_lastBlockReason = "band reversion invalid prices";
+      return false;
+   }
+
+   double stopDistance = (signal.bias == BIAS_BUY)
+                         ? entry - signal.rangeReversionStopPrice
+                         : signal.rangeReversionStopPrice - entry;
+   double tpDistance = (signal.bias == BIAS_BUY)
+                       ? signal.rangeReversionTargetPrice - entry
+                       : entry - signal.rangeReversionTargetPrice;
+   double brokerMinimum = MinimumBrokerStopDistance();
+   stopDistance = MathMax(stopDistance, brokerMinimum);
+   tpDistance = MathMax(tpDistance, brokerMinimum);
+   if(stopDistance <= 0.0 || tpDistance <= 0.0 ||
+      tpDistance / stopDistance < MathMax(0.0, InpBandVWAPReversionMinRR))
+   {
+      g_lastBlockReason = "band reversion execution RR";
+      return false;
+   }
+
+   double riskMultiplier = MathMin(1.0, MathMax(0.0, signal.riskMultiplier));
+   double lots = riskManager.LotsForRisk(signal.bias, entry, stopDistance, riskMultiplier);
+   if(lots <= 0.0)
+   {
+      g_lastBlockReason = "band reversion lot sizing";
+      return false;
+   }
+
+   string exposureReason = "";
+   if(!riskManager.ExposureAllows(signal.bias, entry, stopDistance, lots, exposureReason))
+   {
+      g_lastBlockReason = exposureReason;
+      return false;
+   }
+   string costReason = "";
+   if(!TradingCostGuardAllows(stopDistance, lots, costReason))
+   {
+      g_lastBlockReason = costReason;
+      return false;
+   }
+   string marginReason = "";
+   if(!MarginGuardAllows(signal.bias, lots, entry, marginReason))
+   {
+      g_lastBlockReason = marginReason;
+      return false;
+   }
+
+   double sl = (signal.bias == BIAS_BUY) ? entry - stopDistance : entry + stopDistance;
+   double tp = (signal.bias == BIAS_BUY) ? entry + tpDistance : entry - tpDistance;
+   sl = NormalizeDouble(sl, _Digits);
+   tp = NormalizeDouble(tp, _Digits);
+
+   trade.SetExpertMagicNumber(InpMagicNumber);
+   trade.SetDeviationInPoints(InpDeviationPoints);
+   string tradeComment = CompactTradeComment(signal);
+   bool ok = (signal.bias == BIAS_BUY)
+             ? trade.Buy(lots, _Symbol, 0, sl, tp, tradeComment)
+             : trade.Sell(lots, _Symbol, 0, sl, tp, tradeComment);
+   if(ok)
+   {
+      RegisterInitialRiskForNewestPosition(signal.bias, stopDistance);
+      string biasText = (signal.bias == BIAS_BUY) ? "buy" : "sell";
+      string reason = signal.reasons + "Isolated H1 execution;Trade RR " +
+                      DoubleToString(tpDistance / stopDistance, 2) + ";";
+      logger.Write("entry", trade.ResultOrder(), biasText, lots, entry, sl, tp,
+                   tpDistance / stopDistance, 0.0, reason, signal.atr);
+      g_lastBlockReason = "entered " + biasText;
+   }
+   else
+   {
+      g_lastBlockReason = "trade failed: " + trade.ResultRetcodeDescription();
+      if(InpLogLevel >= LOG_ERRORS)
+         Print(g_lastBlockReason);
+   }
+   return ok;
+}
+
+bool OpenIsolatedDailyDonchianSignal(const SSignal &signal)
+{
+   if(signal.bias == BIAS_NONE || !signal.isDailyDonchianBreakout)
+      return false;
+
+   if(!SpreadRegimeAllows())
+   {
+      g_lastBlockReason = "daily Donchian spread regime";
+      return false;
+   }
+
+   string blockReason = "";
+   if(!IndependentReversionSlotAllows(false, blockReason))
+   {
+      g_lastBlockReason = blockReason;
+      return false;
+   }
+   if(!riskManager.CanOpen(blockReason, true))
+   {
+      g_lastBlockReason = blockReason;
+      return false;
+   }
+   if((signal.bias == BIAS_BUY && !InpAllowBuy) ||
+      (signal.bias == BIAS_SELL && !InpAllowSell))
+   {
+      g_lastBlockReason = "daily Donchian direction disabled";
+      return false;
+   }
+
+   double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   double entry = (signal.bias == BIAS_BUY) ? ask : bid;
+   if(entry <= 0.0)
+   {
+      g_lastBlockReason = "daily Donchian invalid entry";
+      return false;
+   }
+
+   double brokerMinimum = MinimumBrokerStopDistance();
+   double stopDistance = MathMax(signal.stopDistance, brokerMinimum);
+   double tpDistance = MathMax(signal.takeProfitDistance, brokerMinimum);
+   if(stopDistance <= 0.0 || tpDistance <= 0.0 ||
+      tpDistance / stopDistance < MathMax(0.0, InpDailyDonchianMinRR))
+   {
+      g_lastBlockReason = "daily Donchian execution RR";
+      return false;
+   }
+
+   double riskMultiplier = MathMin(1.0, MathMax(0.0, signal.riskMultiplier));
+   double lots = riskManager.LotsForRisk(signal.bias, entry, stopDistance, riskMultiplier);
+   if(lots <= 0.0)
+   {
+      g_lastBlockReason = "daily Donchian lot sizing";
+      return false;
+   }
+
+   string exposureReason = "";
+   if(!riskManager.ExposureAllows(signal.bias, entry, stopDistance, lots, exposureReason))
+   {
+      g_lastBlockReason = exposureReason;
+      return false;
+   }
+   string costReason = "";
+   if(!TradingCostGuardAllows(stopDistance, lots, costReason))
+   {
+      g_lastBlockReason = costReason;
+      return false;
+   }
+   string marginReason = "";
+   if(!MarginGuardAllows(signal.bias, lots, entry, marginReason))
+   {
+      g_lastBlockReason = marginReason;
+      return false;
+   }
+
+   double sl = (signal.bias == BIAS_BUY) ? entry - stopDistance : entry + stopDistance;
+   double tp = 0.0;
+   if(InpDailyDonchianUseTakeProfit)
+      tp = (signal.bias == BIAS_BUY) ? entry + tpDistance : entry - tpDistance;
+   sl = NormalizeDouble(sl, _Digits);
+   if(tp > 0.0)
+      tp = NormalizeDouble(tp, _Digits);
+
+   trade.SetExpertMagicNumber(InpMagicNumber);
+   trade.SetDeviationInPoints(InpDeviationPoints);
+   string tradeComment = CompactTradeComment(signal);
+   bool ok = (signal.bias == BIAS_BUY)
+             ? trade.Buy(lots, _Symbol, 0, sl, tp, tradeComment)
+             : trade.Sell(lots, _Symbol, 0, sl, tp, tradeComment);
+   if(ok)
+   {
+      RegisterInitialRiskForNewestPosition(signal.bias, stopDistance);
+      string biasText = (signal.bias == BIAS_BUY) ? "buy" : "sell";
+      string reason = signal.reasons + "Isolated D1 execution;Trade RR " +
+                      DoubleToString(tpDistance / stopDistance, 2) + ";";
+      logger.Write("entry", trade.ResultOrder(), biasText, lots, entry, sl, tp,
+                   tpDistance / stopDistance, 0.0, reason, signal.atr);
+      g_lastBlockReason = "entered " + biasText;
+   }
+   else
+   {
+      g_lastBlockReason = "trade failed: " + trade.ResultRetcodeDescription();
+      if(InpLogLevel >= LOG_ERRORS)
+         Print(g_lastBlockReason);
+   }
+   return ok;
+}
+
+bool OpenSignal(const SSignal &signal)
+{
+   if(signal.bias == BIAS_NONE)
+      return false;
+
+   if(InpDiagnosticFallbackDebug)
+      Print("DIAG_OPEN_SIGNAL bias=", (int)signal.bias,
+            " confirmations=", signal.confirmations,
+            " reason=", signal.reasons);
+
+   bool flatMonthProbeBypass = InpAllowFlatMonthProbesOutsideMonthFilter &&
+                               (signal.isFlatMonthBreakoutProbe || signal.isFlatMonthMicroReversion);
+   bool flatMonthMomentumBypass = InpAllowFlatMonthMomentumOutsideMonthFilter &&
+                                  (signal.isPowerTrendContinuation ||
+                                   signal.isSessionImpulse ||
+                                   signal.isHighEfficiencyTrend);
+   bool flatMonthOpportunityBypass = InpAllowFlatMonthOpportunityOutsideMonthFilter &&
+                                     FlatMonthOpportunityActive() &&
+                                     signal.qualityScore >= MathMax(1, InpFlatMonthOpportunityBypassMinQualityScore) &&
+                                     signal.priceActionScore >= MathMax(0, InpFlatMonthOpportunityBypassMinPriceActionScore) &&
+                                     (!InpFlatMonthOpportunityBypassRequireLiquidSession ||
+                                      sessionFilter.LiquidSessionActive());
+   bool flatMonthStructuralDisplacementBypass = InpAllowFlatMonthStructuralDisplacementOutsideMonthFilter &&
+                                                signal.isFlatMonthStructuralDisplacement &&
+                                                signal.qualityScore >= MathMax(1, InpFlatMonthStructuralDisplacementBypassMinQualityScore) &&
+                                                signal.priceActionScore >= MathMax(0, InpFlatMonthStructuralDisplacementBypassMinPriceActionScore) &&
+                                                (!InpFlatMonthStructuralDisplacementBypassRequireLiquidSession ||
+                                                 sessionFilter.LiquidSessionActive());
+   bool flatMonthLiquidityReclaimBypass = InpAllowFlatMonthLiquidityReclaimOutsideMonthFilter &&
+                                          signal.isFlatMonthLiquidityReclaim &&
+                                          signal.qualityScore >= MathMax(1, InpFlatMonthLiquidityReclaimBypassMinQualityScore) &&
+                                          signal.priceActionScore >= MathMax(0, InpFlatMonthLiquidityReclaimBypassMinPriceActionScore) &&
+                                          (!InpFlatMonthLiquidityReclaimBypassRequireLiquidSession ||
+                                           sessionFilter.LiquidSessionActive());
+   bool inSessionLiquidityPullbackBypass = InpAllowInSessionLiquidityPullbackOutsideMonthFilter &&
+                                           signal.isInSessionLiquidityPullback &&
+                                           (!InpInSessionLiquidityPullbackRequireLiquidSession ||
+                                            sessionFilter.LiquidSessionActive());
+   bool m5TightLiquidityBypass = InpAllowM5TightLiquidityOutsideMonthFilter &&
+                                 signal.isM5TightLiquidity &&
+                                 FlatMonthOpportunityActive() &&
+                                 (!InpFlatMonthOpportunityBypassRequireLiquidSession ||
+                                  sessionFilter.LiquidSessionActive());
+   bool flatMonthBypass = flatMonthProbeBypass || flatMonthMomentumBypass ||
+                          flatMonthOpportunityBypass || flatMonthStructuralDisplacementBypass ||
+                          flatMonthLiquidityReclaimBypass || inSessionLiquidityPullbackBypass ||
+                          m5TightLiquidityBypass;
+   if(!MonthFilterAllows() && !flatMonthBypass)
+   {
+      g_lastBlockReason = "month filter";
+      return false;
+   }
+   if(!MonthDayWindowAllows() && !flatMonthBypass)
+   {
+      g_lastBlockReason = "month day window";
+      return false;
+   }
+   if((flatMonthProbeBypass || flatMonthMomentumBypass) && !FlatMonthProbeMonthFilterAllows())
+   {
+      g_lastBlockReason = "flat probe month filter";
+      return false;
+   }
+
+   if(!MonthStartFilterAllows())
+   {
+      g_lastBlockReason = "month start filter";
+      return false;
+   }
+
+   if(!MonthStartFallbackGuardAllows(signal))
+   {
+      g_lastBlockReason = "month start fallback guard";
+      return false;
+   }
+
+   string monthlyOpenReason = "";
+   if(!MonthlyOpenDiscoveryGuardAllows(signal, monthlyOpenReason))
+   {
+      g_lastBlockReason = monthlyOpenReason;
+      if(InpDiagnosticFallbackDebug)
+         Print("DIAG_OPEN_BLOCK ", monthlyOpenReason);
+      return false;
+   }
+
+   string earlyMonthBiasReason = "";
+   if(!EarlyMonthOpenBiasGuardAllows(signal, earlyMonthBiasReason))
+   {
+      g_lastBlockReason = earlyMonthBiasReason;
+      if(InpDiagnosticFallbackDebug)
+         Print("DIAG_OPEN_BLOCK ", earlyMonthBiasReason);
+      return false;
+   }
+
+   string weakRegimeReason = "";
+   if(WeakRegimeEntryBlockActive(signal, weakRegimeReason))
+   {
+      g_lastBlockReason = weakRegimeReason;
+      if(InpDiagnosticFallbackDebug)
+         Print("DIAG_OPEN_BLOCK ", weakRegimeReason);
+      return false;
+   }
+
+   string diagnosticFallbackLossBlockReason = "";
+   if(!DiagnosticFallbackNoCushionLossBlockAllows(signal, diagnosticFallbackLossBlockReason))
+   {
+      g_lastBlockReason = diagnosticFallbackLossBlockReason;
+      if(InpDiagnosticFallbackDebug)
+         Print("DIAG_OPEN_BLOCK ", diagnosticFallbackLossBlockReason);
+      return false;
+   }
+
+   if(InpMaxSpreadATRPercent > 0.0 && signal.atr > 0.0)
+   {
+      double spreadAtrPercent = 100.0 * CLogger::SpreadPoints() / (signal.atr / _Point);
+      if(spreadAtrPercent > InpMaxSpreadATRPercent)
+      {
+         g_lastBlockReason = "spread ATR";
+         if(InpDiagnosticFallbackDebug)
+            Print("DIAG_OPEN_BLOCK spread ATR percent=", DoubleToString(spreadAtrPercent, 2));
+         return false;
+      }
+   }
+
+   if(!SpreadRegimeAllows())
+   {
+      g_lastBlockReason = "spread regime";
+      return false;
+   }
+
+   if(!SpreadShockEntryAllows())
+   {
+      g_lastBlockReason = "M1 spread shock";
+      return false;
+   }
+
+   string blockReason = "";
+   if(!IndependentReversionSlotAllows(false, blockReason))
+   {
+      g_lastBlockReason = blockReason;
+      return false;
+   }
+   if(!riskManager.CanOpen(blockReason))
+   {
+      g_lastBlockReason = blockReason;
+      if(InpDiagnosticFallbackDebug)
+         Print("DIAG_OPEN_BLOCK risk=", blockReason);
+      return false;
+   }
+   if(riskManager.DirectionalLossCooldownActive(signal.bias, blockReason))
+   {
+      g_lastBlockReason = blockReason;
+      return false;
+   }
+   if(!FlatMonthProbeLaneSpacingAllows(signal, blockReason))
+   {
+      g_lastBlockReason = blockReason;
+      return false;
+   }
+
+   if(signal.bias == BIAS_BUY && !InpAllowBuy)
+      return false;
+   if(InpUseMTFSlopeDirectionFilter)
+   {
+      double slopePoints = 0;
+      if(MTFSlopePoints(InpDirectionSlopeLookback, slopePoints))
+      {
+         if(signal.bias == BIAS_BUY && slopePoints < InpBuyMinMTFSlopePts)
+         {
+            g_lastBlockReason = "MTF slope buy filter";
+            return false;
+         }
+         if(signal.bias == BIAS_SELL && slopePoints > InpSellMaxMTFSlopePts)
+         {
+            g_lastBlockReason = "MTF slope sell filter";
+            return false;
+         }
+      }
+   }
+   string mtfTrendQualityReason = "";
+   if(!MTFTrendQualityAllows(signal.bias, signal.atr, mtfTrendQualityReason))
+   {
+      g_lastBlockReason = mtfTrendQualityReason;
+      return false;
+   }
+   if(signal.bias == BIAS_BUY && InpUseDateBuyBlock)
+   {
+      datetime now = TimeCurrent();
+      if(now >= InpBuyBlockStart && now <= InpBuyBlockEnd)
+      {
+         g_lastBlockReason = "date buy block";
+         return false;
+      }
+   }
+   if(signal.bias == BIAS_BUY && InpUseDateBuyBlock2)
+   {
+      datetime now = TimeCurrent();
+      if(now >= InpBuyBlock2Start && now <= InpBuyBlock2End)
+      {
+         g_lastBlockReason = "date buy block 2";
+         return false;
+      }
+   }
+   if(signal.bias == BIAS_SELL && !InpAllowSell)
+      return false;
+   if(signal.bias == BIAS_SELL && InpUseMTFSlopeSellBlock)
+   {
+      double slopePoints = 0;
+      if(MTFSlopePoints(InpSellBlockSlopeLookback, slopePoints))
+      {
+         if(slopePoints >= InpSellBlockMinUpSlopePts)
+         {
+            g_lastBlockReason = "MTF up-slope sell block";
+            return false;
+         }
+      }
+   }
+   if(signal.bias == BIAS_SELL && InpUseDateSellBlock)
+   {
+      datetime now = TimeCurrent();
+      if(now >= InpSellBlockStart && now <= InpSellBlockEnd)
+      {
+         g_lastBlockReason = "date sell block";
+         return false;
+      }
+   }
+
+   double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   double entry = (signal.bias == BIAS_BUY) ? ask : bid;
+   bool usedLiquidityStop = signal.useDirectStop;
+   double stopDistance = signal.useDirectStop
+                         ? signal.stopDistance
+                         : StructureStopDistance(signal.bias, entry, signal.stopDistance, usedLiquidityStop);
+   if(signal.isRangeReversion &&
+      InpRangeReversionUseStructuralStop &&
+      signal.rangeReversionStopPrice > 0.0)
+   {
+      double reversionStopDistance = (signal.bias == BIAS_BUY)
+                                     ? entry - signal.rangeReversionStopPrice
+                                     : signal.rangeReversionStopPrice - entry;
+      if(reversionStopDistance > 0.0)
+      {
+         stopDistance = reversionStopDistance;
+         if(InpRangeReversionUseLiquidityStopExtension)
+         {
+            bool rangeLiquidityStop = false;
+            double extendedStopDistance = StructureStopDistance(signal.bias,
+                                                                entry,
+                                                                reversionStopDistance,
+                                                                rangeLiquidityStop);
+            if(extendedStopDistance > stopDistance)
+               stopDistance = extendedStopDistance;
+            if(rangeLiquidityStop)
+               usedLiquidityStop = true;
+         }
+      }
+   }
+   stopDistance = MathMax(stopDistance, MinimumBrokerStopDistance());
+   double activeMaxStopATR = InpMaxStopATRMultiplier;
+   if(usedLiquidityStop && InpLiquidityStopAllowWiderMaxATR)
+      activeMaxStopATR = MathMax(activeMaxStopATR, InpLiquidityStopMaxATRMultiplier);
+   if(activeMaxStopATR > 0.0 && signal.atr > 0.0 && stopDistance > signal.atr * activeMaxStopATR)
+   {
+      g_lastBlockReason = usedLiquidityStop ? "liquidity max stop ATR" : "max stop ATR";
+      return false;
+   }
+
+   string liquidityStopConflictReason = "";
+   if(LiquidityStopConflictGuardBlocks(signal.bias,
+                                       entry,
+                                       stopDistance,
+                                       signal.atr,
+                                       signal.qualityScore,
+                                       liquidityStopConflictReason))
+   {
+      g_lastBlockReason = liquidityStopConflictReason;
+      return false;
+   }
+
+   string earlyMonthLargeStopReason = "";
+   if(EarlyMonthLargeStopGuardBlocks(signal, stopDistance, earlyMonthLargeStopReason))
+   {
+      g_lastBlockReason = earlyMonthLargeStopReason;
+      if(InpDiagnosticFallbackDebug)
+         Print("DIAG_OPEN_BLOCK ", earlyMonthLargeStopReason);
+      return false;
+   }
+
+   string earlyMonthAdverseRejectionReason = "";
+   if(EarlyMonthAdverseRejectionGuardBlocks(signal, earlyMonthAdverseRejectionReason))
+   {
+      g_lastBlockReason = earlyMonthAdverseRejectionReason;
+      if(InpDiagnosticFallbackDebug)
+         Print("DIAG_OPEN_BLOCK ", earlyMonthAdverseRejectionReason);
+      return false;
+   }
+   bool fmlrStructuralRunnerScaleIn = signal.isFlatMonthLiquidityReclaim &&
+                                      FlatMonthLiquidityReclaimUnlimitedRunnerAllows(signal);
+   bool isScaleIn = false;
+   string scaleInReason = "";
+   if(!riskManager.WinnerScaleInAllows(signal.bias,
+                                       signal.qualityScore,
+                                       signal.priceActionScore,
+                                       signal.isPowerTrendContinuation,
+                                       signal.isSessionImpulse,
+                                       fmlrStructuralRunnerScaleIn,
+                                       stopDistance,
+                                       scaleInReason,
+                                       isScaleIn))
+   {
+      g_lastBlockReason = scaleInReason;
+      return false;
+   }
+   if(isScaleIn && InpWinnerScaleInRequireTrendRegime &&
+      TrendRegimeBoostProgress(InpTrendRegimeBoostRequiresEquityProfit) <= 0.0)
+   {
+      g_lastBlockReason = "winner scale-in trend regime";
+      return false;
+   }
+
+   double tpMultiplier = QualityTakeProfitMultiplier(signal.qualityScore);
+   double runnerTpMultiplier = RunnerTakeProfitMultiplier(signal);
+   double trendRegimeTpMultiplier = TrendRegimeTakeProfitMultiplier(signal);
+   double flatMonthCatchUpTpMultiplier = FlatMonthCatchUpTakeProfitMultiplier(signal);
+   double flatMonthMissedMoveTpMultiplier = FlatMonthMissedMoveTakeProfitMultiplier(signal);
+   double powerTrendTpMultiplier = PowerTrendContinuationTakeProfitMultiplier(signal);
+   double sessionImpulseTpMultiplier = SessionImpulseTakeProfitMultiplier(signal);
+   double protectedCushionTpMultiplier = ProtectedCushionTakeProfitMultiplier(signal);
+   double directionalHourTpMultiplier = DirectionalHourTakeProfitMultiplier(signal);
+   double closedProfitTpMultiplier = ClosedProfitTakeProfitMultiplier(signal);
+   double eliteConfluenceTpMultiplier = EliteConfluenceTakeProfitMultiplier(signal);
+   double tpDistance = signal.takeProfitDistance * tpMultiplier * runnerTpMultiplier *
+                       trendRegimeTpMultiplier * flatMonthCatchUpTpMultiplier *
+                       flatMonthMissedMoveTpMultiplier *
+                       powerTrendTpMultiplier * sessionImpulseTpMultiplier * protectedCushionTpMultiplier *
+                       directionalHourTpMultiplier * closedProfitTpMultiplier *
+                       eliteConfluenceTpMultiplier;
+   if(signal.isRangeReversion &&
+      InpRangeReversionUseMeanTarget &&
+      signal.rangeReversionTargetPrice > 0.0)
+   {
+      double reversionTpDistance = (signal.bias == BIAS_BUY)
+                                  ? signal.rangeReversionTargetPrice - entry
+                                  : entry - signal.rangeReversionTargetPrice;
+      if(reversionTpDistance > 0.0)
+         tpDistance = reversionTpDistance;
+      else
+         tpDistance = signal.atr * MathMax(0.10, InpRangeReversionFallbackTPATR);
+   }
+   bool protectedCushionUnlimitedRunner = ProtectedCushionUnlimitedRunnerAllows(signal);
+   bool eliteContinuationUnlimitedRunner = EliteContinuationUnlimitedRunnerAllows(signal);
+   bool fmlrUnlimitedRunner = FlatMonthLiquidityReclaimUnlimitedRunnerAllows(signal);
+   bool useUnlimitedRunner = protectedCushionUnlimitedRunner ||
+                             eliteContinuationUnlimitedRunner ||
+                             fmlrUnlimitedRunner;
+   bool enforcePlannedTarget = !useUnlimitedRunner || fmlrUnlimitedRunner;
+   if(InpUseTakeProfit && enforcePlannedTarget)
+      tpDistance = MathMax(tpDistance, MinimumBrokerStopDistance());
+
+   bool flatMonthCatchUpRelaxLane =
+      (signal.isBreakoutContinuation && InpFlatMonthCatchUpRelaxBreakout) ||
+      (signal.isSessionImpulse && InpFlatMonthCatchUpRelaxBreakout) ||
+      (signal.isRangeReversion && InpFlatMonthCatchUpRelaxRangeReversion);
+   bool flatMonthMissedMoveWakeUp = StringFind(signal.reasons, "Flat month missed move wake-up") >= 0;
+   double minimumRR = signal.isRangeReversion ? MathMax(0.0, InpRangeReversionMinRR)
+                                               : (signal.isFlatMonthBreakoutProbe
+                                                  ? MathMax(0.0, InpFlatMonthBreakoutProbeMinRR)
+                                                  : (signal.isFlatMonthStructuralDisplacement
+                                                     ? MathMax(0.0, InpFlatMonthStructuralDisplacementMinRR)
+                                                     : (signal.isFlatMonthLiquidityReclaim
+                                                        ? MathMax(0.0, InpFlatMonthLiquidityReclaimMinRR)
+                                                        : ActiveMinimumRiskReward(flatMonthCatchUpRelaxLane,
+                                                                                  flatMonthMissedMoveWakeUp))));
+   if(InpUseTakeProfit && enforcePlannedTarget && tpDistance / stopDistance < minimumRR)
+   {
+      g_lastBlockReason = "minimum RR";
+      return false;
+   }
+
+   if(InpUseTakeProfit && enforcePlannedTarget && InpUseSpreadAdjustedRRFilter)
+   {
+      double spreadDistance = CLogger::SpreadPoints() * _Point;
+      double adjustedReward = tpDistance - spreadDistance;
+      double adjustedRisk = stopDistance + spreadDistance;
+      double adjustedMinRR = signal.isRangeReversion ? MathMax(0.0, InpRangeReversionMinRR)
+                                                     : (signal.isFlatMonthBreakoutProbe
+                                                        ? MathMax(0.0, InpFlatMonthBreakoutProbeMinRR)
+                                                        : (signal.isFlatMonthStructuralDisplacement
+                                                           ? MathMax(0.0, InpFlatMonthStructuralDisplacementMinRR)
+                                                           : (signal.isFlatMonthLiquidityReclaim
+                                                              ? MathMax(0.0, InpFlatMonthLiquidityReclaimMinRR)
+                                                              : InpMinSpreadAdjustedRR)));
+      if(adjustedReward <= 0.0 || adjustedRisk <= 0.0 ||
+         adjustedReward / adjustedRisk < adjustedMinRR)
+      {
+         g_lastBlockReason = "spread adjusted RR";
+         return false;
+      }
+   }
+
+   string drawdownQualityReason = "";
+   if(!DrawdownQualityAllows(signal.qualityScore, drawdownQualityReason))
+   {
+      g_lastBlockReason = drawdownQualityReason;
+      return false;
+   }
+   string startingEquityRecoveryQualityReason = "";
+   if(!riskManager.StartingEquityRecoveryQualityAllows(signal.qualityScore,
+                                                       startingEquityRecoveryQualityReason))
+   {
+      g_lastBlockReason = startingEquityRecoveryQualityReason;
+      return false;
+   }
+   string directionalQualityReason = "";
+   if(!riskManager.DirectionalLossQualityAllows(signal.bias, signal.qualityScore, directionalQualityReason))
+   {
+      g_lastBlockReason = directionalQualityReason;
+      return false;
+   }
+   string recentPerformanceQualityReason = "";
+   if(!riskManager.RecentPerformanceQualityAllows(signal.qualityScore, recentPerformanceQualityReason))
+   {
+      g_lastBlockReason = recentPerformanceQualityReason;
+      return false;
+   }
+   string recentPerformanceRQualityReason = "";
+   if(!riskManager.RecentPerformanceRQualityAllows(signal.qualityScore, recentPerformanceRQualityReason))
+   {
+      g_lastBlockReason = recentPerformanceRQualityReason;
+      return false;
+   }
+   string hourPerformanceQualityReason = "";
+   if(!riskManager.HourPerformanceQualityAllows(signal.qualityScore, hourPerformanceQualityReason))
+   {
+      g_lastBlockReason = hourPerformanceQualityReason;
+      return false;
+   }
+   string directionalHourPerformanceQualityReason = "";
+   if(!riskManager.DirectionalHourPerformanceQualityAllows(signal.bias,
+                                                           signal.qualityScore,
+                                                           directionalHourPerformanceQualityReason))
+   {
+      g_lastBlockReason = directionalHourPerformanceQualityReason;
+      return false;
+   }
+   string protectedFloorQualityReason = "";
+   if(!riskManager.ProtectedFloorQualityAllows(signal.qualityScore, protectedFloorQualityReason))
+   {
+      g_lastBlockReason = protectedFloorQualityReason;
+      return false;
+   }
+   string realizedProfitGivebackQualityReason = "";
+   if(!riskManager.RealizedProfitGivebackQualityAllows(signal.qualityScore,
+                                                       realizedProfitGivebackQualityReason))
+   {
+      g_lastBlockReason = realizedProfitGivebackQualityReason;
+      return false;
+   }
+   string equityPeakGivebackQualityReason = "";
+   if(!riskManager.EquityPeakGivebackQualityAllows(signal.qualityScore,
+                                                   equityPeakGivebackQualityReason))
+   {
+      g_lastBlockReason = equityPeakGivebackQualityReason;
+      return false;
+   }
+   string openProfitAddOnQualityReason = "";
+   if(!riskManager.OpenProfitAddOnQualityAllows(signal.qualityScore,
+                                                signal.priceActionScore,
+                                                openProfitAddOnQualityReason))
+   {
+      g_lastBlockReason = openProfitAddOnQualityReason;
+      return false;
+   }
+
+   double sessionRiskMultiplier = sessionFilter.RiskMultiplier();
+   if(sessionRiskMultiplier <= 0.0)
+   {
+      g_lastBlockReason = "session risk";
+      return false;
+   }
+
+   double dayRiskMultiplier = sessionFilter.DayOfWeekRiskMultiplier();
+   if(dayRiskMultiplier <= 0.0)
+   {
+      g_lastBlockReason = "day risk";
+      return false;
+   }
+
+   double dailyLossRiskMultiplier = riskManager.DailyLossPressureRiskMultiplier();
+   double dailyProfitRiskMultiplier = riskManager.DailyProfitProtectionRiskMultiplier();
+   double dailyProfitOpportunityRiskMultiplier = riskManager.DailyProfitOpportunityRiskMultiplier();
+   double closedProfitOpportunityRiskMultiplier = riskManager.ClosedProfitOpportunityRiskMultiplier();
+   double weeklyProfitRiskMultiplier = riskManager.WeeklyProfitProtectionRiskMultiplier();
+   double monthlyProfitRiskMultiplier = riskManager.MonthlyProfitProtectionRiskMultiplier();
+   double weeklyLossRiskMultiplier = riskManager.WeeklyLossPressureRiskMultiplier();
+   double monthlyLossRiskMultiplier = riskManager.MonthlyLossPressureRiskMultiplier();
+   double recentPerformanceRRiskMultiplier = riskManager.RecentPerformanceRRiskMultiplier();
+   double hourPerformanceRiskMultiplier = riskManager.HourPerformanceRiskMultiplier();
+   double directionalHourPerformanceRiskMultiplier = riskManager.DirectionalHourPerformanceRiskMultiplier(signal.bias);
+   double qualityRiskMultiplier = QualityRiskMultiplier(signal.qualityScore);
+   double priceActionRiskMultiplier = PriceActionRiskMultiplier(signal.priceActionScore);
+   double mediocreSetupRiskMultiplier = MediocreSetupRiskMultiplier(signal);
+   if(InpEliteSetupRiskRequiresEquityProfit && !riskManager.EquityAboveStarting())
+   {
+      qualityRiskMultiplier = MathMin(1.0, qualityRiskMultiplier);
+      priceActionRiskMultiplier = MathMin(1.0, priceActionRiskMultiplier);
+   }
+   double directionalRiskMultiplier = riskManager.DirectionalLossRiskMultiplier(signal.bias);
+   double volatilityRiskMultiplier = VolatilityRiskMultiplier(signal.atr);
+   double spreadRiskMultiplier = SpreadRiskMultiplier();
+   double diagnosticFallbackSpreadRiskMultiplier = DiagnosticFallbackSpreadRiskMultiplier(signal);
+   double diagnosticFallbackCushionRiskMultiplier = DiagnosticFallbackCushionRiskMultiplier(signal);
+   double diagnosticFallbackPerformanceRiskMultiplier =
+      riskManager.DiagnosticFallbackPerformanceRiskMultiplier(signal.isDiagnosticFallback);
+   double correlationRiskMultiplier = CorrelationRiskMultiplier(signal.bias);
+   double marketPhaseRiskMultiplier = MarketPhaseRiskMultiplier();
+   double trendRegimeRiskMultiplier = TrendRegimeRiskMultiplier();
+   double powerTrendRiskMultiplier = PowerTrendContinuationRiskMultiplier(signal);
+   double sessionImpulseRiskMultiplier = SessionImpulseRiskMultiplier(signal);
+   double eliteContinuationRiskMultiplier = EliteContinuationRiskAccelerationMultiplier(signal);
+   double setupLaneRiskMultiplier = riskManager.SetupLanePerformanceRiskMultiplier(signal.isRangeReversion,
+                                                                                   signal.isBreakoutContinuation,
+                                                                                   signal.isPowerTrendContinuation,
+                                                                                   signal.isSessionImpulse);
+   double protectedFloorRiskMultiplier = riskManager.ProtectedFloorRiskMultiplier();
+   double marginPressureRiskMultiplier = MarginPressureRiskMultiplier();
+   double flatMonthOpportunityRiskMultiplier = FlatMonthOpportunityRiskMultiplier();
+   double flatMonthProbeRiskMultiplier = FlatMonthProbeRiskMultiplier(signal);
+   double winnerScaleInRiskMultiplier = isScaleIn ? riskManager.WinnerScaleInRiskMultiplier() : 1.0;
+   double riskMultiplier = qualityRiskMultiplier *
+                           priceActionRiskMultiplier *
+                           mediocreSetupRiskMultiplier *
+                           dailyLossRiskMultiplier *
+                           dailyProfitRiskMultiplier *
+                           dailyProfitOpportunityRiskMultiplier *
+                           closedProfitOpportunityRiskMultiplier *
+                           weeklyProfitRiskMultiplier *
+                           monthlyProfitRiskMultiplier *
+                           weeklyLossRiskMultiplier *
+                           monthlyLossRiskMultiplier *
+                           recentPerformanceRRiskMultiplier *
+                           hourPerformanceRiskMultiplier *
+                           directionalHourPerformanceRiskMultiplier *
+                           sessionRiskMultiplier *
+                           dayRiskMultiplier *
+                           directionalRiskMultiplier *
+                           volatilityRiskMultiplier *
+                           spreadRiskMultiplier *
+                           diagnosticFallbackSpreadRiskMultiplier *
+                           diagnosticFallbackCushionRiskMultiplier *
+                           diagnosticFallbackPerformanceRiskMultiplier *
+                           correlationRiskMultiplier *
+                           marketPhaseRiskMultiplier *
+                           trendRegimeRiskMultiplier *
+                           powerTrendRiskMultiplier *
+                           sessionImpulseRiskMultiplier *
+                           eliteContinuationRiskMultiplier *
+                           setupLaneRiskMultiplier *
+                           protectedFloorRiskMultiplier *
+                           marginPressureRiskMultiplier *
+                           flatMonthOpportunityRiskMultiplier *
+                           flatMonthProbeRiskMultiplier;
+   if(isScaleIn)
+      riskMultiplier *= winnerScaleInRiskMultiplier;
+   riskMultiplier *= MathMax(0.0, signal.riskMultiplier);
+   double tradeMarginRiskMultiplier = 1.0;
+   double lots = riskManager.LotsForRisk(signal.bias, entry, stopDistance, riskMultiplier);
+   if(lots <= 0)
+   {
+      g_lastBlockReason = "lot sizing";
+      return false;
+   }
+   if(InpUseTradeMarginRiskScaling)
+   {
+      tradeMarginRiskMultiplier = TradeMarginRiskMultiplier(signal.bias, lots, entry);
+      if(tradeMarginRiskMultiplier < 1.0)
+      {
+         riskMultiplier *= tradeMarginRiskMultiplier;
+         lots = riskManager.LotsForRisk(signal.bias, entry, stopDistance, riskMultiplier);
+         if(lots <= 0)
+         {
+            g_lastBlockReason = "lot sizing";
+            return false;
+         }
+      }
+   }
+   if(InpUseMarginAwareLotCap)
+   {
+      double marginCappedLots = MarginAwareCappedLots(signal.bias, lots, entry);
+      if(marginCappedLots <= 0.0)
+      {
+         g_lastBlockReason = "margin-aware lot cap";
+         return false;
+      }
+      lots = marginCappedLots;
+   }
+
+   string scaleInCoverageReason = "";
+   if(isScaleIn &&
+      !riskManager.ScaleInOpenProfitCoversRisk(signal.bias,
+                                               entry,
+                                               stopDistance,
+                                               lots,
+                                               scaleInCoverageReason))
+   {
+      g_lastBlockReason = scaleInCoverageReason;
+      return false;
+   }
+
+   string exposureReason = "";
+   if(!riskManager.ExposureAllows(signal.bias, entry, stopDistance, lots, exposureReason))
+   {
+      g_lastBlockReason = exposureReason;
+      return false;
+   }
+
+   string costReason = "";
+   if(!TradingCostGuardAllows(stopDistance, lots, costReason))
+   {
+      g_lastBlockReason = costReason;
+      return false;
+   }
+
+   string marginReason = "";
+   if(!MarginGuardAllows(signal.bias, lots, entry, marginReason))
+   {
+      g_lastBlockReason = marginReason;
+      return false;
+   }
+
+   double sl = 0;
+   double tp = 0;
+   if(signal.bias == BIAS_BUY)
+   {
+      sl = NormalizeDouble(entry - stopDistance, _Digits);
+      if(InpUseTakeProfit && !useUnlimitedRunner)
+         tp = NormalizeDouble(entry + tpDistance, _Digits);
+   }
+   else
+   {
+      sl = NormalizeDouble(entry + stopDistance, _Digits);
+      if(InpUseTakeProfit && !useUnlimitedRunner)
+         tp = NormalizeDouble(entry - tpDistance, _Digits);
+   }
+
+   trade.SetExpertMagicNumber(InpMagicNumber);
+   trade.SetDeviationInPoints(InpDeviationPoints);
+
+   bool ok = false;
+   string biasText = (signal.bias == BIAS_BUY) ? "buy" : "sell";
+   string tradeComment = CompactTradeComment(signal);
+   if(signal.bias == BIAS_BUY)
+      ok = trade.Buy(lots, _Symbol, 0, sl, tp, tradeComment);
+   else
+      ok = trade.Sell(lots, _Symbol, 0, sl, tp, tradeComment);
+
+   if(ok)
+   {
+      RegisterInitialRiskForNewestPosition(signal.bias, stopDistance);
+      string entryReason = signal.reasons;
+      if(signal.isRangeReversion)
+         entryReason += "Range reversion trade RR " + DoubleToString(tpDistance / stopDistance, 2) + ";";
+      if(signal.isPowerTrendContinuation)
+         entryReason += "Power trend continuation trade RR " + DoubleToString(tpDistance / stopDistance, 2) + ";";
+      if(signal.isSessionImpulse)
+         entryReason += "Session impulse trade RR " + DoubleToString(tpDistance / stopDistance, 2) + ";";
+      if(signal.isM5TightLiquidity)
+         entryReason += "M5 tight liquidity trade RR " + DoubleToString(tpDistance / stopDistance, 2) + ";";
+      if(signal.isDailyDonchianBreakout)
+         entryReason += "Daily Donchian breakout trade RR " + DoubleToString(tpDistance / stopDistance, 2) + ";";
+      if(InpUseQualityRiskScaling)
+         entryReason += "Quality risk x" + DoubleToString(qualityRiskMultiplier, 2) + ";";
+      if(InpUseDailyLossRiskScaling)
+         entryReason += "Daily loss risk x" + DoubleToString(dailyLossRiskMultiplier, 2) + ";";
+      if(InpUseDailyProfitRiskScaling)
+         entryReason += "Daily profit risk x" + DoubleToString(dailyProfitRiskMultiplier, 2) + ";";
+      if(InpUseDailyProfitOpportunityRiskBoost && dailyProfitOpportunityRiskMultiplier > 1.0)
+         entryReason += "Daily profit opportunity risk x" + DoubleToString(dailyProfitOpportunityRiskMultiplier, 2) + ";";
+      if(InpUseClosedProfitOpportunityRiskBoost && closedProfitOpportunityRiskMultiplier > 1.0)
+         entryReason += "Closed profit opportunity risk x" + DoubleToString(closedProfitOpportunityRiskMultiplier, 2) + ";";
+      if(InpUseWeeklyProfitRiskScaling)
+         entryReason += "Weekly profit risk x" + DoubleToString(weeklyProfitRiskMultiplier, 2) + ";";
+      if(InpUseMonthlyProfitRiskScaling)
+         entryReason += "Monthly profit risk x" + DoubleToString(monthlyProfitRiskMultiplier, 2) + ";";
+      if(InpUseWeeklyLossRiskScaling)
+         entryReason += "Weekly loss risk x" + DoubleToString(weeklyLossRiskMultiplier, 2) + ";";
+      if(InpUseMonthlyLossRiskScaling)
+         entryReason += "Monthly loss risk x" + DoubleToString(monthlyLossRiskMultiplier, 2) + ";";
+      if(InpUseRecentPerformanceRRiskScaling)
+         entryReason += "Recent R risk x" + DoubleToString(recentPerformanceRRiskMultiplier, 2) + ";";
+      if(InpUseHourPerformanceRiskScaling)
+         entryReason += "Hour performance risk x" + DoubleToString(hourPerformanceRiskMultiplier, 2) + ";";
+      if(InpUseDirectionalHourPerformanceRiskScaling)
+         entryReason += "Directional hour risk x" + DoubleToString(directionalHourPerformanceRiskMultiplier, 2) + ";";
+      if(InpUsePriceActionRiskScaling)
+         entryReason += "PA risk x" + DoubleToString(priceActionRiskMultiplier, 2) + ";";
+      if(InpUseMediocreSetupRiskThrottle && mediocreSetupRiskMultiplier < 1.0)
+         entryReason += "Mediocre setup risk x" + DoubleToString(mediocreSetupRiskMultiplier, 2) + ";";
+      if(InpUseSessionRiskScaling)
+         entryReason += "Session risk x" + DoubleToString(sessionRiskMultiplier, 2) + ";";
+      if(InpUseDayOfWeekRiskScaling)
+         entryReason += "Day risk x" + DoubleToString(dayRiskMultiplier, 2) + ";";
+      if(InpUseDirectionalLossRiskScaling)
+         entryReason += "Directional risk x" + DoubleToString(directionalRiskMultiplier, 2) + ";";
+      if(InpUseVolatilityRiskScaling)
+         entryReason += "Volatility risk x" + DoubleToString(volatilityRiskMultiplier, 2) + ";";
+      if(InpUseSpreadRiskScaling)
+         entryReason += "Spread risk x" + DoubleToString(spreadRiskMultiplier, 2) + ";";
+      if(InpUseDiagnosticFallbackSpreadRiskScaling && signal.isDiagnosticFallback)
+         entryReason += "DGF spread risk x" + DoubleToString(diagnosticFallbackSpreadRiskMultiplier, 2) + ";";
+      if(InpUseDiagnosticFallbackCushionRiskThrottle && signal.isDiagnosticFallback)
+         entryReason += "DGF cushion risk x" + DoubleToString(diagnosticFallbackCushionRiskMultiplier, 2) + ";";
+      if(InpUseDiagnosticFallbackPerformanceRiskScaling && signal.isDiagnosticFallback)
+         entryReason += "DGF perf risk x" + DoubleToString(diagnosticFallbackPerformanceRiskMultiplier, 2) + ";";
+      if(InpUseCorrelationRiskScaling)
+         entryReason += "Correlation risk x" + DoubleToString(correlationRiskMultiplier, 2) + ";";
+      if(InpUseMarketPhaseRiskScaling)
+         entryReason += "Phase risk x" + DoubleToString(marketPhaseRiskMultiplier, 2) + ";";
+      if(InpUseTrendRegimeRiskBoost && trendRegimeRiskMultiplier > 1.0)
+         entryReason += "Trend regime risk x" + DoubleToString(trendRegimeRiskMultiplier, 2) + ";";
+      if(InpUsePowerTrendContinuation && powerTrendRiskMultiplier > 1.0)
+         entryReason += "Power trend risk x" + DoubleToString(powerTrendRiskMultiplier, 2) + ";";
+      if(InpUseSessionImpulseLane && sessionImpulseRiskMultiplier > 1.0)
+         entryReason += "Session impulse risk x" + DoubleToString(sessionImpulseRiskMultiplier, 2) + ";";
+      if(InpUseEliteContinuationRiskAcceleration && eliteContinuationRiskMultiplier > 1.0)
+         entryReason += "Elite continuation risk x" + DoubleToString(eliteContinuationRiskMultiplier, 2) + ";";
+      if(InpUseSetupLanePerformanceRiskScaling)
+         entryReason += "Setup lane risk x" + DoubleToString(setupLaneRiskMultiplier, 2) + ";";
+      if(InpUseProtectedFloorRiskScaling && protectedFloorRiskMultiplier < 1.0)
+         entryReason += "Protected floor risk x" + DoubleToString(protectedFloorRiskMultiplier, 2) + ";";
+      if(InpUseMarginPressureRiskScaling)
+         entryReason += "Margin risk x" + DoubleToString(marginPressureRiskMultiplier, 2) + ";";
+      if(InpUseFlatMonthOpportunityMode && flatMonthOpportunityRiskMultiplier > 1.0)
+         entryReason += "Flat month opportunity x" + DoubleToString(flatMonthOpportunityRiskMultiplier, 2) + ";";
+      if(InpUseFlatMonthLateCatchUp && FlatMonthLateCatchUpActive())
+         entryReason += "Flat month late catch-up;";
+      if(InpUseFlatMonthProbeMode && flatMonthProbeRiskMultiplier < 1.0)
+         entryReason += "Flat month probe risk x" + DoubleToString(flatMonthProbeRiskMultiplier, 2) + ";";
+      if(FlatMonthProbeQualityCapBypassAllowed(signal))
+         entryReason += "Flat month probe cap bypass;";
+      if(InpUseTradeMarginRiskScaling)
+         entryReason += "Trade margin risk x" + DoubleToString(tradeMarginRiskMultiplier, 2) + ";";
+      if(isScaleIn)
+         entryReason += "Winner scale-in risk x" + DoubleToString(winnerScaleInRiskMultiplier, 2) + ";";
+      if(InpUseQualityTakeProfitScaling)
+         entryReason += "Quality TP x" + DoubleToString(tpMultiplier, 2) + ";";
+      if(InpUseRunnerTakeProfitExpansion && runnerTpMultiplier > 1.0)
+         entryReason += "Runner TP x" + DoubleToString(runnerTpMultiplier, 2) + ";";
+      if(InpUseTrendRegimeTakeProfitExpansion && trendRegimeTpMultiplier > 1.0)
+         entryReason += "Trend regime TP x" + DoubleToString(trendRegimeTpMultiplier, 2) + ";";
+      if(InpUseFlatMonthCatchUpTakeProfitExpansion && flatMonthCatchUpTpMultiplier > 1.0)
+         entryReason += "Flat month catch-up TP x" + DoubleToString(flatMonthCatchUpTpMultiplier, 2) + ";";
+      if(InpUseFlatMonthMissedMoveTPExpansion && flatMonthMissedMoveTpMultiplier > 1.0)
+         entryReason += "Flat month missed-move TP x" + DoubleToString(flatMonthMissedMoveTpMultiplier, 2) + ";";
+      if(InpUsePowerTrendContinuation && powerTrendTpMultiplier > 1.0)
+         entryReason += "Power trend TP x" + DoubleToString(powerTrendTpMultiplier, 2) + ";";
+      if(InpUseSessionImpulseLane && sessionImpulseTpMultiplier > 1.0)
+         entryReason += "Session impulse TP x" + DoubleToString(sessionImpulseTpMultiplier, 2) + ";";
+      if(InpUseProtectedCushionTakeProfitExpansion && protectedCushionTpMultiplier > 1.0)
+         entryReason += "Protected cushion TP x" + DoubleToString(protectedCushionTpMultiplier, 2) + ";";
+      if(InpUseDirectionalHourTakeProfitExpansion && directionalHourTpMultiplier > 1.0)
+         entryReason += "Directional hour TP x" + DoubleToString(directionalHourTpMultiplier, 2) + ";";
+      if(InpUseClosedProfitTakeProfitExpansion && closedProfitTpMultiplier > 1.0)
+         entryReason += "Closed profit TP x" + DoubleToString(closedProfitTpMultiplier, 2) + ";";
+      if(InpUseEliteConfluenceTakeProfitExpansion && eliteConfluenceTpMultiplier > 1.0)
+         entryReason += "Elite confluence TP x" + DoubleToString(eliteConfluenceTpMultiplier, 2) + ";";
+      if(protectedCushionUnlimitedRunner)
+         entryReason += "Protected cushion unlimited runner;";
+      if(eliteContinuationUnlimitedRunner)
+         entryReason += "Elite continuation unlimited runner;";
+      if(fmlrUnlimitedRunner)
+      {
+         bool loggedFmlrUnlimitedRunner = false;
+         if(StringFind(signal.reasons, "FMLR sweep runner") >= 0)
+         {
+            entryReason += "FMLR sweep unlimited runner;";
+            loggedFmlrUnlimitedRunner = true;
+         }
+         if(StringFind(signal.reasons, "FMLR structural target runner") >= 0 ||
+            StringFind(signal.reasons, "FMLR structural fallback runner") >= 0)
+         {
+            entryReason += "FMLR structural unlimited runner;";
+            loggedFmlrUnlimitedRunner = true;
+         }
+         if(!loggedFmlrUnlimitedRunner)
+            entryReason += "FMLR unlimited runner;";
+      }
+      logger.Write("entry", trade.ResultOrder(), biasText, lots, entry, sl, tp,
+                   tpDistance / stopDistance, 0.0, entryReason, signal.atr);
+      g_lastBlockReason = "entered " + biasText;
+   }
+   else
+   {
+      g_lastBlockReason = "trade failed: " + trade.ResultRetcodeDescription();
+      if(InpLogLevel >= LOG_ERRORS)
+         Print(g_lastBlockReason);
+   }
+
+   return ok;
+}
+
+ENUM_TRADE_BIAS OppositeBias(const ENUM_TRADE_BIAS bias)
+{
+   if(bias == BIAS_BUY)
+      return BIAS_SELL;
+   if(bias == BIAS_SELL)
+      return BIAS_BUY;
+   return BIAS_NONE;
+}
+
+int ActiveConfirmationThreshold(const ENUM_TRADE_BIAS bias)
+{
+   if(!InpUseDirectionalConfirmations)
+      return InpMinimumConfirmations;
+   if(bias == BIAS_BUY)
+      return MathMax(0, InpBuyMinimumConfirmations);
+   if(bias == BIAS_SELL)
+      return MathMax(0, InpSellMinimumConfirmations);
+   return InpMinimumConfirmations;
+}
+
+bool EntryCommentForHistoryPosition(const long positionId, string &comment)
+{
+   comment = "";
+   if(positionId <= 0)
+      return false;
+
+   int total = HistoryDealsTotal();
+   for(int i = total - 1; i >= 0; i--)
+   {
+      ulong ticket = HistoryDealGetTicket(i);
+      if(ticket == 0)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_POSITION_ID) != positionId)
+         continue;
+      if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_IN)
+         continue;
+
+      comment = HistoryDealGetString(ticket, DEAL_COMMENT);
+      return true;
+   }
+   return false;
+}
+
+bool HistoryEntryTimeForPosition(const long positionId, datetime &entryTime)
+{
+   entryTime = 0;
+   if(positionId <= 0)
+      return false;
+
+   if(!HistorySelect(0, TimeCurrent()))
+      return false;
+
+   int total = HistoryDealsTotal();
+   for(int i = total - 1; i >= 0; i--)
+   {
+      ulong ticket = HistoryDealGetTicket(i);
+      if(ticket == 0)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_POSITION_ID) != positionId)
+         continue;
+      if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_IN)
+         continue;
+
+      datetime dealTime = (datetime)HistoryDealGetInteger(ticket, DEAL_TIME);
+      if(entryTime == 0 || dealTime < entryTime)
+         entryTime = dealTime;
+   }
+
+   return entryTime > 0;
+}
+
+int HeldBarsForHistoryPosition(const long positionId)
+{
+   datetime entryTime = 0;
+   if(!HistoryEntryTimeForPosition(positionId, entryTime))
+      return -1;
+
+   int shift = iBarShift(_Symbol, InpSignalTimeframe, entryTime, false);
+   if(shift < 0)
+      return -1;
+   return shift;
+}
+
+double RealizedRiskMultipleForDeal(const ulong dealTicket,
+                                   const ulong analyticsTicket,
+                                   const double profit)
+{
+   double volume = HistoryDealGetDouble(dealTicket, DEAL_VOLUME);
+   double initialRisk = InitialRiskDistance(analyticsTicket, 0.0);
+   if(initialRisk <= 0.0 || volume <= 0.0)
+      return 0.0;
+
+   double riskMoney = MoneyForDistanceLots(initialRisk, volume);
+   if(riskMoney <= 0.0)
+      return 0.0;
+
+   return profit / riskMoney;
+}
+
+bool AdaptiveReverseLossCooldownActive(const ENUM_TRADE_BIAS reversedBias,
+                                       const int qualityScore,
+                                       string &reason)
+{
+   reason = "";
+   if(!InpUseAdaptiveReverseLossCooldown || reversedBias == BIAS_NONE)
+      return false;
+
+   int minQualityScore = MathMax(1, InpAdaptiveReverseLossMinQualityScore);
+   if(qualityScore >= minQualityScore)
+      return false;
+
+   int lookbackTrades = MathMax(1, InpAdaptiveReverseLossLookbackTrades);
+   int threshold = MathMax(1, InpAdaptiveReverseLossThreshold);
+   int found = 0;
+   int reverseLosses = 0;
+   datetime latestReverseLossTime = 0;
+
+   HistorySelect(0, TimeCurrent());
+   int total = HistoryDealsTotal();
+   for(int i = total - 1; i >= 0 && found < lookbackTrades; i--)
+   {
+      ulong ticket = HistoryDealGetTicket(i);
+      if(ticket == 0)
+         continue;
+      if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_OUT)
+         continue;
+
+      long positionId = HistoryDealGetInteger(ticket, DEAL_POSITION_ID);
+      string entryComment = "";
+      if(!EntryCommentForHistoryPosition(positionId, entryComment))
+         continue;
+      if(StringFind(entryComment, "AR;") < 0 &&
+         StringFind(entryComment, "Adaptive reverse guarded;") < 0)
+         continue;
+
+      found++;
+      double profit = HistoryDealGetDouble(ticket, DEAL_PROFIT) +
+                      HistoryDealGetDouble(ticket, DEAL_SWAP) +
+                      HistoryDealGetDouble(ticket, DEAL_COMMISSION);
+      if(profit >= 0.0)
+         continue;
+
+      long dealType = HistoryDealGetInteger(ticket, DEAL_TYPE);
+      bool lossMatchesBias = (reversedBias == BIAS_BUY && dealType == DEAL_TYPE_SELL) ||
+                             (reversedBias == BIAS_SELL && dealType == DEAL_TYPE_BUY);
+      if(!lossMatchesBias)
+         continue;
+
+      reverseLosses++;
+      if(latestReverseLossTime == 0)
+         latestReverseLossTime = (datetime)HistoryDealGetInteger(ticket, DEAL_TIME);
+   }
+
+   if(reverseLosses < threshold)
+      return false;
+
+   reason = "adaptive reverse loss cooldown";
+   if(InpAdaptiveReverseLossCooldownMinutes <= 0 || latestReverseLossTime <= 0)
+      return true;
+
+   return TimeCurrent() - latestReverseLossTime < InpAdaptiveReverseLossCooldownMinutes * 60;
+}
+
+bool AdaptiveReverseAlternatingLossWhipsawActive(const int qualityScore, string &reason)
+{
+   reason = "";
+   if(!InpUseAdaptiveReverseLossCooldown)
+      return false;
+   if(qualityScore >= MathMax(1, InpAdaptiveReverseLossMinQualityScore))
+      return false;
+
+   int lookbackTrades = MathMax(2, InpAdaptiveReverseLossLookbackTrades);
+   int threshold = MathMax(2, InpAdaptiveReverseLossThreshold);
+   int found = 0;
+   int alternatingLosses = 0;
+   ENUM_TRADE_BIAS previousLossBias = BIAS_NONE;
+   datetime latestReverseLossTime = 0;
+
+   HistorySelect(0, TimeCurrent());
+   int total = HistoryDealsTotal();
+   for(int i = total - 1; i >= 0 && found < lookbackTrades; i--)
+   {
+      ulong ticket = HistoryDealGetTicket(i);
+      if(ticket == 0)
+         continue;
+      if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_OUT)
+         continue;
+
+      long positionId = HistoryDealGetInteger(ticket, DEAL_POSITION_ID);
+      string entryComment = "";
+      if(!EntryCommentForHistoryPosition(positionId, entryComment))
+         continue;
+      if(StringFind(entryComment, "AR;") < 0 &&
+         StringFind(entryComment, "Adaptive reverse guarded;") < 0)
+         continue;
+
+      found++;
+      double profit = HistoryDealGetDouble(ticket, DEAL_PROFIT) +
+                      HistoryDealGetDouble(ticket, DEAL_SWAP) +
+                      HistoryDealGetDouble(ticket, DEAL_COMMISSION);
+      if(profit >= 0.0)
+         break;
+
+      long dealType = HistoryDealGetInteger(ticket, DEAL_TYPE);
+      ENUM_TRADE_BIAS lossBias = BIAS_NONE;
+      if(dealType == DEAL_TYPE_SELL)
+         lossBias = BIAS_BUY;
+      else if(dealType == DEAL_TYPE_BUY)
+         lossBias = BIAS_SELL;
+      else
+         continue;
+
+      if(previousLossBias != BIAS_NONE && lossBias == previousLossBias)
+         break;
+
+      if(latestReverseLossTime == 0)
+         latestReverseLossTime = (datetime)HistoryDealGetInteger(ticket, DEAL_TIME);
+      previousLossBias = lossBias;
+      alternatingLosses++;
+   }
+
+   if(alternatingLosses < threshold)
+      return false;
+
+   reason = "adaptive reverse alternating loss whipsaw";
+   if(InpAdaptiveReverseLossCooldownMinutes <= 0 || latestReverseLossTime <= 0)
+      return true;
+
+   return TimeCurrent() - latestReverseLossTime < InpAdaptiveReverseLossCooldownMinutes * 60;
+}
+
+bool AdaptiveReverseRecentFlipCooldownActive(const int qualityScore, string &reason)
+{
+   reason = "";
+   if(!InpUseAdaptiveReverseRecentFlipCooldown)
+      return false;
+   if(qualityScore >= MathMax(1, InpAdaptiveReverseRecentFlipMinQualityScore))
+      return false;
+
+   int cooldownMinutes = MathMax(0, InpAdaptiveReverseRecentFlipCooldownMinutes);
+   if(cooldownMinutes <= 0)
+      return false;
+
+   HistorySelect(0, TimeCurrent());
+   int total = HistoryDealsTotal();
+   for(int i = total - 1; i >= 0; i--)
+   {
+      ulong ticket = HistoryDealGetTicket(i);
+      if(ticket == 0)
+         continue;
+      if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_IN)
+         continue;
+
+      string comment = HistoryDealGetString(ticket, DEAL_COMMENT);
+      if(StringFind(comment, "AR;") < 0 &&
+         StringFind(comment, "Adaptive reverse guarded;") < 0)
+         continue;
+
+      datetime entryTime = (datetime)HistoryDealGetInteger(ticket, DEAL_TIME);
+      if(entryTime <= 0)
+         return false;
+
+      bool active = TimeCurrent() - entryTime < cooldownMinutes * 60;
+      if(active)
+         reason = "adaptive reverse recent flip cooldown";
+      return active;
+   }
+   return false;
+}
+
+bool AdaptiveReversePostStopLockoutActive(const ENUM_TRADE_BIAS reversedBias,
+                                          const int qualityScore,
+                                          string &reason)
+{
+   reason = "";
+   if(!InpUseAdaptiveReversePostStopLockout)
+      return false;
+   if(qualityScore >= MathMax(1, InpAdaptiveReversePostStopMinQualityScore))
+      return false;
+
+   int lockoutMinutes = MathMax(0, InpAdaptiveReversePostStopLockoutMinutes);
+   if(lockoutMinutes <= 0)
+      return false;
+
+   HistorySelect(0, TimeCurrent());
+   int total = HistoryDealsTotal();
+   for(int i = total - 1; i >= 0; i--)
+   {
+      ulong ticket = HistoryDealGetTicket(i);
+      if(ticket == 0)
+         continue;
+      if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_MAGIC) != InpMagicNumber)
+         continue;
+      if(HistoryDealGetInteger(ticket, DEAL_ENTRY) != DEAL_ENTRY_OUT)
+         continue;
+
+      datetime exitTime = (datetime)HistoryDealGetInteger(ticket, DEAL_TIME);
+      if(exitTime <= 0)
+         continue;
+      if(TimeCurrent() - exitTime >= lockoutMinutes * 60)
+         return false;
+
+      long reasonCode = HistoryDealGetInteger(ticket, DEAL_REASON);
+      if(reasonCode != DEAL_REASON_SL)
+         continue;
+
+      if(InpAdaptiveReversePostStopMatchDirection && reversedBias != BIAS_NONE)
+      {
+         long dealType = HistoryDealGetInteger(ticket, DEAL_TYPE);
+         bool exitDirectionMatchesReverse = (reversedBias == BIAS_BUY && dealType == DEAL_TYPE_BUY) ||
+                                            (reversedBias == BIAS_SELL && dealType == DEAL_TYPE_SELL);
+         if(!exitDirectionMatchesReverse)
+            continue;
+      }
+
+      reason = "adaptive reverse post-stop lockout";
+      return true;
+   }
+
+   return false;
+}
+
+bool NearestForwardLiquidityDistance(const ENUM_TRADE_BIAS bias,
+                                     const double entryPrice,
+                                     const int lookback,
+                                     double &nearestDistance)
+{
+   nearestDistance = 0.0;
+   if(bias == BIAS_NONE || entryPrice <= 0.0)
+      return false;
+
+   ENUM_TRADE_BIAS targetLiquidityBias = OppositeBias(bias);
+   bool found = false;
+   double selectedDistance = 0.0;
+   double level = 0.0;
+
+   if(InpAdaptiveReverseTrapUseEqualLevels &&
+      EqualLiquidityStopLevel(targetLiquidityBias, MathMax(4, lookback), level))
+   {
+      double distance = (bias == BIAS_BUY) ? level - entryPrice : entryPrice - level;
+      if(distance > 0.0)
+      {
+         selectedDistance = distance;
+         found = true;
+      }
+   }
+
+   if(InpAdaptiveReverseTrapUsePreviousDay &&
+      PreviousPeriodLiquidityStopLevel(targetLiquidityBias, PERIOD_D1, entryPrice, level))
+   {
+      double distance = (bias == BIAS_BUY) ? level - entryPrice : entryPrice - level;
+      if(distance > 0.0 && (!found || distance < selectedDistance))
+      {
+         selectedDistance = distance;
+         found = true;
+      }
+   }
+
+   if(InpAdaptiveReverseTrapUsePreviousWeek &&
+      PreviousPeriodLiquidityStopLevel(targetLiquidityBias, PERIOD_W1, entryPrice, level))
+   {
+      double distance = (bias == BIAS_BUY) ? level - entryPrice : entryPrice - level;
+      if(distance > 0.0 && (!found || distance < selectedDistance))
+      {
+         selectedDistance = distance;
+         found = true;
+      }
+   }
+
+   if(!found)
+      return false;
+
+   nearestDistance = selectedDistance;
+   return true;
+}
+
+bool ForwardLiquidityLevelNear(const ENUM_TRADE_BIAS bias,
+                               const double entryPrice,
+                               const double atr,
+                               const int lookback,
+                               double &nearestDistance)
+{
+   nearestDistance = 0.0;
+   if(atr <= 0.0)
+      return false;
+   if(!NearestForwardLiquidityDistance(bias, entryPrice, lookback, nearestDistance))
+      return false;
+   return nearestDistance <= atr * MathMax(0.0, InpAdaptiveReverseTrapMaxDistanceATR);
+}
+
+bool AdaptiveReverseLiquidityTrapGuardActive(const ENUM_TRADE_BIAS reversedBias,
+                                             const int qualityScore,
+                                             string &reason)
+{
+   reason = "";
+   if(!InpUseAdaptiveReverseLiquidityTrapGuard || reversedBias == BIAS_NONE)
+      return false;
+   if(qualityScore >= MathMax(1, InpAdaptiveReverseTrapBypassQualityScore))
+      return false;
+
+   double atr = 0.0;
+   if(!indicators.ATR(1, atr) || atr <= 0.0)
+      return false;
+
+   double entryPrice = iClose(_Symbol, InpSignalTimeframe, 1);
+   double nearestDistance = 0.0;
+   if(!ForwardLiquidityLevelNear(reversedBias,
+                                 entryPrice,
+                                 atr,
+                                 MathMax(4, InpAdaptiveReverseTrapLookbackBars),
+                                 nearestDistance))
+      return false;
+
+   reason = "adaptive reverse liquidity trap";
+   return true;
+}
+
+bool AdaptiveReverseLiquidityClearanceAllows(const ENUM_TRADE_BIAS reversedBias,
+                                             const int qualityScore,
+                                             const double atr)
+{
+   if(!InpUseAdaptiveReverseLiquidityClearance)
+      return true;
+   if(reversedBias == BIAS_NONE)
+      return false;
+   if(qualityScore >= MathMax(1, InpAdaptiveReverseClearanceBypassQualityScore))
+      return true;
+   if(atr <= 0.0)
+      return false;
+
+   double entryPrice = iClose(_Symbol, InpSignalTimeframe, 1);
+   if(entryPrice <= 0.0)
+      return false;
+
+   double nearestDistance = 0.0;
+   if(!NearestForwardLiquidityDistance(reversedBias,
+                                       entryPrice,
+                                       MathMax(4, InpAdaptiveReverseClearanceLookbackBars),
+                                       nearestDistance))
+      return true;
+
+   return nearestDistance >= atr * MathMax(0.0, InpAdaptiveReverseMinLiquidityClearanceATR);
+}
+
+bool AdaptiveReverseFollowThroughCloseAllows(const ENUM_TRADE_BIAS reversedBias,
+                                             const int qualityScore,
+                                             const double atr)
+{
+   if(!InpUseAdaptiveReverseFollowThroughClose)
+      return true;
+   if(reversedBias == BIAS_NONE)
+      return false;
+   if(qualityScore >= MathMax(1, InpAdaptiveReverseFollowThroughBypassQualityScore))
+      return true;
+
+   CMarketStructure structure;
+   int lookback = MathMax(3, InpAdaptiveReverseFollowThroughLookbackBars);
+   double level = 0.0;
+   double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+   double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+   if(close1 <= 0.0 || open1 <= 0.0)
+      return false;
+
+   double atrBuffer = MathMax(0.0, InpAdaptiveReverseFollowThroughBufferATR) * MathMax(0.0, atr);
+   double pointBuffer = MathMax(0.0, InpAdaptiveReverseFollowThroughBufferPoints) * _Point;
+   double buffer = MathMax(atrBuffer, pointBuffer);
+
+   if(reversedBias == BIAS_BUY && structure.HighestHigh(2, lookback, level))
+      return close1 > open1 && close1 > level + buffer;
+   if(reversedBias == BIAS_SELL && structure.LowestLow(2, lookback, level))
+      return close1 < open1 && close1 < level - buffer;
+
+   return false;
+}
+
+bool AdaptiveReverseDeferredConfirmationAllows(const ENUM_TRADE_BIAS reversedBias,
+                                               const int qualityScore,
+                                               const double atr)
+{
+   if(!InpUseAdaptiveReverseDeferredConfirmation)
+      return true;
+   if(reversedBias == BIAS_NONE)
+      return false;
+   if(qualityScore >= MathMax(1, InpAdaptiveReverseDeferredBypassQualityScore))
+      return true;
+   if(atr <= 0.0)
+      return false;
+
+   CMarketStructure structure;
+   int lookback = MathMax(4, InpAdaptiveReverseDeferredBreakLookbackBars);
+   double level = 0.0;
+   double breakOpen = iOpen(_Symbol, InpSignalTimeframe, 2);
+   double breakHigh = iHigh(_Symbol, InpSignalTimeframe, 2);
+   double breakLow = iLow(_Symbol, InpSignalTimeframe, 2);
+   double breakClose = iClose(_Symbol, InpSignalTimeframe, 2);
+   double retestHigh = iHigh(_Symbol, InpSignalTimeframe, 1);
+   double retestLow = iLow(_Symbol, InpSignalTimeframe, 1);
+   double retestClose = iClose(_Symbol, InpSignalTimeframe, 1);
+   if(breakOpen <= 0.0 || breakHigh <= 0.0 || breakLow <= 0.0 || breakClose <= 0.0 ||
+      retestHigh <= 0.0 || retestLow <= 0.0 || retestClose <= 0.0)
+      return false;
+
+   double breakRange = breakHigh - breakLow;
+   if(breakRange <= _Point)
+      return false;
+
+   double breakBodyPercent = 100.0 * MathAbs(breakClose - breakOpen) / breakRange;
+   if(breakBodyPercent < MathMax(0.0, InpAdaptiveReverseDeferredMinBreakBodyPercent))
+      return false;
+
+   double atrBuffer = MathMax(0.0, InpAdaptiveReverseDeferredBreakBufferATR) * atr;
+   double pointBuffer = MathMax(0.0, InpAdaptiveReverseDeferredBreakBufferPoints) * _Point;
+   double breakBuffer = MathMax(atrBuffer, pointBuffer);
+   double maxRetestDistance = MathMax(0.0, InpAdaptiveReverseDeferredMaxRetestATR) * atr;
+
+   if(reversedBias == BIAS_BUY && structure.HighestHigh(3, lookback, level))
+   {
+      bool displacementBreak = breakClose > breakOpen && breakClose > level + breakBuffer;
+      bool controlledRetest = retestClose > level &&
+                              retestLow >= level - maxRetestDistance &&
+                              retestLow <= level + maxRetestDistance;
+      return displacementBreak && controlledRetest;
+   }
+
+   if(reversedBias == BIAS_SELL && structure.LowestLow(3, lookback, level))
+   {
+      bool displacementBreak = breakClose < breakOpen && breakClose < level - breakBuffer;
+      bool controlledRetest = retestClose < level &&
+                              retestHigh <= level + maxRetestDistance &&
+                              retestHigh >= level - maxRetestDistance;
+      return displacementBreak && controlledRetest;
+   }
+
+   return false;
+}
+
+bool AdaptiveReverseWhipsawGuardAllows(const ENUM_TRADE_BIAS reversedBias,
+                                       const int qualityScore)
+{
+   if(!InpUseAdaptiveReverseWhipsawGuard)
+      return true;
+   if(reversedBias == BIAS_NONE)
+      return false;
+
+   string reverseLossReason = "";
+   if(AdaptiveReverseLossCooldownActive(reversedBias, qualityScore, reverseLossReason))
+      return false;
+
+   string alternatingLossWhipsawReason = "";
+   if(AdaptiveReverseAlternatingLossWhipsawActive(qualityScore, alternatingLossWhipsawReason))
+      return false;
+
+   string recentFlipReason = "";
+   if(AdaptiveReverseRecentFlipCooldownActive(qualityScore, recentFlipReason))
+      return false;
+
+   string postStopReason = "";
+   if(AdaptiveReversePostStopLockoutActive(reversedBias, qualityScore, postStopReason))
+      return false;
+
+   string liquidityTrapReason = "";
+   if(AdaptiveReverseLiquidityTrapGuardActive(reversedBias, qualityScore, liquidityTrapReason))
+      return false;
+
+   double adx = 0.0;
+   if(indicators.ADX(1, adx) && adx < MathMax(0.0, InpAdaptiveReverseMinADX))
+      return false;
+   if(InpAdaptiveReverseBlockRangePhase &&
+      adx <= MathMax(0.0, InpRangeADXThreshold) &&
+      qualityScore < MathMax(1, InpAdaptiveReversePhaseBypassQualityScore))
+      return false;
+   if(InpAdaptiveReverseRequireTrendPhase &&
+      adx < MathMax(0.0, InpTrendADXThreshold) &&
+      qualityScore < MathMax(1, InpAdaptiveReversePhaseBypassQualityScore))
+      return false;
+
+   CMarketStructure structure;
+   double atr = 0.0;
+   indicators.ATR(1, atr);
+
+   if(!AdaptiveReverseDeferredConfirmationAllows(reversedBias, qualityScore, atr))
+      return false;
+
+   if(!AdaptiveReverseLiquidityClearanceAllows(reversedBias, qualityScore, atr))
+      return false;
+
+   bool structureConfirms = structure.BOS(reversedBias, InpBOSLookbackBars) ||
+                            structure.CHoCH(reversedBias, InpCHoCHLookbackBars) ||
+                            (atr > 0.0 && structure.DisplacementBOS(reversedBias, InpDisplacementBOSLookbackBars, atr));
+   if(InpAdaptiveReverseRequireStructure && !structureConfirms)
+      return false;
+
+   if(!AdaptiveReverseFollowThroughCloseAllows(reversedBias, qualityScore, atr))
+      return false;
+
+   bool sweepRejects = structure.SweepRejection(reversedBias, InpSweepLookbackBars) ||
+                       structure.EqualHighLowSweep(reversedBias, InpEqualLevelLookbackBars);
+   if(InpAdaptiveReverseRequireSweepReject && !sweepRejects)
+      return false;
+
+   return true;
+}
+
+void ApplySignalMode(SSignal &signal)
+{
+   bool reverse = InpReverseSignals;
+
+   if(!reverse && InpUseAdaptiveReverse)
+   {
+      double emaNow = 0;
+      double emaPast = 0;
+      if(indicators.MTFEMA(1, emaNow) && indicators.MTFEMA(1 + InpAdaptiveSlopeLookbackBars, emaPast))
+      {
+         double slopePoints = MathAbs(emaNow - emaPast) / _Point;
+         reverse = slopePoints < InpAdaptiveSlopeThresholdPts;
+      }
+   }
+
+   if(reverse)
+   {
+      ENUM_TRADE_BIAS reversedBias = OppositeBias(signal.bias);
+      if(InpUseAdaptiveReverse && !InpReverseSignals &&
+         !AdaptiveReverseWhipsawGuardAllows(reversedBias, signal.qualityScore))
+      {
+         signal.reasons += "Adaptive reverse whipsaw guard;";
+         if(InpAdaptiveReverseBlockOriginalOnGuard)
+            signal.bias = BIAS_NONE;
+         return;
+      }
+
+      signal.bias = reversedBias;
+      if(signal.bias != BIAS_NONE)
+         signal.reasons += (InpReverseSignals ? "Reverse mode;" : "Adaptive reverse guarded;");
+   }
+}
+
+void DrawDashboard()
+{
+   if(!InpShowDashboard)
+      return;
+   if(MQLInfoInteger(MQL_TESTER) && !InpDashboardInTester)
+      return;
+
+   double atr = 0, adx = 0;
+   indicators.ATR(1, atr);
+   indicators.ADX(1, adx);
+
+   double profitFactor, winRate, expectancy, maxDrawdown;
+   int wins, losses, cw, cl;
+   stats.Compute(profitFactor, winRate, expectancy, maxDrawdown, wins, losses, cw, cl);
+   bool hasUnprotectedPosition = false;
+   double openRiskPercent = riskManager.OpenRiskPercentForDashboard(hasUnprotectedPosition);
+
+   string bias = "None";
+   if(g_lastTrendBias == BIAS_BUY)
+      bias = "Buy";
+   else if(g_lastTrendBias == BIAS_SELL)
+      bias = "Sell";
+
+   string text =
+      "Professional XAUUSD EA\n" +
+      "Symbol: " + _Symbol + " | TF: " + EnumToString(InpSignalTimeframe) + "\n" +
+      "Trend: " + bias + " (" + g_lastTrendReason + ")\n" +
+      "Session: " + sessionFilter.Label() + " | Spread: " + DoubleToString(CLogger::SpreadPoints(), 1) + " pts\n" +
+      "ATR: " + DoubleToString(atr / _Point, 1) + " pts | ADX: " + DoubleToString(adx, 1) + "\n" +
+      "Risk: " + DoubleToString(InpRiskPercent, 2) + "% | Positions: " + (string)riskManager.CountPositions() + "\n" +
+      "Open Risk: " + DoubleToString(openRiskPercent, 2) + "% | Unprotected: " + (hasUnprotectedPosition ? "Yes" : "No") + "\n" +
+      "Equity DD: " + DoubleToString(riskManager.CurrentEquityDrawdownPercent(), 2) + "% | Peak: " + DoubleToString(riskManager.PeakEquity(), 2) + "\n" +
+      "PF: " + DoubleToString(profitFactor, 2) + " | Win Rate: " + DoubleToString(winRate, 1) + "% | Expectancy: " + DoubleToString(expectancy, 2) + "\n" +
+      "Max DD: " + DoubleToString(maxDrawdown, 2) + " | W/L: " + (string)wins + "/" + (string)losses + "\n" +
+      "Consecutive W/L Max: " + (string)cw + "/" + (string)cl + " | Current Loss Streak: " + (string)riskManager.ConsecutiveLosses() + "\n" +
+      "Last status: " + g_lastBlockReason;
+
+   Comment(text);
+}
+
+double SafeTesterStatistic(const ENUM_STATISTICS statistic)
+{
+   ResetLastError();
+   double value = TesterStatistics(statistic);
+   if(!MathIsValidNumber(value))
+      return 0.0;
+   return value;
+}
+
+double OnTester()
+{
+   double netProfit = SafeTesterStatistic(STAT_PROFIT);
+   double profitFactor = SafeTesterStatistic(STAT_PROFIT_FACTOR);
+   double recoveryFactor = SafeTesterStatistic(STAT_RECOVERY_FACTOR);
+   double sharpeRatio = SafeTesterStatistic(STAT_SHARPE_RATIO);
+   double equityDrawdownPct = SafeTesterStatistic(STAT_EQUITY_DDREL_PERCENT);
+   double trades = SafeTesterStatistic(STAT_TRADES);
+
+   Print("TESTER_STATS net=", DoubleToString(netProfit, 2),
+         " balance=", DoubleToString(AccountInfoDouble(ACCOUNT_BALANCE), 2),
+         " profit_factor=", DoubleToString(profitFactor, 4),
+         " recovery_factor=", DoubleToString(recoveryFactor, 4),
+         " sharpe=", DoubleToString(sharpeRatio, 4),
+         " equity_dd_pct=", DoubleToString(equityDrawdownPct, 4),
+         " trades=", DoubleToString(trades, 0));
+
+   if(InpTesterFitnessMode == FITNESS_NET_PROFIT)
+      return netProfit;
+
+   if(netProfit <= 0.0)
+      return netProfit;
+
+   double tradePenalty = 1.0;
+   if(InpTesterMinTrades > 0 && trades < InpTesterMinTrades)
+   {
+      double ratio = MathMax(0.0, trades) / (double)InpTesterMinTrades;
+      tradePenalty = MathPow(ratio, MathMax(0.0, InpTesterTradeCountPenalty));
+   }
+
+   double pfPenalty = 1.0;
+   if(InpTesterMinProfitFactor > 0.0 && profitFactor < InpTesterMinProfitFactor)
+      pfPenalty = MathMax(0.0, profitFactor / InpTesterMinProfitFactor);
+
+   double drawdownPenalty = 1.0;
+   if(InpTesterMaxDrawdownPercent > 0.0 && equityDrawdownPct > InpTesterMaxDrawdownPercent)
+   {
+      double excess = (equityDrawdownPct - InpTesterMaxDrawdownPercent) / InpTesterMaxDrawdownPercent;
+      drawdownPenalty = 1.0 / (1.0 + excess * MathMax(0.0, InpTesterDrawdownPenalty));
+   }
+
+   double recoveryPenalty = 1.0;
+   if(InpTesterMinRecoveryFactor > 0.0 && recoveryFactor < InpTesterMinRecoveryFactor)
+   {
+      double ratio = MathMax(0.0, recoveryFactor) / InpTesterMinRecoveryFactor;
+      recoveryPenalty = MathPow(ratio, MathMax(0.0, InpTesterRecoveryPenalty));
+   }
+
+   double sharpePenalty = 1.0;
+   if(sharpeRatio < InpTesterMinSharpeRatio)
+   {
+      double shortfall = InpTesterMinSharpeRatio - sharpeRatio;
+      sharpePenalty = 1.0 / (1.0 + shortfall * MathMax(0.0, InpTesterSharpePenalty));
+   }
+
+   if(InpTesterFitnessMode == FITNESS_RECOVERY_SHARPE)
+   {
+      double normalizedSharpe = MathMax(0.0, sharpeRatio);
+      double normalizedRecovery = MathMax(0.0, recoveryFactor);
+      return netProfit * (1.0 + normalizedSharpe) * (1.0 + normalizedRecovery) *
+             tradePenalty * pfPenalty * drawdownPenalty * recoveryPenalty * sharpePenalty;
+   }
+
+   double robustFitness = netProfit * MathMax(0.0, profitFactor) * tradePenalty * pfPenalty *
+                          drawdownPenalty * recoveryPenalty * sharpePenalty;
+
+   if(InpTesterFitnessMode == FITNESS_PROTECTED_GROWTH)
+   {
+      double pfReward = MathPow(MathMax(0.01, profitFactor), MathMax(0.0, InpTesterProfitFactorRewardPower));
+      double recoveryReward = MathPow(1.0 + MathMax(0.0, recoveryFactor), MathMax(0.0, InpTesterRecoveryRewardPower));
+      double drawdownReward = 1.0 / MathPow(1.0 + MathMax(0.0, equityDrawdownPct) / 100.0,
+                                            MathMax(0.0, InpTesterDrawdownRewardPower));
+      return robustFitness * pfReward * recoveryReward * drawdownReward;
+   }
+
+   if(InpTesterFitnessMode == FITNESS_PROFIT_RECOVERY_FLOOR)
+   {
+      double netPower = MathMax(0.10, InpTesterProtectedProfitNetPower);
+      double profitComponent = MathPow(MathMax(0.01, netProfit), netPower);
+      double pfRatio = 1.0;
+      if(InpTesterMinProfitFactor > 0.0)
+         pfRatio = MathMax(0.01, profitFactor / InpTesterMinProfitFactor);
+      double recoveryRatio = 1.0;
+      if(InpTesterMinRecoveryFactor > 0.0)
+         recoveryRatio = MathMax(0.01, recoveryFactor / InpTesterMinRecoveryFactor);
+      double drawdownRatio = 0.0;
+      if(InpTesterMaxDrawdownPercent > 0.0)
+         drawdownRatio = MathMax(0.0, equityDrawdownPct / InpTesterMaxDrawdownPercent);
+
+      double pfComponent = MathPow(pfRatio, MathMax(0.0, InpTesterProfitFactorRewardPower));
+      double recoveryComponent = MathPow(recoveryRatio, MathMax(0.0, InpTesterRecoveryRewardPower));
+      if(recoveryRatio < 1.0)
+         recoveryComponent *= MathPow(recoveryRatio, MathMax(0.0, InpTesterRecoveryFloorPenaltyPower));
+
+      double drawdownComponent = 1.0 / MathPow(1.0 + drawdownRatio, MathMax(0.0, InpTesterDrawdownRewardPower));
+      if(drawdownRatio > 1.0)
+         drawdownComponent /= MathPow(drawdownRatio, MathMax(0.0, InpTesterDrawdownExcessPenaltyPower));
+
+      return profitComponent * pfComponent * recoveryComponent * drawdownComponent *
+             tradePenalty * pfPenalty * drawdownPenalty * recoveryPenalty * sharpePenalty;
+   }
+
+   if(InpTesterFitnessMode == FITNESS_MAX_PROFIT_PROTECTED)
+   {
+      double netPower = MathMax(1.00, InpTesterMaxProfitNetPower);
+      double profitComponent = MathPow(MathMax(0.01, netProfit), netPower);
+
+      double pfRatio = 1.0;
+      if(InpTesterMinProfitFactor > 0.0)
+         pfRatio = MathMax(0.01, profitFactor / InpTesterMinProfitFactor);
+
+      double recoveryRatio = 1.0;
+      if(InpTesterMinRecoveryFactor > 0.0)
+         recoveryRatio = MathMax(0.01, recoveryFactor / InpTesterMinRecoveryFactor);
+
+      double drawdownRatio = 0.0;
+      if(InpTesterMaxDrawdownPercent > 0.0)
+         drawdownRatio = MathMax(0.0, equityDrawdownPct / InpTesterMaxDrawdownPercent);
+
+      double qualityPower = MathMax(0.0, InpTesterMaxProfitQualityPower);
+      double qualityComponent = MathPow(MathMax(0.01, pfRatio) *
+                                        MathMax(0.01, recoveryRatio) *
+                                        (1.0 + MathMax(0.0, sharpeRatio)),
+                                        qualityPower);
+
+      if(pfRatio < 1.0)
+         qualityComponent *= MathPow(pfRatio, MathMax(0.0, InpTesterProfitFactorRewardPower));
+      if(recoveryRatio < 1.0)
+         qualityComponent *= MathPow(recoveryRatio, MathMax(0.0, InpTesterRecoveryFloorPenaltyPower));
+
+      double drawdownPower = MathMax(0.0, InpTesterMaxProfitDrawdownPower);
+      double drawdownComponent = 1.0 / MathPow(1.0 + drawdownRatio, drawdownPower);
+      if(drawdownRatio > 1.0)
+         drawdownComponent /= MathPow(drawdownRatio, MathMax(0.0, InpTesterDrawdownExcessPenaltyPower));
+
+      return profitComponent * qualityComponent * drawdownComponent *
+             tradePenalty * pfPenalty * drawdownPenalty * recoveryPenalty * sharpePenalty;
+   }
+
+   return robustFitness;
+}
+
+bool AppendTradeReadinessViolation(const bool violation, const string reason, string &violations)
+{
+   if(!violation)
+      return false;
+
+   if(StringLen(violations) > 0)
+      violations += " ";
+   violations += reason + ";";
+   return true;
+}
+
+bool TradeEnvironmentAllows(string &reason)
+{
+   reason = "";
+   if(!InpUseTradeEnvironmentGuard)
+      return true;
+
+   MqlTick tick;
+   if(!SymbolInfoTick(_Symbol, tick))
+   {
+      reason = "trade environment no tick";
+      return false;
+   }
+
+   if(tick.bid <= 0.0 || tick.ask <= 0.0 || tick.ask <= tick.bid)
+   {
+      reason = "trade environment invalid bid ask";
+      return false;
+   }
+
+   bool inTester = (bool)MQLInfoInteger(MQL_TESTER);
+   if(!inTester && InpTradeEnvMaxQuoteAgeSeconds > 0)
+   {
+      int quoteAgeSeconds = (int)(TimeCurrent() - tick.time);
+      if(tick.time <= 0 || quoteAgeSeconds > InpTradeEnvMaxQuoteAgeSeconds)
+      {
+         reason = "trade environment stale quote";
+         return false;
+      }
+   }
+
+   int minSignalBars = MathMax(1, InpTradeEnvMinSignalBars);
+   if(Bars(_Symbol, InpSignalTimeframe) < minSignalBars)
+   {
+      reason = "trade environment insufficient history";
+      return false;
+   }
+
+   double point = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+   double tickSize = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
+   double tickValue = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE);
+   double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+   double lotStep = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+   if(point <= 0.0 || tickSize <= 0.0 || minLot <= 0.0 || lotStep <= 0.0)
+   {
+      reason = "trade environment invalid symbol spec";
+      return false;
+   }
+
+   if(InpTradeEnvRequireTickValue && tickValue <= 0.0)
+   {
+      reason = "trade environment invalid tick value";
+      return false;
+   }
+
+   long tradeMode = SymbolInfoInteger(_Symbol, SYMBOL_TRADE_MODE);
+   if(tradeMode == SYMBOL_TRADE_MODE_DISABLED || tradeMode == SYMBOL_TRADE_MODE_CLOSEONLY)
+   {
+      reason = "trade environment symbol not open";
+      return false;
+   }
+
+   long stopsLevel = SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL);
+   long freezeLevel = SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL);
+   if(InpTradeEnvMaxStopsLevelPoints > 0.0 &&
+      (double)stopsLevel > InpTradeEnvMaxStopsLevelPoints)
+   {
+      reason = "trade environment stop level";
+      return false;
+   }
+   if(InpTradeEnvMaxFreezeLevelPoints > 0.0 &&
+      (double)freezeLevel > InpTradeEnvMaxFreezeLevelPoints)
+   {
+      reason = "trade environment freeze level";
+      return false;
+   }
+
+   return true;
+}
+
+bool TradeReadinessSafetyGateAllows()
+{
+   if(!InpUseTradeReadinessSafetyGate)
+      return true;
+
+   string violations = "";
+   double maxRisk = MathMax(0.01, InpTradeReadyMaxRiskPercent);
+   double maxOpenRisk = MathMax(maxRisk, InpTradeReadyMaxOpenRiskPercent);
+   double maxLots = MathMax(0.01, InpTradeReadyMaxPositionLots);
+   int maxPositions = MathMax(1, InpTradeReadyMaxSimultaneousPositions);
+
+   AppendTradeReadinessViolation(!InpUseSymbolSafetyLock,
+                                 "symbol safety lock disabled", violations);
+   AppendTradeReadinessViolation(StringLen(InpAllowedSymbol) <= 0,
+                                 "allowed symbol is blank", violations);
+   AppendTradeReadinessViolation(!InpUseRealAccountSafetyLock,
+                                 "real-account safety lock disabled", violations);
+   AppendTradeReadinessViolation(!InpUseTradeEnvironmentGuard,
+                                 "trade environment guard disabled", violations);
+   AppendTradeReadinessViolation(InpTradeEnvMinSignalBars < 250,
+                                 "trade environment history requirement too low", violations);
+   AppendTradeReadinessViolation(InpTradeEnvMaxQuoteAgeSeconds <= 0 ||
+                                 InpTradeEnvMaxQuoteAgeSeconds > 60,
+                                 "trade environment quote-age cap missing or too high", violations);
+   AppendTradeReadinessViolation(InpTradeEnvMaxStopsLevelPoints <= 0.0 ||
+                                 InpTradeEnvMaxStopsLevelPoints > 300.0,
+                                 "trade environment stop-level cap missing or too high", violations);
+   AppendTradeReadinessViolation(InpTradeEnvMaxFreezeLevelPoints <= 0.0 ||
+                                 InpTradeEnvMaxFreezeLevelPoints > 300.0,
+                                 "trade environment freeze-level cap missing or too high", violations);
+   AppendTradeReadinessViolation(!InpTradeEnvRequireTickValue,
+                                 "trade environment tick-value check disabled", violations);
+
+   AppendTradeReadinessViolation(InpRiskPercent <= 0.0 || InpRiskPercent > maxRisk,
+                                 "risk percent above trade-ready cap", violations);
+   AppendTradeReadinessViolation(InpMaxEffectiveRiskPercent <= 0.0 ||
+                                 InpMaxEffectiveRiskPercent > maxRisk,
+                                 "effective risk cap missing or too high", violations);
+   AppendTradeReadinessViolation(InpMaxOpenRiskPercent <= 0.0 ||
+                                 InpMaxOpenRiskPercent > maxOpenRisk,
+                                 "open risk cap missing or too high", violations);
+   AppendTradeReadinessViolation(InpMaxPositionLots <= 0.0 ||
+                                 InpMaxPositionLots > maxLots,
+                                 "position lot cap missing or too high", violations);
+   AppendTradeReadinessViolation(InpMaxSimultaneousPositions > maxPositions,
+                                 "too many simultaneous positions", violations);
+   AppendTradeReadinessViolation(InpAllowMinLotRiskOverflow,
+                                 "min-lot risk overflow enabled", violations);
+   AppendTradeReadinessViolation(!InpBlockUnprotectedExposure,
+                                 "unprotected exposure block disabled", violations);
+
+   AppendTradeReadinessViolation(InpMaxDailyLossPercent <= 0.0 ||
+                                 InpMaxDailyLossPercent > InpTradeReadyMaxDailyLossPercent,
+                                 "daily loss cap missing or too high", violations);
+   AppendTradeReadinessViolation(InpMaxWeeklyLossPercent <= 0.0 ||
+                                 InpMaxWeeklyLossPercent > InpTradeReadyMaxWeeklyLossPercent,
+                                 "weekly loss cap missing or too high", violations);
+   AppendTradeReadinessViolation(InpMaxMonthlyLossPercent <= 0.0 ||
+                                 InpMaxMonthlyLossPercent > InpTradeReadyMaxMonthlyLossPercent,
+                                 "monthly loss cap missing or too high", violations);
+   AppendTradeReadinessViolation(InpMaxEquityDrawdownPercent <= 0.0 ||
+                                 InpMaxEquityDrawdownPercent > InpTradeReadyMaxEquityDrawdownPercent,
+                                 "equity drawdown cap missing or too high", violations);
+   AppendTradeReadinessViolation(!InpClosePositionsOnRiskLimit,
+                                 "risk-limit close disabled", violations);
+   AppendTradeReadinessViolation(InpMaxDailyLossCount > 1,
+                                 "daily loss-count cap too high", violations);
+   AppendTradeReadinessViolation(InpMaxConsecutiveLosses > 2,
+                                 "consecutive-loss cap too high", violations);
+   AppendTradeReadinessViolation(InpCooldownMinutesAfterLoss < 120,
+                                 "loss cooldown too short", violations);
+
+   AppendTradeReadinessViolation(!InpUseLossStreakRiskReduction,
+                                 "loss-streak risk reduction disabled", violations);
+   AppendTradeReadinessViolation(!InpUseDrawdownRiskReduction,
+                                 "drawdown risk reduction disabled", violations);
+   AppendTradeReadinessViolation(!InpUseDrawdownQualityGate,
+                                 "drawdown quality gate disabled", violations);
+   AppendTradeReadinessViolation(!InpUseDailyLossRiskScaling ||
+                                 !InpUseWeeklyLossRiskScaling ||
+                                 !InpUseMonthlyLossRiskScaling,
+                                 "loss risk scaling incomplete", violations);
+   AppendTradeReadinessViolation(!InpUseDailyProfitLock ||
+                                 !InpUseWeeklyProfitLock ||
+                                 !InpUseMonthlyProfitLock,
+                                 "profit locks incomplete", violations);
+   AppendTradeReadinessViolation(!InpUseProfitGivebackGuard,
+                                 "profit giveback guard disabled", violations);
+
+   AppendTradeReadinessViolation(InpMaxSpreadPoints <= 0.0 ||
+                                 InpMaxSpreadPoints > InpTradeReadyMaxSpreadPoints,
+                                 "spread cap missing or too high", violations);
+   AppendTradeReadinessViolation(InpMaxSpreadATRPercent <= 0.0 ||
+                                 InpMaxSpreadATRPercent > InpTradeReadyMaxSpreadATRPercent,
+                                 "spread ATR cap missing or too high", violations);
+   AppendTradeReadinessViolation(InpDeviationPoints > InpTradeReadyMaxDeviationPoints,
+                                 "slippage/deviation cap too high", violations);
+   AppendTradeReadinessViolation(!InpUseSpreadAdjustedRRFilter,
+                                 "spread-adjusted RR filter disabled", violations);
+   AppendTradeReadinessViolation(!InpUseSpreadRegimeGuard ||
+                                 !InpUseM1SpreadShockGuard ||
+                                 !InpUseSpreadRiskScaling,
+                                 "spread guards incomplete", violations);
+   AppendTradeReadinessViolation(!InpUseTradingCostGuard,
+                                 "trading-cost guard disabled", violations);
+
+   AppendTradeReadinessViolation(!InpUseMarginGuard ||
+                                 !InpUseMarginAwareLotCap ||
+                                 !InpUseMarginPressureRiskScaling ||
+                                 !InpUseTradeMarginRiskScaling,
+                                 "margin guards incomplete", violations);
+   AppendTradeReadinessViolation(InpMinMarginLevelPercent < 500.0,
+                                 "minimum margin level too low", violations);
+
+   AppendTradeReadinessViolation(!InpUseTakeProfit,
+                                 "take profit disabled", violations);
+   AppendTradeReadinessViolation(!InpUseStructureStop,
+                                 "structure stop disabled", violations);
+   AppendTradeReadinessViolation(!InpUseLiquidityAwareStructureStop,
+                                 "liquidity-aware structure stop disabled", violations);
+   AppendTradeReadinessViolation(!InpUseLiquidityStopConflictGuard,
+                                 "liquidity stop conflict guard disabled", violations);
+   AppendTradeReadinessViolation(!InpUseBreakEven,
+                                 "break-even protection disabled", violations);
+   AppendTradeReadinessViolation(!InpUseATRTrailing,
+                                 "ATR trailing disabled", violations);
+   AppendTradeReadinessViolation(!InpUseMFEProfitLockStop,
+                                 "MFE profit-lock stop disabled", violations);
+   AppendTradeReadinessViolation(!InpUseMFEGivebackExit,
+                                 "MFE giveback exit disabled", violations);
+
+   AppendTradeReadinessViolation(InpUseAdaptiveReverse,
+                                 "Adaptive Reverse enabled", violations);
+   AppendTradeReadinessViolation(InpUseWinnerScaleIn ||
+                                 InpUseHouseMoneyScaleInRiskRamp,
+                                 "scale-in behavior enabled", violations);
+   AppendTradeReadinessViolation(InpUseProfitOnlyRiskBoost ||
+                                 InpUseClosedProfitOpportunityRiskBoost ||
+                                 InpUseHouseMoneyAccelerationGate ||
+                                 InpUseHouseMoneyOpenRiskExpansion ||
+                                 InpUseHotStreakRiskBoost ||
+                                 InpUseRecentProfitFactorRiskBoost ||
+                                 InpUseProtectedCushionRiskBoost,
+                                 "risk boost behavior enabled", violations);
+   AppendTradeReadinessViolation(InpUseProtectedCushionUnlimitedRunner ||
+                                 InpUseEliteContinuationUnlimitedRunner,
+                                 "unlimited runner behavior enabled", violations);
+   AppendTradeReadinessViolation(InpUseFlatMonthLiquidityReclaimLane ||
+                                  InpAllowFlatMonthLiquidityReclaimOutsideMonthFilter,
+                                  "experimental FMLR lane enabled", violations);
+   AppendTradeReadinessViolation(InpUseBandVWAPReversionLane,
+                                 "experimental band/VWAP reversion lane enabled", violations);
+   AppendTradeReadinessViolation(InpUseTickSpeedImpulse,
+                                  "tick-speed impulse enabled", violations);
+
+   if(StringLen(violations) > 0)
+   {
+      Print("Trade-readiness safety gate failed: ", violations);
+      return false;
+   }
+
+   return true;
+}
+
+bool SymbolSafetyLockAllows()
+{
+   if(!InpUseSymbolSafetyLock)
+      return true;
+
+   if(StringLen(InpAllowedSymbol) <= 0)
+   {
+      Print("Symbol safety lock failed: InpAllowedSymbol is blank.");
+      return false;
+   }
+
+   if(StringFind(_Symbol, InpAllowedSymbol) >= 0)
+      return true;
+
+   Print("Symbol safety lock failed: configured for ", InpAllowedSymbol,
+         " but attached to ", _Symbol, ".");
+   return false;
+}
+
+bool RealAccountSafetyLockAllows()
+{
+   long tradeMode = AccountInfoInteger(ACCOUNT_TRADE_MODE);
+   if(tradeMode != ACCOUNT_TRADE_MODE_REAL)
+      return true;
+
+   if(!InpUseRealAccountSafetyLock)
+   {
+      Print("Real-account safety lock failed: InpUseRealAccountSafetyLock=false is not allowed on real accounts.");
+      return false;
+   }
+
+   if(InpAllowRealAccountTrading &&
+      InpUseTradeReadinessSafetyGate &&
+      InpRealAccountApprovalCode == "ALLOW_REAL_ACCOUNT_TRADING" &&
+      StringLen(InpEvidenceProfileId) > 0 &&
+      StringLen(InpEvidenceSourceHash) > 0 &&
+      StringLen(InpEvidenceRunLabel) > 0 &&
+      InpRealAccountApprovalProfileId == InpEvidenceProfileId &&
+      InpRealAccountApprovalSourceHash == InpEvidenceSourceHash)
+      return true;
+
+   Print("Real-account safety lock failed: real accounts require ",
+         "InpAllowRealAccountTrading=true, InpUseTradeReadinessSafetyGate=true, ",
+         "InpRealAccountApprovalCode=ALLOW_REAL_ACCOUNT_TRADING, matching ",
+         "InpRealAccountApprovalProfileId/InpEvidenceProfileId, matching ",
+         "InpRealAccountApprovalSourceHash/InpEvidenceSourceHash, and a non-empty evidence run label ",
+         "only after live-trading approval.");
+   return false;
+}
+
+int OnInit()
+{
+   if(!SymbolSafetyLockAllows())
+      return INIT_PARAMETERS_INCORRECT;
+
+   if(!InpUseSymbolSafetyLock && StringFind(_Symbol, InpAllowedSymbol) < 0)
+      Print("Warning: this EA is configured for ", InpAllowedSymbol, " but is attached to ", _Symbol);
+
+   if(!RealAccountSafetyLockAllows())
+      return INIT_PARAMETERS_INCORRECT;
+
+   if(!TradeReadinessSafetyGateAllows())
+      return INIT_PARAMETERS_INCORRECT;
+
+   if(!indicators.Init())
+   {
+      Print("Failed to initialize indicator handles.");
+      return INIT_FAILED;
+   }
+
+   trade.SetExpertMagicNumber(InpMagicNumber);
+   trade.SetDeviationInPoints(InpDeviationPoints);
+   riskManager.Init();
+   logger.Init();
+   blockDiagnostics.Init();
+   g_lastBarTime = iTime(_Symbol, InpSignalTimeframe, 0);
+   g_lastBandReversionBarTime = iTime(_Symbol, InpBandVWAPReversionTimeframe, 0);
+   return INIT_SUCCEEDED;
+}
+
+void OnDeinit(const int reason)
+{
+   Comment("");
+   indicators.Release();
+   logger.Close();
+   blockDiagnostics.Close();
+}
+
+bool WeekendCloseWindowActive()
+{
+   if(!InpCloseBeforeWeekend)
+      return false;
+
+   MqlDateTime dt;
+   TimeToStruct(TimeCurrent(), dt);
+   int closeHour = MathMax(0, MathMin(23, InpWeekendCloseHour));
+   return dt.day_of_week == 5 && dt.hour >= closeHour;
+}
+
+void OnTick()
+{
+   tickMicrostructure.Update();
+   bool newBar = IsNewBar();
+   if(InpTradeOnlyNewBar && !newBar)
+   {
+      if(!InpManageOnlyNewBar)
+         positionManager.Manage(BIAS_NONE);
+      DrawDashboard();
+      return;
+   }
+
+   string trendReason = "";
+   ENUM_TRADE_BIAS trendBias = trendFilter.Bias(trendReason);
+   if(trendBias == BIAS_NONE &&
+      InpUseDiagnosticTrendFallbackEntry &&
+      InpDiagnosticFallbackUseCandleBias)
+   {
+      double open1 = iOpen(_Symbol, InpSignalTimeframe, 1);
+      double close1 = iClose(_Symbol, InpSignalTimeframe, 1);
+      if(open1 > 0.0 && close1 > 0.0)
+      {
+         if(close1 > open1)
+         {
+            trendBias = BIAS_BUY;
+            trendReason = "diagnostic candle buy";
+         }
+         else if(close1 < open1)
+         {
+            trendBias = BIAS_SELL;
+            trendReason = "diagnostic candle sell";
+         }
+      }
+   }
+   g_lastTrendReason = trendReason;
+   g_lastTrendBias = trendBias;
+
+   bool primarySessionAllowed = sessionFilter.IsAllowed();
+   SSignal signal = entryEngine.Build(trendBias);
+   ApplySignalMode(signal);
+   SSignal secondarySignal = BuildM5TightLiquiditySecondarySignal(trendBias);
+   SSignal bandReversionSignal = entryEngine.BuildBandVWAPReversion();
+   SSignal dailyDonchianSignal = BuildDailyDonchianBreakoutSignal();
+   bool bandMayBypassPrimarySession = InpBandVWAPReversionBypassPrimarySession &&
+                                      sessionFilter.TradingDayAllowed();
+   bool dailyMayBypassPrimarySession = InpDailyDonchianBypassPrimarySession &&
+                                       sessionFilter.TradingDayAllowed();
+   bool dailyIndependentAttempt = InpUseDailyDonchianBreakoutLane &&
+                                  InpDailyDonchianUseIsolatedExecution &&
+                                  !InpDailyDonchianStandaloneMode;
+   bool bandIndependentAttempt = InpUseBandVWAPReversionLane &&
+                                 InpBandVWAPReversionUseIsolatedExecution &&
+                                 InpBandVWAPReversionIndependentAttempt;
+   if(InpDailyDonchianStandaloneMode)
+   {
+      signal = dailyDonchianSignal;
+   }
+   else if(!primarySessionAllowed)
+   {
+      if(!dailyIndependentAttempt &&
+         dailyMayBypassPrimarySession && dailyDonchianSignal.bias != BIAS_NONE)
+         signal = dailyDonchianSignal;
+      else if(!bandIndependentAttempt &&
+              bandMayBypassPrimarySession && bandReversionSignal.bias != BIAS_NONE)
+         signal = bandReversionSignal;
+   }
+   else if(signal.bias == BIAS_NONE)
+   {
+      if(!dailyIndependentAttempt && dailyDonchianSignal.bias != BIAS_NONE)
+         signal = dailyDonchianSignal;
+      else if(secondarySignal.bias != BIAS_NONE)
+         signal = secondarySignal;
+      else if(!bandIndependentAttempt && bandReversionSignal.bias != BIAS_NONE)
+         signal = bandReversionSignal;
+   }
+   else if(InpM5TightLiquidityAllowPrimaryOverride &&
+           secondarySignal.bias != BIAS_NONE &&
+           signal.qualityScore <= MathMax(0, InpM5TightLiquidityOverrideMaxPrimaryQuality) &&
+           (!InpM5TightLiquidityOverrideRequireSameBias || secondarySignal.bias == signal.bias))
+   {
+      secondarySignal.reasons += "M5 replaced weak primary quality " + (string)signal.qualityScore + ";";
+      signal = secondarySignal;
+   }
+
+   if(InpClosePositionsOnRiskLimit)
+   {
+      string riskExitReason = "";
+      if(riskManager.RiskLimitHit(riskExitReason))
+      {
+         positionManager.CloseAll(riskExitReason);
+         g_lastBlockReason = riskExitReason;
+         blockDiagnostics.Write(g_lastBlockReason, trendBias, signal);
+         DrawDashboard();
+         return;
+      }
+   }
+
+   if(WeekendCloseWindowActive())
+   {
+      positionManager.CloseAll("weekend close");
+      g_lastBlockReason = "weekend close";
+      blockDiagnostics.Write(g_lastBlockReason, trendBias, signal);
+      DrawDashboard();
+      return;
+   }
+
+   if(sessionFilter.CloseWindowActive())
+   {
+      positionManager.CloseAll("session end close");
+      g_lastBlockReason = "session end close";
+      blockDiagnostics.Write(g_lastBlockReason, trendBias, signal);
+      DrawDashboard();
+      return;
+   }
+
+   positionManager.Manage(signal.bias);
+
+   bool selectedSignalSessionAllowed = primarySessionAllowed ||
+                                        (signal.isBandVWAPReversion && bandMayBypassPrimarySession) ||
+                                        (signal.isDailyDonchianBreakout && dailyMayBypassPrimarySession);
+   bool dailyIndependentSessionAllowed = dailyIndependentAttempt &&
+                                         dailyDonchianSignal.bias != BIAS_NONE &&
+                                         (primarySessionAllowed || dailyMayBypassPrimarySession);
+   bool bandIndependentSessionAllowed = bandIndependentAttempt &&
+                                        bandReversionSignal.bias != BIAS_NONE &&
+                                        (primarySessionAllowed || bandMayBypassPrimarySession);
+   if(!selectedSignalSessionAllowed && !dailyIndependentSessionAllowed &&
+      !bandIndependentSessionAllowed)
+   {
+      g_lastBlockReason = "session closed";
+      blockDiagnostics.Write(g_lastBlockReason, trendBias, signal);
+      DrawDashboard();
+      return;
+   }
+
+   if(newsFilter.IsBlocked())
+   {
+      if(InpClosePositionsOnManualNews)
+         positionManager.CloseAll("manual news filter");
+      g_lastBlockReason = "manual news filter";
+      blockDiagnostics.Write(g_lastBlockReason, trendBias, signal);
+      DrawDashboard();
+      return;
+   }
+
+   string environmentReason = "";
+   if(!TradeEnvironmentAllows(environmentReason))
+   {
+      g_lastBlockReason = environmentReason;
+      blockDiagnostics.Write(g_lastBlockReason, trendBias, signal);
+      DrawDashboard();
+      return;
+   }
+
+   bool attemptedEntry = false;
+   bool openedPosition = false;
+   if(selectedSignalSessionAllowed && signal.bias != BIAS_NONE)
+   {
+      attemptedEntry = true;
+      if(signal.isBandVWAPReversion && InpBandVWAPReversionUseIsolatedExecution)
+         openedPosition = OpenIsolatedBandVWAPReversionSignal(signal);
+      else if(signal.isDailyDonchianBreakout && InpDailyDonchianUseIsolatedExecution)
+         openedPosition = OpenIsolatedDailyDonchianSignal(signal);
+      else
+         openedPosition = OpenSignal(signal);
+      blockDiagnostics.Write(g_lastBlockReason, trendBias, signal);
+   }
+
+   if(!openedPosition && dailyIndependentSessionAllowed)
+   {
+      attemptedEntry = true;
+      openedPosition = OpenIsolatedDailyDonchianSignal(dailyDonchianSignal);
+      blockDiagnostics.Write(g_lastBlockReason, trendBias, dailyDonchianSignal);
+   }
+
+   if(bandIndependentSessionAllowed)
+   {
+      attemptedEntry = true;
+      bool bandOpened = OpenIsolatedBandVWAPReversionSignal(bandReversionSignal);
+      openedPosition = openedPosition || bandOpened;
+      blockDiagnostics.Write(g_lastBlockReason, trendBias, bandReversionSignal);
+   }
+
+   if(!attemptedEntry && signal.confirmations > 0)
+   {
+      g_lastBlockReason = "confirmations " + (string)signal.confirmations + "/" + (string)ActiveConfirmationThreshold(trendBias);
+      blockDiagnostics.Write(g_lastBlockReason, trendBias, signal);
+   }
+   else if(!attemptedEntry)
+   {
+      g_lastBlockReason = "no setup";
+      blockDiagnostics.Write(g_lastBlockReason, trendBias, signal);
+   }
+
+   DrawDashboard();
+}
+
+void OnTradeTransaction(const MqlTradeTransaction &trans,
+                        const MqlTradeRequest &request,
+                        const MqlTradeResult &result)
+{
+   if(trans.type != TRADE_TRANSACTION_DEAL_ADD)
+      return;
+
+   if(!HistoryDealSelect(trans.deal))
+      return;
+
+   if(HistoryDealGetString(trans.deal, DEAL_SYMBOL) != _Symbol)
+      return;
+   if(HistoryDealGetInteger(trans.deal, DEAL_MAGIC) != InpMagicNumber)
+      return;
+   if(HistoryDealGetInteger(trans.deal, DEAL_ENTRY) != DEAL_ENTRY_OUT)
+      return;
+
+   double profit = HistoryDealGetDouble(trans.deal, DEAL_PROFIT) +
+                   HistoryDealGetDouble(trans.deal, DEAL_SWAP) +
+                   HistoryDealGetDouble(trans.deal, DEAL_COMMISSION);
+   long positionId = HistoryDealGetInteger(trans.deal, DEAL_POSITION_ID);
+   ulong analyticsTicket = (positionId > 0) ? (ulong)positionId : trans.deal;
+   double realizedR = RealizedRiskMultipleForDeal(trans.deal, analyticsTicket, profit);
+   int heldBars = HeldBarsForHistoryPosition(positionId);
+   logger.Write("closed_deal",
+                analyticsTicket,
+                "close",
+                HistoryDealGetDouble(trans.deal, DEAL_VOLUME),
+                HistoryDealGetDouble(trans.deal, DEAL_PRICE),
+                0,
+                0,
+                realizedR,
+                profit,
+                HistoryDealGetString(trans.deal, DEAL_COMMENT),
+                0,
+                EMPTY_VALUE,
+                EMPTY_VALUE,
+                heldBars);
+}
