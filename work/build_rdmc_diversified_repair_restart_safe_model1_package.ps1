@@ -16,8 +16,8 @@ $launchLock = Join-Path $repo "work\MT5_LOCAL_LAUNCH_DISABLED.lock"
 $launchUnlock = Join-Path $repo "work\ALLOW_MT5_LOCAL_LAUNCH.unlock"
 
 $expectedV1SourceHash = "4740338598E290360946FE414CC6F2FE0CF3B704006860514367DCB996A8D2B5"
-$expectedSourceHash = "F532233CBAEFB47B0E634DD048F56D90A40703F0B5EDA4D52BE659D3B8A6D3D6"
-$expectedProfileHash = "3BB68023CD8FDF66F748C099B555C39B23BA2894B5C32341BECCBA6FD20BB344"
+$expectedSourceHash = "F0070D8568A653A417099EA20F5F590B86271F08744AD60511C8E5E5A799C0E9"
+$expectedProfileHash = "882A96BD743621A3D73817B5C9900923EFF140736282CA0E7C6488F25FF9708A"
 
 foreach($required in @($source, $profile, $v1Source, $launchLock)) {
    if(!(Test-Path -LiteralPath $required -PathType Leaf)) {
@@ -151,10 +151,13 @@ $manifest = [pscustomobject]@{
    ExactBrokerOrderCheck = "ENABLED"
    PreflightFailureBlocksSend = "ENABLED"
    PreflightBrokerCommentEvidence = "ENABLED"
-   PostFillReconciliationStatus = "PASS_81_CHECKS"
+   PostFillReconciliationStatus = "PASS_86_CHECKS"
    ResultLinkedPositionIdentity = "ENABLED"
    PositivePostFillPositionIdentifierRequired = "ENABLED"
    AttachedProtectionVerification = "ENABLED"
+   ExactAttachedStopVerification = "ENABLED"
+   ExactAttachedTargetVerification = "ENABLED"
+   UnexpectedAttachedTargetRejected = "ENABLED"
    ActualCashRiskReconciliation = "ENABLED"
    AggregateAccountRiskReconciliation = "ENABLED"
    IncompleteAccountRiskFailsClosed = "ENABLED"
@@ -245,7 +248,7 @@ $packageLines = @(
    '- A failed broker preflight blocks the send and preserves the check retcode and broker comment in failure evidence; protective close paths do not depend on entry preflight.',
    '- After a successful send, the exact broker result order or deal-linked immutable position identifier is reconciled to one unique expert-owned position; newest-position guessing is not used.',
    '- A selected fill must expose a positive immutable `POSITION_IDENTIFIER` before it can be accepted, logged, or assigned durable risk state. Missing identity rejects and force-closes the exact captured ticket.',
-   '- The broker-attached open price, volume, stop loss, and requested take-profit state are verified before an entry is accepted or its initial risk is registered.',
+   '- The broker-attached open price and volume are verified, and attached SL/TP prices must match the exact requested state within half the larger symbol point or trade tick. A target attached when none was requested is rejected.',
    '- Planned cash risk is compared with actual fill-to-stop cash risk. The new position may exceed planned risk by at most `5%` and can never exceed its configured per-position cash-risk cap.',
    '- After each fill, every open account position is reselected and broker-valued from its open price to attached stop. An unreadable position, missing/invalid stop, failed valuation, post-fill position-count breach, or aggregate account-risk breach rejects the fill.',
    '- The entry precheck and post-fill reconciliation share the same fail-closed account-risk helper, so a configurable multi-position profile cannot hide slippage behind a per-position-only comparison.',
@@ -281,7 +284,7 @@ $packageLines = @(
    "",
    "## Hard boundary",
    "",
-   'The source is tester-only, real-account trading is disabled, and all 12 annual/YTD Model1 rows remain `LOCKED_LOCAL_LAUNCH_DISABLED`. The new cost, margin, hard-cooldown, intrabar emergency, broker-result, persistent-state, idempotency, immutable-fill-identity, scoped-lifecycle, identifier-ticket alias, and event-driven orphan-reconciliation safeguards can change entries and exits. The active-order reconciliation can change entries and exits. Broker-volume reconciliation can change entries and exits. Post-fill risk reconciliation can change entries and exits. Tightening-only stop enforcement, ownership-checked close reconciliation, write-ahead one-shot actions, and position-state retirement can change exits too, so the earlier post-hoc collision score is not attributed to this executable path. Static checks cannot prove compilation, profit, drawdown, or restart behavior inside MT5. Compilation, annual and continuous Model1, annual and continuous real-tick Model4, cost stress, Monte Carlo, broker variation, and valid forward evidence are still required.'
+   'The source is tester-only, real-account trading is disabled, and all 12 annual/YTD Model1 rows remain `LOCKED_LOCAL_LAUNCH_DISABLED`. The new cost, margin, hard-cooldown, intrabar emergency, broker-result, persistent-state, idempotency, immutable-fill-identity, exact-attached-protection, scoped-lifecycle, identifier-ticket alias, and event-driven orphan-reconciliation safeguards can change entries and exits. The active-order reconciliation can change entries and exits. Broker-volume reconciliation can change entries and exits. Post-fill risk reconciliation can change entries and exits. Tightening-only stop enforcement, ownership-checked close reconciliation, write-ahead one-shot actions, and position-state retirement can change exits too, so the earlier post-hoc collision score is not attributed to this executable path. Static checks cannot prove compilation, profit, drawdown, or restart behavior inside MT5. Compilation, annual and continuous Model1, annual and continuous real-tick Model4, cost stress, Monte Carlo, broker variation, and valid forward evidence are still required.'
 )
 [IO.File]::WriteAllLines($packagePath, $packageLines, [Text.Encoding]::ASCII)
 

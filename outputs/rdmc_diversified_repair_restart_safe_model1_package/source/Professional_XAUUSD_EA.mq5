@@ -4,8 +4,8 @@
 //| No martingale, grid, averaging down, or recovery systems           |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.26"
-#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with verified account-scoped, immutable-identity-required, collision-safe and event-reconciled position state plus ownership-checked execution; tester-only until independently validated."
+#property version   "1.27"
+#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with exact attached protection, verified account-scoped immutable identity, collision-safe event reconciliation and ownership-checked execution; tester-only until independently validated."
 
 #include <Trade/Trade.mqh>
 
@@ -2273,6 +2273,10 @@ string PostFillForcedCloseIdentifierKey(const ulong positionIdentifier, const lo
    return PositionScopedStateKeyForIdentifier("PF", magic, positionIdentifier);
 }
 
+bool TradePriceMatches(const string symbol,
+                       const double actual,
+                       const double requested);
+
 class CValidatedTrade : public CTrade
 {
 private:
@@ -2432,8 +2436,18 @@ public:
          reason = "post-fill invalid protective-stop direction";
          return false;
       }
+      if(!TradePriceMatches(symbol, actualSL, requestedSL))
+      {
+         reason = "post-fill stop-loss state mismatch";
+         return false;
+      }
       if(requestedTP > 0.0 &&
          (actualTP <= 0.0 || (buy && actualTP <= openPrice) || (!buy && actualTP >= openPrice)))
+      {
+         reason = "post-fill take-profit state mismatch";
+         return false;
+      }
+      if(!TradePriceMatches(symbol, actualTP, requestedTP))
       {
          reason = "post-fill take-profit state mismatch";
          return false;

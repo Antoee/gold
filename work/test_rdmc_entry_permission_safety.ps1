@@ -63,7 +63,7 @@ $finalOnTickIndex = $source.LastIndexOf('void OnTick()', [StringComparison]::Ord
 $finalTransactionIndex = $source.LastIndexOf('void OnTradeTransaction', [StringComparison]::Ordinal)
 $onTick = if($finalOnTickIndex -ge 0 -and $finalTransactionIndex -gt $finalOnTickIndex) { $source.Substring($finalOnTickIndex, $finalTransactionIndex - $finalOnTickIndex) } else { '' }
 
-Add-Check "source version is 1.26" ($source.Contains('#property version   "1.26"')) "version"
+Add-Check "source version is 1.27" ($source.Contains('#property version   "1.27"')) "version"
 Add-Check "description advertises permission gate" ($source.Contains('permission-gated XAUUSD research portfolio')) "description"
 Add-Check "invalid entry direction fails closed" ($permissions.Contains('bias != BIAS_BUY && bias != BIAS_SELL') -and $permissions.Contains('entry permission invalid direction')) "direction gate"
 Add-Check "live-only permission block is explicit" ($permissions.Contains('if(!MQLInfoInteger(MQL_TESTER))')) "tester isolation"

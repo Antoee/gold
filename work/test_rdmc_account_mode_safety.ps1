@@ -41,7 +41,7 @@ $profile = Read-Profile $profilePath
 $modeGate = Get-Section $source "bool AccountPositionModeAllows()" "bool ResearchCapitalContractAllows()"
 $onInit = Get-Section $source "int OnInit()" "void OnDeinit(const int reason)"
 
-Add-Check "source version is 1.26" ($source.Contains('#property version   "1.26"')) "version"
+Add-Check "source version is 1.27" ($source.Contains('#property version   "1.27"')) "version"
 Add-Check "description advertises the hedging lock" ($source.Contains('Restart-safe, hedging-locked and permission-gated')) "description"
 Add-Check "account gate reads ACCOUNT_MARGIN_MODE" ($modeGate.Contains('AccountInfoInteger(ACCOUNT_MARGIN_MODE)')) "account property"
 Add-Check "account gate uses the typed margin-mode enum" ($modeGate.Contains('ENUM_ACCOUNT_MARGIN_MODE mode')) "typed mode"
