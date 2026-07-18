@@ -25,11 +25,12 @@ This package supersedes the uncompiled v1 package before its first MT5 run. It p
 - Foreign orders are never canceled by the EA and instead fail the dedicated-account contract closed.
 - Entry, margin-cap, and partial-close volumes are rounded down with the broker-provided `SYMBOL_VOLUME_STEP`; precision is derived from the step instead of being hardcoded to two decimals.
 - Live account-history validation is invalidated by deal and generic trade events, with a fixed 60-second watchdog for missed or delayed events. Active positions and orders remain uncached and are checked on every entry evaluation.
+- Initialization requires `ACCOUNT_MARGIN_MODE_RETAIL_HEDGING` before capital registration, indicator allocation, or executor setup. Netting, exchange, and unknown accounting modes fail closed because ticket ownership and partial-close behavior depend on hedging semantics.
 
 ## Frozen identity
 
-- Source SHA-256: `C0C8479499BE03C3E8FBC22FE35C48B21A083F0A657224288186CE10791E3F7E`
-- Profile SHA-256: `3BBA7AF599CDC01C59E82E9D3B2CEB64D267C266FC3E5382A6D910787C02087F`
+- Source SHA-256: `0C14343AA9BE19936A0DD1EFC7645E6FCA2A413442E69DD60C222B6D2440644F`
+- Profile SHA-256: `C6E041873D597E4709E8B4A6E18B29F11CB7FF9996D34025CDFF025385FC3806`
 - Predecessor source SHA-256: `4740338598E290360946FE414CC6F2FE0CF3B704006860514367DCB996A8D2B5`
 - Source/profile inputs: `588 / 588`
 - Queue: `outputs/RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_QUEUE.csv`

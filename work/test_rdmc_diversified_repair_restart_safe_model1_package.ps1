@@ -10,8 +10,8 @@ $queuePath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL
 $manifestPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_MANIFEST.csv"
 $documentPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_PACKAGE.md"
 
-$expectedSourceHash = "C0C8479499BE03C3E8FBC22FE35C48B21A083F0A657224288186CE10791E3F7E"
-$expectedProfileHash = "3BBA7AF599CDC01C59E82E9D3B2CEB64D267C266FC3E5382A6D910787C02087F"
+$expectedSourceHash = "0C14343AA9BE19936A0DD1EFC7645E6FCA2A413442E69DD60C222B6D2440644F"
+$expectedProfileHash = "C6E041873D597E4709E8B4A6E18B29F11CB7FF9996D34025CDFF025385FC3806"
 $expectedV1SourceHash = "4740338598E290360946FE414CC6F2FE0CF3B704006860514367DCB996A8D2B5"
 
 $checks = [System.Collections.Generic.List[object]]::new()
@@ -215,6 +215,7 @@ Add-Check "manifest freezes broker-result verification" ($manifest[0].TradeResul
 Add-Check "manifest freezes pending-order reconciliation" ($manifest[0].PendingOrderSafetyStatus -eq 'PASS_45_CHECKS' -and $manifest[0].ActiveOrderEntryBlock -eq 'ENABLED' -and $manifest[0].VerifiedResearchOrderCancel -eq 'ENABLED' -and $manifest[0].ForeignOrderOwnershipPreserved -eq 'ENABLED' -and $manifest[0].FlattenOrderFirst -eq 'ENABLED') "$($manifest[0].PendingOrderSafetyStatus)"
 Add-Check "manifest freezes broker-step-aware volume" ($manifest[0].VolumeContractSafetyStatus -eq 'PASS_43_CHECKS' -and $manifest[0].BrokerStepAwareVolume -eq 'ENABLED' -and $manifest[0].PartialCloseStepNormalization -eq 'ENABLED') "$($manifest[0].VolumeContractSafetyStatus)"
 Add-Check "manifest freezes bounded history reconciliation" ($manifest[0].AccountHistoryReconciliationStatus -eq 'PASS_34_CHECKS' -and $manifest[0].TransactionDrivenHistoryInvalidation -eq 'ENABLED' -and $manifest[0].PeriodicHistoryWatchdog -eq 'ENABLED_60_SECONDS' -and $manifest[0].PerTickHistoryRescan -eq 'DISABLED') "$($manifest[0].AccountHistoryReconciliationStatus)"
+Add-Check "manifest freezes hedging account mode" ($manifest[0].AccountModeSafetyStatus -eq 'PASS_34_CHECKS' -and $manifest[0].HedgingAccountRequired -eq 'ENABLED' -and $manifest[0].NettingAccountRejected -eq 'ENABLED' -and $manifest[0].ExchangeAccountRejected -eq 'ENABLED') "$($manifest[0].AccountModeSafetyStatus)"
 
 $document = Get-Content -LiteralPath $documentPath -Raw
 Add-Check "package states restart repair boundary" ($document.Contains('supersedes the uncompiled v1 package') -and $document.Contains('does not establish a new best') -and $document.Contains('Static checks cannot prove compilation')) "boundary present"
@@ -224,6 +225,7 @@ Add-Check "package states broker-result evidence boundary" ($document.Contains('
 Add-Check "package states pending-order evidence boundary" ($document.Contains('active account order blocks new exposure') -and $document.Contains('cancel research-owned orders') -and $document.Contains('Foreign orders are never canceled') -and $document.Contains('active-order reconciliation can change entries and exits')) "boundary present"
 Add-Check "package states broker-volume evidence boundary" ($document.Contains('SYMBOL_VOLUME_STEP') -and $document.Contains('precision is derived') -and $document.Contains('Broker-volume reconciliation can change entries and exits')) "boundary present"
 Add-Check "package states bounded history reconciliation" ($document.Contains('generic trade events') -and $document.Contains('fixed 60-second watchdog') -and $document.Contains('positions and orders remain uncached')) "boundary present"
+Add-Check "package states hedging-only account contract" ($document.Contains('ACCOUNT_MARGIN_MODE_RETAIL_HEDGING') -and $document.Contains('Netting, exchange, and unknown accounting modes fail closed') -and $document.Contains('partial-close behavior depend')) "boundary present"
 Add-Check "registered forward candidate stays unchanged" ($document.Contains('does not') -and $manifest[0].ForwardCandidateChanged -eq 'NO') $manifest[0].ForwardCandidateChanged
 Add-Check "no account identifier published" ($document -notmatch '(?i)account.?id\s*[:=]\s*\d{5,}' -and $document -notmatch '(?i)login\s*[:=]\s*\d{5,}') "public markdown clean"
 Add-Check "no GitHub token published" ($document -notmatch 'github_pat_|gh[pousr]_[A-Za-z0-9]{20,}') "public markdown clean"

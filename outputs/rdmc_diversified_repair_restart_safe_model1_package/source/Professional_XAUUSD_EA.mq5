@@ -4,8 +4,8 @@
 //| No martingale, grid, averaging down, or recovery systems           |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.14"
-#property description "Restart-safe, broker-verified and order-reconciled XAUUSD research portfolio; tester-only until independently validated."
+#property version   "1.15"
+#property description "Restart-safe, hedging-locked and broker-reconciled XAUUSD research portfolio; tester-only until independently validated."
 
 #include <Trade/Trade.mqh>
 
@@ -24121,6 +24121,18 @@ bool SymbolSafetyLockAllows()
    return false;
 }
 
+bool AccountPositionModeAllows()
+{
+   ENUM_ACCOUNT_MARGIN_MODE mode =
+      (ENUM_ACCOUNT_MARGIN_MODE)AccountInfoInteger(ACCOUNT_MARGIN_MODE);
+   if(mode == ACCOUNT_MARGIN_MODE_RETAIL_HEDGING)
+      return true;
+
+   Print("Account position-mode contract failed: this portfolio requires hedging accounting but found ",
+         EnumToString(mode), ".");
+   return false;
+}
+
 bool ResearchCapitalContractAllows()
 {
    if(InpUseResearchTesterOnlyLock && !MQLInfoInteger(MQL_TESTER))
@@ -24304,6 +24316,9 @@ bool RealAccountSafetyLockAllows()
 int OnInit()
 {
    if(!SymbolSafetyLockAllows())
+      return INIT_PARAMETERS_INCORRECT;
+
+   if(!AccountPositionModeAllows())
       return INIT_PARAMETERS_INCORRECT;
 
    if(!ResearchCapitalContractAllows())
