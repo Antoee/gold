@@ -4,11 +4,13 @@ Research and validation repository for a risk-first MetaTrader 5 Expert Advisor 
 
 ## Current Status
 
-**Best balanced executable: Transferable Portfolio v0.1**
+**Best validated strategy: Transferable Portfolio v0.1 signals**
+
+**Recommended executable candidate: Operational Hardening v0.2-rc1. It has identical historical trades and profit, but stricter account and loss controls.**
 
 **Forward-test candidate only. Real-account trading remains disabled.**
 
-**2026-07-17 update: no new best was promoted. The first forward attachment remains invalid because the demo account has the wrong starting balance. Three low-activity diversifier profiles failed disjoint post-2020 holdout gates; an exact-source two-lane growth allocation ladder failed its improvement/drawdown gate; a new independent M15 daily-VWAP continuation family failed all pre-2021 broad windows; the M15 dual-regime portfolio also failed its recent holdout, and bounded inverse-volatility, lane-aware market-phase, no-follow-through exit, and two-bar confirmation forks failed pre-2021 discovery.**
+**2026-07-17 update: v0.2-rc1 passed exact Model1 and Model4 fidelity. Model4 remains +$1,615.36, PF 1.58, 362 trades, and 2.83% drawdown, with 724/724 events matching v0.1. This is an operational safety promotion, not a higher-profit new best. The first forward attachment remains invalid because the demo account has the wrong starting balance.**
 
 The candidate combines two date-independent H1 strategies:
 
@@ -18,7 +20,9 @@ The candidate combines two date-independent H1 strategies:
 - Shared maximum equity drawdown guard: `5.00%`
 - Hedging account required
 
-Exact tested files and evidence are in [`release/transferable-portfolio-v0.1`](release/transferable-portfolio-v0.1/README.md).
+v0.2-rc1 adds a `$10,000`/USD first-attachment contract, `1.25%` weekly and `1.50%` monthly loss limits, a nine-loss/48-hour portfolio cooldown, a `300%` minimum margin level, and fail-close protection if a managed stop disappears. None of those gates changed a historical trade in either validation model.
+
+Use [`release/transferable-portfolio-v0.2-rc1`](release/transferable-portfolio-v0.2-rc1/README.md) for the operational candidate. The exact frozen forward candidate remains in [`release/transferable-portfolio-v0.1`](release/transferable-portfolio-v0.1/README.md).
 
 ## Frozen Forward Demo
 
@@ -37,6 +41,8 @@ The replacement-account activation gate is prepared but has not been executed. T
 The terminal process later stopped during an interrupted isolated-research run. Restarting the same session preserved every frozen identity and the zero-trade account, but the read-only sentinel could not refresh while terminal-level algorithmic trading remained disabled. Re-enabling that switch would also wake the candidate on the invalid account, so the terminal was stopped again and the safety lock was retained. The stale heartbeat and stopped terminal are explicit failures, not forward evidence; valid days remain `0`.
 
 ## Latest Research Screens
+
+The operational-hardening fork compiled with `0 errors, 0 warnings` and reproduced the released strategy exactly. Model1 returned `+$1,616.49`, PF `1.58`, 370 trades, and `3.24%` drawdown with `740 / 740` exact lane events. Model4 real ticks returned `+$1,615.36`, PF `1.58`, 362 trades, and `2.83%` drawdown with `724 / 724` exact events. It is promoted as `v0.2-rc1` because it closes live-operation gaps without claiming additional historical edge. It still has zero valid forward days and trades. See the [decision](outputs/OPERATIONAL_HARDENING_PORTFOLIO_DECISION.md) and [fidelity table](outputs/OPERATIONAL_HARDENING_PORTFOLIO_FIDELITY.csv).
 
 Three exact low-activity profiles with positive pre-2021 clues were tested for diversification eligibility, not standalone promotion: a 16-bar failed-breakout trap, an 8-bar volatility squeeze, and a volume-climax VWAP reversal, each at `0.10%` risk. All `9 / 9` post-2020 Model 1 reports passed source identity. None stayed profitable in both disjoint holdout eras. Failed breakout made `+$21.65` in 2021-2022 but lost `-$11.77` in 2023-2026; squeeze lost `-$2.60` then made `+$45.44`; volume climax lost `-$14.76` and `-$57.78`. Combining those alternating outcomes after observing them would be portfolio curve fitting, so all three were rejected before trade correlation, portfolio allocation, Model 4, or implementation. See the [frozen contract](outputs/LOW_ACTIVITY_DIVERSIFIER_HOLDOUT_CONTRACT.md) and [decision](outputs/LOW_ACTIVITY_DIVERSIFIER_HOLDOUT_DECISION.md).
 
@@ -124,6 +130,16 @@ These checks reduce start-date dependence. They do not prove future profitabilit
 
 ## Frozen Identity
 
+The recommended operational candidate has a separate identity from the still-frozen v0.1 forward run:
+
+| v0.2-rc1 artifact | SHA-256 |
+|---|---|
+| EA source | `015DCCDBA020796895C1A71B150C31B4F0F276A9334243BD7474293F73385EB4` |
+| Compiled binary | `4C0BF9BEF949772DA537091EB8E3464FCF9910F9AF55D2A17B7305E1E8ED4756` |
+| Model4 profile | `7E7081A9BF179BC1B93623316D8EFFFB3C0CED91ACF0FFDE91BD61ABD712F6B2` |
+
+The frozen v0.1 forward identity remains:
+
 | Artifact | SHA-256 |
 |---|---|
 | EA source | `5BADDE1BC7C1E8020E64F00793058AD5C6174370A866F5D3002FA1FA12248FC3` |
@@ -144,7 +160,9 @@ No backtest can make an EA work forever without monitoring. The future process i
 
 ## Repository Map
 
+- [`release/transferable-portfolio-v0.2-rc1`](release/transferable-portfolio-v0.2-rc1/README.md): operationally hardened source, profile, exact-fidelity results, and SHA-256 manifest
 - [`release/transferable-portfolio-v0.1`](release/transferable-portfolio-v0.1/README.md): current source, profile, reports, ledgers, stress results, and SHA-256 manifest
+- [`outputs/OPERATIONAL_HARDENING_PORTFOLIO_DECISION.md`](outputs/OPERATIONAL_HARDENING_PORTFOLIO_DECISION.md): v0.2-rc1 safety promotion and remaining live-readiness block
 - [`outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md`](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md): current frozen forward-demo progress and integrity gates
 - [`outputs/TRANSFERABLE_FORWARD_SENTINEL_REGISTRATION.json`](outputs/TRANSFERABLE_FORWARD_SENTINEL_REGISTRATION.json): read-only operational/account contract monitor identity
 - [`outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md`](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md): disabled-trading account-switch and clock-start gate
