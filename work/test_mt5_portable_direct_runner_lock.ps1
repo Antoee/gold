@@ -42,8 +42,14 @@ if($guardText -notmatch 'outerHardLockFile' -or $guardText -notmatch 'Split-Path
 foreach($token in @("ConfigSha256", "SourceSha256", "PackageConfigSha256", "Package source identity mismatch")) {
    if($workerText -notmatch [regex]::Escape($token)) { throw "Worker identity attestation is missing: $token" }
 }
+foreach($token in @("mt5_report_identity_helpers.ps1", "Read-MT5ReportIdentityEvidence", "Write-MT5ReportIdentityEvidence", "ReportSha256", "ReportIdentityReused")) {
+   if($workerText -notmatch [regex]::Escape($token)) { throw "Worker resumable report identity is missing: $token" }
+}
 foreach($token in @("sharedResearchPortable", "mt5_portable_research", "portableParent.Equals")) {
    if($launcherText -notmatch [regex]::Escape($token)) { throw "Shared portable allowlist is missing: $token" }
+}
+foreach($token in @("Get-MatchingPortableReports", "LastWriteTimeUtc", "did not exit cleanly", "ambiguous report set", "still changing after terminal exit")) {
+   if($launcherText -notmatch [regex]::Escape($token)) { throw "Fresh completed-report enforcement is missing: $token" }
 }
 
 [pscustomobject]@{

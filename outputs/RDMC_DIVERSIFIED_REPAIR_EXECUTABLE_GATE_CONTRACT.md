@@ -38,7 +38,9 @@ A failed or incomplete wave never admits later waves. At most two tests are spen
 - Plan mode selects only the currently admitted wave and never launches MT5.
 - Parallel, worker, and direct-config launch layers each invoke the hard-lock guard before resolving a runtime or config.
 - Every worker rechecks the manifest-pinned config and source hashes and records the compiled binary hash.
-- The collector requires one runner row per admitted config, one shared binary identity, the exact report name, and the frozen source identity inside every report before parsing metrics.
+- Before launch, the direct runner removes every same-named report under the admitted portable root. It waits for clean terminal exit and then requires exactly one fresh, non-empty report whose size and timestamp remain stable after exit.
+- A completed worker row is reusable only with an adjacent schema-versioned sidecar binding the exact report hash, config hash, source hash, compiled-binary hash, report name, size, and creation time.
+- The collector requires one runner row per admitted config, one shared binary identity, the exact report name, the frozen source identity inside every report, and an independently revalidated sidecar/report hash before parsing metrics.
 - The admission evaluator rejects failed completed waves, leaves missing waves pending, and cannot promote a five-wave pass without executable-ledger stress.
 
 ## Hard Boundary

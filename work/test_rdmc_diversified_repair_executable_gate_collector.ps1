@@ -3,6 +3,7 @@ $ErrorActionPreference = "Stop"
 
 $repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $collector = Join-Path $PSScriptRoot "collect_rdmc_diversified_repair_executable_gate_results.ps1"
+. (Join-Path $PSScriptRoot "mt5_report_identity_helpers.ps1")
 $manifest = @(Import-Csv -LiteralPath (Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_EXECUTABLE_GATE_WAVE_01_MANIFEST.csv"))
 $sourceHash = "EC6F866B8F7786169F7B2ECE5553CF3A4DC6E6073D0B25389C16381B71FEF51F"
 $binaryHash = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
@@ -36,6 +37,12 @@ function Write-SyntheticReport([object]$Row, [bool]$IncludeSourceHash = $true) {
 </table><p>$identity</p></body></html>
 "@
    [IO.File]::WriteAllText($path, $html, [Text.Encoding]::ASCII)
+   if($IncludeSourceHash) {
+      Write-MT5ReportIdentityEvidence -ReportPath $path `
+         -IdentityPath (Join-Path $reports ($Row.ExpectedReportName + ".identity.json")) `
+         -ExpectedReportName $Row.ExpectedReportName -ConfigSha256 $Row.ConfigSha256 `
+         -SourceSha256 $sourceHash -PortableBinarySha256 $binaryHash | Out-Null
+   }
    return $path
 }
 
@@ -43,6 +50,7 @@ function Write-RunnerLedger([bool]$TamperConfig = $false) {
    $rows = foreach($row in $manifest) {
       $report = Join-Path $reports ($row.ExpectedReportName + ".htm")
       $relativeReport = $report.Substring($repo.Length + 1)
+      $identity = Join-Path $reports ($row.ExpectedReportName + ".identity.json")
       [pscustomobject]@{
          QueueRank = $row.QueueRank
          Candidate = $row.Candidate
@@ -51,6 +59,9 @@ function Write-RunnerLedger([bool]$TamperConfig = $false) {
          PackageSourceSha256 = $sourceHash
          PackageConfigSha256 = if($TamperConfig -and $row.QueueRank -eq $manifest[0].QueueRank) { "BAD" } else { $row.ConfigSha256 }
          PortableBinarySha256 = $binaryHash
+         ReportSha256 = (Get-FileHash -LiteralPath $report -Algorithm SHA256).Hash
+         ReportIdentityPath = $identity.Substring($repo.Length + 1)
+         ReportIdentityReused = $false
       }
    }
    $rows | Export-Csv -LiteralPath $ledger -NoTypeInformation -Encoding ASCII
@@ -85,6 +96,9 @@ try {
    if(@($canonical | Where-Object { $_.ConfigSha256 -notin $manifest.ConfigSha256 -or $_.SourceSha256 -ne $sourceHash -or $_.PortableBinarySha256 -ne $binaryHash }).Count -gt 0) {
       throw "Collector lost frozen identity fields."
    }
+   if(@($canonical | Where-Object { [string]::IsNullOrWhiteSpace($_.ReportIdentityPath) -or $_.ReportIdentityReused -ne 'False' }).Count -gt 0) {
+      throw "Collector lost report-sidecar provenance."
+   }
 
    Write-RunnerLedger -TamperConfig $true
    $configRejected = $false
@@ -94,7 +108,7 @@ try {
    Write-RunnerLedger
    Write-SyntheticReport $manifest[0] $false | Out-Null
    $sourceRejected = $false
-   try { & $collector @common | Out-Null } catch { $sourceRejected = $_.Exception.Message -match "lacks the frozen source identity" }
+   try { & $collector @common | Out-Null } catch { $sourceRejected = $_.Exception.Message -match "report (hash|sidecar identity) mismatch" }
    if(!$sourceRejected) { throw "Collector accepted a report without the frozen source identity." }
 
    $after = @(Get-Process -Name terminal,terminal64,metatester,metatester64,MetaEditor,metaeditor64 -ErrorAction SilentlyContinue)

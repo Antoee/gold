@@ -56,6 +56,9 @@ $outerHardLockPath = Join-Path (Split-Path -Parent (Split-Path -Parent $resolved
 $quietStopPath = Join-Path $WorkDir "STOP_MT5_FOCUS_WATCHDOG"
 $guardPath = Join-Path $WorkDir "assert_mt5_launch_allowed.ps1"
 $helperPath = Join-Path $WorkDir "mt5_background_helpers.ps1"
+$reportIdentityHelperPath = Join-Path $WorkDir "mt5_report_identity_helpers.ps1"
+$portableConfigRunnerPath = Join-Path $WorkDir "run_mt5_portable_config_hidden.ps1"
+$portableWorkerPath = Join-Path $WorkDir "run_mt5_portable_package_worker.ps1"
 $stopHelperPath = Join-Path $WorkDir "stop_mt5_stray_processes.ps1"
 $stopWatchdogPath = Join-Path $WorkDir "stop_mt5_focus_watchdog.ps1"
 $watchdogPath = Join-Path $WorkDir "mt5_focus_watchdog.ps1"
@@ -193,6 +196,13 @@ Add-Result $rows "Helper" "Start-MT5Hidden requires hidden desktop ack file" ((C
 Add-Result $rows "Helper" "Start-MT5Hidden honors hard lock" ((Contains-Text $helperText 'function Start-MT5Hidden') -and (Contains-Text $helperText 'MT5_LOCAL_LAUNCH_DISABLED.lock')) $helperPath "Start-MT5Hidden must stop when work\MT5_LOCAL_LAUNCH_DISABLED.lock exists."
 Add-Result $rows "Helper" "Background helper has low-impact controls" ((Contains-Text $helperText 'Set-MT5ProcessMute') -and (Contains-Text $helperText 'Set-MT5ProcessLowImpact') -and (Contains-Text $helperText 'Hide-MT5Windows')) $helperPath "Keep mute, lower-priority, and hide-window controls in the helper."
 Add-Result $rows "Helper" "Background helper covers broad MT5 process variants" ((Contains-Text $helperText 'Get-MT5FamilyProcessNames') -and (Contains-Text $helperText 'terminal64') -and (Contains-Text $helperText 'terminal') -and (Contains-Text $helperText 'metatester64') -and (Contains-Text $helperText 'metatester') -and (Contains-Text $helperText 'MetaEditor') -and (Contains-Text $helperText 'metaeditor64')) $helperPath "Mute, priority, and hide-window controls should cover terminal/metatester/MetaEditor variants."
+
+$reportIdentityHelperText = Read-TextSafe $reportIdentityHelperPath
+$portableConfigRunnerText = Read-TextSafe $portableConfigRunnerPath
+$portableWorkerText = Read-TextSafe $portableWorkerPath
+Add-Result $rows "Report integrity" "Identity-bound report helper exists" ((Test-Path -LiteralPath $reportIdentityHelperPath) -and (Contains-Text $reportIdentityHelperText 'Read-MT5ReportIdentityEvidence') -and (Contains-Text $reportIdentityHelperText 'Write-MT5ReportIdentityEvidence') -and (Contains-Text $reportIdentityHelperText 'PortableBinarySha256') -and (Contains-Text $reportIdentityHelperText 'ReportSha256')) $reportIdentityHelperPath "Restore the schema-versioned report identity helper."
+Add-Result $rows "Report integrity" "Portable runner requires fresh completed report" ((Contains-Text $portableConfigRunnerText 'Get-MatchingPortableReports') -and (Contains-Text $portableConfigRunnerText 'did not exit cleanly') -and (Contains-Text $portableConfigRunnerText 'ambiguous report set') -and (Contains-Text $portableConfigRunnerText 'still changing after terminal exit')) $portableConfigRunnerPath "Remove stale reports, wait for clean terminal exit, and require one stable report."
+Add-Result $rows "Report integrity" "Portable worker resumes only identity-bound evidence" ((Contains-Text $portableWorkerText 'Read-MT5ReportIdentityEvidence') -and (Contains-Text $portableWorkerText 'Write-MT5ReportIdentityEvidence') -and (Contains-Text $portableWorkerText 'ReportIdentityReused') -and (Contains-Text $portableWorkerText 'PackageConfigSha256')) $portableWorkerPath "Require matching config, source, binary, and report identities before reusing a completed row."
 
 $stopHelperText = Read-TextSafe $stopHelperPath
 Add-Result $rows "Cleanup" "Stop-stray helper exists" (Test-Path -LiteralPath $stopHelperPath) $stopHelperPath "Restore work\stop_mt5_stray_processes.ps1."

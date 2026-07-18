@@ -13,6 +13,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 if(!$UserAuthorizedFocusRisk) { throw "Explicit focus-risk authorization is required." }
 . (Join-Path $PSScriptRoot "assert_mt5_launch_allowed.ps1")
+. (Join-Path $PSScriptRoot "mt5_report_identity_helpers.ps1")
 $repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $manifest = (Resolve-Path -LiteralPath $ManifestPath).Path
 $portable = (Resolve-Path -LiteralPath $PortableRoot).Path
@@ -61,10 +62,21 @@ foreach($item in $items) {
       throw "Package source identity mismatch at queue rank $($item.QueueRank)."
    }
    $destinationBase = Resolve-RepoPath ([string]$item.ReportDestination)
-   $existing = @('.htm','.html','.xml') | ForEach-Object { $destinationBase + $_ } |
-      Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
-   if($existing -and !(Test-ReportSourceIdentity $existing $expectedSourceHash)) {
-      $existing = $null
+   $expectedReportName = if($item.PSObject.Properties.Name -contains "ExpectedReportName" -and
+                            ![string]::IsNullOrWhiteSpace([string]$item.ExpectedReportName)) {
+      [string]$item.ExpectedReportName
+   } else {
+      [IO.Path]::GetFileName($destinationBase)
+   }
+   $identityPath = $destinationBase + ".identity.json"
+   $existingCandidates = @(@('.htm','.html','.xml') | ForEach-Object { $destinationBase + $_ } |
+      Where-Object { Test-Path -LiteralPath $_ -PathType Leaf })
+   $existing = if($existingCandidates.Count -eq 1) { $existingCandidates[0] } else { $null }
+   $cachedIdentity = $null
+   if($existing) {
+      $cachedIdentity = Read-MT5ReportIdentityEvidence -ReportPath $existing `
+         -IdentityPath $identityPath -ExpectedReportName $expectedReportName `
+         -ConfigSha256 $configHash -SourceSha256 $expectedSourceHash
    }
    $started = (Get-Date).ToString("s")
    $status = ""
@@ -72,10 +84,15 @@ foreach($item in $items) {
    $evidence = ""
    $portableBinaryHash = ""
    $portableExpertRecompiled = $false
-   if($existing) {
+   $reportHash = ""
+   $reportIdentityReused = $false
+   if($cachedIdentity) {
       $status = "REPORT_FOUND"
       $reportPath = $existing
-      $evidence = "Reused existing non-empty package report."
+      $portableBinaryHash = $cachedIdentity.PortableBinarySha256
+      $reportHash = $cachedIdentity.ReportSha256
+      $reportIdentityReused = $true
+      $evidence = "Reused identity-bound package report."
    }
    else {
       try {
@@ -94,9 +111,18 @@ foreach($item in $items) {
          $target = $destinationBase + $extension
          $parent = Split-Path -Parent $target
          if($parent -and !(Test-Path -LiteralPath $parent)) { New-Item -ItemType Directory -Path $parent -Force | Out-Null }
+         foreach($candidate in $existingCandidates) {
+            if($candidate -ne $target) { Remove-Item -LiteralPath $candidate -Force -ErrorAction SilentlyContinue }
+         }
          Copy-Item -LiteralPath $sourceReport -Destination $target -Force
+         $identity = Write-MT5ReportIdentityEvidence -ReportPath $target `
+            -IdentityPath $identityPath -ExpectedReportName $expectedReportName `
+            -ConfigSha256 $configHash -SourceSha256 $expectedSourceHash `
+            -PortableBinarySha256 $portableBinaryHash
+         if(!$identity) { throw "Copied report identity evidence did not validate." }
          $status = "REPORT_FOUND"
          $reportPath = $target
+         $reportHash = $identity.ReportSha256
          $evidence = "Portable worker exported and copied the full MT5 report."
       }
       catch {
@@ -116,6 +142,9 @@ foreach($item in $items) {
       PackageSourceSha256 = $expectedSourceHash
       PortableBinarySha256 = $portableBinaryHash
       PortableExpertRecompiled = $portableExpertRecompiled
+      ReportSha256 = $reportHash
+      ReportIdentityPath = $identityPath
+      ReportIdentityReused = $reportIdentityReused
       Started = $started
       Finished = (Get-Date).ToString("s")
    }) | Out-Null

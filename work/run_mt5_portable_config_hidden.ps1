@@ -123,8 +123,24 @@ $configText = Get-Content -LiteralPath $config
 $reportLine = $configText | Where-Object { $_ -match '^Report=' } | Select-Object -First 1
 if(!$reportLine) { throw "Tester config has no Report setting." }
 $reportName = ($reportLine -replace '^Report=', '').Trim()
-$reportCandidates = @(".htm", ".html", ".xml") | ForEach-Object { Join-Path $portable ($reportName + $_) }
-foreach($candidate in $reportCandidates) { Remove-Item -LiteralPath $candidate -Force -ErrorAction SilentlyContinue }
+if([string]::IsNullOrWhiteSpace($reportName) -or
+   [IO.Path]::GetFileName($reportName) -ne $reportName -or
+   $reportName.IndexOfAny([IO.Path]::GetInvalidFileNameChars()) -ge 0) {
+   throw "Tester report name must be a non-empty file name without a path."
+}
+
+function Get-MatchingPortableReports {
+   return @(Get-ChildItem -LiteralPath $portable -Recurse -File -ErrorAction SilentlyContinue |
+      Where-Object { $_.BaseName -eq $reportName -and $_.Extension -in @('.htm','.html','.xml') })
+}
+
+$staleReports = @(Get-MatchingPortableReports)
+foreach($candidate in $staleReports) {
+   Remove-Item -LiteralPath $candidate.FullName -Force
+}
+if(@(Get-MatchingPortableReports).Count -ne 0) {
+   throw "A stale portable report could not be removed before testing."
+}
 
 $mainInstall = "C:\Program Files\MetaTrader 5\"
 $mainTerminalIds = @(Get-Process terminal,terminal64 -ErrorAction SilentlyContinue | Where-Object {
@@ -135,27 +151,43 @@ $mainBinaryHash = Get-OptionalHash $mainBinary
 Stop-PortableProcesses
 $portableExpert = Install-PortablePackageExpert
 
-$processId = [Mt5Audio.HiddenProcess]::StartHidden($terminal, "/portable /config:`"$config`"")
-$deadline = (Get-Date).AddMinutes($TimeoutMinutes)
+$runStartedUtc = [datetime]::UtcNow
 $report = $null
-do {
-   Start-Sleep -Milliseconds 750
-   Set-PortableLowImpact
-   $report = $reportCandidates | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
-   $running = Get-Process -Id $processId -ErrorAction SilentlyContinue
-   if(!$running -and !$report) {
-      Start-Sleep -Seconds 1
-      $report = $reportCandidates | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
-      break
-   }
-} while(!$report -and (Get-Date) -lt $deadline)
+$processId = 0
+try {
+   $processId = [Mt5Audio.HiddenProcess]::StartHidden($terminal, "/portable /config:`"$config`"")
+   $deadline = (Get-Date).AddMinutes($TimeoutMinutes)
+   do {
+      Start-Sleep -Milliseconds 750
+      Set-PortableLowImpact
+      $running = Get-Process -Id $processId -ErrorAction SilentlyContinue
+   } while($running -and (Get-Date) -lt $deadline)
 
-if(!$report) {
-   $report = Get-ChildItem -LiteralPath $portable -Recurse -File -ErrorAction SilentlyContinue |
-      Where-Object { $_.BaseName -eq $reportName -and $_.Extension -in @('.htm','.html','.xml') } |
-      Select-Object -ExpandProperty FullName -First 1
+   if($running) {
+      throw "Portable tester did not exit cleanly before the timeout for $reportName."
+   }
+   Start-Sleep -Seconds 1
+
+   $freshReports = @(Get-MatchingPortableReports)
+   if($freshReports.Count -ne 1) {
+      throw "Portable tester produced an ambiguous report set for ${reportName}: $($freshReports.Count) files."
+   }
+   $reportItem = $freshReports[0]
+   if($reportItem.Length -le 0 -or $reportItem.LastWriteTimeUtc -lt $runStartedUtc.AddSeconds(-2)) {
+      throw "Portable tester report is empty or stale for $reportName."
+   }
+   $firstLength = $reportItem.Length
+   $firstWrite = $reportItem.LastWriteTimeUtc
+   Start-Sleep -Milliseconds 500
+   $reportItem = Get-Item -LiteralPath $reportItem.FullName
+   if($reportItem.Length -ne $firstLength -or $reportItem.LastWriteTimeUtc -ne $firstWrite) {
+      throw "Portable tester report was still changing after terminal exit for $reportName."
+   }
+   $report = $reportItem.FullName
 }
-Stop-PortableProcesses
+finally {
+   Stop-PortableProcesses
+}
 
 if(!$report -or !(Test-Path -LiteralPath $report -PathType Leaf)) { throw "Portable tester produced no report for $reportName." }
 if((Get-Item -LiteralPath $report).Length -le 0) { throw "Portable tester produced an empty report." }

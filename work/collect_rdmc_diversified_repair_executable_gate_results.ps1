@@ -13,6 +13,7 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "mt5_report_identity_helpers.ps1")
 $repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $decisionPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_EXECUTABLE_GATE_DECISION.csv"
 $evaluator = Join-Path $PSScriptRoot "evaluate_rdmc_diversified_repair_executable_gate.py"
@@ -99,6 +100,7 @@ foreach($row in $waveRows) {
    if($run.PackageSourceSha256 -ne $expectedSourceHash) { throw "Runner source mismatch at queue rank $($row.QueueRank)." }
    if($run.PackageConfigSha256 -ne $row.ConfigSha256) { throw "Runner config mismatch at queue rank $($row.QueueRank)." }
    if([string]::IsNullOrWhiteSpace([string]$run.PortableBinarySha256)) { throw "Runner binary identity is missing." }
+   if([string]::IsNullOrWhiteSpace([string]$run.ReportSha256)) { throw "Runner report identity is missing." }
    $binaryHashes.Add(([string]$run.PortableBinarySha256).ToUpperInvariant()) | Out-Null
 
    $reportPath = Resolve-RepoPath ([string]$run.ReportPath)
@@ -111,6 +113,21 @@ foreach($row in $waveRows) {
    if([IO.Path]::GetFileNameWithoutExtension($reportResolved) -ne $row.ExpectedReportName) {
       throw "Runner report name mismatch at queue rank $($row.QueueRank)."
    }
+   $reportHash = (Get-FileHash -LiteralPath $reportResolved -Algorithm SHA256).Hash.ToUpperInvariant()
+   if($reportHash -ne ([string]$run.ReportSha256).ToUpperInvariant()) {
+      throw "Runner report hash mismatch at queue rank $($row.QueueRank)."
+   }
+   $identityPath = Resolve-RepoPath ([string]$run.ReportIdentityPath)
+   $expectedIdentityPath = Join-Path $reportRoot ($row.ExpectedReportName + ".identity.json")
+   if([IO.Path]::GetFullPath($identityPath) -ne [IO.Path]::GetFullPath($expectedIdentityPath)) {
+      throw "Runner report identity path mismatch at queue rank $($row.QueueRank)."
+   }
+   $reportIdentity = Read-MT5ReportIdentityEvidence -ReportPath $reportResolved `
+      -IdentityPath $identityPath -ExpectedReportName $row.ExpectedReportName `
+      -ConfigSha256 $row.ConfigSha256 -SourceSha256 $expectedSourceHash
+   if(!$reportIdentity -or $reportIdentity.PortableBinarySha256 -ne ([string]$run.PortableBinarySha256).ToUpperInvariant()) {
+      throw "Runner report sidecar identity mismatch at queue rank $($row.QueueRank)."
+   }
    $reportText = Get-Content -LiteralPath $reportResolved -Raw
    if($reportText.IndexOf($expectedSourceHash, [StringComparison]::OrdinalIgnoreCase) -lt 0) {
       throw "Runner report lacks the frozen source identity at queue rank $($row.QueueRank)."
@@ -122,8 +139,10 @@ foreach($row in $waveRows) {
       ConfigSha256 = $row.ConfigSha256
       SourceSha256 = $expectedSourceHash
       PortableBinarySha256 = ([string]$run.PortableBinarySha256).ToUpperInvariant()
-      ReportSha256 = (Get-FileHash -LiteralPath $reportResolved -Algorithm SHA256).Hash.ToUpperInvariant()
+      ReportSha256 = $reportHash
       ReportPath = Relative-RepoPath $reportResolved
+      ReportIdentityPath = Relative-RepoPath $identityPath
+      ReportIdentityReused = ([string]$run.ReportIdentityReused -eq "True")
       IdentityPass = $true
    }) | Out-Null
 }
@@ -167,6 +186,8 @@ foreach($row in $waveRows) {
       ExpectedReportName = $row.ExpectedReportName
       Status = $item.Status
       ReportPath = $audit[0].ReportPath
+      ReportIdentityPath = $audit[0].ReportIdentityPath
+      ReportIdentityReused = $audit[0].ReportIdentityReused
       ReportSha256 = $audit[0].ReportSha256
       ConfigSha256 = $row.ConfigSha256
       SourceSha256 = $expectedSourceHash
