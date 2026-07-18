@@ -12,6 +12,8 @@ Research and validation repository for a risk-first MetaTrader 5 Expert Advisor 
 
 **2026-07-17 update: v0.2-rc2 passed exact Model1 and Model4 fidelity plus a dynamic wrong-capital initialization canary. Model4 remains +$1,615.36, PF 1.58, 362 trades, and 2.83% drawdown, with 724/724 events matching v0.1. This is an operational safety promotion, not a higher-profit new best. The first forward attachment remains invalid because the demo account has the wrong starting balance.**
 
+**Forward-prep update: a separate rc2 profile, read-only sentinel, immutable registration drafts, and activation preflight are now packaged. The `$10,000` canary passes; the `$100,000` canary is refused on balance and equity. Nothing is registered or installed, valid forward days/trades remain zero, and real-money use is still not approved.**
+
 The candidate combines two date-independent H1 strategies:
 
 - Band/VWAP mean reversion at `0.45%` requested risk
@@ -22,7 +24,7 @@ The candidate combines two date-independent H1 strategies:
 
 v0.2-rc2 retains rc1's `$10,000`/USD first-attachment contract, `1.25%` weekly and `1.50%` monthly loss limits, nine-loss/48-hour portfolio cooldown, `300%` minimum margin level, and missing-stop fail-close protection. It additionally invalidates the account after any new funding/credit/charge/standalone-fee record or non-portfolio buy/sell activity. None of those gates changed a historical trade in either validation model.
 
-Use [`release/transferable-portfolio-v0.2-rc2`](release/transferable-portfolio-v0.2-rc2/README.md) for the operational candidate. rc1 remains preserved for reproducibility, and the exact frozen forward candidate remains in [`release/transferable-portfolio-v0.1`](release/transferable-portfolio-v0.1/README.md).
+Use [`release/transferable-portfolio-v0.2-rc2`](release/transferable-portfolio-v0.2-rc2/README.md) for the operational candidate. Its unregistered forward-preparation package is in [`release/operational-hardening-rc2-forward-prep`](release/operational-hardening-rc2-forward-prep/README.md). rc1 remains preserved for reproducibility, and the exact frozen forward candidate remains in [`release/transferable-portfolio-v0.1`](release/transferable-portfolio-v0.1/README.md).
 
 ## Frozen Forward Demo
 
@@ -39,6 +41,12 @@ The forward profile keeps the same trading and risk inputs as the released base 
 The replacement-account activation gate is prepared but has not been executed. Terminal-level and sentinel-chart algorithmic trading are now disabled, the account-creation dialog was canceled without accepting terms, and no registration timestamp was changed. The disabled-trading check passes; the gate still refuses registration because starting balance and equity are `$100,000` instead of the frozen `$10,000`. It also preserves the demo hedging, identity, flat-account, zero-risk, and empty-log requirements. A separate verification is required after trading is re-enabled. Creating the new virtual account still awaits explicit acceptance of MetaQuotes' terms. See the [activation procedure](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md).
 
 The terminal process later stopped during an interrupted isolated-research run. Restarting the same session preserved every frozen identity and the zero-trade account, but the read-only sentinel could not refresh while terminal-level algorithmic trading remained disabled. Re-enabling that switch would also wake the candidate on the invalid account, so the terminal was stopped again and the safety lock was retained. The stale heartbeat and stopped terminal are explicit failures, not forward evidence; valid days remain `0`.
+
+### rc2 Forward Preparation
+
+rc2 now has a separate, unregistered forward package. Its profile changes only the run label, dedicated evidence filenames, and dashboard display; all 101 trading/risk fields remain identical to the Model4-tested profile. The companion sentinel compiled with `0 errors, 0 warnings`, contains no trading or account-identifier path, and reports account currency, funding-history count, foreign-trade count, positions, protection, risk, permissions, and frozen identity.
+
+The read-only preflight requires a fresh identity-matched heartbeat, USD demo hedging mode, exactly `$10,000` balance and equity within `$1`, accessible history, zero foreign trades, a flat/protected account, zero candidate risk, empty dedicated logs, and terminal/MQL algorithmic trading disabled. A deterministic `$10,000` fixture passed; a `$100,000` fixture matching the invalid attached account was refused on both capital gates. The checker did not mutate either draft or freeze a funding baseline. See the [package](outputs/OPERATIONAL_HARDENING_RC2_FORWARD_PACKAGE.md), [canary](outputs/OPERATIONAL_HARDENING_RC2_FORWARD_PREFLIGHT_TEST.md), and [candidate registration draft](outputs/OPERATIONAL_HARDENING_RC2_FORWARD_REGISTRATION_DRAFT.json).
 
 ## Latest Research Screens
 
@@ -153,7 +161,7 @@ The source compiles with `0 errors, 0 warnings`. Both published source snapshots
 
 ## What Remains
 
-1. Provision a `$10,000` demo hedging account, re-register the unchanged candidate, then collect at least 90 calendar days and 30 closed trades.
+1. Provision a fresh `$10,000` USD demo hedging account, pass the rc2 read-only activation preflight, then create a separate immutable rc2 registration and collect at least 90 valid calendar days and 30 closed trades.
 2. Reproduce the frozen profile on a second broker's XAUUSD specification.
 3. Review forward slippage, missed trades, disconnect handling, and the loss-streak warning.
 4. Keep live trading disabled until a manual review accepts all remaining evidence.
@@ -163,6 +171,7 @@ No backtest can make an EA work forever without monitoring. The future process i
 ## Repository Map
 
 - [`release/transferable-portfolio-v0.2-rc2`](release/transferable-portfolio-v0.2-rc2/README.md): recommended dedicated-account/funding-drift hardened source, profile, fidelity evidence, and manifest
+- [`release/operational-hardening-rc2-forward-prep`](release/operational-hardening-rc2-forward-prep/README.md): unregistered rc2 forward profile, read-only sentinel, identity drafts, wrong-capital canary, and manifest
 - [`release/transferable-portfolio-v0.2-rc1`](release/transferable-portfolio-v0.2-rc1/README.md): operationally hardened source, profile, exact-fidelity results, and SHA-256 manifest
 - [`release/transferable-portfolio-v0.1`](release/transferable-portfolio-v0.1/README.md): current source, profile, reports, ledgers, stress results, and SHA-256 manifest
 - [`outputs/OPERATIONAL_HARDENING_PORTFOLIO_DECISION.md`](outputs/OPERATIONAL_HARDENING_PORTFOLIO_DECISION.md): v0.2-rc1 safety promotion and remaining live-readiness block
