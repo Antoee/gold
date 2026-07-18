@@ -105,7 +105,10 @@ try {
    if($evaluation.Count -ne 2 -or @($evaluation | Where-Object Reasons -ne 'NOT_EVALUATED_INCOMPLETE_WAVE').Count -gt 0) {
       throw 'Empty-evidence evaluation did not remain at the two-row Wave 1 boundary.'
    }
-   $reportArtifacts = @(Get-ChildItem -LiteralPath $reportsPath -File | Where-Object Name -ne 'README.md')
+   $reportArtifacts = @()
+   if(Test-Path -LiteralPath $reportsPath -PathType Container) {
+      $reportArtifacts = @(Get-ChildItem -LiteralPath $reportsPath -File | Where-Object Name -ne 'README.md')
+   }
    if($reportArtifacts.Count -ne 0) { throw 'Harness audit found an unvalidated report artifact.' }
    if(Test-Path -LiteralPath (Join-Path $repo 'outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_RESULTS.csv')) {
       throw 'Harness audit found a claimed canonical result file.'
