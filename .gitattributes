@@ -140,3 +140,4 @@ work/evaluate_rdmc_money_ready_gate_repair_executable.py text eol=lf
 work/test_rdmc_money_ready_gate_repair_executable*.ps1 text eol=lf
 work/test_rdmc_money_ready_gate_repair_executable.py text eol=lf
 work/test_rdmc_money_ready_gate_repair_offline_suite.ps1 text eol=lf
+work/*rdmc_money_ready_gate_repair_wave_01_readiness.ps1 text eol=lf
