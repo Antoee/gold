@@ -17,6 +17,10 @@ $manifestPath = Join-Path $repo "outputs\RDMC_SIGNAL_RANGE_GATE_REPAIR_MODEL1_MA
 $selectionPath = Join-Path $repo "outputs\RDMC_SIGNAL_RANGE_GATE_SELECTION.csv"
 $joinedPath = Join-Path $repo "outputs\RDMC_CAP12_MODEL4_2015_2018_MOMENTUM_FEATURES.csv"
 $package = Join-Path $repo "outputs\rdmc_signal_range_gate_repair_model1_package"
+$collectorPath = Join-Path $repo "work\collect_rdmc_signal_range_gate_repair_results.ps1"
+$collectorTestPath = Join-Path $repo "work\test_rdmc_signal_range_gate_repair_collector.ps1"
+$decisionPath = Join-Path $repo "work\build_rdmc_signal_range_gate_repair_decision.ps1"
+$decisionTestPath = Join-Path $repo "work\test_rdmc_signal_range_gate_repair_decision.ps1"
 
 $sourceHash = (Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash
 $profileHash = (Get-FileHash -LiteralPath $profilePath -Algorithm SHA256).Hash
@@ -59,6 +63,15 @@ Check "profile byte identities" (@($profileMismatches).Count -eq 0) "four exact 
 Check "no real trading profile" (@(Get-ChildItem -LiteralPath (Join-Path $package 'profiles') -Filter '*.set' | Where-Object { (Get-Content -LiteralPath $_.FullName -Raw) -match 'InpAllowRealAccountTrading=true' }).Count -eq 0) "all profiles disabled"
 Check "configs present" (@($manifest | Where-Object { !(Test-Path -LiteralPath (Join-Path $repo $_.PackageConfig)) }).Count -eq 0) "8 / 8"
 Check "no generated reports" (@(Get-ChildItem -LiteralPath (Join-Path $package 'reports_here') -File -ErrorAction SilentlyContinue).Count -eq 0) "early gate unopened"
+
+Check "identity collector present" (Test-Path -LiteralPath $collectorPath -PathType Leaf) "exact report admission tool"
+$collector = Get-Content -LiteralPath $collectorPath -Raw
+Check "collector enforces report source" ($collector -match 'Report source identity missing' -and $collector -match [regex]::Escape($sourceHash)) "stale reports rejected"
+Check "collector test present" (Test-Path -LiteralPath $collectorTestPath -PathType Leaf) "synthetic end-to-end fixture"
+Check "decision builder present" (Test-Path -LiteralPath $decisionPath -PathType Leaf) "frozen stop-rule tool"
+$decisionBuilder = Get-Content -LiteralPath $decisionPath -Raw
+Check "decision freezes gate" ($decisionBuilder -match 'srg_min125_center' -and $decisionBuilder -match 'Trades2019 -ge 18' -and $decisionBuilder -match 'OPEN_MODEL4') "center plus neighbor, 18 trades"
+Check "decision branch tests present" (Test-Path -LiteralPath $decisionTestPath -PathType Leaf) "offline pass/fail fixtures"
 
 $checks | Format-Table -AutoSize
 "PASS: $($checks.Count) RDMC signal-range repair checks"
