@@ -106,6 +106,12 @@ outputs/rdmc_diversified_repair_restart_safe_model1_package/configs/*.ini -text 
 outputs/rdmc_diversified_repair_executable_gate_package/source/Professional_XAUUSD_EA.mq5 -text -diff
 outputs/rdmc_diversified_repair_executable_gate_package/profiles/*.set -text whitespace=cr-at-eol
 outputs/rdmc_diversified_repair_executable_gate_package/configs/*.ini -text whitespace=cr-at-eol
+work/run_rdmc_diversified_repair_executable_gate_wave.ps1 text eol=lf
+work/collect_rdmc_diversified_repair_executable_gate_results.ps1 text eol=lf
+work/evaluate_rdmc_diversified_repair_executable_gate.py text eol=lf
+work/test_rdmc_diversified_repair_executable_gate_wave_runner.ps1 text eol=lf
+work/test_rdmc_diversified_repair_executable_gate_collector.ps1 text eol=lf
+work/test_rdmc_diversified_repair_executable_gate.py text eol=lf
 outputs/RDMC_EXECUTABLE_LEDGER_STRESS_*.csv text eol=lf
 outputs/RDMC_EXECUTABLE_LEDGER_STRESS_*.md text eol=lf
 work/*rdmc_executable_trade_ledger_stress.py text eol=lf
@@ -118,3 +124,8 @@ outputs/rdmc_money_ready_gate_repair_package/source/Professional_XAUUSD_EA.mq5 -
 outputs/rdmc_money_ready_gate_repair_package/profiles/*.set -text whitespace=cr-at-eol
 outputs/RDMC_MONEY_READY_GATE_REPAIR_* -text whitespace=cr-at-eol
 outputs/rdmc_money_ready_gate_repair_executable_package/** -text whitespace=cr-at-eol
+work/run_rdmc_money_ready_gate_repair_executable_wave.ps1 text eol=lf
+work/collect_rdmc_money_ready_gate_repair_executable_results.ps1 text eol=lf
+work/evaluate_rdmc_money_ready_gate_repair_executable.py text eol=lf
+work/test_rdmc_money_ready_gate_repair_executable*.ps1 text eol=lf
+work/test_rdmc_money_ready_gate_repair_executable.py text eol=lf

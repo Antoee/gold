@@ -3,10 +3,19 @@
 - Status: **LOCKED**
 - Admitted wave: `1`
 - Rows: `2`
-- Available workers: `not inventoried by offline builder`
-- CPU ceiling: `80%`
-- Timeout per config: `15 minutes`
-- Repository lock: `True`
-- Outer lock: `True`
+- Available workers: `2` of `2` allowed
+- CPU ceiling per worker: `80%`
+- Execution mode: `SINGLE_STAGE`
+- Shared binary status: `LOCKED_COMPILE_ONCE_REQUIRED`
+- Shared binary action: `COMPILE_ON_LEADER_AND_DISTRIBUTE`
+- Repository hard lock: `True`
+- Outer workspace hard lock: `True`
+- Action: `WAIT_FOR_DELIBERATE_LOCK_REVIEW`
 
-This plan does not launch MT5. The new manifest must be bound to the compile-once runner, report sidecars, collector, and evaluator before either lock is reviewed. Wave 1 remains the only admitted spend.
+Plan mode never launches MT5. Run mode requires explicit focus-risk authorization, both hard locks absent, both unlock acknowledgements, and the launch-guard environment flags. Only the currently admitted wave manifest is passed to the generic parallel runner.
+
+Before workers start, run mode compiles the exact candidate once on one allowlisted leader and distributes that byte-identical source, EX5, and identity file to every portable root. Workers receive the prepared binary hash and are prohibited from recompiling independently.
+
+Wave 4 is staged without changing any frozen evidence row: three disjoint real-tick eras run first on at most three workers, verified missing complete-month XAUUSD tick caches are unioned across stopped portable roots, and only then does the continuous 2015-2026 row run on a warm cache. A complete-month same-name hash conflict stops the wave; the frozen partial July 2026 cutoff month is never copied.
+
+Interrupted work is resumable only through identity sidecars generated after a complete terminal exit. A cached report without matching report, config, source, and compiled-binary hashes is ignored and rerun.

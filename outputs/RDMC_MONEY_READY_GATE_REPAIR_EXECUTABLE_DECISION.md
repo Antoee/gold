@@ -3,12 +3,20 @@
 **Status: LOCKED_AWAITING_WAVE_01_REPORTS. No new best, forward substitution, or real-money approval.**
 
 - Current wave: `1`
-- Reports supplied: `0/24`
-- Static readiness: `PASS`
-- Source normalizes to frozen trading source after reversing the declared gate patch: `PASS`
+- Parsed reports supplied: `0/24`
+- Passed row gates: `0/24`
 - Launch locked: `True`
+- Static readiness: `PASS`
+- Source normalization to frozen base: `PASS`
+- Next action: `WAIT_FOR_LAUNCH_UNLOCK_THEN_RUN_WAVE_01`
 - Manifest SHA-256: `EB48BDE3D67F9D16BAD427AB5ACC25BC8DFF8D8F29839EB95ADE615F59668972`
 - Source SHA-256: `104F1B2D77876FA9856C8BECF7BF2D81DAB187F54BF3ED12C07493BCD6F6D6C8`
 - Profile SHA-256: `8A2D3B36ACD6A7B754B20A5D8AF8A98ED2F2AFD739B03CC3EE1A82BD8C2E3E3E`
 
-Static equivalence does not transfer profit evidence. The exact new identity must pass all 24 rows before executable-ledger and broker gates can open.
+## Evidence Boundary
+
+- No report is inferred from a config, static check, or post-hoc component ledger.
+- Missing or unparsed reports keep the current wave pending; a failed completed wave rejects later testing.
+- Model1 can reject only. Model4 waves must pass before executable trade-ledger stress is admitted.
+- Even a five-wave pass is not money-ready: cost stress, order-aware Monte Carlo, broker variation, and valid forward evidence remain required.
+- The registered forward candidate and real-account safety lock remain unchanged.
