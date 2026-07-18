@@ -4,8 +4,8 @@
 //| No martingale, grid, averaging down, or recovery systems           |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.11"
-#property description "Restart-safe diversified XAUUSD research portfolio; tester-only until independently validated."
+#property version   "1.12"
+#property description "Restart-safe, broker-verified XAUUSD research portfolio; tester-only until independently validated."
 
 #include <Trade/Trade.mqh>
 
@@ -2096,6 +2096,91 @@ double          InpTesterMaxProfitDrawdownPower = 2.00;
 double          InpTesterMaxProfitQualityPower = 1.00;
 
 CTrade trade;
+
+string TradeResultEvidence(CTrade &executor)
+{
+   return "retcode=" + IntegerToString((int)executor.ResultRetcode()) +
+          " (" + executor.ResultRetcodeDescription() + ")" +
+          ", deal=" + (string)executor.ResultDeal() +
+          ", order=" + (string)executor.ResultOrder();
+}
+
+bool ExecuteMarketEntry(CTrade &executor,
+                        const bool buy,
+                        const double volume,
+                        const string symbol,
+                        const double sl,
+                        const double tp,
+                        const string comment)
+{
+   bool submitted = buy ? executor.Buy(volume, symbol, 0.0, sl, tp, comment)
+                        : executor.Sell(volume, symbol, 0.0, sl, tp, comment);
+   if(!submitted)
+      return false;
+
+   uint retcode = executor.ResultRetcode();
+   if(retcode != TRADE_RETCODE_DONE && retcode != TRADE_RETCODE_DONE_PARTIAL)
+      return false;
+   return executor.ResultDeal() > 0;
+}
+
+bool ExecutePositionClose(CTrade &executor, const ulong ticket)
+{
+   if(!executor.PositionClose(ticket))
+      return false;
+
+   uint retcode = executor.ResultRetcode();
+   if(retcode != TRADE_RETCODE_DONE &&
+      retcode != TRADE_RETCODE_DONE_PARTIAL &&
+      retcode != TRADE_RETCODE_POSITION_CLOSED)
+      return false;
+   return !PositionSelectByTicket(ticket);
+}
+
+bool TradePriceMatches(const double actual, const double requested)
+{
+   double tickSize = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
+   double tolerance = MathMax(MathMax(_Point, tickSize) * 0.5, 0.00000001);
+   if(requested <= 0.0)
+      return MathAbs(actual) <= tolerance;
+   return MathAbs(actual - requested) <= tolerance;
+}
+
+bool ExecutePositionModify(CTrade &executor,
+                           const ulong ticket,
+                           const double sl,
+                           const double tp)
+{
+   if(!executor.PositionModify(ticket, sl, tp))
+      return false;
+
+   uint retcode = executor.ResultRetcode();
+   if(retcode != TRADE_RETCODE_DONE && retcode != TRADE_RETCODE_NO_CHANGES)
+      return false;
+   if(!PositionSelectByTicket(ticket))
+      return false;
+   return TradePriceMatches(PositionGetDouble(POSITION_SL), sl) &&
+          TradePriceMatches(PositionGetDouble(POSITION_TP), tp);
+}
+
+bool ExecutePositionClosePartial(CTrade &executor,
+                                 const ulong ticket,
+                                 const double closeVolume,
+                                 const double previousVolume)
+{
+   if(!executor.PositionClosePartial(ticket, closeVolume))
+      return false;
+
+   uint retcode = executor.ResultRetcode();
+   if(retcode != TRADE_RETCODE_DONE && retcode != TRADE_RETCODE_DONE_PARTIAL)
+      return false;
+   if(!PositionSelectByTicket(ticket))
+      return true;
+
+   double volumeStep = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+   double tolerance = MathMax(volumeStep * 0.5, 0.00000001);
+   return PositionGetDouble(POSITION_VOLUME) < previousVolume - tolerance;
+}
 
 bool IsResearchPortfolioMagic(const long magic)
 {
@@ -16105,6 +16190,80 @@ class CPositionManager
 private:
    CMarketStructure m_structure;
 
+   void ReportTradeFailure(const string operation,
+                           const ulong ticket,
+                           const string reason)
+   {
+      if(InpLogLevel >= LOG_ERRORS)
+         Print(operation, " failed for ", ticket, ": ", reason,
+               " / ", TradeResultEvidence(trade));
+   }
+
+   bool CloseAndLog(const ulong ticket,
+                    const string eventName,
+                    const string side,
+                    const double volume,
+                    const double openPrice,
+                    const double sl,
+                    const double tp,
+                    const double r,
+                    const double profit,
+                    const string reason,
+                    const double atr)
+   {
+      if(!ExecutePositionClose(trade, ticket))
+      {
+         ReportTradeFailure("position close", ticket, reason);
+         return false;
+      }
+      logger.Write(eventName, ticket, side, volume, openPrice, sl, tp,
+                   r, profit, reason, atr);
+      return true;
+   }
+
+   bool ModifyAndLog(const ulong ticket,
+                     const string side,
+                     const double volume,
+                     const double openPrice,
+                     const double sl,
+                     const double tp,
+                     const double r,
+                     const double profit,
+                     const string reason,
+                     const double atr)
+   {
+      if(!ExecutePositionModify(trade, ticket, sl, tp))
+      {
+         ReportTradeFailure("position modify", ticket, reason);
+         return false;
+      }
+      logger.Write("modify", ticket, side, volume, openPrice, sl, tp,
+                   r, profit, reason, atr);
+      return true;
+   }
+
+   bool PartialCloseAndLog(const ulong ticket,
+                           const string side,
+                           const double closeVolume,
+                           const double previousVolume,
+                           const double openPrice,
+                           const double sl,
+                           const double tp,
+                           const double r,
+                           const double profit,
+                           const string reason,
+                           const double atr)
+   {
+      if(!ExecutePositionClosePartial(trade, ticket, closeVolume, previousVolume))
+      {
+         ReportTradeFailure("partial close", ticket, reason);
+         return false;
+      }
+      logger.Write("partial", ticket, side, closeVolume, openPrice, sl, tp,
+                   r, profit, reason, atr);
+      return true;
+   }
+
    bool DailyDonchianChannelExitHit(const ENUM_POSITION_TYPE type,
                                     string &reason)
    {
@@ -16681,10 +16840,13 @@ private:
          return;
 
       newTp = NormalizeDouble(newTp, _Digits);
-      if(trade.PositionModify(ticket, sl, newTp))
+      if(ModifyAndLog(ticket,
+                      (type == POSITION_TYPE_BUY ? "buy" : "sell"),
+                      volume, openPrice, sl, newTp, r,
+                      PositionGetDouble(POSITION_PROFIT),
+                      "post partial runner TP expansion", atr))
       {
          MarkPostPartialRunnerTPExpanded(ticket);
-         logger.Write("modify", ticket, (type == POSITION_TYPE_BUY ? "buy" : "sell"), volume, openPrice, sl, newTp, r, PositionGetDouble(POSITION_PROFIT), "post partial runner TP expansion", atr);
       }
    }
 
@@ -16741,10 +16903,13 @@ private:
          double atr = 0.0;
          indicators.ATR(1, atr);
          double r = ProfitR(ticket, type, openPrice, sl);
-         if(trade.PositionClosePartial(ticket, closeLots))
+         if(PartialCloseAndLog(ticket,
+                               (type == POSITION_TYPE_BUY ? "buy" : "sell"),
+                               closeLots, volume, openPrice, sl, tp, r,
+                               PositionGetDouble(POSITION_PROFIT),
+                               "open basket partial harvest", atr))
          {
             MarkBasketHarvest(ticket);
-            logger.Write("partial", ticket, (type == POSITION_TYPE_BUY ? "buy" : "sell"), closeLots, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), "open basket partial harvest", atr);
 
             if(InpOpenBasketHarvestMoveStop && sl > 0.0)
             {
@@ -16757,8 +16922,12 @@ private:
                if(initialRisk > 0.0 && betterStop)
                {
                   protectedStop = NormalizeDouble(protectedStop, _Digits);
-                  trade.PositionModify(ticket, protectedStop, tp);
-                  logger.Write("modify", ticket, (type == POSITION_TYPE_BUY ? "buy" : "sell"), PositionGetDouble(POSITION_VOLUME), openPrice, protectedStop, tp, r, PositionGetDouble(POSITION_PROFIT), "open basket harvest stop lock", atr);
+                  ModifyAndLog(ticket,
+                               (type == POSITION_TYPE_BUY ? "buy" : "sell"),
+                               PositionGetDouble(POSITION_VOLUME), openPrice,
+                               protectedStop, tp, r,
+                               PositionGetDouble(POSITION_PROFIT),
+                               "open basket harvest stop lock", atr);
                }
             }
          }
@@ -17041,11 +17210,9 @@ public:
          double atr = 0;
          indicators.ATR(1, atr);
 
-         if(trade.PositionClose(ticket))
-            logger.Write("risk_exit", ticket, (type == POSITION_TYPE_BUY ? "buy" : "sell"), volume, openPrice, sl, tp, 0, profit, reason, atr);
-         else if(InpLogLevel >= LOG_ERRORS)
-            Print("Risk close failed for ", ticket, ": ", reason,
-                  " / ", trade.ResultRetcodeDescription());
+         CloseAndLog(ticket, "risk_exit",
+                     (type == POSITION_TYPE_BUY ? "buy" : "sell"),
+                     volume, openPrice, sl, tp, 0, profit, reason, atr);
       }
    }
 
@@ -17067,6 +17234,7 @@ public:
          double sl = PositionGetDouble(POSITION_SL);
          double tp = PositionGetDouble(POSITION_TP);
          double volume = PositionGetDouble(POSITION_VOLUME);
+         double profit = PositionGetDouble(POSITION_PROFIT);
          long positionId = PositionGetInteger(POSITION_IDENTIFIER);
          datetime positionTime = (datetime)PositionGetInteger(POSITION_TIME);
          double atr = 0;
@@ -17087,9 +17255,8 @@ public:
             string dailyExitReason = "";
             if(DailyDonchianChannelExitHit(type, dailyExitReason))
             {
-               trade.PositionClose(ticket);
-               logger.Write("exit", ticket, "daily_channel", volume, openPrice, sl, tp, 0,
-                            PositionGetDouble(POSITION_PROFIT), dailyExitReason, atr);
+               CloseAndLog(ticket, "exit", "daily_channel", volume, openPrice,
+                           sl, tp, 0, profit, dailyExitReason, atr);
                continue;
             }
 
@@ -17102,8 +17269,8 @@ public:
             if((type == POSITION_TYPE_BUY && currentSignalBias == BIAS_SELL) ||
                (type == POSITION_TYPE_SELL && currentSignalBias == BIAS_BUY))
             {
-               trade.PositionClose(ticket);
-               logger.Write("exit", ticket, "opposite", volume, openPrice, sl, tp, 0, PositionGetDouble(POSITION_PROFIT), "opposite signal", atr);
+               CloseAndLog(ticket, "exit", "opposite", volume, openPrice,
+                           sl, tp, 0, profit, "opposite signal", atr);
                continue;
             }
          }
@@ -17114,8 +17281,8 @@ public:
             int heldBars = iBarShift(_Symbol, InpSignalTimeframe, barOpen, false);
             if(heldBars >= InpMaxHoldBars)
             {
-               trade.PositionClose(ticket);
-               logger.Write("exit", ticket, "time", volume, openPrice, sl, tp, 0, PositionGetDouble(POSITION_PROFIT), "time exit", atr);
+               CloseAndLog(ticket, "exit", "time", volume, openPrice,
+                           sl, tp, 0, profit, "time exit", atr);
                continue;
             }
          }
@@ -17129,8 +17296,8 @@ public:
                if((type == POSITION_TYPE_BUY && close1 < exitEma) ||
                   (type == POSITION_TYPE_SELL && close1 > exitEma))
                {
-                  trade.PositionClose(ticket);
-                  logger.Write("exit", ticket, "ema", volume, openPrice, sl, tp, 0, PositionGetDouble(POSITION_PROFIT), "EMA exit", atr);
+                  CloseAndLog(ticket, "exit", "ema", volume, openPrice,
+                              sl, tp, 0, profit, "EMA exit", atr);
                   continue;
                }
             }
@@ -17138,8 +17305,8 @@ public:
 
          if(InpUseVolatilityExit && atr / _Point >= InpVolatilityExitATRPoints)
          {
-            trade.PositionClose(ticket);
-            logger.Write("exit", ticket, "volatility", volume, openPrice, sl, tp, 0, PositionGetDouble(POSITION_PROFIT), "volatility exit", atr);
+            CloseAndLog(ticket, "exit", "volatility", volume, openPrice,
+                        sl, tp, 0, profit, "volatility exit", atr);
             continue;
          }
 
@@ -17154,15 +17321,16 @@ public:
          string thesisBreakReason = "";
          if(SmartMoneyThesisBreakExitHit(type, atr, r, heldBarsForExit, thesisBreakReason))
          {
-            trade.PositionClose(ticket);
-            logger.Write("exit", ticket, "smart_money_thesis_break", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), thesisBreakReason, atr);
+            CloseAndLog(ticket, "exit", "smart_money_thesis_break", volume,
+                        openPrice, sl, tp, r, profit, thesisBreakReason, atr);
             continue;
          }
 
          if(OppositeDisplacementExitHit(type, atr, r))
          {
-            trade.PositionClose(ticket);
-            logger.Write("exit", ticket, "opposite_displacement", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), "opposite displacement exit", atr);
+            CloseAndLog(ticket, "exit", "opposite_displacement", volume,
+                        openPrice, sl, tp, r, profit,
+                        "opposite displacement exit", atr);
             continue;
          }
 
@@ -17171,8 +17339,8 @@ public:
             string spreadShockReason = "";
             if(SpreadShockExitHit(atr, r, spreadShockReason))
             {
-               trade.PositionClose(ticket);
-               logger.Write("exit", ticket, "spread_shock", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), spreadShockReason, atr);
+               CloseAndLog(ticket, "exit", "spread_shock", volume, openPrice,
+                           sl, tp, r, profit, spreadShockReason, atr);
                continue;
             }
          }
@@ -17186,8 +17354,9 @@ public:
                                          heldBarsForExit,
                                          sessionImpulseFailureReason))
          {
-            trade.PositionClose(ticket);
-            logger.Write("exit", ticket, "session_impulse_failure", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), sessionImpulseFailureReason, atr);
+            CloseAndLog(ticket, "exit", "session_impulse_failure", volume,
+                        openPrice, sl, tp, r, profit,
+                        sessionImpulseFailureReason, atr);
             continue;
          }
 
@@ -17198,8 +17367,9 @@ public:
                                          heldBarsForExit,
                                          flatMonthProbeFailureReason))
          {
-            trade.PositionClose(ticket);
-            logger.Write("exit", ticket, "flat_month_probe_failure", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), flatMonthProbeFailureReason, atr);
+            CloseAndLog(ticket, "exit", "flat_month_probe_failure", volume,
+                        openPrice, sl, tp, r, profit,
+                        flatMonthProbeFailureReason, atr);
             continue;
          }
 
@@ -17212,8 +17382,9 @@ public:
             if(heldBars >= InpNoFollowThroughBars &&
                !RunnerExitPatienceAllows(type, openPrice, sl, r, maxFavorableR, atr))
             {
-               trade.PositionClose(ticket);
-               logger.Write("exit", ticket, "no_follow_through", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), "no follow-through exit", atr);
+               CloseAndLog(ticket, "exit", "no_follow_through", volume,
+                           openPrice, sl, tp, r, profit,
+                           "no follow-through exit", atr);
                continue;
             }
          }
@@ -17225,16 +17396,17 @@ public:
             int heldBars = iBarShift(_Symbol, InpSignalTimeframe, barOpen, false);
             if(heldBars >= InpMFEFailureBars)
             {
-               trade.PositionClose(ticket);
-               logger.Write("exit", ticket, "mfe_failure", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), "MFE failure exit", atr);
+               CloseAndLog(ticket, "exit", "mfe_failure", volume, openPrice,
+                           sl, tp, r, profit, "MFE failure exit", atr);
                continue;
             }
          }
 
          if(InpUseEarlyMFEReversalExit && maxFavorableR >= MathMax(0.0, InpEarlyMFEReversalStartR) && r <= InpEarlyMFEReversalExitR)
          {
-            trade.PositionClose(ticket);
-            logger.Write("exit", ticket, "early_mfe_reversal", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), "Early MFE reversal exit", atr);
+            CloseAndLog(ticket, "exit", "early_mfe_reversal", volume,
+                        openPrice, sl, tp, r, profit,
+                        "Early MFE reversal exit", atr);
             continue;
          }
 
@@ -17245,8 +17417,8 @@ public:
             if(heldBars >= InpStagnationExitBars &&
                !RunnerExitPatienceAllows(type, openPrice, sl, r, maxFavorableR, atr))
             {
-               trade.PositionClose(ticket);
-               logger.Write("exit", ticket, "stagnation", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), "stagnation exit", atr);
+               CloseAndLog(ticket, "exit", "stagnation", volume, openPrice,
+                           sl, tp, r, profit, "stagnation exit", atr);
                continue;
             }
          }
@@ -17256,8 +17428,8 @@ public:
             string reversalReason = "";
             if(ReversalPressure(type, atr, reversalReason))
             {
-               trade.PositionClose(ticket);
-               logger.Write("exit", ticket, "reversal_pressure", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), reversalReason, atr);
+               CloseAndLog(ticket, "exit", "reversal_pressure", volume,
+                           openPrice, sl, tp, r, profit, reversalReason, atr);
                continue;
             }
          }
@@ -17277,7 +17449,6 @@ public:
             double closeThresholdR = MathMax(InpMFEGivebackMinCloseR, maxFavorableR - effectiveGivebackR);
             if(r <= closeThresholdR)
             {
-               trade.PositionClose(ticket);
                string givebackReason = "MFE giveback exit";
                if(sessionImpulsePatience)
                   givebackReason = "SIL runner patience MFE giveback exit " + DoubleToString(effectiveGivebackR, 2) + "R";
@@ -17287,7 +17458,8 @@ public:
                   givebackReason = "runner patience MFE giveback exit " + DoubleToString(effectiveGivebackR, 2) + "R";
                else if(effectiveGivebackR > MathMax(0.0, InpMFEGivebackMaxGivebackR))
                   givebackReason = "MFE giveback exit stretched " + DoubleToString(effectiveGivebackR, 2) + "R";
-               logger.Write("exit", ticket, "mfe_giveback", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), givebackReason, atr);
+               CloseAndLog(ticket, "exit", "mfe_giveback", volume, openPrice,
+                           sl, tp, r, profit, givebackReason, atr);
                continue;
             }
          }
@@ -17298,16 +17470,17 @@ public:
             int heldBars = iBarShift(_Symbol, InpSignalTimeframe, barOpen, false);
             if(heldBars >= InpUnderwaterExitBars)
             {
-               trade.PositionClose(ticket);
-               logger.Write("exit", ticket, "underwater_time", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), "underwater time exit", atr);
+               CloseAndLog(ticket, "exit", "underwater_time", volume,
+                           openPrice, sl, tp, r, profit,
+                           "underwater time exit", atr);
                continue;
             }
          }
 
          if(InpUseAdverseRExit && InpAdverseExitR > 0.0 && r <= -InpAdverseExitR)
          {
-            trade.PositionClose(ticket);
-            logger.Write("exit", ticket, "adverse_r", volume, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), "adverse R exit", atr);
+            CloseAndLog(ticket, "exit", "adverse_r", volume, openPrice,
+                        sl, tp, r, profit, "adverse R exit", atr);
             continue;
          }
 
@@ -17321,10 +17494,14 @@ public:
 
             if(closeLots >= minLot && volume - closeLots >= minLot)
             {
-               trade.PositionClosePartial(ticket, closeLots);
-               MarkPartialClose(ticket);
-               logger.Write("partial", ticket, (type == POSITION_TYPE_BUY ? "buy" : "sell"), closeLots, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), "R partial profit lock", atr);
-               if(InpRPartialProfitLockMoveStop && sl > 0.0)
+               bool partiallyClosed = PartialCloseAndLog(ticket,
+                                                         (type == POSITION_TYPE_BUY ? "buy" : "sell"),
+                                                         closeLots, volume, openPrice,
+                                                         sl, tp, r, profit,
+                                                         "R partial profit lock", atr);
+               if(partiallyClosed)
+                  MarkPartialClose(ticket);
+               if(partiallyClosed && InpRPartialProfitLockMoveStop && sl > 0.0)
                {
                   double initialRisk = InitialRiskDistance(ticket, MathAbs(openPrice - sl));
                   double lockR = MathMax(0.0, InpRPartialProfitLockStopR);
@@ -17335,8 +17512,12 @@ public:
                   if(initialRisk > 0.0 && betterStop)
                   {
                      protectedStop = NormalizeDouble(protectedStop, _Digits);
-                     trade.PositionModify(ticket, protectedStop, tp);
-                     logger.Write("modify", ticket, (type == POSITION_TYPE_BUY ? "buy" : "sell"), PositionGetDouble(POSITION_VOLUME), openPrice, protectedStop, tp, r, PositionGetDouble(POSITION_PROFIT), "R partial profit lock stop", atr);
+                     ModifyAndLog(ticket,
+                                  (type == POSITION_TYPE_BUY ? "buy" : "sell"),
+                                  PositionGetDouble(POSITION_VOLUME), openPrice,
+                                  protectedStop, tp, r,
+                                  PositionGetDouble(POSITION_PROFIT),
+                                  "R partial profit lock stop", atr);
                   }
                }
             }
@@ -17351,9 +17532,11 @@ public:
 
             if(closeLots >= minLot && volume - closeLots >= minLot)
             {
-               trade.PositionClosePartial(ticket, closeLots);
-               MarkPartialClose(ticket);
-               logger.Write("partial", ticket, (type == POSITION_TYPE_BUY ? "buy" : "sell"), closeLots, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), "partial close", atr);
+               if(PartialCloseAndLog(ticket,
+                                     (type == POSITION_TYPE_BUY ? "buy" : "sell"),
+                                     closeLots, volume, openPrice, sl, tp, r,
+                                     profit, "partial close", atr))
+                  MarkPartialClose(ticket);
             }
          }
 
@@ -17367,10 +17550,14 @@ public:
 
             if(closeLots >= minLot && volume - closeLots >= minLot)
             {
-               trade.PositionClosePartial(ticket, closeLots);
-               MarkPartialClose(ticket);
-               logger.Write("partial", ticket, (type == POSITION_TYPE_BUY ? "buy" : "sell"), closeLots, openPrice, sl, tp, r, PositionGetDouble(POSITION_PROFIT), "protected runner partial close", atr);
-               if(InpProtectedRunnerPartialMoveStop && sl > 0.0)
+               bool partiallyClosed = PartialCloseAndLog(ticket,
+                                                         (type == POSITION_TYPE_BUY ? "buy" : "sell"),
+                                                         closeLots, volume, openPrice,
+                                                         sl, tp, r, profit,
+                                                         "protected runner partial close", atr);
+               if(partiallyClosed)
+                  MarkPartialClose(ticket);
+               if(partiallyClosed && InpProtectedRunnerPartialMoveStop && sl > 0.0)
                {
                   double initialRisk = InitialRiskDistance(ticket, MathAbs(openPrice - sl));
                   double lockR = MathMax(0.0, InpProtectedRunnerPartialStopLockR);
@@ -17381,8 +17568,12 @@ public:
                   if(initialRisk > 0.0 && betterStop)
                   {
                      protectedStop = NormalizeDouble(protectedStop, _Digits);
-                     trade.PositionModify(ticket, protectedStop, tp);
-                     logger.Write("modify", ticket, (type == POSITION_TYPE_BUY ? "buy" : "sell"), PositionGetDouble(POSITION_VOLUME), openPrice, protectedStop, tp, r, PositionGetDouble(POSITION_PROFIT), "protected runner partial stop lock", atr);
+                     ModifyAndLog(ticket,
+                                  (type == POSITION_TYPE_BUY ? "buy" : "sell"),
+                                  PositionGetDouble(POSITION_VOLUME), openPrice,
+                                  protectedStop, tp, r,
+                                  PositionGetDouble(POSITION_PROFIT),
+                                  "protected runner partial stop lock", atr);
                   }
                }
             }
@@ -17512,7 +17703,12 @@ public:
          if(newSl > 0 && MathAbs(newSl - sl) > _Point * 2)
          {
             newSl = NormalizeDouble(newSl, _Digits);
-            if(trade.PositionModify(ticket, newSl, tp) && StringLen(stopModifyReason) > 0)
+            if(!ExecutePositionModify(trade, ticket, newSl, tp))
+               ReportTradeFailure("position modify", ticket,
+                                  StringLen(stopModifyReason) > 0
+                                  ? stopModifyReason
+                                  : "protective stop update");
+            else if(StringLen(stopModifyReason) > 0)
                logger.Write("modify", ticket, (type == POSITION_TYPE_BUY ? "buy" : "sell"), volume, openPrice, newSl, tp, r, PositionGetDouble(POSITION_PROFIT), stopModifyReason, atr);
          }
       }
@@ -17631,6 +17827,34 @@ private:
    CTrade m_trade;
    int m_atrHandle;
    datetime m_lastSignalBar;
+
+   void ReportTradeFailure(const string operation,
+                           const ulong ticket,
+                           const string reason)
+   {
+      if(InpLogLevel >= LOG_ERRORS)
+         Print("Momentum ", operation, " failed for ", ticket, ": ", reason,
+               " / ", TradeResultEvidence(m_trade));
+   }
+
+   bool ClosePosition(const ulong ticket, const string reason)
+   {
+      if(ExecutePositionClose(m_trade, ticket))
+         return true;
+      ReportTradeFailure("position close", ticket, reason);
+      return false;
+   }
+
+   bool ModifyPosition(const ulong ticket,
+                       const double sl,
+                       const double tp,
+                       const string reason)
+   {
+      if(ExecutePositionModify(m_trade, ticket, sl, tp))
+         return true;
+      ReportTradeFailure("position modify", ticket, reason);
+      return false;
+   }
 
    string RiskKey(const ulong ticket)
    {
@@ -17903,13 +18127,18 @@ private:
       m_trade.SetExpertMagicNumber(InpMOMagicNumber);
       m_trade.SetDeviationInPoints(InpMODeviationPoints);
       string comment = buy ? "MTSM_BUY" : "MTSM_SELL";
-      bool opened = buy ? m_trade.Buy(lots, _Symbol, 0.0, stopPrice, takeProfit, comment)
-                        : m_trade.Sell(lots, _Symbol, 0.0, stopPrice, takeProfit, comment);
+      bool opened = ExecuteMarketEntry(m_trade, buy, lots, _Symbol,
+                                       stopPrice, takeProfit, comment);
       if(!opened)
+      {
+         ReportTradeFailure("entry", 0, "daily momentum plus fresh H1 breakout");
          return false;
+      }
       RegisterRiskForNewestPosition(stopDistance);
-      logger.Write("momentum_entry", m_trade.ResultOrder(), buy ? "buy" : "sell", lots,
-                   entryPrice, stopPrice, takeProfit, 0.0, 0.0,
+      double filledVolume = m_trade.ResultVolume() > 0.0 ? m_trade.ResultVolume() : lots;
+      double filledPrice = m_trade.ResultPrice() > 0.0 ? m_trade.ResultPrice() : entryPrice;
+      logger.Write("momentum_entry", m_trade.ResultDeal(), buy ? "buy" : "sell", filledVolume,
+                   filledPrice, stopPrice, takeProfit, 0.0, 0.0,
                    "daily momentum plus fresh H1 breakout", atr);
       return true;
    }
@@ -17925,21 +18154,21 @@ private:
             double closePrice = iClose(_Symbol, InpMOSignalTimeframe, 1);
             bool channelExit = buy ? closePrice < exitLow : closePrice > exitHigh;
             if(channelExit)
-               return m_trade.PositionClose(ticket);
+               return ClosePosition(ticket, "momentum channel exit");
          }
       }
       if(InpMOUseMomentumFailureExit)
       {
          int direction = MomentumDirection();
          if((buy && direction < 0) || (!buy && direction > 0))
-            return m_trade.PositionClose(ticket);
+            return ClosePosition(ticket, "momentum direction failure");
       }
       if(InpMOMaximumHoldBars > 0)
       {
          datetime openTime = (datetime)PositionGetInteger(POSITION_TIME);
          int openShift = iBarShift(_Symbol, InpMOSignalTimeframe, openTime, false);
          if(openShift >= InpMOMaximumHoldBars)
-            return m_trade.PositionClose(ticket);
+            return ClosePosition(ticket, "momentum maximum hold");
       }
       return false;
    }
@@ -17972,7 +18201,7 @@ private:
                        : newSl > current + minimumDistance;
       bool improved = buy ? newSl > oldSl + _Point : newSl < oldSl - _Point;
       if(valid && improved)
-         m_trade.PositionModify(ticket, newSl, takeProfit);
+         ModifyPosition(ticket, newSl, takeProfit, "momentum protective stop");
    }
 
    bool ManagePositionOnBar()
@@ -18053,6 +18282,10 @@ public:
          return false;
       m_trade.SetExpertMagicNumber(InpMOMagicNumber);
       m_trade.SetDeviationInPoints(InpMODeviationPoints);
+      m_trade.SetAsyncMode(false);
+      m_trade.SetMarginMode();
+      if(!m_trade.SetTypeFillingBySymbol(_Symbol))
+         return false;
       return true;
    }
 
@@ -18089,8 +18322,7 @@ public:
          if(PositionGetString(POSITION_SYMBOL) != _Symbol ||
             PositionGetInteger(POSITION_MAGIC) != InpMOMagicNumber)
             continue;
-         if(!m_trade.PositionClose(ticket))
-            Print("Momentum close failed for ", ticket, ": ", reason);
+         ClosePosition(ticket, reason);
       }
    }
 
@@ -21700,22 +21932,23 @@ bool OpenIsolatedBandVWAPReversionSignal(const SSignal &signal)
    trade.SetExpertMagicNumber(InpMagicNumber);
    trade.SetDeviationInPoints(InpDeviationPoints);
    string tradeComment = CompactTradeComment(signal);
-   bool ok = (signal.bias == BIAS_BUY)
-             ? trade.Buy(lots, _Symbol, 0, sl, tp, tradeComment)
-             : trade.Sell(lots, _Symbol, 0, sl, tp, tradeComment);
+   bool ok = ExecuteMarketEntry(trade, signal.bias == BIAS_BUY, lots,
+                                _Symbol, sl, tp, tradeComment);
    if(ok)
    {
       RegisterInitialRiskForNewestPosition(signal.bias, stopDistance);
       string biasText = (signal.bias == BIAS_BUY) ? "buy" : "sell";
       string reason = signal.reasons + "Isolated H1 execution;Trade RR " +
                       DoubleToString(tpDistance / stopDistance, 2) + ";";
-      logger.Write("entry", trade.ResultOrder(), biasText, lots, entry, sl, tp,
+      double filledVolume = trade.ResultVolume() > 0.0 ? trade.ResultVolume() : lots;
+      double filledPrice = trade.ResultPrice() > 0.0 ? trade.ResultPrice() : entry;
+      logger.Write("entry", trade.ResultDeal(), biasText, filledVolume, filledPrice, sl, tp,
                    tpDistance / stopDistance, 0.0, reason, signal.atr);
       g_lastBlockReason = "entered " + biasText;
    }
    else
    {
-      g_lastBlockReason = "trade failed: " + trade.ResultRetcodeDescription();
+      g_lastBlockReason = "trade failed: " + TradeResultEvidence(trade);
       if(InpLogLevel >= LOG_ERRORS)
          Print(g_lastBlockReason);
    }
@@ -21803,22 +22036,23 @@ bool OpenIsolatedDailyDonchianSignal(const SSignal &signal)
    trade.SetExpertMagicNumber(InpMagicNumber);
    trade.SetDeviationInPoints(InpDeviationPoints);
    string tradeComment = CompactTradeComment(signal);
-   bool ok = (signal.bias == BIAS_BUY)
-             ? trade.Buy(lots, _Symbol, 0, sl, tp, tradeComment)
-             : trade.Sell(lots, _Symbol, 0, sl, tp, tradeComment);
+   bool ok = ExecuteMarketEntry(trade, signal.bias == BIAS_BUY, lots,
+                                _Symbol, sl, tp, tradeComment);
    if(ok)
    {
       RegisterInitialRiskForNewestPosition(signal.bias, stopDistance);
       string biasText = (signal.bias == BIAS_BUY) ? "buy" : "sell";
       string reason = signal.reasons + "Isolated D1 execution;Trade RR " +
                       DoubleToString(tpDistance / stopDistance, 2) + ";";
-      logger.Write("entry", trade.ResultOrder(), biasText, lots, entry, sl, tp,
+      double filledVolume = trade.ResultVolume() > 0.0 ? trade.ResultVolume() : lots;
+      double filledPrice = trade.ResultPrice() > 0.0 ? trade.ResultPrice() : entry;
+      logger.Write("entry", trade.ResultDeal(), biasText, filledVolume, filledPrice, sl, tp,
                    tpDistance / stopDistance, 0.0, reason, signal.atr);
       g_lastBlockReason = "entered " + biasText;
    }
    else
    {
-      g_lastBlockReason = "trade failed: " + trade.ResultRetcodeDescription();
+      g_lastBlockReason = "trade failed: " + TradeResultEvidence(trade);
       if(InpLogLevel >= LOG_ERRORS)
          Print(g_lastBlockReason);
    }
@@ -22470,13 +22704,10 @@ bool OpenSignal(const SSignal &signal)
    trade.SetExpertMagicNumber(InpMagicNumber);
    trade.SetDeviationInPoints(InpDeviationPoints);
 
-   bool ok = false;
    string biasText = (signal.bias == BIAS_BUY) ? "buy" : "sell";
    string tradeComment = CompactTradeComment(signal);
-   if(signal.bias == BIAS_BUY)
-      ok = trade.Buy(lots, _Symbol, 0, sl, tp, tradeComment);
-   else
-      ok = trade.Sell(lots, _Symbol, 0, sl, tp, tradeComment);
+   bool ok = ExecuteMarketEntry(trade, signal.bias == BIAS_BUY, lots,
+                                _Symbol, sl, tp, tradeComment);
 
    if(ok)
    {
@@ -22609,13 +22840,15 @@ bool OpenSignal(const SSignal &signal)
          if(!loggedFmlrUnlimitedRunner)
             entryReason += "FMLR unlimited runner;";
       }
-      logger.Write("entry", trade.ResultOrder(), biasText, lots, entry, sl, tp,
+      double filledVolume = trade.ResultVolume() > 0.0 ? trade.ResultVolume() : lots;
+      double filledPrice = trade.ResultPrice() > 0.0 ? trade.ResultPrice() : entry;
+      logger.Write("entry", trade.ResultDeal(), biasText, filledVolume, filledPrice, sl, tp,
                    tpDistance / stopDistance, 0.0, entryReason, signal.atr);
       g_lastBlockReason = "entered " + biasText;
    }
    else
    {
-      g_lastBlockReason = "trade failed: " + trade.ResultRetcodeDescription();
+      g_lastBlockReason = "trade failed: " + TradeResultEvidence(trade);
       if(InpLogLevel >= LOG_ERRORS)
          Print(g_lastBlockReason);
    }
@@ -23966,6 +24199,14 @@ int OnInit()
 
    trade.SetExpertMagicNumber(InpMagicNumber);
    trade.SetDeviationInPoints(InpDeviationPoints);
+   trade.SetAsyncMode(false);
+   trade.SetMarginMode();
+   if(!trade.SetTypeFillingBySymbol(_Symbol))
+   {
+      Print("Failed to configure symbol-native order filling.");
+      indicators.Release();
+      return INIT_FAILED;
+   }
    riskManager.Init();
    if(!g_peakEquityPersistenceHealthy)
    {

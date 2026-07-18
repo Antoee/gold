@@ -69,9 +69,9 @@ $positionManager = Get-Section $source "class CPositionManager" "CPositionManage
 $primaryClose = Get-Section $positionManager "void CloseAll(const string reason)" "void Manage(const ENUM_TRADE_BIAS currentSignalBias)"
 $momentumClass = Get-Section $source "class CMomentumLane" "CMomentumLane g_momentum;"
 $momentumClose = Get-Section $momentumClass "void CloseAll(const string reason)" "void OnTradeTransaction(const MqlTradeTransaction &transaction)"
-Add-Check "primary emergency close owns primary magic" ($primaryClose.Contains('PositionGetInteger(POSITION_MAGIC) != InpMagicNumber') -and $primaryClose.Contains('trade.PositionClose(ticket)')) "primary close"
-Add-Check "primary emergency close logs broker rejection" ($primaryClose.Contains('Risk close failed for ') -and $primaryClose.Contains('trade.ResultRetcodeDescription()')) "primary failure visible"
-Add-Check "momentum emergency close owns momentum magic" ($momentumClose.Contains('PositionGetInteger(POSITION_MAGIC) != InpMOMagicNumber') -and $momentumClose.Contains('m_trade.PositionClose(ticket)')) "momentum close"
+Add-Check "primary emergency close owns primary magic" ($primaryClose.Contains('PositionGetInteger(POSITION_MAGIC) != InpMagicNumber') -and $primaryClose.Contains('CloseAndLog(ticket,')) "primary close"
+Add-Check "primary emergency close logs broker rejection" ($positionManager.Contains('ReportTradeFailure("position close", ticket, reason)') -and $positionManager.Contains('TradeResultEvidence(trade)')) "primary failure visible"
+Add-Check "momentum emergency close owns momentum magic" ($momentumClose.Contains('PositionGetInteger(POSITION_MAGIC) != InpMOMagicNumber') -and $momentumClose.Contains('ClosePosition(ticket, reason)') -and $momentumClass.Contains('ExecutePositionClose(m_trade, ticket)')) "momentum close"
 
 foreach($contract in @{
    InpTradeOnlyNewBar = 'true'

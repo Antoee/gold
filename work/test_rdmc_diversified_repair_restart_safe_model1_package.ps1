@@ -10,8 +10,8 @@ $queuePath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL
 $manifestPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_MANIFEST.csv"
 $documentPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_PACKAGE.md"
 
-$expectedSourceHash = "AE56DD40DD5A0619A54252081F64CBABDEF7F002066C50AEE3ECA9C8CF100AB8"
-$expectedProfileHash = "0CE2FAFCE3AD8BDC88D655B4C94364EA5F2B03C3BB4A5EC24C6308B6CC1D35E8"
+$expectedSourceHash = "0D59CD8DB67612E10E397766C56B55941A3D6178B84DCC9E611935A981F35FEA"
+$expectedProfileHash = "4ADF1741251591C50C5316503C3B489C95015456B75B4A5A9A940375259C241C"
 $expectedV1SourceHash = "4740338598E290360946FE414CC6F2FE0CF3B704006860514367DCB996A8D2B5"
 
 $checks = [System.Collections.Generic.List[object]]::new()
@@ -204,11 +204,13 @@ Add-Check "locked package contains no MT5 reports" ($reports.Count -eq 0) "repor
 Add-Check "manifest remains static and unpromoted" ($manifest.Count -eq 1 -and $manifest[0].Status -eq 'STATIC_ONLY_LOCKED' -and $manifest[0].PromotionStatus -eq 'NOT_PROMOTED' -and $manifest[0].HistoricalBestChanged -eq 'NO') "rows=$($manifest.Count)"
 Add-Check "manifest freezes all-entry execution hardening" ($manifest[0].EntryPathSafetyStatus -eq 'PASS_74_CHECKS' -and $manifest[0].MomentumCostMarginGuard -eq 'ENABLED' -and $manifest[0].PortfolioCooldownAllLanes -eq 'ENABLED') "$($manifest[0].EntryPathSafetyStatus)"
 Add-Check "manifest freezes lightweight realtime protection" ($manifest[0].RealtimeProtectionStatus -eq 'PASS_31_CHECKS' -and $manifest[0].RealtimeEquityDrawdownClose -eq 'ENABLED' -and $manifest[0].RealtimeMissingStopClose -eq 'ENABLED' -and $manifest[0].NormalPositionManagement -eq 'NEW_BAR') "$($manifest[0].RealtimeProtectionStatus)"
+Add-Check "manifest freezes broker-result verification" ($manifest[0].TradeResultSafetyStatus -eq 'PASS_53_CHECKS' -and $manifest[0].BrokerRetcodeVerification -eq 'ENABLED' -and $manifest[0].PostRequestStateVerification -eq 'ENABLED' -and $manifest[0].SynchronousTradeRequests -eq 'ENABLED' -and $manifest[0].SymbolNativeOrderFilling -eq 'ENABLED') "$($manifest[0].TradeResultSafetyStatus)"
 
 $document = Get-Content -LiteralPath $documentPath -Raw
 Add-Check "package states restart repair boundary" ($document.Contains('supersedes the uncompiled v1 package') -and $document.Contains('does not establish a new best') -and $document.Contains('Static checks cannot prove compilation')) "boundary present"
 Add-Check "package states entry-hardening evidence boundary" ($document.Contains('All four order-opening sites') -and $document.Contains('earlier post-hoc collision score is not attributed')) "boundary present"
-Add-Check "package states realtime efficiency boundary" ($document.Contains('lightweight per-tick emergency path') -and $document.Contains('performs no trade-history scan') -and $document.Contains('intrabar emergency enforcement can change entries and exits')) "boundary present"
+Add-Check "package states realtime efficiency boundary" ($document.Contains('lightweight per-tick emergency path') -and $document.Contains('performs no trade-history scan') -and $document.Contains('intrabar emergency') -and $document.Contains('can change entries and exits')) "boundary present"
+Add-Check "package states broker-result evidence boundary" ($document.Contains('completed broker retcode') -and $document.Contains('resulting position state') -and $document.Contains('broker-result enforcement can change entries and exits')) "boundary present"
 Add-Check "registered forward candidate stays unchanged" ($document.Contains('does not') -and $manifest[0].ForwardCandidateChanged -eq 'NO') $manifest[0].ForwardCandidateChanged
 Add-Check "no account identifier published" ($document -notmatch '(?i)account.?id\s*[:=]\s*\d{5,}' -and $document -notmatch '(?i)login\s*[:=]\s*\d{5,}') "public markdown clean"
 Add-Check "no GitHub token published" ($document -notmatch 'github_pat_|gh[pousr]_[A-Za-z0-9]{20,}') "public markdown clean"

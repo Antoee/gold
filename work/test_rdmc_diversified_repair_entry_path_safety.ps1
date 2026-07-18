@@ -34,9 +34,10 @@ if(@($checks | Where-Object { !$_.Pass }).Count -gt 0) {
 
 $source = Get-Content -LiteralPath $sourcePath -Raw
 $profile = Read-Profile $profilePath
-$orderCalls = @([regex]::Matches($source, '\b(?:m_trade|trade)\.(?:Buy|Sell)\s*\('))
+$orderCalls = @([regex]::Matches($source, 'ExecuteMarketEntry\('))
+$wrappedBuySellCalls = @([regex]::Matches($source, '\bexecutor\.(?:Buy|Sell)\s*\('))
 $alternateEntryCalls = @([regex]::Matches($source, '\b(?:OrderSendAsync|OrderSend|PositionOpen|BuyLimit|SellLimit|BuyStop|SellStop)\s*\('))
-Add-Check "exactly four buy/sell entry pairs exist" ($orderCalls.Count -eq 8) "calls=$($orderCalls.Count)"
+Add-Check "exactly four verified market entry paths exist" ($orderCalls.Count -eq 5 -and $wrappedBuySellCalls.Count -eq 2) "wrapper_refs=$($orderCalls.Count) internal_calls=$($wrappedBuySellCalls.Count)"
 Add-Check "no alternate order-opening API exists" ($alternateEntryCalls.Count -eq 0) "calls=$($alternateEntryCalls.Count)"
 
 $momentumClass = Get-Section $source "class CMomentumLane" "CMomentumLane g_momentum;"
@@ -53,22 +54,22 @@ foreach($entry in @(
    [pscustomobject]@{ Name='daily Donchian'; Text=$dailyOpen },
    [pscustomobject]@{ Name='primary'; Text=$primaryOpen }
 )) {
-   $directCalls = @([regex]::Matches($entry.Text, '\b(?:m_trade|trade)\.(?:Buy|Sell)\s*\(')).Count
-   Add-Check "$($entry.Name) has one buy/sell pair" ($directCalls -eq 2) "calls=$directCalls"
+   $directCalls = @([regex]::Matches($entry.Text, 'ExecuteMarketEntry\(')).Count
+   Add-Check "$($entry.Name) has one verified market entry" ($directCalls -eq 1) "calls=$directCalls"
    foreach($marker in @('LotsForRisk(','ExposureAllows(','TradingCostGuardAllows(','MarginGuardAllows(','SetExpertMagicNumber(','SetDeviationInPoints(')) {
       Add-Check "$($entry.Name) entry guard: $marker" $entry.Text.Contains($marker) $marker
    }
    $exposureIndex = $entry.Text.IndexOf('ExposureAllows(', [StringComparison]::Ordinal)
    $costIndex = $entry.Text.IndexOf('TradingCostGuardAllows(', [StringComparison]::Ordinal)
    $marginIndex = $entry.Text.IndexOf('MarginGuardAllows(', [StringComparison]::Ordinal)
-   $buyIndex = $entry.Text.IndexOf('.Buy(', [StringComparison]::Ordinal)
-   Add-Check "$($entry.Name) final guard order is exposure-cost-margin-order" ($exposureIndex -ge 0 -and $costIndex -gt $exposureIndex -and $marginIndex -gt $costIndex -and $buyIndex -gt $marginIndex) "exposure=$exposureIndex cost=$costIndex margin=$marginIndex order=$buyIndex"
+   $orderIndex = $entry.Text.IndexOf('ExecuteMarketEntry(', [StringComparison]::Ordinal)
+   Add-Check "$($entry.Name) final guard order is exposure-cost-margin-order" ($exposureIndex -ge 0 -and $costIndex -gt $exposureIndex -and $marginIndex -gt $costIndex -and $orderIndex -gt $marginIndex) "exposure=$exposureIndex cost=$costIndex margin=$marginIndex order=$orderIndex"
 }
 
 Add-Check "momentum uses nonzero stop and target" ($momentumOpen.Contains('stopPrice, takeProfit, comment') -and $momentumOpen.Contains('stopDistance <= 0.0')) "SL and TP passed"
-Add-Check "band reversion always passes SL and TP" ($bandOpen.Contains('0, sl, tp, tradeComment') -and $bandOpen.Contains('stopDistance <= 0.0 || tpDistance <= 0.0')) "SL and TP validated"
-Add-Check "daily Donchian always passes SL" ($dailyOpen.Contains('0, sl, tp, tradeComment') -and $dailyOpen.Contains('stopDistance <= 0.0')) "SL validated"
-Add-Check "primary always passes computed SL" ($primaryOpen.Contains('0, sl, tp, tradeComment') -and $primaryOpen.Contains('stopDistance = MathMax(stopDistance, MinimumBrokerStopDistance());') -and $primaryOpen.Contains('if(lots <= 0)')) "SL validated through minimum distance and lot sizing"
+Add-Check "band reversion always passes SL and TP" ($bandOpen.Contains('_Symbol, sl, tp, tradeComment') -and $bandOpen.Contains('stopDistance <= 0.0 || tpDistance <= 0.0')) "SL and TP validated"
+Add-Check "daily Donchian always passes SL" ($dailyOpen.Contains('_Symbol, sl, tp, tradeComment') -and $dailyOpen.Contains('stopDistance <= 0.0')) "SL validated"
+Add-Check "primary always passes computed SL" ($primaryOpen.Contains('_Symbol, sl, tp, tradeComment') -and $primaryOpen.Contains('stopDistance = MathMax(stopDistance, MinimumBrokerStopDistance());') -and $primaryOpen.Contains('if(lots <= 0)')) "SL validated through minimum distance and lot sizing"
 
 foreach($marker in @('TradeEnvironmentAllows(reason)','riskManager.CanOpen(reason)','WeekendCloseWindowActive()','newsFilter.IsBlocked()','InpMOMaximumDailyLossPercent','InpMOMaximumTradesPerDay','InpMOMaximumSpreadPoints','SessionAllows()','InpMOMaximumConsecutiveLosses')) {
    Add-Check "momentum safety marker: $marker" $momentumSafety.Contains($marker) $marker
