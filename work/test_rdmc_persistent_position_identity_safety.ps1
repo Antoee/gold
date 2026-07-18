@@ -102,7 +102,7 @@ $finalOnTickEnd = $source.IndexOf("void OnTradeTransaction(", $finalOnTickIndex,
 $finalOnTick = if($finalOnTickIndex -ge 0 -and $finalOnTickEnd -gt $finalOnTickIndex) { $source.Substring($finalOnTickIndex, $finalOnTickEnd - $finalOnTickIndex) } else { '' }
 $finalOnTrade = if($finalOnTradeIndex -ge 0) { $source.Substring($finalOnTradeIndex) } else { '' }
 
-Add-Check "source version is 1.30" ($source.Contains('#property version   "1.30"')) "version"
+Add-Check "source version is 1.31" ($source.Contains('#property version   "1.31"')) "version"
 Add-Check "description advertises account-scoped position state" ($source.Contains('verified account-scoped')) "description"
 Add-Check "description advertises collision-safe event reconciliation" ($source.Contains('collision-safe event reconciliation')) "description"
 Add-Check "base36 encoder uses a fixed uppercase alphabet" ($namespace.Contains('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')) "alphabet"
@@ -174,7 +174,8 @@ Add-Check "reconciliation covers every primary and momentum namespace" ([regex]:
 Add-Check "reconciliation clears dirty flag only after all namespaces" ($orphanState.IndexOf('g_positionStateReconciliationDue = false;', [StringComparison]::Ordinal) -gt $orphanState.LastIndexOf('RetireOrphanedPersistentStateNamespace(', [StringComparison]::Ordinal)) "success only"
 Add-Check "initialization reconciles before momentum starts" ($onInit.IndexOf('riskManager.Init();', [StringComparison]::Ordinal) -lt $onInit.IndexOf('ReconcileOrphanedPersistentPositionState()', [StringComparison]::Ordinal) -and $onInit.IndexOf('ReconcileOrphanedPersistentPositionState()', [StringComparison]::Ordinal) -lt $onInit.IndexOf('g_momentum.Init()', [StringComparison]::Ordinal)) "init ordering"
 Add-Check "tick reconciliation runs only while dirty" ($finalOnTick.Contains('if(g_positionStateReconciliationDue)') -and [regex]::Matches($finalOnTick, 'ReconcileOrphanedPersistentPositionState\(\)').Count -eq 1) "event driven"
-Add-Check "healthy reconciliation failure blocks further processing" ($finalOnTick.Contains('if(!positionStateReady)') -and $finalOnTick.Contains('position-state reconciliation unavailable') -and $finalOnTick.IndexOf('if(!positionStateReady)', [StringComparison]::Ordinal) -lt $finalOnTick.IndexOf('if(InpClosePositionsOnRiskLimit)', [StringComparison]::Ordinal)) "entry blocked"
+Add-Check "critical live-state checks precede tick reconciliation" ($finalOnTick.IndexOf('CriticalResearchPositionStateAllows(realtimeRiskReason)', [StringComparison]::Ordinal) -lt $finalOnTick.IndexOf('if(g_positionStateReconciliationDue)', [StringComparison]::Ordinal)) "emergency ordering"
+Add-Check "reconciliation failure cancels and flattens both lanes" ($finalOnTick.Contains('if(!positionStateReady)') -and $finalOnTick.Contains('string reconciliationReason = "position-state reconciliation unavailable";') -and $finalOnTick.Contains('CancelResearchOrders(reconciliationReason);') -and $finalOnTick.Contains('positionManager.CloseAll(reconciliationReason);') -and $finalOnTick.Contains('g_momentum.CloseAll(reconciliationReason);')) "fail-closed cleanup"
 Add-Check "deal transactions mark position state dirty" ($finalTransaction.Contains('g_positionStateReconciliationDue = true;')) "transaction driven"
 Add-Check "generic trade events mark position state dirty" ($finalOnTrade.Contains('g_positionStateReconciliationDue = true;')) "trade driven"
 

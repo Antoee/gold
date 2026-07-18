@@ -4,7 +4,7 @@
 //| No martingale, grid, averaging down, or recovery systems           |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.30"
+#property version   "1.31"
 #property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with exact attached protection, verified account-scoped immutable identity, disabled-lane cleanup, collision-safe event reconciliation and ownership-checked execution; tester-only until independently validated."
 
 #include <Trade/Trade.mqh>
@@ -25231,9 +25231,6 @@ void OnTick()
 {
    RefreshAccountHistoryWatchdog();
    tickMicrostructure.Update();
-   bool positionStateReady = true;
-   if(g_positionStateReconciliationDue)
-      positionStateReady = ReconcileOrphanedPersistentPositionState();
    if(!g_criticalPersistenceHealthy)
    {
       string persistenceReason = "critical trade-state persistence";
@@ -25244,19 +25241,18 @@ void OnTick()
       DrawDashboard();
       return;
    }
-   if(!positionStateReady)
+   if(ResearchActiveOrderCount() > 0)
    {
-      g_lastBlockReason = "position-state reconciliation unavailable";
+      string startupOrderReason = "active research order";
+      CancelResearchOrders(startupOrderReason);
+      positionManager.CloseAll(startupOrderReason);
+      g_momentum.CloseAll(startupOrderReason);
+      g_lastBlockReason = startupOrderReason;
       DrawDashboard();
       return;
    }
    string realtimeRiskReason = "";
    bool realtimeRiskHit = !CriticalResearchPositionStateAllows(realtimeRiskReason);
-   if(!realtimeRiskHit && ResearchActiveOrderCount() > 0)
-   {
-      realtimeRiskReason = "active research order";
-      realtimeRiskHit = true;
-   }
    if(!realtimeRiskHit && InpClosePositionsOnRiskLimit)
       realtimeRiskHit = riskManager.RealtimeProtectionLimitHit(realtimeRiskReason);
    if(realtimeRiskHit)
@@ -25265,6 +25261,19 @@ void OnTick()
       positionManager.CloseAll(realtimeRiskReason);
       g_momentum.CloseAll(realtimeRiskReason);
       g_lastBlockReason = realtimeRiskReason;
+      DrawDashboard();
+      return;
+   }
+   bool positionStateReady = true;
+   if(g_positionStateReconciliationDue)
+      positionStateReady = ReconcileOrphanedPersistentPositionState();
+   if(!positionStateReady)
+   {
+      string reconciliationReason = "position-state reconciliation unavailable";
+      CancelResearchOrders(reconciliationReason);
+      positionManager.CloseAll(reconciliationReason);
+      g_momentum.CloseAll(reconciliationReason);
+      g_lastBlockReason = reconciliationReason;
       DrawDashboard();
       return;
    }

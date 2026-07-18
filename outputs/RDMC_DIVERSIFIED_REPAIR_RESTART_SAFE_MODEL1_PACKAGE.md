@@ -24,7 +24,7 @@ This package supersedes the uncompiled v1 package before its first MT5 run. It p
 - Both trade executors are explicitly synchronous and use the symbol-native filling policy; successful entry logs use broker-confirmed deal, volume, and price fields.
 - Any active account order blocks new exposure, preventing a merely placed market request from being duplicated before it resolves.
 - A verified starting-capital registration permits initialization with a surviving research-owned order so restart recovery can run; first registration with any active order still fails closed.
-- Every ready tick treats a research-owned active order as an always-on emergency condition, independent of the optional risk-close switch, and cancels it before management or entry.
+- Every ready tick treats a research-owned active order as an always-on emergency condition, independent of the optional risk-close switch, and cancels it before position-state reconciliation, management, or entry.
 - Emergency, period-risk, weekend, session-end, and manual-news flattening cancel research-owned orders with verified broker results before closing positions.
 - Foreign orders are never canceled by the EA and instead fail the dedicated-account contract closed.
 - Entry, margin-cap, and partial-close volumes are rounded down with the broker-provided `SYMBOL_VOLUME_STEP`; precision is derived from the step instead of being hardcoded to two decimals.
@@ -59,17 +59,18 @@ This package supersedes the uncompiled v1 package before its first MT5 run. It p
 - Initialization and trade events reconcile orphaned state left by offline SL/TP exits or transaction ordering. A successful reconciliation clears its dirty flag, so terminal globals are not scanned on every tick.
 - Reconciliation accepts only the exact account/magic prefix plus an uppercase base-36 identifier suffix. Unrelated or malformed terminal globals are ignored.
 - If any indexed position or owned open-position identifier is unreadable, active state is preserved and processing remains blocked until a complete snapshot succeeds.
+- Live critical-position checks run before orphan reconciliation, and a failed reconciliation snapshot cancels research orders and flattens both lanes instead of leaving exposure waiting behind an early return.
 - Partial exits retain runner state while a matching expert-owned position identifier remains open. Full exits retire all scoped state, both immediately after verified EA closes and after broker-originated closing deals.
 - An unreadable active-position scan preserves persistent state instead of deleting it, and every obsolete ticket-only key family is absent from the source.
 
 ## Frozen identity
 
-- Source SHA-256: `D838AD3A88697B7ABCA4549721E5CC7652F252D5D1D50F3B0E523A940804B12D`
-- Profile SHA-256: `B66DEC5319AB9027E3F9C71B573E0E1DE57AFC6F3F08F1FF8EE5B360A8EEB254`
+- Source SHA-256: `EC6F866B8F7786169F7B2ECE5553CF3A4DC6E6073D0B25389C16381B71FEF51F`
+- Profile SHA-256: `746798EF260A375F8F8921DBC6D03CD3968ED38F5C105818598CA57572A0B883`
 - Predecessor source SHA-256: `4740338598E290360946FE414CC6F2FE0CF3B704006860514367DCB996A8D2B5`
 - Source/profile inputs: `589 / 589`
 - Queue: `outputs/RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_QUEUE.csv`
 
 ## Hard boundary
 
-The source is tester-only, real-account trading is disabled, and all 12 annual/YTD Model1 rows remain `LOCKED_LOCAL_LAUNCH_DISABLED`. The new cost, margin, hard-cooldown, intrabar emergency, broker-result, persistent-state, always-on live initial-risk validation, disabled-lane cleanup, idempotency, immutable-fill-identity, exact-attached-protection, scoped-lifecycle, identifier-ticket alias, and event-driven orphan-reconciliation safeguards can change entries and exits. Active-order reconciliation, including registered-restart recovery, can change entries and exits. Broker-volume reconciliation can change entries and exits. Post-fill risk reconciliation can change entries and exits. Tightening-only stop enforcement, ownership-checked close reconciliation, write-ahead one-shot actions, and position-state retirement can change exits too, so the earlier post-hoc collision score is not attributed to this executable path. Static checks cannot prove compilation, profit, drawdown, or restart behavior inside MT5. Compilation, annual and continuous Model1, annual and continuous real-tick Model4, cost stress, Monte Carlo, broker variation, and valid forward evidence are still required.
+The source is tester-only, real-account trading is disabled, and all 12 annual/YTD Model1 rows remain `LOCKED_LOCAL_LAUNCH_DISABLED`. The new cost, margin, hard-cooldown, intrabar emergency, broker-result, persistent-state, always-on live initial-risk validation, disabled-lane cleanup, idempotency, immutable-fill-identity, exact-attached-protection, scoped-lifecycle, identifier-ticket alias, and event-driven orphan-reconciliation safeguards can change entries and exits. Active-order reconciliation, including registered-restart recovery before reconciliation, can change entries and exits. Failed reconciliation now flattens exposure and can change exits. Broker-volume reconciliation can change entries and exits. Post-fill risk reconciliation can change entries and exits. Tightening-only stop enforcement, ownership-checked close reconciliation, write-ahead one-shot actions, and position-state retirement can change exits too, so the earlier post-hoc collision score is not attributed to this executable path. Static checks cannot prove compilation, profit, drawdown, or restart behavior inside MT5. Compilation, annual and continuous Model1, annual and continuous real-tick Model4, cost stress, Monte Carlo, broker variation, and valid forward evidence are still required.

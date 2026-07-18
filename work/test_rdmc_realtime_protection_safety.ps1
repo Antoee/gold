@@ -98,9 +98,11 @@ $momentumCloseIndex = $onTick.IndexOf('g_momentum.CloseAll(realtimeRiskReason);'
 $urgentReturnIndex = $onTick.IndexOf('return;', $momentumCloseIndex, [StringComparison]::Ordinal)
 $realtimeCallCount = @([regex]::Matches($onTick, 'RealtimeProtectionLimitHit\(')).Count
 $criticalStateIndex = $onTick.IndexOf('CriticalResearchPositionStateAllows(realtimeRiskReason)', [StringComparison]::Ordinal)
+$reconciliationIndex = $onTick.IndexOf('if(g_positionStateReconciliationDue)', [StringComparison]::Ordinal)
 $optionalRiskIndex = $onTick.IndexOf('if(!realtimeRiskHit && InpClosePositionsOnRiskLimit)', [StringComparison]::Ordinal)
 Add-Check "critical-state guard runs unconditionally on every ready tick" ($criticalStateIndex -ge 0 -and $optionalRiskIndex -gt $criticalStateIndex) "state=$criticalStateIndex optional=$optionalRiskIndex"
 Add-Check "optional risk switch cannot bypass critical-state flatten" ($onTick.Contains('bool realtimeRiskHit = !CriticalResearchPositionStateAllows(realtimeRiskReason);') -and $onTick.Contains('if(realtimeRiskHit)')) "unconditional integrity"
+Add-Check "critical-state emergency precedes orphan reconciliation" ($criticalStateIndex -ge 0 -and $reconciliationIndex -gt $criticalStateIndex) "state=$criticalStateIndex reconciliation=$reconciliationIndex"
 Add-Check "realtime guard runs before new-bar calculation" ($realtimeIndex -ge 0 -and $newBarIndex -gt $realtimeIndex) "guard=$realtimeIndex newbar=$newBarIndex"
 Add-Check "realtime guard runs before momentum management or entry" ($realtimeIndex -ge 0 -and $momentumIndex -gt $realtimeIndex) "guard=$realtimeIndex momentum=$momentumIndex"
 Add-Check "realtime guard runs before ordinary new-bar early return" ($realtimeIndex -ge 0 -and $earlyReturnIndex -gt $realtimeIndex) "guard=$realtimeIndex return_gate=$earlyReturnIndex"

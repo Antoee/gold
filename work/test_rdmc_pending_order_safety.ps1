@@ -93,15 +93,18 @@ Add-Check "first registration requires zero active orders" ($capital.Contains('t
 $finalOnTickIndex = $source.LastIndexOf('void OnTick()', [StringComparison]::Ordinal)
 $finalTransactionIndex = $source.LastIndexOf('void OnTradeTransaction', [StringComparison]::Ordinal)
 $onTick = if($finalOnTickIndex -ge 0 -and $finalTransactionIndex -gt $finalOnTickIndex) { $source.Substring($finalOnTickIndex, $finalTransactionIndex - $finalOnTickIndex) } else { '' }
-Add-Check "six flatten paths cancel research orders" ([regex]::Matches($onTick, 'CancelResearchOrders\(').Count -eq 6) "cancel_calls=6"
+Add-Check "eight flatten paths cancel research orders" ([regex]::Matches($onTick, 'CancelResearchOrders\(').Count -eq 8) "cancel_calls=8"
 $criticalStateIndex = $onTick.IndexOf('CriticalResearchPositionStateAllows(realtimeRiskReason)', [StringComparison]::Ordinal)
 $restartOrderIndex = $onTick.IndexOf('ResearchActiveOrderCount() > 0', [StringComparison]::Ordinal)
+$reconciliationIndex = $onTick.IndexOf('if(g_positionStateReconciliationDue)', [StringComparison]::Ordinal)
 $optionalRiskIndex = $onTick.IndexOf('if(!realtimeRiskHit && InpClosePositionsOnRiskLimit)', [StringComparison]::Ordinal)
-Add-Check "registered restart order recovery is always on" ($onTick.Contains('if(!realtimeRiskHit && ResearchActiveOrderCount() > 0)') -and $onTick.Contains('realtimeRiskReason = "active research order";') -and $onTick.Contains('realtimeRiskHit = true;')) "unconditional recovery"
-Add-Check "restart order recovery precedes optional risk gate" ($criticalStateIndex -ge 0 -and $restartOrderIndex -gt $criticalStateIndex -and $optionalRiskIndex -gt $restartOrderIndex) "state=$criticalStateIndex order=$restartOrderIndex optional=$optionalRiskIndex"
+Add-Check "registered restart order recovery is always on" ($onTick.Contains('if(ResearchActiveOrderCount() > 0)') -and $onTick.Contains('string startupOrderReason = "active research order";') -and $onTick.Contains('CancelResearchOrders(startupOrderReason);')) "unconditional recovery"
+Add-Check "restart order recovery precedes reconciliation and optional risk" ($restartOrderIndex -ge 0 -and $criticalStateIndex -gt $restartOrderIndex -and $optionalRiskIndex -gt $criticalStateIndex -and $reconciliationIndex -gt $optionalRiskIndex) "order=$restartOrderIndex state=$criticalStateIndex optional=$optionalRiskIndex reconcile=$reconciliationIndex"
 foreach($path in @(
    @{ Name='persistence failure'; Cancel='CancelResearchOrders(persistenceReason);'; Close='positionManager.CloseAll(persistenceReason);' },
+   @{ Name='startup order'; Cancel='CancelResearchOrders(startupOrderReason);'; Close='positionManager.CloseAll(startupOrderReason);' },
    @{ Name='realtime risk'; Cancel='CancelResearchOrders(realtimeRiskReason);'; Close='positionManager.CloseAll(realtimeRiskReason);' },
+   @{ Name='reconciliation failure'; Cancel='CancelResearchOrders(reconciliationReason);'; Close='positionManager.CloseAll(reconciliationReason);' },
    @{ Name='period risk'; Cancel='CancelResearchOrders(riskExitReason);'; Close='positionManager.CloseAll(riskExitReason);' },
    @{ Name='weekend'; Cancel='CancelResearchOrders("weekend close");'; Close='positionManager.CloseAll("weekend close");' },
    @{ Name='session'; Cancel='CancelResearchOrders("session end close");'; Close='positionManager.CloseAll("session end close");' },
