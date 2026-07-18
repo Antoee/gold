@@ -11,6 +11,12 @@ $manifestPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_EXECUTABLE_GATE
 $contractPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_EXECUTABLE_GATE_CONTRACT.md"
 $decisionPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_EXECUTABLE_GATE_DECISION.csv"
 $decisionMarkdownPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_EXECUTABLE_GATE_DECISION.md"
+$ledgerContractPath = Join-Path $repo "outputs\RDMC_EXECUTABLE_LEDGER_STRESS_CONTRACT.md"
+$ledgerDecisionPath = Join-Path $repo "outputs\RDMC_EXECUTABLE_LEDGER_STRESS_DECISION.csv"
+$ledgerDecisionMarkdownPath = Join-Path $repo "outputs\RDMC_EXECUTABLE_LEDGER_STRESS_DECISION.md"
+$ledgerAnalyzerPath = Join-Path $repo "work\analyze_rdmc_executable_trade_ledger_stress.py"
+$ledgerCorePath = Join-Path $repo "work\rdmc_executable_ledger_stress_core.py"
+$ledgerTestPath = Join-Path $repo "work\test_rdmc_executable_trade_ledger_stress.py"
 $expectedSourceHash = "EC6F866B8F7786169F7B2ECE5553CF3A4DC6E6073D0B25389C16381B71FEF51F"
 $expectedProfileHash = "746798EF260A375F8F8921DBC6D03CD3968ED38F5C105818598CA57572A0B883"
 $expectedManifestHash = "4DB75F81EB1BF82DD4516654E2070D75563D904B7A17367629911EE261B0E18A"
@@ -20,7 +26,9 @@ function Add-Check([string]$Name, [bool]$Pass, [string]$Evidence) {
    $checks.Add([pscustomobject]@{ Check=$Name; Pass=$Pass; Evidence=$Evidence })
 }
 
-foreach($required in @($source, $profile, $configs, $manifestPath, $contractPath, $decisionPath, $decisionMarkdownPath)) {
+foreach($required in @($source, $profile, $configs, $manifestPath, $contractPath, $decisionPath, $decisionMarkdownPath,
+                        $ledgerContractPath, $ledgerDecisionPath, $ledgerDecisionMarkdownPath,
+                        $ledgerAnalyzerPath, $ledgerCorePath, $ledgerTestPath)) {
    Add-Check "required artifact: $([IO.Path]::GetFileName($required))" (Test-Path -LiteralPath $required) $required
 }
 if(@($checks | Where-Object { !$_.Pass }).Count -gt 0) {
@@ -32,6 +40,11 @@ $manifest = @(Import-Csv -LiteralPath $manifestPath)
 $contract = Get-Content -LiteralPath $contractPath -Raw
 $decision = @(Import-Csv -LiteralPath $decisionPath)
 $decisionMarkdown = Get-Content -LiteralPath $decisionMarkdownPath -Raw
+$ledgerContract = Get-Content -LiteralPath $ledgerContractPath -Raw
+$ledgerDecision = @(Import-Csv -LiteralPath $ledgerDecisionPath)
+$ledgerDecisionMarkdown = Get-Content -LiteralPath $ledgerDecisionMarkdownPath -Raw
+$ledgerAnalyzer = Get-Content -LiteralPath $ledgerAnalyzerPath -Raw
+$ledgerCore = Get-Content -LiteralPath $ledgerCorePath -Raw
 $configFiles = @(Get-ChildItem -LiteralPath $configs -Filter "*.ini" -File | Sort-Object Name)
 $reportFiles = @(Get-ChildItem -LiteralPath $reports -File -ErrorAction SilentlyContinue)
 $sourceHash = (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash.ToUpperInvariant()
@@ -91,6 +104,15 @@ Add-Check "contract requires fresh complete resumable reports" ($contract.Contai
 Add-Check "contract requires one prepared binary" ($contract.Contains('compiles the exact package source once') -and $contract.Contains('same source, EX5, and two-line source/binary identity file') -and $contract.Contains('may not compile independently')) "boundary present"
 Add-Check "contract stages overlapping real ticks after verified cache union" ($contract.Contains('three non-overlapping eras run first') -and $contract.Contains('missing complete-month') -and $contract.Contains('partial July 2026 cutoff month is never copied') -and $contract.Contains('continuous 2015-2026 row starts only after')) "boundary present"
 Add-Check "decision does not infer reports" ($decisionMarkdown.Contains('No report is inferred') -and $decisionMarkdown.Contains('Even a five-wave pass is not money-ready')) "boundary present"
+Add-Check "ledger stress awaits executable admission" ($ledgerDecision.Count -eq 1 -and $ledgerDecision[0].Status -eq 'AWAITING_EXECUTABLE_MT5_GATE' -and $ledgerDecision[0].CurrentExecutableGateStatus -eq 'LOCKED_AWAITING_WAVE_01_REPORTS' -and $ledgerDecision[0].ExecutableLedgerPresent -eq 'False') $(if($ledgerDecision.Count -eq 1){$ledgerDecision[0].Status}else{'missing'})
+Add-Check "ledger stress keeps candidate unchanged" ($ledgerDecision[0].ForwardCandidateChanged -eq 'False' -and $ledgerDecision[0].RealAccountApproved -eq 'False') "forward=$($ledgerDecision[0].ForwardCandidateChanged) real=$($ledgerDecision[0].RealAccountApproved)"
+Add-Check "ledger contract is identity bound" ($ledgerContract.Contains('one wave-4, continuous, Model4 result') -and $ledgerContract.Contains('shared portable-binary hash') -and $ledgerContract.Contains('UTC creation time') -and $ledgerContract.Contains('source identity must also appear inside the report')) "boundary present"
+Add-Check "ledger contract rejects unsupported lifecycle" ($ledgerContract.Contains('filled order') -and $ledgerContract.Contains('initial stop') -and $ledgerContract.Contains('Reversals, overlapping entries, partial or oversized exits') -and $ledgerContract.Contains('price path')) "boundary present"
+Add-Check "ledger contract freezes cost and order-aware stress" ($ledgerContract.Contains('0.10R/trade') -and $ledgerContract.Contains('moving blocks of 8, 16, and 24 trades') -and $ledgerContract.Contains('whole-calendar-year resampling') -and $ledgerContract.Contains('All eight')) "boundary present"
+Add-Check "ledger analyzer cannot use post-hoc evidence" ($ledgerDecisionMarkdown.Contains('Post-hoc component ledgers cannot substitute') -and $ledgerAnalyzer.Contains('run_admitted_stress') -and $ledgerAnalyzer.Contains('len(results) == 24')) "boundary present"
+Add-Check "ledger report paths are canonical" ($ledgerAnalyzer.Contains('report.resolve().parent == REPORT_ROOT.resolve()') -and $ledgerAnalyzer.Contains('identity_path.resolve() == expected_identity_path.resolve()')) "boundary present"
+Add-Check "ledger parser is structured and fail closed" ($ledgerCore.Contains('class ReportRowsParser(HTMLParser)') -and $ledgerCore.Contains('Exit deal lacks its exact order row') -and $ledgerCore.Contains('Deal gross profit differs from its price path')) "boundary present"
+Add-Check "no stale executable stress claims" (!(Test-Path -LiteralPath (Join-Path $repo 'outputs\RDMC_EXECUTABLE_LEDGER_TRADES.csv')) -and !(Test-Path -LiteralPath (Join-Path $repo 'outputs\RDMC_EXECUTABLE_LEDGER_COST_STRESS.csv')) -and !(Test-Path -LiteralPath (Join-Path $repo 'outputs\RDMC_EXECUTABLE_LEDGER_ORDER_AWARE_MONTE_CARLO.csv'))) "ledger/cost/mc absent"
 Add-Check "repository launch lock remains" (Test-Path -LiteralPath (Join-Path $repo 'work\MT5_LOCAL_LAUNCH_DISABLED.lock')) "present"
 Add-Check "outer launch lock remains" (Test-Path -LiteralPath (Join-Path (Split-Path -Parent $repo) 'MT5_LOCAL_LAUNCH_DISABLED.lock')) "present"
 $mt5Processes = @(Get-Process -Name terminal64,terminal,metatester64,metaeditor64 -ErrorAction SilentlyContinue)

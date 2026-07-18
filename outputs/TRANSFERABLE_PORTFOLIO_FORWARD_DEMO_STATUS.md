@@ -1,7 +1,7 @@
 ﻿# Transferable Portfolio Forward Demo Status
 
 - **Status:** `FAIL`
-- **Updated:** `2026-07-18 11:47:26 -05:00`
+- **Updated:** `2026-07-18 13:28:55 -05:00`
 - **Registered:** `2026-07-17T03:57:19-05:00`
 - **Decision:** The live demo balance does not match the frozen starting-capital contract. This sample is invalid; move the unchanged candidate to a correctly capitalized demo before any trades occur.
 - **Safety:** Demo hedging account only; real-account trading remains disabled. The read-only sentinel cannot trade, and the account identifier is not published by either registration or heartbeat.
@@ -23,7 +23,7 @@
 | Metric | Current | Required |
 |---|---:|---:|
 | Eligible calendar days | 0.00 | 90 |
-| Elapsed since registration | 1.33 | information only; invalid while account contract fails |
+| Elapsed since registration | 1.40 | information only; invalid while account contract fails |
 | Closed trades | 0 | 30 |
 | Entry events | 0 | information only |
 | Net profit | $0.00 | > $0 after sample completes |
@@ -40,7 +40,7 @@
 |---|---|---|
 | Frozen source, profile, and installed binary hashes | PASS | source=True; profile=True; binary=True |
 | Read-only sentinel code identity | PASS | source=True; profile=True; binary=True |
-| Sentinel heartbeat freshness and identity | ATTENTION | present=True; valid=True; fresh=False; age=75748.3s; identity=True |
+| Sentinel heartbeat freshness and identity | ATTENTION | present=True; valid=True; fresh=False; age=81837.9s; identity=True |
 | Demo account and capital contract | FAIL | mode=demo/hedging; actual=$100000.00; expected=$10000.00 |
 | Connection and trading permissions | ATTENTION | connected=True; terminal=False; account=True; expert=True; MQL=False |
 | MT5 process running | ATTENTION | process count=0 |

@@ -47,9 +47,17 @@ Wave 4 keeps all four frozen evidence rows but executes them in two stages. The 
 - The collector requires one runner row per admitted config, one shared binary identity, the exact report name, the frozen source identity inside every report, and an independently revalidated sidecar/report hash before parsing metrics.
 - The admission evaluator rejects failed completed waves, leaves missing waves pending, and cannot promote a five-wave pass without executable-ledger stress.
 
+## Executable Ledger Stress
+
+- Stress admission requires all 24 canonical rows, a passed annual-to-continuous consistency check, and the one wave-4 continuous Model4 report under the frozen report root.
+- The ledger parser exact-matches every entry and exit deal to a filled order, requires the original stop, validates price-derived gross P/L, and rejects overlap, reversal, partial exit, and an unfinished lifecycle.
+- Deterministic cost stress subtracts `0.00R`, `0.02R`, `0.05R`, and `0.10R` per trade and requires positive older, middle, and recent broad eras.
+- Seeded 10,000-trial stress preserves local order with 8-, 16-, and 24-trade moving blocks plus whole-calendar-year resampling under standard and severe execution degradation.
+- See `RDMC_EXECUTABLE_LEDGER_STRESS_CONTRACT.md` for exact thresholds and the closed-trade drawdown boundary.
+
 ## Hard Boundary
 
 - Both MT5 launch locks are present. No terminal, MetaEditor, tester, or worker was launched to build this package.
 - Model1 only rejects cheaply; it can never promote the candidate.
-- Passing wave 5 still requires an executable trade ledger, deterministic cost stress, order-aware Monte Carlo, broker variation, and a valid forward demo.
+- Passing wave 5 still requires the identity-bound executable trade ledger, deterministic cost stress, order-aware Monte Carlo, broker variation, and a valid forward demo.
 - The post-hoc `+$2,067.64` collision score is not attributed to this source. The registered forward candidate and real-account lock remain unchanged.
