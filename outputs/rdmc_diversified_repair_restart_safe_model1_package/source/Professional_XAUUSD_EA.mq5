@@ -4,8 +4,8 @@
 //| No martingale, grid, averaging down, or recovery systems           |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.19"
-#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with preflighted, fill- and account-risk-reconciled entries; tester-only until independently validated."
+#property version   "1.20"
+#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with reconciled entries and tightening-only protective stops; tester-only until independently validated."
 
 #include <Trade/Trade.mqh>
 
@@ -2540,10 +2540,17 @@ bool ExecutePositionClose(CTrade &executor, const ulong ticket)
    return closed;
 }
 
-bool TradePriceMatches(const double actual, const double requested)
+bool TradePriceMatches(const string symbol,
+                       const double actual,
+                       const double requested)
 {
-   double tickSize = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
-   double tolerance = MathMax(MathMax(_Point, tickSize) * 0.5, 0.00000001);
+   if(StringLen(symbol) <= 0)
+      return false;
+   double point = SymbolInfoDouble(symbol, SYMBOL_POINT);
+   double tickSize = SymbolInfoDouble(symbol, SYMBOL_TRADE_TICK_SIZE);
+   if(point <= 0.0 || tickSize <= 0.0)
+      return false;
+   double tolerance = MathMax(MathMax(point, tickSize) * 0.5, 0.00000001);
    if(requested <= 0.0)
       return MathAbs(actual) <= tolerance;
    return MathAbs(actual - requested) <= tolerance;
@@ -2554,6 +2561,27 @@ bool ExecutePositionModify(CTrade &executor,
                            const double sl,
                            const double tp)
 {
+   if(ticket == 0 || !PositionSelectByTicket(ticket))
+      return false;
+
+   string symbol = PositionGetString(POSITION_SYMBOL);
+   long positionType = PositionGetInteger(POSITION_TYPE);
+   double currentSL = PositionGetDouble(POSITION_SL);
+   if(StringLen(symbol) <= 0 || currentSL <= 0.0 || sl <= 0.0 ||
+      PositionGetInteger(POSITION_MAGIC) != (long)executor.RequestMagic() ||
+      PositionGetInteger(POSITION_REASON) != POSITION_REASON_EXPERT)
+      return false;
+
+   double point = SymbolInfoDouble(symbol, SYMBOL_POINT);
+   double tickSize = SymbolInfoDouble(symbol, SYMBOL_TRADE_TICK_SIZE);
+   if(point <= 0.0 || tickSize <= 0.0)
+      return false;
+   double tolerance = MathMax(MathMax(point, tickSize) * 0.5, 0.00000001);
+   if((positionType == POSITION_TYPE_BUY && sl < currentSL - tolerance) ||
+      (positionType == POSITION_TYPE_SELL && sl > currentSL + tolerance) ||
+      (positionType != POSITION_TYPE_BUY && positionType != POSITION_TYPE_SELL))
+      return false;
+
    if(!executor.PositionModify(ticket, sl, tp))
       return false;
 
@@ -2562,8 +2590,8 @@ bool ExecutePositionModify(CTrade &executor,
       return false;
    if(!PositionSelectByTicket(ticket))
       return false;
-   return TradePriceMatches(PositionGetDouble(POSITION_SL), sl) &&
-          TradePriceMatches(PositionGetDouble(POSITION_TP), tp);
+   return TradePriceMatches(symbol, PositionGetDouble(POSITION_SL), sl) &&
+          TradePriceMatches(symbol, PositionGetDouble(POSITION_TP), tp);
 }
 
 bool ExecutePositionClosePartial(CTrade &executor,
