@@ -7,6 +7,7 @@ release/transferable-portfolio-v0.1/Professional_XAUUSD_Transferable_Portfolio.m
 work/Professional_XAUUSD_Operational_Hardening_Portfolio.mq5 -text -diff
 release/transferable-portfolio-v0.2-rc1/** -text whitespace=cr-at-eol
 work/Professional_XAUUSD_Operational_Hardening_Portfolio_RC2.mq5 -text -diff
+work/Professional_XAUUSD_Momentum_Breakout_Quality_Portfolio.mq5 -text -diff
 release/transferable-portfolio-v0.2-rc2/** -text whitespace=cr-at-eol
 work/Professional_XAUUSD_Operational_Hardening_RC2_Forward_Sentinel.mq5 -text -diff
 release/operational-hardening-rc2-forward-prep/** -text whitespace=cr-at-eol

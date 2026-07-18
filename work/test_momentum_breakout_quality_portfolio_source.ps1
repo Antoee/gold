@@ -7,6 +7,10 @@ $baseHash = (Get-FileHash -LiteralPath $basePath -Algorithm SHA256).Hash
 if($baseHash -ne "9141137A9550F3394DE85E1725E018671B4F2A2FF0F43A3EF23F9FB1238CD302") {
    throw "Frozen RC2 source identity changed: $baseHash"
 }
+$forkHash = (Get-FileHash -LiteralPath $forkPath -Algorithm SHA256).Hash
+if($forkHash -ne "7BCFE5C270F0B9B62121164877A88F0D6212C6B7090438400DBA9391D99C6F3A") {
+   throw "Tested research source identity changed: $forkHash"
+}
 $base = Get-Content -LiteralPath $basePath -Raw
 $fork = Get-Content -LiteralPath $forkPath -Raw
 foreach($required in @(
@@ -30,4 +34,4 @@ if($fork.IndexOf('InpMORiskPercent = 0.15;', [StringComparison]::Ordinal) -lt 0 
    $fork.IndexOf('InpMaximumPortfolioOpenRiskPercent = 0.75;', [StringComparison]::Ordinal) -lt 0) {
    throw "Frozen risk defaults changed."
 }
-"MOMENTUM_BREAKOUT_QUALITY_SOURCE_TEST_PASS source=$((Get-FileHash -LiteralPath $forkPath -Algorithm SHA256).Hash)"
+"MOMENTUM_BREAKOUT_QUALITY_SOURCE_TEST_PASS source=$forkHash"
