@@ -71,6 +71,7 @@ if($PlanOnly) {
    return
 }
 
+. (Join-Path $PSScriptRoot "assert_mt5_launch_allowed.ps1")
 $workerScript = Join-Path $PSScriptRoot "run_mt5_portable_package_worker.ps1"
 if(!(Test-Path -LiteralPath $workerScript -PathType Leaf)) {
    throw "Portable package worker is missing: $workerScript"

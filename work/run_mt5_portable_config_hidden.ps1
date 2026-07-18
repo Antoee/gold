@@ -11,6 +11,7 @@ $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "mt5_background_helpers.ps1")
 
 if(!$UserAuthorizedFocusRisk) { throw "Explicit focus-risk authorization is required." }
+. (Join-Path $PSScriptRoot "assert_mt5_launch_allowed.ps1")
 $repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $portable = (Resolve-Path -LiteralPath $PortableRoot).Path.TrimEnd('\')
 $config = (Resolve-Path -LiteralPath $ConfigPath).Path
@@ -26,7 +27,15 @@ $mainBinary = Join-Path $mainData "Professional_XAUUSD_EA.ex5"
 
 if(!(Test-Path -LiteralPath $terminal -PathType Leaf)) { throw "Portable terminal missing: $terminal" }
 if(!(Test-Path -LiteralPath $metaEditor -PathType Leaf)) { throw "Portable MetaEditor missing: $metaEditor" }
-if(!$portable.StartsWith($repo + "\work\", [StringComparison]::OrdinalIgnoreCase)) { throw "Portable runtime is outside the workspace work directory." }
+$sharedWork = Split-Path -Parent $repo
+$portableParent = Split-Path -Parent $portable
+$portableName = Split-Path -Leaf $portable
+$repoLocalPortable = $portable.StartsWith($repo + "\work\", [StringComparison]::OrdinalIgnoreCase)
+$sharedResearchPortable = (
+   $portableParent.Equals($sharedWork, [StringComparison]::OrdinalIgnoreCase) -and
+   $portableName -match '^mt5_portable_research(?:_w\d+)?$'
+)
+if(!$repoLocalPortable -and !$sharedResearchPortable) { throw "Portable runtime is outside the workspace work directory." }
 if(!$config.StartsWith($repo + "\", [StringComparison]::OrdinalIgnoreCase)) { throw "Tester config is outside the workspace." }
 $configDir = Split-Path -Parent $config
 $packageRoot = Split-Path -Parent $configDir

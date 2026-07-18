@@ -11,6 +11,8 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+if(!$UserAuthorizedFocusRisk) { throw "Explicit focus-risk authorization is required." }
+. (Join-Path $PSScriptRoot "assert_mt5_launch_allowed.ps1")
 $repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $manifest = (Resolve-Path -LiteralPath $ManifestPath).Path
 $portable = (Resolve-Path -LiteralPath $PortableRoot).Path
@@ -46,7 +48,18 @@ $items = @(Import-Csv -LiteralPath $manifest | Where-Object {
 
 foreach($item in $items) {
    $config = Resolve-RepoPath ([string]$item.PackageConfig)
+   $configHash = (Get-FileHash -LiteralPath $config -Algorithm SHA256).Hash.ToUpperInvariant()
+   if($item.PSObject.Properties.Name -contains "ConfigSha256" -and
+      ![string]::IsNullOrWhiteSpace([string]$item.ConfigSha256) -and
+      $configHash -ne ([string]$item.ConfigSha256).ToUpperInvariant()) {
+      throw "Package config identity mismatch at queue rank $($item.QueueRank)."
+   }
    $expectedSourceHash = Get-PackageSourceHash $config
+   if($item.PSObject.Properties.Name -contains "SourceSha256" -and
+      ![string]::IsNullOrWhiteSpace([string]$item.SourceSha256) -and
+      $expectedSourceHash -ne ([string]$item.SourceSha256).ToUpperInvariant()) {
+      throw "Package source identity mismatch at queue rank $($item.QueueRank)."
+   }
    $destinationBase = Resolve-RepoPath ([string]$item.ReportDestination)
    $existing = @('.htm','.html','.xml') | ForEach-Object { $destinationBase + $_ } |
       Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
@@ -99,6 +112,7 @@ foreach($item in $items) {
       Status = $status
       ReportPath = $reportPath
       Evidence = $evidence
+      PackageConfigSha256 = $configHash
       PackageSourceSha256 = $expectedSourceHash
       PortableBinarySha256 = $portableBinaryHash
       PortableExpertRecompiled = $portableExpertRecompiled

@@ -41,8 +41,21 @@ try {
    }
    if(!$duplicateRejected) { throw "Duplicate QueueRank values were not rejected." }
 
+   $before = @(Get-Process -Name terminal,terminal64,metatester,metatester64,MetaEditor,metaeditor64 -ErrorAction SilentlyContinue)
+   $hardLockRejected = $false
+   try {
+      & $runner -ManifestPath $validPath -PortableRoots @("worker-a") `
+         -UserAuthorizedFocusRisk -OutputPrefix "LOCK_TEST" | Out-Null
+   }
+   catch {
+      $hardLockRejected = $_.Exception.Message -match "hard-locked"
+   }
+   $after = @(Get-Process -Name terminal,terminal64,metatester,metatester64,MetaEditor,metaeditor64 -ErrorAction SilentlyContinue)
+   if(!$hardLockRejected) { throw "Generic parallel runner did not honor the MT5 hard lock." }
+   if($after.Count -gt $before.Count) { throw "Generic parallel runner created an MT5-family process while locked." }
+
    $runnerText = Get-Content -LiteralPath $runner -Raw
-   foreach($token in @("run_mt5_portable_package_worker.ps1", "UserAuthorizedFocusRisk", "MaxCpuPercent", "ExpectedRows", "PlanOnly")) {
+   foreach($token in @("run_mt5_portable_package_worker.ps1", "assert_mt5_launch_allowed.ps1", "UserAuthorizedFocusRisk", "MaxCpuPercent", "ExpectedRows", "PlanOnly")) {
       if($runnerText -notmatch [regex]::Escape($token)) { throw "Generic runner is missing required token: $token" }
    }
 
@@ -51,6 +64,7 @@ try {
       ValidRows = $plan.Rows
       Workers = $plan.Workers
       DuplicateRanksRejected = $duplicateRejected
+      HardLockRejected = $hardLockRejected
       MQL5Launched = $false
    }
 }

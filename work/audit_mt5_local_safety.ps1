@@ -51,6 +51,8 @@ $rows = New-Object System.Collections.Generic.List[object]
 $unlockPath = Join-Path $WorkDir "ALLOW_MT5_LOCAL_LAUNCH.unlock"
 $hiddenDesktopAckPath = Join-Path $WorkDir "ALLOW_MT5_HIDDEN_DESKTOP_ACK.unlock"
 $hardLockPath = Join-Path $WorkDir "MT5_LOCAL_LAUNCH_DISABLED.lock"
+$resolvedWorkDir = (Resolve-Path -LiteralPath $WorkDir).Path
+$outerHardLockPath = Join-Path (Split-Path -Parent (Split-Path -Parent $resolvedWorkDir)) "MT5_LOCAL_LAUNCH_DISABLED.lock"
 $quietStopPath = Join-Path $WorkDir "STOP_MT5_FOCUS_WATCHDOG"
 $guardPath = Join-Path $WorkDir "assert_mt5_launch_allowed.ps1"
 $helperPath = Join-Path $WorkDir "mt5_background_helpers.ps1"
@@ -159,6 +161,9 @@ Add-Result $rows "Runtime" "Hidden desktop ack file is absent" (!(Test-Path -Lit
 Add-Result $rows "Runtime" "Hard local launch lock is present" (Test-Path -LiteralPath $hardLockPath) `
    $hardLockPath `
    "Restore work\MT5_LOCAL_LAUNCH_DISABLED.lock while local MT5 can steal focus on this PC."
+Add-Result $rows "Runtime" "Outer workspace launch lock is present" (Test-Path -LiteralPath $outerHardLockPath) `
+   $outerHardLockPath `
+   "Restore the outer workspace MT5_LOCAL_LAUNCH_DISABLED.lock while local MT5 can steal focus on this PC."
 
 $quietStopExists = Test-Path -LiteralPath $quietStopPath
 Add-Result $rows "Runtime" "Quiet PC mode stop marker status is recorded" $true `
@@ -174,6 +179,7 @@ Add-Result $rows "Guard" "Launch guard requires hidden desktop ack" (Contains-Te
 Add-Result $rows "Guard" "Launch guard requires unlock file" (Contains-Text $guardText 'ALLOW_MT5_LOCAL_LAUNCH.unlock') $guardPath "Guard must require work\ALLOW_MT5_LOCAL_LAUNCH.unlock."
 Add-Result $rows "Guard" "Launch guard requires hidden desktop ack file" (Contains-Text $guardText 'ALLOW_MT5_HIDDEN_DESKTOP_ACK.unlock') $guardPath "Guard must require work\ALLOW_MT5_HIDDEN_DESKTOP_ACK.unlock."
 Add-Result $rows "Guard" "Launch guard honors hard lock" (Contains-Text $guardText 'MT5_LOCAL_LAUNCH_DISABLED.lock') $guardPath "Guard must stop when work\MT5_LOCAL_LAUNCH_DISABLED.lock exists."
+Add-Result $rows "Guard" "Launch guard honors outer workspace hard lock" ((Contains-Text $guardText 'outerHardLockFile') -and (Contains-Text $guardText 'Split-Path -Parent $repoRoot')) $guardPath "Guard must stop when the outer workspace lock exists."
 Add-Result $rows "Guard" "Launch guard stops stray MT5 processes" ((Contains-Text $guardText 'Stop-MT5StrayProcesses') -and (Contains-Text $guardText 'Stop-Process') -and (Contains-Text $guardText 'terminal64') -and (Contains-Text $guardText 'metatester64') -and (Contains-Text $guardText 'metaeditor64')) $guardPath "Guard should stop stray MT5/MetaEditor processes before throwing."
 Add-Result $rows "Guard" "Launch guard fails closed" (Contains-Text $guardText 'throw') $guardPath "Guard must throw when local launch is not allowed."
 
