@@ -1,0 +1,3 @@
+QueueRank,Wave,ExpectedReportName,Window,Model,ReportStatus,GatePass,Reasons
+1,1,rdmc_exec_w01_m1_critical_2019,2019,1,MISSING_REPORT,False,NOT_EVALUATED_INCOMPLETE_WAVE
+2,1,rdmc_exec_w01_m1_critical_2022,2022,1,MISSING_REPORT,False,NOT_EVALUATED_INCOMPLETE_WAVE

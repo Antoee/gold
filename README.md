@@ -56,6 +56,8 @@ Research and validation repository for a risk-first MetaTrader 5 Expert Advisor 
 
 **2026-07-18 order-aware stress update: still no new best. The same post-hoc ledger passed 8/8 additional seeded 10,000-trial paths using 8-, 16-, and 24-trade moving blocks plus whole-window resampling under standard and severe frozen execution stress. The weakest severe path retained `+$279.20` P05 net, `1.391` median PF, `3.32%` P95 closed drawdown, and `0.86%` red trials. Concentration remains material: 33 RRO trades contribute `63.13%` of net and 311 MTSM trades consume `69.52%` of summed initial risk. Removing RRO leaves `+$762.32` and all three broad eras positive, but only 9/12 individual windows positive. This passes offline triage only; it does not establish an executable combined equity curve, change the forward candidate, or approve real-money use. See the [regime-stress decision](outputs/RDMC_DIVERSIFIED_REPAIR_COLLISION_REGIME_STRESS_DECISION.md).**
 
+**2026-07-18 executable-gate update: still no new best and zero new MT5 reports. A deterministic 24-config gate now replaces chronological all-at-once testing. Wave 1 spends only two Model1 runs on the known 2019/2022 failure years; later waves add broad/continuous Model1, critical real ticks, broad/continuous real ticks, and finally 12 annual real-tick restarts. Failed or incomplete waves cannot admit later work. Only six runs use Model1 and it is reject-only; continuous Model4 must retain PF `1.30`, at least 250 trades, no more than `5%` drawdown, recovery `3`, and CAGR `1.00%` before annual testing can complete. Both launch locks remain active, so the exact status is `LOCKED_AWAITING_WAVE_01_REPORTS`. See the [frozen contract](outputs/RDMC_DIVERSIFIED_REPAIR_EXECUTABLE_GATE_CONTRACT.md) and [current decision](outputs/RDMC_DIVERSIFIED_REPAIR_EXECUTABLE_GATE_DECISION.md).**
+
 **2026-07-18 pending-order restart update: still no new best. Restart-safe source `v1.30` allows an already registered account to initialize with a research-owned order left active across a crash, then treats that order as an always-on first-tick emergency and verifies cancellation before management or entry. First registration with any active order still fails, foreign orders remain untouched and fail the dedicated-account contract, and the optional risk-close switch cannot bypass recovery. Pending-order checks pass `51/51`; the generated package passes `111/111`; all MT5 launches, compilation, and profitability claims remain locked.**
 
 **2026-07-18 disabled-lane cleanup update: still no new best. Restart-safe source `v1.29` requires positive, distinct research magics before capital-state registration, keeps both identities owned even when momentum is disabled, configures its close executor before the disabled early return, and treats surviving disabled-lane exposure as an unconditional emergency-flatten condition. Disabling a lane can no longer reclassify its history/exposure as foreign or leave a same-symbol position unmanaged. The dedicated suite passes `59/59` and the generated package passes `111/111`; no signal or risk setting changed, and fresh MT5 profitability evidence remains locked and unclaimed.**
@@ -300,10 +302,10 @@ The source compiles with `0 errors, 0 warnings`. Both published source snapshots
 
 ## What Remains
 
-1. Run the frozen eight-config signal-range early gate on 2019 and 2022; reject it unless the center and one adjacent threshold make both years profitable with the preregistered activity floor.
-2. Prioritize a genuinely independent return stream and freeze every experiment before results.
-3. Provision a fresh `$10,000` USD demo hedging account for a separately reviewed candidate, pass the rc2 read-only activation preflight, and collect at least 90 valid calendar days and 30 closed trades.
-4. Reproduce the frozen profile on a second broker's XAUUSD specification.
+1. Keep the two local launch locks in place until the execution environment is deliberately reviewed, then compile the exact v1.31 combined source and run executable-gate wave 1 only: Model1 2019 and 2022.
+2. Admit waves 2-5 sequentially only after the previous frozen gate passes; stop immediately on a red critical year, losing broad era, weak continuous path, red annual restart, or annual/continuous inconsistency.
+3. If all five waves pass, export the executable trade ledger and rerun deterministic cost stress, order-aware Monte Carlo, and a second-broker XAUUSD specification test.
+4. Provision a fresh `$10,000` USD demo hedging account for a separately reviewed candidate, pass the read-only activation preflight, and collect at least 90 valid calendar days and 30 closed trades.
 5. Review forward slippage, missed trades, disconnect handling, and the loss-streak warning.
 6. Keep live trading disabled until a manual review accepts all remaining evidence.
 
@@ -327,6 +329,8 @@ No backtest can make an EA work forever without monitoring. The future process i
 - [`outputs/RDMC_SIGNAL_RANGE_GATE_OFFLINE_PRESCREEN.md`](outputs/RDMC_SIGNAL_RANGE_GATE_OFFLINE_PRESCREEN.md): validated H1-cache post-hoc rejection diagnostic with path-dependence caveat
 - [`outputs/RDMC_DIVERSIFIED_REPAIR_OFFLINE_PRESCREEN.md`](outputs/RDMC_DIVERSIFIED_REPAIR_OFFLINE_PRESCREEN.md): 12-window component-union screen that opens implementation work but is not a combined backtest
 - [`outputs/RDMC_DIVERSIFIED_REPAIR_COLLISION_REGIME_STRESS_DECISION.md`](outputs/RDMC_DIVERSIFIED_REPAIR_COLLISION_REGIME_STRESS_DECISION.md): moving-block, whole-window, and component-concentration post-hoc triage
+- [`outputs/RDMC_DIVERSIFIED_REPAIR_EXECUTABLE_GATE_CONTRACT.md`](outputs/RDMC_DIVERSIFIED_REPAIR_EXECUTABLE_GATE_CONTRACT.md): frozen five-wave early-rejection sequence, thresholds, identities, and evidence boundary
+- [`outputs/RDMC_DIVERSIFIED_REPAIR_EXECUTABLE_GATE_DECISION.md`](outputs/RDMC_DIVERSIFIED_REPAIR_EXECUTABLE_GATE_DECISION.md): current zero-report admission status and exact next executable wave
 - [`work/collect_rdmc_signal_range_gate_repair_results.ps1`](work/collect_rdmc_signal_range_gate_repair_results.ps1): exact identity and path admission for the eight reports
 - [`work/build_rdmc_signal_range_gate_repair_decision.ps1`](work/build_rdmc_signal_range_gate_repair_decision.ps1): frozen center-plus-neighbor early-stop decision
 - [`outputs/RC2_DI_REPAIR_PORTFOLIO_DISCOVERY_DECISION.md`](outputs/RC2_DI_REPAIR_PORTFOLIO_DISCOVERY_DECISION.md): exact 24-report rejection of the near-miss directional-edge repair family

@@ -1,0 +1,41 @@
+# RDMC Diversified Repair Executable Gate Contract
+
+Status: **FROZEN / LOCKED / ZERO MT5 REPORTS / NOT PROMOTED**
+
+This contract replaces chronological all-at-once testing with early rejection. It preserves the exact source and profile while spending real-tick time only after cheaper evidence passes.
+
+## Frozen Identity
+
+- Source SHA-256: `EC6F866B8F7786169F7B2ECE5553CF3A4DC6E6073D0B25389C16381B71FEF51F`
+- Profile SHA-256: `746798EF260A375F8F8921DBC6D03CD3968ED38F5C105818598CA57572A0B883`
+- Starting capital: `10,000 USD`
+- Symbol/timeframe: `XAUUSD M15`
+- Data cutoff: `2026.07.12`
+- Configs: `24` with each config SHA-256 pinned in the combined manifest
+
+## Efficient Waves
+
+| Wave | Model | Runs | Maximum workers | Admission purpose |
+|---:|---|---:|---:|---|
+| 1 | Model1 | 2 | 2 | Reject immediately on the known 2019 or 2022 failure year |
+| 2 | Model1 | 4 | 4 | Check three disjoint broad eras plus the continuous path |
+| 3 | Model4 real ticks | 2 | 2 | Recheck 2019 and 2022 before broad real-tick cost |
+| 4 | Model4 real ticks | 4 | 4 | Check broad eras and continuous risk-adjusted return |
+| 5 | Model4 real ticks | 12 | 6 | Prove annual restart stability only after all earlier gates pass |
+
+A failed or incomplete wave never admits later waves. At most two tests are spent before the first rejection decision and only eight tests are spent before real-tick testing begins.
+
+## Frozen Gates
+
+- Critical 2019/2022 rows: positive net, PF at least `1.05`, frozen activity floor, and drawdown no higher than `3%`.
+- Broad eras: every disjoint era positive, PF at least `1.20`, frozen activity floor, and drawdown no higher than `5%`.
+- Continuous Model1 triage: PF at least `1.25`, at least `250` trades, drawdown no higher than `5%`, recovery at least `2`, and CAGR at least `0.75%`.
+- Continuous Model4: PF at least `1.30`, at least `250` trades, drawdown no higher than `5%`, recovery at least `3`, and CAGR at least `1.00%`.
+- Annual Model4: all 12 annual/YTD rows profitable with frozen activity floors and drawdown no higher than `3%`; summed annual net must remain within `0.75x` to `1.25x` of continuous Model4 net.
+
+## Hard Boundary
+
+- Both MT5 launch locks are present. No terminal, MetaEditor, tester, or worker was launched to build this package.
+- Model1 only rejects cheaply; it can never promote the candidate.
+- Passing wave 5 still requires an executable trade ledger, deterministic cost stress, order-aware Monte Carlo, broker variation, and a valid forward demo.
+- The post-hoc `+$2,067.64` collision score is not attributed to this source. The registered forward candidate and real-account lock remain unchanged.

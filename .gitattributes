@@ -103,3 +103,6 @@ outputs/rdmc_diversified_repair_model1_package/source/Professional_XAUUSD_EA.mq5
 outputs/rdmc_diversified_repair_restart_safe_model1_package/source/Professional_XAUUSD_EA.mq5 -text -diff
 outputs/rdmc_diversified_repair_restart_safe_model1_package/profiles/*.set -text whitespace=cr-at-eol
 outputs/rdmc_diversified_repair_restart_safe_model1_package/configs/*.ini -text whitespace=cr-at-eol
+outputs/rdmc_diversified_repair_executable_gate_package/source/Professional_XAUUSD_EA.mq5 -text -diff
+outputs/rdmc_diversified_repair_executable_gate_package/profiles/*.set -text whitespace=cr-at-eol
+outputs/rdmc_diversified_repair_executable_gate_package/configs/*.ini -text whitespace=cr-at-eol
