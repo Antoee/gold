@@ -48,7 +48,24 @@ if((Get-FileHash -LiteralPath $profile -Algorithm SHA256).Hash -ne $expectedProf
 
 $configsDirectory = Join-Path $package 'configs'
 $reportsDirectory = Join-Path $package 'reports_here'
-New-Item -ItemType Directory -Path $configsDirectory,$reportsDirectory -Force | Out-Null
+$sourceDirectory = Join-Path $package 'source'
+$packageSource = Join-Path $sourceDirectory 'Professional_XAUUSD_EA.mq5'
+New-Item -ItemType Directory -Path $configsDirectory,$reportsDirectory,$sourceDirectory -Force | Out-Null
+$reportArtifactsBefore = @(Get-ChildItem -LiteralPath $reportsDirectory -File | Where-Object Name -ne 'README.md')
+$canonicalMutableOutputs = @(
+   (Join-Path $repo 'outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_DECISION.csv'),
+   (Join-Path $repo 'outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_DECISION.md'),
+   (Join-Path $repo 'outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_RUN_PLAN.csv'),
+   (Join-Path $repo 'outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_RUN_PLAN.md')
+)
+$requestedMutableOutputs = @($decisionCsv,$decisionMarkdown,$runPlanCsv,$runPlanMarkdown) | ForEach-Object { [IO.Path]::GetFullPath($_) }
+if($reportArtifactsBefore.Count -gt 0 -and @($requestedMutableOutputs | Where-Object { $canonicalMutableOutputs -contains $_ }).Count -gt 0) {
+   throw 'Identity-bound executable evidence already exists; refusing to reset a canonical decision or run plan.'
+}
+Copy-Item -LiteralPath $source -Destination $packageSource -Force
+if((Get-FileHash -LiteralPath $packageSource -Algorithm SHA256).Hash -ne $expectedSourceHash) {
+   throw 'Executable package source identity changed during staging.'
+}
 $inputs = Import-SetInputs -Path $profile
 if($inputs.Keys.Count -ne 589) { throw "Expected 589 profile inputs, found $($inputs.Keys.Count)." }
 $baseRows = @(Import-Csv -LiteralPath $baseManifest | Sort-Object { [int]$_.QueueRank })
@@ -108,8 +125,8 @@ foreach($wave in 1..5) {
 
 @(
    '# RDMC Money-Ready Gate Repair Executable Package', '',
-   '**LOCKED. ZERO MT5 REPORTS.**', '',
-   'This package references the gate-repair source/profile identity and contains the complete 24-row executable requalification queue. Reports belong in this directory only after the guarded runner records matching config, source, profile, compiled-binary, and report identities.', '',
+   "**LOCKED. IDENTITY-BOUND REPORT ARTIFACTS PRESERVED: $($reportArtifactsBefore.Count).**", '',
+   'This package contains the exact gate-repair source identity and the complete 24-row executable requalification queue. Existing reports are preserved byte-for-byte. New reports belong in this directory only after the guarded runner records matching config, source, profile, compiled-binary, and report identities.', '',
    'Wave order is `2, 4, 2, 4, 12`: Model1 critical years, Model1 broad/continuous, Model4 critical years, Model4 broad/continuous, then annual Model4 restarts. Model1 can reject only.'
 ) | Set-Content -LiteralPath (Join-Path $package 'README.md') -Encoding ASCII
 @(
@@ -213,6 +230,7 @@ $decision | Export-Csv -LiteralPath $decisionCsv -NoTypeInformation -Encoding AS
    Model1Rows = @($rows | Where-Object Model -eq 1).Count
    Model4Rows = @($rows | Where-Object Model -eq 4).Count
    ReportsPresent = 0
+   ReportArtifactsPreserved = $reportArtifactsBefore.Count
    LaunchLocked = $decision.LaunchLocked
    MQL5Launched = $false
 }

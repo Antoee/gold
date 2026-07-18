@@ -4,6 +4,7 @@ param(
    [string]$ProfilePath = 'outputs\rdmc_money_ready_gate_repair_package\profiles\rdmc_money_ready_gate_repair_v1.set',
    [string]$ManifestPath = 'outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_MANIFEST.csv',
    [string]$WaveManifestPath = 'outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_WAVE_01_MANIFEST.csv',
+   [string]$DecisionCsvPath = 'outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_DECISION.csv',
    [string[]]$WorkerNames = @('mt5_portable_research','mt5_portable_research_w2'),
    [string]$StatusCsvPath = 'outputs\RDMC_MONEY_READY_GATE_REPAIR_WAVE_01_READINESS.csv',
    [string]$WorkersCsvPath = 'outputs\RDMC_MONEY_READY_GATE_REPAIR_WAVE_01_WORKERS.csv',
@@ -52,6 +53,7 @@ $source = Resolve-InputPath $SourcePath
 $profile = Resolve-InputPath $ProfilePath
 $manifest = Resolve-InputPath $ManifestPath
 $waveManifest = Resolve-InputPath $WaveManifestPath
+$decisionCsv = Resolve-InputPath $DecisionCsvPath
 $statusCsv = Resolve-InputPath $StatusCsvPath
 $workersCsv = Resolve-InputPath $WorkersCsvPath
 $statusMarkdown = Resolve-InputPath $StatusMarkdownPath
@@ -69,6 +71,10 @@ if(Test-Path -LiteralPath $manifest -PathType Leaf) { $manifestRows = @(Import-C
 $waveRows = @()
 if(Test-Path -LiteralPath $waveManifest -PathType Leaf) { $waveRows = @(Import-Csv -LiteralPath $waveManifest | Sort-Object { [int]$_.QueueRank }) }
 $canonicalWaveRows = @($manifestRows | Where-Object Wave -eq '1' | Sort-Object { [int]$_.QueueRank })
+$decisionRows = @(if(Test-Path -LiteralPath $decisionCsv -PathType Leaf) { Import-Csv -LiteralPath $decisionCsv })
+if($decisionRows.Count -ne 1) { throw 'Wave 1 readiness requires exactly one executable decision row.' }
+$terminalRejected = ConvertTo-BoolStrict $decisionRows[0].TerminalRejection
+$decisionNextAction = [string]$decisionRows[0].NextAction
 
 $waveIdentityReady = $waveRows.Count -eq 2 -and $canonicalWaveRows.Count -eq 2
 if($waveIdentityReady) {
@@ -149,6 +155,7 @@ $currentBinaryIdentities = @($workerRows | Where-Object BinarySha256 -ne 'MISSIN
 $reportDirectory = Join-Path $repo 'outputs\rdmc_money_ready_gate_repair_executable_package\reports_here'
 $reportArtifacts = @()
 if(Test-Path -LiteralPath $reportDirectory -PathType Container) { $reportArtifacts = @(Get-ChildItem -LiteralPath $reportDirectory -File | Where-Object Name -ne 'README.md') }
+$reportFiles = @($reportArtifacts | Where-Object Extension -eq '.htm')
 $mt5Processes = @(Get-Process -Name terminal,terminal64,metatester,metatester64,MetaEditor,metaeditor64 -ErrorAction SilentlyContinue)
 $repoLock = Test-Path -LiteralPath (Join-Path $PSScriptRoot 'MT5_LOCAL_LAUNCH_DISABLED.lock')
 $outerLock = Test-Path -LiteralPath (Join-Path $sharedWork 'MT5_LOCAL_LAUNCH_DISABLED.lock')
@@ -166,11 +173,12 @@ Add-Gate $gates 'frozen-profile-identity' ($profileHash -eq $expectedProfileHash
 Add-Gate $gates 'frozen-manifest-identity' ($manifestHash -eq $expectedManifestHash -and $manifestRows.Count -eq 24) 'WAVE_01_RUN' "sha256=$manifestHash; rows=$($manifestRows.Count)"
 Add-Gate $gates 'wave-01-contract' $waveContractReady 'WAVE_01_RUN' "rows=$($waveRows.Count); windows=$($waveRows.Window -join ','); model=1"
 Add-Gate $gates 'wave-01-config-identities' $configIdentityReady 'WAVE_01_RUN' 'Both config hashes match the frozen manifest.'
+Add-Gate $gates 'candidate-admission-open' (!$terminalRejected) 'WAVE_01_RUN' "terminal_rejection=$terminalRejected; next_action=$decisionNextAction"
 Add-Gate $gates 'two-portable-runtimes' $runtimeReady 'WAVE_01_RUN' "ready=$(@($workerRows | Where-Object RuntimeReady).Count)/2"
 Add-Gate $gates 'uniform-runtime-build' $runtimeBuildReady 'WAVE_01_RUN' "terminal=$($runtimeVersions -join ','); editor=$($editorVersions -join ',')"
 Add-Gate $gates 'model1-history-2019' $history2019Ready 'WAVE_01_RUN' "unique_hashes=$($history2019Hashes.Count)"
 Add-Gate $gates 'model1-history-2022' $history2022Ready 'WAVE_01_RUN' "unique_hashes=$($history2022Hashes.Count)"
-Add-Gate $gates 'empty-report-destination' ($reportArtifacts.Count -eq 0) 'WAVE_01_RUN' "artifacts=$($reportArtifacts.Count)"
+Add-Gate $gates 'empty-report-destination' ($reportArtifacts.Count -eq 0) 'WAVE_01_RUN' "reports=$($reportFiles.Count); artifacts=$($reportArtifacts.Count)"
 Add-Gate $gates 'mt5-processes-stopped' ($mt5Processes.Count -eq 0) 'WAVE_01_RUN' "processes=$($mt5Processes.Count)"
 Add-Gate $gates 'minimum-free-disk' $diskReady 'WAVE_01_RUN' 'At least 10 GB free on the workspace drive.'
 Add-Gate $gates 'launch-locks-cleared' $locksCleared 'WAVE_01_RUN' "repository_lock=$repoLock; outer_lock=$outerLock"
@@ -183,7 +191,9 @@ Add-Gate $gates 'model4-ticks-2022' $model4Ticks2022Ready 'FUTURE_WAVE_03' "mont
 $infrastructureBlockers = @($gates | Where-Object { $_.RequiredFor -eq 'WAVE_01_RUN' -and $_.Gate -notin @('launch-locks-cleared','explicit-focus-risk-authorization') -and !$_.Ready })
 $infrastructureReady = $infrastructureBlockers.Count -eq 0
 $safeToLaunchNow = $infrastructureReady -and $locksCleared -and $authorizationReady
-$status = if(!$infrastructureReady) {
+$status = if($terminalRejected) {
+   'TERMINAL_REJECTION_NO_RERUN'
+} elseif(!$infrastructureReady) {
    'INFRASTRUCTURE_BLOCKED'
 } elseif(!$locksCleared) {
    if($sharedBinaryReady) { 'HARD_LOCKED_SHARED_BINARY_READY' } elseif($stagedSourceReady) { 'HARD_LOCKED_SOURCE_STAGED_COMPILE_ONCE_REQUIRED' } else { 'HARD_LOCKED_COMPILE_ONCE_REQUIRED' }
@@ -195,6 +205,7 @@ $status = if(!$infrastructureReady) {
    'READY_TO_COMPILE_ONCE_AND_RUN_WAVE_01'
 }
 $nextAction = switch($status) {
+   'TERMINAL_REJECTION_NO_RERUN' { $decisionNextAction }
    'INFRASTRUCTURE_BLOCKED' { 'REPAIR_WAVE_01_INFRASTRUCTURE' }
    'HARD_LOCKED_SHARED_BINARY_READY' { 'DELIBERATE_LOCK_REVIEW_REQUIRED' }
    'HARD_LOCKED_SOURCE_STAGED_COMPILE_ONCE_REQUIRED' { 'DELIBERATE_LOCK_REVIEW_THEN_COMPILE_ONCE_AND_RUN_WAVE_01' }
@@ -221,7 +232,8 @@ $summary = [pscustomobject][ordered]@{
    CompilationNeeded = !$sharedBinaryReady
    CurrentSourceIdentities = $currentSourceIdentities.Count
    CurrentBinaryIdentities = $currentBinaryIdentities.Count
-   ReportsPresent = $reportArtifacts.Count
+   ReportsPresent = $reportFiles.Count
+   ReportArtifactsPresent = $reportArtifacts.Count
    Model4TickMonths2019PerWorker = $workerRows.TickMonths2019 -join ','
    Model4TickMonths2022PerWorker = $workerRows.TickMonths2022 -join ','
    Model4Ticks2022Ready = $model4Ticks2022Ready
@@ -245,11 +257,12 @@ $workerRows | Export-Csv -LiteralPath $workersCsv -NoTypeInformation -Encoding A
    "- Exact successor source staged: ``$stagedSourceReady``",
    "- Existing successor shared binary ready: ``$sharedBinaryReady``",
    "- Compile-once action required: ``$(!$sharedBinaryReady)``",
-   "- Report artifacts present: ``$($reportArtifacts.Count)``",
+   "- Identity-bound reports present: ``$($reportFiles.Count)``",
+   "- Report plus sidecar artifacts present: ``$($reportArtifacts.Count)``",
    "- Hard launch lock present: ``$($repoLock -or $outerLock)``",
    "- Explicit focus-risk authorization ready: ``$authorizationReady``",
    "- Future Model4 tick cache: 2019=``$model4Ticks2019Ready``; 2022=``$model4Ticks2022Ready``", '',
-   'The exact successor source may be staged while both launch locks remain present. Existing EX5 and compiled-identity artifacts remain untrusted and untouched; the guarded runner must still compile the exact successor once on one leader, then distribute one byte-identical source, EX5, and identity file to both workers.', '',
+   $(if($terminalRejected) { 'Wave 1 is complete and rejected. The exact source, profile, shared binary, reports, and sidecars remain frozen for audit only; this identity must not compile or run again.' } else { 'The exact successor source may be staged while both launch locks remain present. The guarded runner compiles the exact successor once on one leader, then distributes one byte-identical source, EX5, and identity file to both workers.' }), '',
    'The missing 2022 TKC months do not block Wave 1 because Wave 1 is Model1 one-minute OHLC. They are a future Wave 3 Model4 data-download requirement. This report performs no compilation, terminal launch, test, account action, or evidence promotion.', '',
    '| Gate | Ready | Required for | Evidence |', '|---|---:|---|---|'
 ) + @($gates | ForEach-Object { "| $($_.Gate) | $($_.Ready) | $($_.RequiredFor) | $($_.Evidence) |" }) |

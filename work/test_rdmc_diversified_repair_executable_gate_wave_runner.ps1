@@ -6,11 +6,15 @@ $runner = Join-Path $PSScriptRoot "run_rdmc_diversified_repair_executable_gate_w
 $planDir = Join-Path $repo ("outputs\_rdmc_exec_wave_plan_test_" + [guid]::NewGuid().ToString("N"))
 $planCsv = Join-Path $planDir "plan.csv"
 $planMd = Join-Path $planDir "plan.md"
+$decisionFixture = Join-Path $planDir "decision.csv"
 if(!$planDir.StartsWith((Join-Path $repo "outputs") + "\", [StringComparison]::OrdinalIgnoreCase)) { throw "Unsafe plan-test path." }
 $before = @(Get-Process -Name terminal,terminal64,metatester,metatester64,MetaEditor,metaeditor64 -ErrorAction SilentlyContinue)
 
 try {
-   $plan = & $runner -PlanCsv $planCsv -PlanMarkdown $planMd
+   New-Item -ItemType Directory -Path $planDir -Force | Out-Null
+   [pscustomobject]@{ CurrentWave = 1; TerminalRejection = $false } |
+      Export-Csv -LiteralPath $decisionFixture -NoTypeInformation -Encoding ASCII
+   $plan = & $runner -DecisionCsvPath $decisionFixture -PlanCsv $planCsv -PlanMarkdown $planMd
    if($plan.Status -ne "LOCKED" -or $plan.Wave -ne 1 -or $plan.Rows -ne 2 -or $plan.MQL5Launched -or
       $plan.SharedBinaryStatus -notin @("LOCKED_COMPILE_ONCE_REQUIRED","SHARED_BINARY_READY")) {
       throw "Wave runner plan did not preserve the locked wave-one contract."
@@ -24,11 +28,11 @@ try {
    }
 
    $wrongWaveRejected = $false
-   try { & $runner -Wave 2 -PlanCsv $planCsv -PlanMarkdown $planMd | Out-Null } catch { $wrongWaveRejected = $_.Exception.Message -match "not the admitted wave" }
+   try { & $runner -DecisionCsvPath $decisionFixture -Wave 2 -PlanCsv $planCsv -PlanMarkdown $planMd | Out-Null } catch { $wrongWaveRejected = $_.Exception.Message -match "not the admitted wave" }
    if(!$wrongWaveRejected) { throw "Wave runner accepted a future wave." }
 
    $hardLockRejected = $false
-   try { & $runner -Run -UserAuthorizedFocusRisk -PlanCsv $planCsv -PlanMarkdown $planMd | Out-Null } catch { $hardLockRejected = $_.Exception.Message -match "hard-locked" }
+   try { & $runner -DecisionCsvPath $decisionFixture -Run -UserAuthorizedFocusRisk -PlanCsv $planCsv -PlanMarkdown $planMd | Out-Null } catch { $hardLockRejected = $_.Exception.Message -match "hard-locked" }
    if(!$hardLockRejected) { throw "Wave runner did not fail closed in run mode." }
 
    $after = @(Get-Process -Name terminal,terminal64,metatester,metatester64,MetaEditor,metaeditor64 -ErrorAction SilentlyContinue)

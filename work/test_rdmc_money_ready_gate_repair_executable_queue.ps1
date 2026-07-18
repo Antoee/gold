@@ -10,6 +10,7 @@ $sourcePath = Join-Path $repo 'outputs\rdmc_money_ready_gate_repair_package\sour
 $profilePath = Join-Path $repo 'outputs\rdmc_money_ready_gate_repair_package\profiles\rdmc_money_ready_gate_repair_v1.set'
 $configsPath = Join-Path $repo 'outputs\rdmc_money_ready_gate_repair_executable_package\configs'
 $reportsPath = Join-Path $repo 'outputs\rdmc_money_ready_gate_repair_executable_package\reports_here'
+$packageSourcePath = Join-Path $repo 'outputs\rdmc_money_ready_gate_repair_executable_package\source\Professional_XAUUSD_EA.mq5'
 $contractPath = Join-Path $repo 'outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_CONTRACT.md'
 $expectedManifestHash = 'EB48BDE3D67F9D16BAD427AB5ACC25BC8DFF8D8F29839EB95ADE615F59668972'
 $expectedSourceHash = '104F1B2D77876FA9856C8BECF7BF2D81DAB187F54BF3ED12C07493BCD6F6D6C8'
@@ -22,6 +23,11 @@ $decisionPath = Join-Path $temp 'decision.csv'
 $decisionMarkdownPath = Join-Path $temp 'decision.md'
 $runPlanPath = Join-Path $temp 'run-plan.csv'
 $runPlanMarkdownPath = Join-Path $temp 'run-plan.md'
+$reportArtifactsBefore = @(
+   Get-ChildItem -LiteralPath $reportsPath -File | Where-Object Name -ne 'README.md' | Sort-Object Name | ForEach-Object {
+      [pscustomobject]@{ Name = $_.Name; Sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToUpperInvariant() }
+   }
+)
 
 & (Join-Path $PSScriptRoot 'build_rdmc_money_ready_gate_repair_executable_queue.ps1') `
    -DecisionCsvPath $decisionPath -DecisionMarkdownPath $decisionMarkdownPath `
@@ -29,6 +35,10 @@ $runPlanMarkdownPath = Join-Path $temp 'run-plan.md'
 
 if((Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash -ne $expectedManifestHash) { throw 'Executable queue manifest hash changed.' }
 if((Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash -ne $expectedSourceHash) { throw 'Executable queue source hash changed.' }
+if(!(Test-Path -LiteralPath $packageSourcePath -PathType Leaf) -or
+   (Get-FileHash -LiteralPath $packageSourcePath -Algorithm SHA256).Hash -ne $expectedSourceHash) {
+   throw 'Executable package does not contain the exact frozen source required by the portable worker.'
+}
 if((Get-FileHash -LiteralPath $profilePath -Algorithm SHA256).Hash -ne $expectedProfileHash) { throw 'Executable queue profile hash changed.' }
 
 $rows = @(Import-Csv -LiteralPath $manifestPath | Sort-Object { [int]$_.QueueRank })
@@ -80,7 +90,18 @@ foreach($wave in 1..5) {
 }
 
 $reportArtifacts = @(Get-ChildItem -LiteralPath $reportsPath -File | Where-Object Name -ne 'README.md')
-if($reportArtifacts.Count -ne 0) { throw 'Executable queue contains unvalidated report artifacts.' }
+if($reportArtifacts.Count -ne $reportArtifactsBefore.Count) { throw 'Executable queue builder changed the report artifact count.' }
+foreach($beforeArtifact in $reportArtifactsBefore) {
+   $afterArtifact = @($reportArtifacts | Where-Object Name -eq $beforeArtifact.Name)
+   if($afterArtifact.Count -ne 1 -or
+      (Get-FileHash -LiteralPath $afterArtifact[0].FullName -Algorithm SHA256).Hash.ToUpperInvariant() -ne $beforeArtifact.Sha256) {
+      throw "Executable queue builder changed report evidence: $($beforeArtifact.Name)"
+   }
+}
+if($reportArtifacts.Count -ne 4 -or @($reportArtifacts | Where-Object Extension -eq '.htm').Count -ne 2 -or
+   @($reportArtifacts | Where-Object Name -like '*.identity.json').Count -ne 2) {
+   throw 'Expected the two identity-bound Wave 1 reports to remain present.'
+}
 $decision = @(Import-Csv -LiteralPath $decisionPath)
 if($decision.Count -ne 1 -or $decision[0].Status -ne 'LOCKED_AWAITING_WAVE_01_REPORTS' -or $decision[0].ExecutableGatePass -ne 'False' -or $decision[0].ReportsPresent -ne '0') { throw 'Executable decision overclaims current evidence.' }
 if($decision[0].ManifestSha256 -ne $expectedManifestHash -or $decision[0].SourceSha256 -ne $expectedSourceHash -or $decision[0].ProfileSha256 -ne $expectedProfileHash) { throw 'Executable decision identity mismatch.' }
@@ -104,7 +125,8 @@ Remove-Item -LiteralPath $temp -Recurse -Force
    Model4Rows = @($rows | Where-Object Model -eq '4').Count
    Configs = $configFiles.Count
    InputsPerConfig = $profileInputs.Keys.Count
-   ReportsPresent = $reportArtifacts.Count
+   ReportsPresent = @($reportArtifacts | Where-Object Extension -eq '.htm').Count
+   ReportArtifactsPreserved = $reportArtifacts.Count
    ThresholdsChangedFromFullGate = 0
    SourceSha256 = $expectedSourceHash
    ProfileSha256 = $expectedProfileHash

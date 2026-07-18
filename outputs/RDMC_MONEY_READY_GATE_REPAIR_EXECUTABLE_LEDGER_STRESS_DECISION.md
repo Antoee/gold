@@ -2,7 +2,7 @@
 
 **Status: AWAITING EXECUTABLE MT5 GATE. No executable ledger exists and no stress pass is claimed.**
 
-- Current executable status: `LOCKED_AWAITING_WAVE_01_REPORTS`
+- Current executable status: `EXECUTABLE_GATE_REJECTED_WAVE_01`
 - Launch locked: `True`
 - Static readiness: `PASS`
 - Source normalization to frozen base: `PASS`

@@ -6,6 +6,7 @@ param(
    [ValidateRange(1,1440)][int]$TimeoutMinutesPerConfig = 15,
    [switch]$UserAuthorizedFocusRisk,
    [switch]$Run,
+   [string]$DecisionCsvPath = "outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_DECISION.csv",
    [string]$PlanCsv = "outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_RUN_PLAN.csv",
    [string]$PlanMarkdown = "outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_RUN_PLAN.md"
 )
@@ -14,7 +15,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $sharedWork = Split-Path -Parent $repo
-$decisionPath = Join-Path $repo "outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_DECISION.csv"
+$decisionPath = if([IO.Path]::IsPathRooted($DecisionCsvPath)) { $DecisionCsvPath } else { Join-Path $repo $DecisionCsvPath }
 $manifestPath = Join-Path $repo "outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_MANIFEST.csv"
 $parallelRunner = Join-Path $PSScriptRoot "run_mt5_portable_parallel_manifest.ps1"
 $collector = Join-Path $PSScriptRoot "collect_rdmc_money_ready_gate_repair_executable_results.ps1"

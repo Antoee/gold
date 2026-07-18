@@ -11,6 +11,7 @@ $tempRelative = "outputs\_rdmc_exec_collector_test_" + [guid]::NewGuid().ToStrin
 $temp = Join-Path $repo $tempRelative
 $reports = Join-Path $temp "reports"
 $ledger = Join-Path $temp "runner_1.csv"
+$decisionFixture = Join-Path $temp "decision.csv"
 
 if(!$temp.StartsWith((Join-Path $repo "outputs") + "\", [StringComparison]::OrdinalIgnoreCase)) {
    throw "Unsafe collector-test directory."
@@ -68,11 +69,14 @@ function Write-RunnerLedger([bool]$TamperConfig = $false) {
 }
 
 try {
+   [pscustomobject]@{ CurrentWave = 1; TerminalRejection = $false } |
+      Export-Csv -LiteralPath $decisionFixture -NoTypeInformation -Encoding ASCII
    foreach($row in $manifest) { Write-SyntheticReport $row | Out-Null }
    Write-RunnerLedger
 
    $common = @{
       Wave = 1
+      DecisionCsvPath = $decisionFixture
       ReportDir = ($reports.Substring($repo.Length + 1))
       RunnerLedgerGlob = ($ledger.Substring($repo.Length + 1))
       ResultsPath = "$tempRelative\canonical.csv"

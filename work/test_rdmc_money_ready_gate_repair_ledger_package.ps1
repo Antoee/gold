@@ -77,7 +77,7 @@ foreach($forbidden in @('RDMC_DIVERSIFIED_REPAIR_EXECUTABLE_GATE','rdmc_diversif
 if($LASTEXITCODE -ne 0) { throw 'Successor ledger regression failed.' }
 $decision = @(Import-Csv -LiteralPath $decisionPath)
 if($decision.Count -ne 1 -or $decision[0].Status -ne 'AWAITING_EXECUTABLE_MT5_GATE' -or
-   $decision[0].CurrentExecutableGateStatus -ne 'LOCKED_AWAITING_WAVE_01_REPORTS' -or
+   $decision[0].CurrentExecutableGateStatus -ne 'EXECUTABLE_GATE_REJECTED_WAVE_01' -or
    $decision[0].ExecutableGatePass -ne 'False' -or $decision[0].ExecutableLedgerPresent -ne 'False' -or
    $decision[0].CostGatePass -ne 'False' -or $decision[0].OrderAwareMonteCarloPass -ne 'False' -or
    $decision[0].StaticReadinessPass -ne 'True' -or $decision[0].SourceNormalizedToBase -ne 'True' -or

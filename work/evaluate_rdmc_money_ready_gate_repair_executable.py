@@ -16,6 +16,8 @@ RESULTS = ROOT / "outputs" / "RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_RESULTS.cs
 EVALUATION_CSV = ROOT / "outputs" / "RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_EVALUATION.csv"
 DECISION_CSV = ROOT / "outputs" / "RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_DECISION.csv"
 DECISION_MD = ROOT / "outputs" / "RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_DECISION.md"
+RUN_PLAN_CSV = ROOT / "outputs" / "RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_RUN_PLAN.csv"
+RUN_PLAN_MD = ROOT / "outputs" / "RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_RUN_PLAN.md"
 REPO_LOCK = ROOT / "work" / "MT5_LOCAL_LAUNCH_DISABLED.lock"
 OUTER_LOCK = ROOT.parent / "MT5_LOCAL_LAUNCH_DISABLED.lock"
 
@@ -47,6 +49,38 @@ def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
         writer = csv.DictWriter(handle, fieldnames=list(rows[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
+
+
+def close_terminal_run_plan(decision: dict[str, Any], launch_locked: bool) -> None:
+    if not decision["TerminalRejection"]:
+        return
+    if RUN_PLAN_CSV.is_file():
+        rows = read_csv(RUN_PLAN_CSV)
+        for row in rows:
+            row["Status"] = "TERMINAL_REJECTED"
+            row["Action"] = str(decision["NextAction"])
+            row["AvailableWorkers"] = "0"
+            if "SharedBinaryAction" in row:
+                row["SharedBinaryAction"] = "KEEP_FROZEN_BINARY_FOR_AUDIT_ONLY"
+        if rows:
+            write_csv(RUN_PLAN_CSV, rows)
+    lines = [
+        "# RDMC Money-Ready Gate Repair Executable Run Plan",
+        "",
+        "**TERMINAL REJECTION. THIS IDENTITY MUST NOT RUN AGAIN.**",
+        "",
+        f"- Failed wave: `{decision['CurrentWave']}`",
+        f"- Status: `{decision['Status']}`",
+        f"- Launch locked: `{launch_locked}`",
+        "- Static readiness: `PASS`",
+        "- Source normalization to frozen base: `PASS`",
+        f"- Next action: `{decision['NextAction']}`",
+        "- Available workers: `0`",
+        "- Existing source, profile, binary, reports, and identity sidecars: `PRESERVE FOR AUDIT`",
+        "",
+        "A fresh Wave 1 is admissible only after the required strategy-code rewrite creates a new source, profile, manifest, and compiled-binary identity.",
+    ]
+    RUN_PLAN_MD.write_text("\n".join(lines) + "\n", encoding="ascii")
 
 
 def load_manifest() -> list[dict[str, str]]:
@@ -171,6 +205,7 @@ def evaluate_gate(
             return decision, details
 
         wave_failed = False
+        wave_detail_start = len(details)
         for manifest_row in wave_rows:
             result = result_map[manifest_row["ExpectedReportName"]]
             passed, reasons = evaluate_row(manifest_row, result)
@@ -189,13 +224,33 @@ def evaluate_gate(
                 }
             )
         if wave_failed:
+            failed_details = [row for row in details[wave_detail_start:] if not row["GatePass"]]
+            failed_reason_tokens = [
+                token
+                for row in failed_details
+                for token in str(row["Reasons"]).split(";")
+                if token
+            ]
+            activity_only = bool(failed_reason_tokens) and all(
+                token.startswith("TotalTrades=") for token in failed_reason_tokens
+            )
+            if wave == 1 and activity_only:
+                next_action = "ALLOW_ONE_NEW_IDENTITY_ONE_FACTOR_ACTIVITY_REPAIR_THEN_RESTART_WAVE_01"
+            else:
+                next_action = {
+                    1: "REWRITE_ENTRY_OR_REGIME_LOGIC_THEN_RESTART_WAVE_01",
+                    2: "REWRITE_CROSS_REGIME_ARCHITECTURE_THEN_RESTART_WAVE_01",
+                    3: "REWRITE_TICK_SENSITIVE_ENTRY_EXIT_OR_EXECUTION_LOGIC_THEN_RESTART_WAVE_01",
+                    4: "REWRITE_ROBUSTNESS_PORTFOLIO_OR_RISK_ARCHITECTURE_THEN_RESTART_WAVE_01",
+                    5: "REWRITE_SEASONAL_ROBUSTNESS_WITHOUT_POSTHOC_CALENDAR_BLOCKS_THEN_RESTART_WAVE_01",
+                }[wave]
             return (
                 {
                     "Status": f"EXECUTABLE_GATE_REJECTED_WAVE_{wave:02d}",
                     "CurrentWave": wave,
                     "PassedRows": passed_rows,
                     "TotalRows": len(manifest),
-                    "NextAction": "KEEP_CANDIDATE_UNPROMOTED_AND_DIAGNOSE_REJECTION",
+                    "NextAction": next_action,
                     "TerminalRejection": True,
                     "ExecutableGatePass": False,
                     "AnnualToContinuousNetRatio": "",
@@ -238,7 +293,7 @@ def evaluate_gate(
                         "CurrentWave": 5,
                         "PassedRows": passed_rows,
                         "TotalRows": len(manifest),
-                        "NextAction": "KEEP_CANDIDATE_UNPROMOTED_AND_DIAGNOSE_RESTART_DIVERGENCE",
+                        "NextAction": "REWRITE_RESTART_STATE_OR_PATH_DEPENDENCE_THEN_RESTART_WAVE_01",
                         "TerminalRejection": True,
                         "ExecutableGatePass": False,
                         "AnnualToContinuousNetRatio": round(annual_ratio, 4),
@@ -281,6 +336,7 @@ def main() -> int:
     }
     write_csv(EVALUATION_CSV, details)
     write_csv(DECISION_CSV, [decision_row])
+    close_terminal_run_plan(decision, launch_locked)
 
     lines = [
         "# RDMC Money-Ready Gate Repair Executable Decision",

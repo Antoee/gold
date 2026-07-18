@@ -11,7 +11,7 @@
 "strategy-risk-inputs-unchanged","True","No strategy or risk setting was changed for the draft."
 "static-blocker-identity","True","Blockers: none."
 "static-trade-readiness","True","Status=PASS; blockers=none."
-"primary-executable-gate","False","status=LOCKED_AWAITING_WAVE_01_REPORTS; identity=True."
+"primary-executable-gate","False","status=EXECUTABLE_GATE_REJECTED_WAVE_01; identity=True."
 "executable-ledger-stress","False","status=AWAITING_EXECUTABLE_MT5_GATE; identity=True."
 "distinct-broker-gate","False","status=AWAITING_PRIMARY_EXECUTABLE_LEDGER_STRESS; identity=True."
 "candidate-compiled-binary","False","status=PENDING_EXECUTABLE_GATE."

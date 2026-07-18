@@ -1,5 +1,6 @@
 param(
    [ValidateRange(0,5)][int]$Wave = 0,
+   [string]$DecisionCsvPath = "outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_DECISION.csv",
    [string]$ManifestPath = "outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_MANIFEST.csv",
    [string]$ReportDir = "outputs\rdmc_money_ready_gate_repair_executable_package\reports_here",
    [string]$RunnerLedgerGlob = "",
@@ -15,7 +16,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "mt5_report_identity_helpers.ps1")
 $repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
-$decisionPath = Join-Path $repo "outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_DECISION.csv"
+$decisionPath = if([IO.Path]::IsPathRooted($DecisionCsvPath)) { $DecisionCsvPath } else { Join-Path $repo $DecisionCsvPath }
 $evaluator = Join-Path $PSScriptRoot "evaluate_rdmc_money_ready_gate_repair_executable.py"
 $expectedManifestHash = "EB48BDE3D67F9D16BAD427AB5ACC25BC8DFF8D8F29839EB95ADE615F59668972"
 $expectedSourceHash = "104F1B2D77876FA9856C8BECF7BF2D81DAB187F54BF3ED12C07493BCD6F6D6C8"

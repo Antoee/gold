@@ -68,6 +68,7 @@ $tests = @(
    @('24-row executable queue', 'test_rdmc_money_ready_gate_repair_executable_queue.ps1'),
    @('identity-bound execution harness', 'test_rdmc_money_ready_gate_repair_execution_harness.ps1'),
    @('compile-once wave runner', 'test_rdmc_money_ready_gate_repair_executable_wave_runner.ps1'),
+   @('terminal Wave 1 readiness', 'test_rdmc_money_ready_gate_repair_wave_01_readiness.ps1'),
    @('hard-locked source staging', 'test_rdmc_money_ready_gate_repair_source_staging.ps1'),
    @('strategy rewrite escalation policy', 'test_rdmc_strategy_rewrite_escalation_policy.ps1'),
    @('identity-bound collector', 'test_rdmc_money_ready_gate_repair_executable_collector.ps1'),
@@ -81,10 +82,6 @@ foreach($test in $tests) { Invoke-PowerShellTest -Name $test[0] -File $test[1] }
 $evaluatorTest = Join-Path $PSScriptRoot 'test_rdmc_money_ready_gate_repair_executable.py'
 & python $evaluatorTest | Out-Host
 if($LASTEXITCODE -ne 0) { throw 'Executable evaluator regression failed.' }
-
-# Regenerate the canonical plan after all isolated tests so worker inventory and compile-once state are authoritative.
-& (Join-Path $PSScriptRoot 'run_rdmc_money_ready_gate_repair_executable_wave.ps1') | Out-Host
-if(!$?) { throw 'Canonical executable plan regeneration failed.' }
 
 $staticRows = @(Import-Csv -LiteralPath (Join-Path $repo 'outputs\RDMC_MONEY_READY_GATE_REPAIR_STATIC_READINESS.csv'))
 if($staticRows.Count -ne 63 -or @($staticRows | Where-Object { !(ConvertTo-BoolStrict $_.Pass) }).Count -ne 0) {
@@ -102,17 +99,21 @@ if((@(1..5 | ForEach-Object { $wave = $_; @($manifestRows | Where-Object Wave -e
 
 $decision = Import-OneCsvRow (Join-Path $repo 'outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_DECISION.csv') 'Executable decision'
 Assert-FrozenIdentity $decision 'Executable decision'
-if($decision.Status -ne 'LOCKED_AWAITING_WAVE_01_REPORTS' -or $decision.CurrentWave -ne '1' -or $decision.ReportsPresent -ne '0' -or
-   !(ConvertTo-BoolStrict $decision.LaunchLocked) -or (ConvertTo-BoolStrict $decision.ExecutableGatePass) -or
+if($decision.Status -ne 'EXECUTABLE_GATE_REJECTED_WAVE_01' -or $decision.CurrentWave -ne '1' -or $decision.ReportsPresent -ne '2' -or
+   !(ConvertTo-BoolStrict $decision.TerminalRejection) -or !(ConvertTo-BoolStrict $decision.LaunchLocked) -or
+   $decision.NextAction -ne 'REWRITE_ENTRY_OR_REGIME_LOGIC_THEN_RESTART_WAVE_01' -or
+   (ConvertTo-BoolStrict $decision.ExecutableGatePass) -or
    !(ConvertTo-BoolStrict $decision.StaticReadinessPass) -or !(ConvertTo-BoolStrict $decision.SourceNormalizedToBase) -or
    (ConvertTo-BoolStrict $decision.ForwardCandidateChanged) -or (ConvertTo-BoolStrict $decision.RealAccountApproved)) {
-   throw 'Executable decision no longer preserves the locked zero-evidence boundary.'
+   throw 'Executable decision no longer preserves the terminal Wave 1 rejection.'
 }
 
 $planRows = @(Import-Csv -LiteralPath (Join-Path $repo 'outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_RUN_PLAN.csv'))
 if($planRows.Count -ne 2 -or ($planRows.Window -join ',') -ne '2019,2022' -or @($planRows | Where-Object {
-   $_.Status -ne 'LOCKED' -or $_.ExecutionMode -ne 'SINGLE_STAGE' -or $_.SharedBinaryStatus -notin @('LOCKED_COMPILE_ONCE_REQUIRED','SHARED_BINARY_READY')
-}).Count -ne 0) { throw 'Canonical Wave 1 plan is stale or unsafe.' }
+   $_.Status -ne 'TERMINAL_REJECTED' -or $_.Action -ne 'REWRITE_ENTRY_OR_REGIME_LOGIC_THEN_RESTART_WAVE_01' -or
+   $_.AvailableWorkers -ne '0' -or $_.ExecutionMode -ne 'SINGLE_STAGE' -or $_.SharedBinaryStatus -ne 'SHARED_BINARY_READY' -or
+   $_.SharedBinaryAction -ne 'KEEP_FROZEN_BINARY_FOR_AUDIT_ONLY'
+}).Count -ne 0) { throw 'Canonical Wave 1 terminal plan is stale or unsafe.' }
 
 $sourceStagingRows = @(Import-Csv -LiteralPath (Join-Path $repo 'outputs\RDMC_MONEY_READY_GATE_REPAIR_SOURCE_STAGING.csv'))
 $sourceStagingTests = @(Import-Csv -LiteralPath (Join-Path $repo 'outputs\RDMC_MONEY_READY_GATE_REPAIR_SOURCE_STAGING_TESTS.csv'))
@@ -179,8 +180,15 @@ if($legacyForwardTests.Count -ne 4 -or @($legacyForwardTests | Where-Object { !(
 
 $reportDirectory = Join-Path $repo 'outputs\rdmc_money_ready_gate_repair_executable_package\reports_here'
 $reportArtifacts = @(Get-ChildItem -LiteralPath $reportDirectory -File | Where-Object Name -ne 'README.md')
-if($reportArtifacts.Count -ne 0 -or (Test-Path -LiteralPath (Join-Path $repo 'outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_RESULTS.csv'))) {
-   throw 'Unvalidated executable evidence exists in the successor package.'
+if($reportArtifacts.Count -ne 4 -or @($reportArtifacts | Where-Object Extension -eq '.htm').Count -ne 2 -or
+   @($reportArtifacts | Where-Object Name -like '*.identity.json').Count -ne 2) {
+   throw 'The two identity-bound Wave 1 reports are incomplete.'
+}
+$executableResults = @(Import-Csv -LiteralPath (Join-Path $repo 'outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_RESULTS.csv'))
+$executableEvaluation = @(Import-Csv -LiteralPath (Join-Path $repo 'outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_EVALUATION.csv'))
+if($executableResults.Count -ne 2 -or @($executableResults | Where-Object Status -ne 'PARSED').Count -ne 0 -or
+   $executableEvaluation.Count -ne 2 -or @($executableEvaluation | Where-Object GatePass -ne 'False').Count -ne 0) {
+   throw 'Wave 1 parsed evidence no longer matches the terminal rejection.'
 }
 
 $afterProcesses = @(Get-Process -Name terminal,terminal64,metatester,metatester64,MetaEditor,metaeditor64 -ErrorAction SilentlyContinue)
@@ -190,14 +198,14 @@ if($afterProcesses.Count -ne 0 -or !(Test-Path -LiteralPath $repoLock) -or !(Tes
 
 $summary = [pscustomobject][ordered]@{
    Status = 'PASS'
-   DirectTestEntrypoints = 12
+   DirectTestEntrypoints = 13
    SourceStagingScenarios = 4
    ExactSourceWorkersStaged = 4
    RewritePolicyChecks = 10
    StaticChecksPassed = 63
    ExecutableRows = 24
-   ExecutableReportsPresent = 0
-   ExecutableEvaluatorCases = 6
+   ExecutableReportsPresent = 2
+   ExecutableEvaluatorCases = 11
    LedgerFailClosedCases = 12
    SecondBrokerEvaluatorCases = 16
    SecondBrokerPackageChecks = 48
@@ -216,19 +224,19 @@ $summary = [pscustomobject][ordered]@{
 $summary | Export-Csv -LiteralPath $summaryCsv -NoTypeInformation -Encoding ASCII
 @(
    '# RDMC Money-Ready Gate-Repair Offline Audit', '',
-   '**PASS. The complete successor offline stack is deterministic, launch-locked, identity-bound, and fail-closed with zero executable or forward evidence.**', '',
-   '- Direct test entrypoints: `12`',
+   '**PASS. The complete successor stack preserves the identity-bound Wave 1 rejection, remains launch-locked, and has zero valid forward evidence.**', '',
+   '- Direct test entrypoints: `13`',
    '- Hard-locked source-staging regressions: `4/4` on four portable workers',
    '- Strategy rewrite escalation checks: `10/10`',
    '- Static readiness: `63/63`',
    '- Executable queue: `24` rows in waves `2,4,2,4,12`',
-   '- Executable evaluator regressions: `6/6`',
+   '- Executable evaluator regressions: `11/11`',
    '- Ledger fail-closed regressions: `12/12`',
    '- Second-broker evaluator regressions: `16/16`',
    '- Second-broker package checks: `48/48`',
    '- Successor forward fixtures: `4/4`',
    '- Legacy forward compatibility fixtures: `4/4`',
-   '- Executable reports inherited or supplied: `0/24`',
+   '- Identity-bound executable reports supplied: `2/24` (both Wave 1 rows rejected)',
    '- Second-broker reports inherited or supplied: `0/18`',
    '- Candidate registered: `False`',
    '- MT5 launched: `False`',
@@ -243,10 +251,10 @@ if(!$SkipCleanWorktreeCheck) {
 
 [pscustomobject]@{
    Status = 'PASS'
-   DirectTestEntrypoints = 12
+   DirectTestEntrypoints = 13
    CanonicalDriftDetected = $false
    CleanWorktreeVerified = !$SkipCleanWorktreeCheck
-   ReportsPresent = 0
+   ReportsPresent = 2
    MQL5Launched = $false
    RealAccountApproved = $false
 }

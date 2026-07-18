@@ -1,4 +1,4 @@
 "Scenario","Expected","Actual","Pass","MQL5Launched"
-"current_hard_locked_runtime","HARD_LOCKED_SOURCE_STAGED_COMPILE_ONCE_REQUIRED","HARD_LOCKED_SOURCE_STAGED_COMPILE_ONCE_REQUIRED","True","False"
+"current_terminal_rejection","TERMINAL_REJECTION_NO_RERUN","TERMINAL_REJECTION_NO_RERUN","True","False"
 "tampered_wave_manifest","INFRASTRUCTURE_BLOCKED","INFRASTRUCTURE_BLOCKED","True","False"
 "missing_portable_worker","INFRASTRUCTURE_BLOCKED","INFRASTRUCTURE_BLOCKED","True","False"

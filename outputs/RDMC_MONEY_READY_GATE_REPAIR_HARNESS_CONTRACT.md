@@ -1,6 +1,6 @@
 # RDMC Money-Ready Gate Repair Execution Harness Contract
 
-**OFFLINE HARNESS ONLY. ZERO MT5 REPORTS AND NO PROFIT CLAIM.**
+**OFFLINE HARNESS BUILD ONLY. EXISTING TESTER EVIDENCE IS PRESERVED; NO PROFIT CLAIM.**
 
 The runner, collector, evaluator, and their three regression tests are deterministically derived from the reviewed diversified-repair executable harness. The template byte identities are pinned before generation; only candidate identity, package paths, artifact names, and the two static gate-repair decision facts change.
 
@@ -11,4 +11,4 @@ The runner, collector, evaluator, and their three regression tests are determini
 
 The harness preserves compile-once binary distribution, the two launch locks, explicit focus-risk authorization, wave admission, Model1 reject-only ordering, Wave 4 cache staging, report sidecars, exact report/config/source/binary hashes, and fail-closed thresholds. It cannot promote the registered forward candidate or approve real trading.
 
-Both launch locks must remain present until a deliberate review. Building or testing this harness never launches MT5.
+Both launch locks must remain present until a deliberate review. Building or testing this harness never launches MT5 and never deletes existing report evidence.

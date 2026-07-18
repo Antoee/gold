@@ -1,0 +1,5 @@
+"Window","Lane","Trades","WinningTrades","LosingTrades","NetProfit","Attribution"
+"2019","MTSM_BUY","3","0","3","-17.35","All three positions exited at stop loss"
+"2019","RRO","0","0","0","0.00","No executable trades"
+"2022","MTSM","5","1","4","-35.62","One winning buy and four stop-loss exits; net includes -0.05 swap"
+"2022","RRO","2","1","1","0.78","One band/VWAP winner and one loser"

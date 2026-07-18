@@ -18,12 +18,12 @@ $temp = Join-Path $repo $tempRelative
 $before = @(Get-Process -Name terminal,terminal64,metatester,metatester64,MetaEditor,metaeditor64 -ErrorAction SilentlyContinue)
 
 $expectedGenerated = @{
-   runner = '55848002418E3DECEB4938F89F82821910D2AC3101CE2D72725D7AE7869B3ECA'
-   collector = '8B1F30B07A65FEF53C7BF3741B1C6B6A22C1926023220E35225A092B4FC8CBD6'
-   evaluator = '44EFC91B10E8B0FEC81B12588B7EE45C468FBF2348D9A39FE8AA083CC897EFC8'
-   runner_test = '6E1250B699162375B784A4A5CFB8E38DDD4485E08CDED2B52D9136F8C087DD83'
-   collector_test = '78185DF7F43258EDEC81F304DB453AFB263B4A79DCB4EB4D31927B7C3BC523BE'
-   evaluator_test = '125141086026214214D083C4C74D3570C891BE795751283BD6312B2823814180'
+   runner = 'F37410B81AB8039E4CFDDB564700B8045A5BF970CAFEDC60647C99CBEC947AE8'
+   collector = '35FA8C47C0422697A23B35DDDDB8C63D24DC5CF97257E6ACA8C70966B49FAFEA'
+   evaluator = '344B4B23428C89D10EFA23C8FB75468AC9EDD693F8B50B23D452558130EF883F'
+   runner_test = '8DCC7E9362B7659EF672989E1AFAD5AA29F18B54C4DB0DA841D43A33814EB285'
+   collector_test = '3BB3636363545CC3577897F594C5E58A710278E915E478DFD96EA632D3BD6201'
+   evaluator_test = '41B9E42A560AB700E4B62C1738AA9C889FF62470B6140BCC2509743D9D423BE4'
 }
 
 if(!$temp.StartsWith((Join-Path $repo 'outputs') + '\', [StringComparison]::OrdinalIgnoreCase)) { throw 'Unsafe harness-test path.' }
@@ -68,50 +68,65 @@ try {
       if($runnerText.IndexOf($guard, [StringComparison]::Ordinal) -lt 0) { throw "Runner guard missing: $guard" }
    }
 
-   $authorizationRejected = $false
+   $terminalRunnerRejected = $false
    try {
       & $runner -Run -PlanCsv "$tempRelative\no_auth_plan.csv" -PlanMarkdown "$tempRelative\no_auth_plan.md" | Out-Null
    }
-   catch { $authorizationRejected = $_.Exception.Message -match 'explicit focus-risk authorization' }
-   if(!$authorizationRejected) { throw 'Runner did not reject run mode without explicit authorization.' }
+   catch { $terminalRunnerRejected = $_.Exception.Message -match 'terminally rejected' }
+   if(!$terminalRunnerRejected) { throw 'Runner did not enforce the canonical terminal rejection.' }
 
-   $hardLockRejected = $false
+   $terminalAuthorizedRunnerRejected = $false
    try {
       & $runner -Run -UserAuthorizedFocusRisk -PlanCsv "$tempRelative\locked_plan.csv" -PlanMarkdown "$tempRelative\locked_plan.md" | Out-Null
    }
-   catch { $hardLockRejected = $_.Exception.Message -match 'hard-locked' }
-   if(!$hardLockRejected) { throw 'Runner did not reject run mode under the hard locks.' }
+   catch { $terminalAuthorizedRunnerRejected = $_.Exception.Message -match 'terminally rejected' }
+   if(!$terminalAuthorizedRunnerRejected) { throw 'Explicit authorization bypassed the canonical terminal rejection.' }
 
-   $missingLedgerRejected = $false
+   $terminalCollectorRejected = $false
    try {
       & $collector -Wave 1 -RunnerLedgerGlob "$tempRelative\missing_runner_*.csv" `
          -ResultsPath "$tempRelative\canonical.csv" -RunAuditPath "$tempRelative\audit.csv" `
          -RawResultsPath "$tempRelative\raw.csv" -SummaryPath "$tempRelative\summary.csv" `
          -MetricsMarkdownPath "$tempRelative\metrics.md" -SkipAdmissionRefresh | Out-Null
    }
-   catch { $missingLedgerRejected = $_.Exception.Message -match 'No runner ledger files found' }
-   if(!$missingLedgerRejected) { throw 'Collector did not fail closed when the admitted runner ledger was absent.' }
+   catch { $terminalCollectorRejected = $_.Exception.Message -match 'terminally rejected' }
+   if(!$terminalCollectorRejected) { throw 'Collector did not enforce the canonical terminal rejection.' }
 
    & python $evaluator
    if($LASTEXITCODE -ne 0) { throw 'Successor evaluator main failed.' }
    $decision = @(Import-Csv -LiteralPath $decisionPath)
-   if($decision.Count -ne 1 -or $decision[0].Status -ne 'LOCKED_AWAITING_WAVE_01_REPORTS' -or
-      $decision[0].ReportsPresent -ne '0' -or $decision[0].StaticReadinessPass -ne 'True' -or
+   if($decision.Count -ne 1 -or $decision[0].Status -ne 'EXECUTABLE_GATE_REJECTED_WAVE_01' -or
+      $decision[0].ReportsPresent -ne '2' -or $decision[0].TerminalRejection -ne 'True' -or
+      $decision[0].LaunchLocked -ne 'True' -or
+      $decision[0].NextAction -ne 'REWRITE_ENTRY_OR_REGIME_LOGIC_THEN_RESTART_WAVE_01' -or
+      $decision[0].StaticReadinessPass -ne 'True' -or
       $decision[0].SourceNormalizedToBase -ne 'True' -or $decision[0].ForwardCandidateChanged -ne 'False' -or
       $decision[0].RealAccountApproved -ne 'False') {
       throw 'Successor evaluator overclaimed evidence or lost gate-repair identity facts.'
    }
    $evaluation = @(Import-Csv -LiteralPath $evaluationPath)
-   if($evaluation.Count -ne 2 -or @($evaluation | Where-Object Reasons -ne 'NOT_EVALUATED_INCOMPLETE_WAVE').Count -gt 0) {
-      throw 'Empty-evidence evaluation did not remain at the two-row Wave 1 boundary.'
+   if($evaluation.Count -ne 2 -or @($evaluation | Where-Object GatePass -ne 'False').Count -gt 0 -or
+      @($evaluation | Where-Object Reasons -eq 'NOT_EVALUATED_INCOMPLETE_WAVE').Count -gt 0) {
+      throw 'Wave 1 evaluation did not preserve both terminally rejected rows.'
    }
    $reportArtifacts = @()
    if(Test-Path -LiteralPath $reportsPath -PathType Container) {
       $reportArtifacts = @(Get-ChildItem -LiteralPath $reportsPath -File | Where-Object Name -ne 'README.md')
    }
-   if($reportArtifacts.Count -ne 0) { throw 'Harness audit found an unvalidated report artifact.' }
-   if(Test-Path -LiteralPath (Join-Path $repo 'outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_RESULTS.csv')) {
-      throw 'Harness audit found a claimed canonical result file.'
+   if($reportArtifacts.Count -ne 4) { throw 'Harness audit did not find exactly two reports and two identity sidecars.' }
+   foreach($sidecar in @($reportArtifacts | Where-Object Extension -eq '.json')) {
+      $identity = Get-Content -LiteralPath $sidecar.FullName -Raw | ConvertFrom-Json
+      $reportPath = Join-Path $reportsPath ($sidecar.Name -replace '\.identity\.json$','.htm')
+      if(!(Test-Path -LiteralPath $reportPath -PathType Leaf) -or
+         $identity.SourceSha256 -ne '104F1B2D77876FA9856C8BECF7BF2D81DAB187F54BF3ED12C07493BCD6F6D6C8' -or
+         $identity.PortableBinarySha256 -ne 'D1CF2B9B455F7895CB6BEAC47C98CB4266CD30BC1CCD7B701AF2DB35B6B904AD' -or
+         (Get-FileHash -LiteralPath $reportPath -Algorithm SHA256).Hash.ToUpperInvariant() -ne $identity.ReportSha256) {
+         throw "Report identity binding failed: $($sidecar.Name)"
+      }
+   }
+   $canonicalResults = @(Import-Csv -LiteralPath (Join-Path $repo 'outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_RESULTS.csv'))
+   if($canonicalResults.Count -ne 2 -or @($canonicalResults | Where-Object Status -ne 'PARSED').Count -gt 0) {
+      throw 'Harness audit did not find the two rejected canonical Wave 1 results.'
    }
    if(!(Test-Path -LiteralPath (Join-Path $PSScriptRoot 'MT5_LOCAL_LAUNCH_DISABLED.lock')) -or
       !(Test-Path -LiteralPath (Join-Path $sharedWork 'MT5_LOCAL_LAUNCH_DISABLED.lock'))) {
@@ -123,10 +138,11 @@ try {
    $result = [pscustomobject][ordered]@{
       Status = 'PASS'
       Components = $manifest.Count
-      AuthorizationRejected = $authorizationRejected
-      HardLockRejected = $hardLockRejected
-      MissingLedgerRejected = $missingLedgerRejected
-      ReportsPresent = $reportArtifacts.Count
+      TerminalRunnerRejected = $terminalRunnerRejected
+      TerminalAuthorizedRunnerRejected = $terminalAuthorizedRunnerRejected
+      TerminalCollectorRejected = $terminalCollectorRejected
+      ReportsPresent = $canonicalResults.Count
+      ReportArtifactsPresent = $reportArtifacts.Count
       MQL5Launched = $false
       ForwardCandidateChanged = $false
       RealAccountApproved = $false
@@ -135,21 +151,22 @@ try {
    $markdown = @(
       '# RDMC Money-Ready Gate Repair Harness Tests',
       '',
-      '**PASS. The successor harness is operationally bound but remains launch locked with zero executable reports.**',
+      '**PASS. The successor harness preserves the identity-bound Wave 1 rejection and prevents any same-identity rerun.**',
       '',
       '- Generated components: `6`',
       '- Hash-pinned template and generated identities: `PASS`',
-      '- Evaluator regression cases: `6/6`',
-      '- Explicit focus-risk authorization rejection: `PASS`',
-      '- Repository/outer hard-lock rejection: `PASS`',
-      '- Missing runner-ledger rejection: `PASS`',
+      '- Evaluator regression cases: `11/11`',
+      '- Terminal runner rejection without authorization: `PASS`',
+      '- Terminal runner rejection with authorization: `PASS`',
+      '- Terminal collector rejection: `PASS`',
       '- Synthetic report identity/tamper regression: `PASS`',
-      '- Reports present: `0/24`',
+      '- Identity-bound reports present: `2/24`',
+      '- Report plus identity artifacts: `4`',
       '- MT5 launched: `False`',
       '- Forward candidate changed: `False`',
       '- Real-account approval: `False`',
       '',
-      'The current admitted spend remains Wave 1 only: Model1 2019 and 2022. Passing offline harness tests does not compile the new source, establish profit, or transfer evidence from an older binary.'
+      'Wave 1 Model1 2019 and 2022 failed the economic and activity gates. The identity is terminally rejected; the next admissible research action is a code rewrite under a new identity, followed by a fresh Wave 1.'
    ) -join "`n"
    [IO.File]::WriteAllText($testMarkdownPath, $markdown + "`n", [Text.Encoding]::ASCII)
    $result

@@ -16,11 +16,13 @@ $before = @(Get-Process -Name terminal,terminal64,metatester,metatester64,MetaEd
 try {
    $current = & $builder
    $workers = @(Import-Csv -LiteralPath $workersPath)
-   if($current.Status -ne 'HARD_LOCKED_SOURCE_STAGED_COMPILE_ONCE_REQUIRED' -or !$current.InfrastructureReady -or $current.SafeToLaunchNow -or
+   if($current.Status -ne 'TERMINAL_REJECTION_NO_RERUN' -or $current.InfrastructureReady -or $current.SafeToLaunchNow -or
       !$current.LaunchLocksPresent -or $current.RuntimeWorkersReady -ne 2 -or !$current.Model1History2019Ready -or
-      !$current.Model1History2022Ready -or !$current.StagedSourceReady -or $current.SharedBinaryReady -or !$current.CompilationNeeded -or
-      $current.ReportsPresent -ne 0 -or $current.MQL5Launched -or $current.ForwardCandidateChanged -or $current.RealAccountApproved) {
-      throw 'Current Wave 1 readiness did not preserve the expected hard-locked compile-once boundary.'
+      !$current.Model1History2022Ready -or !$current.StagedSourceReady -or !$current.SharedBinaryReady -or $current.CompilationNeeded -or
+      $current.ReportsPresent -ne 2 -or $current.ReportArtifactsPresent -ne 4 -or
+      $current.NextAction -ne 'REWRITE_ENTRY_OR_REGIME_LOGIC_THEN_RESTART_WAVE_01' -or
+      $current.MQL5Launched -or $current.ForwardCandidateChanged -or $current.RealAccountApproved) {
+      throw 'Current Wave 1 readiness did not preserve the terminal rejection boundary.'
    }
    if($workers.Count -ne 2 -or @($workers | Where-Object RuntimeReady -ne 'True').Count -ne 0 -or
       @($workers | Where-Object ExactSourceReady -ne 'True').Count -ne 0 -or
@@ -28,18 +30,21 @@ try {
       throw 'Current Wave 1 worker inventory is incomplete.'
    }
 
+   $decisionFixture = Join-Path $temp 'pending-decision.csv'
+   [pscustomobject]@{ TerminalRejection=$false; NextAction='RUN_WAVE_01_ONLY' } |
+      Export-Csv -LiteralPath $decisionFixture -NoTypeInformation -Encoding ASCII
    $tamperedManifest = Join-Path $temp 'tampered-wave.csv'
    $tamperedRows = @(Import-Csv -LiteralPath (Join-Path $repo 'outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_WAVE_01_MANIFEST.csv'))
    $tamperedRows[0].ConfigSha256 = '0' * 64
    $tamperedRows | Export-Csv -LiteralPath $tamperedManifest -NoTypeInformation -Encoding ASCII
-   $tampered = & $builder -WaveManifestPath $tamperedManifest `
+   $tampered = & $builder -DecisionCsvPath $decisionFixture -WaveManifestPath $tamperedManifest `
       -StatusCsvPath (Join-Path $temp 'tampered-status.csv') -WorkersCsvPath (Join-Path $temp 'tampered-workers.csv') `
       -StatusMarkdownPath (Join-Path $temp 'tampered-status.md')
    if($tampered.Status -ne 'INFRASTRUCTURE_BLOCKED' -or $tampered.InfrastructureReady -or $tampered.SafeToLaunchNow -or $tampered.MQL5Launched) {
       throw 'Tampered Wave 1 manifest was not refused before launch.'
    }
 
-   $missingWorker = & $builder -WorkerNames @('mt5_portable_research','mt5_portable_research_w99') `
+   $missingWorker = & $builder -DecisionCsvPath $decisionFixture -WorkerNames @('mt5_portable_research','mt5_portable_research_w99') `
       -StatusCsvPath (Join-Path $temp 'missing-status.csv') -WorkersCsvPath (Join-Path $temp 'missing-workers.csv') `
       -StatusMarkdownPath (Join-Path $temp 'missing-status.md')
    if($missingWorker.Status -ne 'INFRASTRUCTURE_BLOCKED' -or $missingWorker.InfrastructureReady -or $missingWorker.SafeToLaunchNow -or $missingWorker.MQL5Launched) {
@@ -50,16 +55,16 @@ try {
    if($after.Count -ne $before.Count -or $after.Count -ne 0) { throw 'Wave 1 readiness tests launched an MT5-family process.' }
 
    $scenarios = @(
-      [pscustomobject]@{Scenario='current_hard_locked_runtime';Expected='HARD_LOCKED_SOURCE_STAGED_COMPILE_ONCE_REQUIRED';Actual=$current.Status;Pass=$true;MQL5Launched=$false},
+      [pscustomobject]@{Scenario='current_terminal_rejection';Expected='TERMINAL_REJECTION_NO_RERUN';Actual=$current.Status;Pass=$true;MQL5Launched=$false},
       [pscustomobject]@{Scenario='tampered_wave_manifest';Expected='INFRASTRUCTURE_BLOCKED';Actual=$tampered.Status;Pass=$true;MQL5Launched=$false},
       [pscustomobject]@{Scenario='missing_portable_worker';Expected='INFRASTRUCTURE_BLOCKED';Actual=$missingWorker.Status;Pass=$true;MQL5Launched=$false}
    )
    $scenarios | Export-Csv -LiteralPath $testsCsvPath -NoTypeInformation -Encoding ASCII
    @(
       '# RDMC Money-Ready Gate-Repair Wave 1 Readiness Tests', '',
-      '**PASS. Three no-launch scenarios preserve exact identity, infrastructure, and hard-lock boundaries.**', '',
-      '- Current Wave 1 infrastructure: `READY`',
-      '- Current launch state: `HARD_LOCKED_SOURCE_STAGED_COMPILE_ONCE_REQUIRED`',
+      '**PASS. Three no-launch scenarios preserve terminal rejection, exact identity, infrastructure, and hard-lock boundaries.**', '',
+      '- Current Wave 1 result: `TERMINAL_REJECTION_NO_RERUN`',
+      '- Required next action: `REWRITE_ENTRY_OR_REGIME_LOGIC_THEN_RESTART_WAVE_01`',
       '- Tampered manifest rejected: `PASS`',
       '- Missing worker rejected: `PASS`',
       '- MT5 launched: `False`', '',

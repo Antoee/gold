@@ -14,37 +14,37 @@ $templates = @(
       Kind = 'runner'
       Source = Join-Path $PSScriptRoot 'run_rdmc_diversified_repair_executable_gate_wave.ps1'
       Destination = Join-Path $PSScriptRoot 'run_rdmc_money_ready_gate_repair_executable_wave.ps1'
-      ExpectedSha256 = '00411E648881581E8B53D34BDFF7942513BFCE41C0607147640D6CA7142FB16D'
+      ExpectedSha256 = 'BD4B4FB2A06ABB7D44FF0901AEFEA9C56BBCBBED829BA1E70C0ECF7229ACBE4A'
    },
    [pscustomobject]@{
       Kind = 'collector'
       Source = Join-Path $PSScriptRoot 'collect_rdmc_diversified_repair_executable_gate_results.ps1'
       Destination = Join-Path $PSScriptRoot 'collect_rdmc_money_ready_gate_repair_executable_results.ps1'
-      ExpectedSha256 = '74F10470B15A078FD503D7A2ACE73336D680DD76A1C9B3C447CA36BBF0421229'
+      ExpectedSha256 = '247EB899D167E702EBA00F06E69F24FD1AC407588A52EAFDAD5DAC7973EFF41B'
    },
    [pscustomobject]@{
       Kind = 'evaluator'
       Source = Join-Path $PSScriptRoot 'evaluate_rdmc_diversified_repair_executable_gate.py'
       Destination = Join-Path $PSScriptRoot 'evaluate_rdmc_money_ready_gate_repair_executable.py'
-      ExpectedSha256 = '83179BD754A5F85D06EA4AF0AF9B3FF043BCD5D1125C3AB1F9DE55EF2AFDC5A0'
+      ExpectedSha256 = 'C860DA9CCEE39942115E1794EA28AD69D492DD920F5191768686FEDA40CC3A71'
    },
    [pscustomobject]@{
       Kind = 'runner_test'
       Source = Join-Path $PSScriptRoot 'test_rdmc_diversified_repair_executable_gate_wave_runner.ps1'
       Destination = Join-Path $PSScriptRoot 'test_rdmc_money_ready_gate_repair_executable_wave_runner.ps1'
-      ExpectedSha256 = 'F22C3D5915F15B2668E0C1FE6BFE6E06CF36BBAC0DF8FADD26E51864B7E58CBA'
+      ExpectedSha256 = '4E9F1E8ACF0D14374EF00F215ECDCE04C8C1720A6956762192AEABB714682441'
    },
    [pscustomobject]@{
       Kind = 'collector_test'
       Source = Join-Path $PSScriptRoot 'test_rdmc_diversified_repair_executable_gate_collector.ps1'
       Destination = Join-Path $PSScriptRoot 'test_rdmc_money_ready_gate_repair_executable_collector.ps1'
-      ExpectedSha256 = 'AD7787979459C9C67FA692FBCC36CBCF747C06224AB305996CF7DD52F81FD185'
+      ExpectedSha256 = '6CE9883A27E18F57CEDD601E9E0CB4D7788BFA9D27E3CD49B8161E2B801C9AE3'
    },
    [pscustomobject]@{
       Kind = 'evaluator_test'
       Source = Join-Path $PSScriptRoot 'test_rdmc_diversified_repair_executable_gate.py'
       Destination = Join-Path $PSScriptRoot 'test_rdmc_money_ready_gate_repair_executable.py'
-      ExpectedSha256 = '2C533F07F75455A33F95FE68233276600E3DA04568532C7E0D04F9D42D7F2A6E'
+      ExpectedSha256 = '4DCE06FECD9404EB8130D94235AFC625DE9C877ADEA257A46B0686B1446AA2BC'
    }
 )
 
@@ -133,7 +133,7 @@ $manifestRows | Export-Csv -LiteralPath $manifestPath -NoTypeInformation -Encodi
 $contract = @(
    '# RDMC Money-Ready Gate Repair Execution Harness Contract',
    '',
-   '**OFFLINE HARNESS ONLY. ZERO MT5 REPORTS AND NO PROFIT CLAIM.**',
+   '**OFFLINE HARNESS BUILD ONLY. EXISTING TESTER EVIDENCE IS PRESERVED; NO PROFIT CLAIM.**',
    '',
    'The runner, collector, evaluator, and their three regression tests are deterministically derived from the reviewed diversified-repair executable harness. The template byte identities are pinned before generation; only candidate identity, package paths, artifact names, and the two static gate-repair decision facts change.',
    '',
@@ -144,7 +144,7 @@ $contract = @(
    '',
    'The harness preserves compile-once binary distribution, the two launch locks, explicit focus-risk authorization, wave admission, Model1 reject-only ordering, Wave 4 cache staging, report sidecars, exact report/config/source/binary hashes, and fail-closed thresholds. It cannot promote the registered forward candidate or approve real trading.',
    '',
-   'Both launch locks must remain present until a deliberate review. Building or testing this harness never launches MT5.'
+   'Both launch locks must remain present until a deliberate review. Building or testing this harness never launches MT5 and never deletes existing report evidence.'
 ) -join "`n"
 [IO.File]::WriteAllText($contractPath, $contract + "`n", $ascii)
 

@@ -1,2 +1,2 @@
-"Status","Components","AuthorizationRejected","HardLockRejected","MissingLedgerRejected","ReportsPresent","MQL5Launched","ForwardCandidateChanged","RealAccountApproved"
-"PASS","6","True","True","True","0","False","False","False"
+"Status","Components","TerminalRunnerRejected","TerminalAuthorizedRunnerRejected","TerminalCollectorRejected","ReportsPresent","ReportArtifactsPresent","MQL5Launched","ForwardCandidateChanged","RealAccountApproved"
+"PASS","6","True","True","True","2","4","False","False","False"

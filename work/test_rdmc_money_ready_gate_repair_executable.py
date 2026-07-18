@@ -60,7 +60,13 @@ wave1_loss[0]["NetProfit"] = "-0.01"
 decision, details = GATE.evaluate_gate(manifest, wave1_loss, launch_locked=False)
 assert decision["Status"] == "EXECUTABLE_GATE_REJECTED_WAVE_01"
 assert decision["TerminalRejection"] is True
+assert decision["NextAction"] == "REWRITE_ENTRY_OR_REGIME_LOGIC_THEN_RESTART_WAVE_01"
 assert any("NetProfit" in str(row["Reasons"]) for row in details)
+
+wave1_activity_only = [dict(row) for row in wave1]
+wave1_activity_only[0]["TotalTrades"] = "0"
+decision, _ = GATE.evaluate_gate(manifest, wave1_activity_only, launch_locked=False)
+assert decision["NextAction"] == "ALLOW_ONE_NEW_IDENTITY_ONE_FACTOR_ACTIVITY_REPAIR_THEN_RESTART_WAVE_01"
 
 decision, details = GATE.evaluate_gate(manifest, all_pass, launch_locked=False)
 assert decision["Status"] == "EXECUTABLE_MT5_GATE_PASS_PENDING_LEDGER_STRESS"
@@ -78,11 +84,35 @@ decision, details = GATE.evaluate_gate(manifest, divergent, launch_locked=False)
 assert decision["Status"] == "EXECUTABLE_GATE_REJECTED_WAVE_05_CONSISTENCY"
 assert decision["AnnualToContinuousNetRatio"] == 2.0
 assert details[-1]["GatePass"] is False
+assert decision["NextAction"] == "REWRITE_RESTART_STATE_OR_PATH_DEPENDENCE_THEN_RESTART_WAVE_01"
 
 missing_metric = [dict(row) for row in wave1]
 missing_metric[0]["ProfitFactor"] = ""
 decision, details = GATE.evaluate_gate(manifest, missing_metric, launch_locked=False)
 assert decision["Status"] == "EXECUTABLE_GATE_REJECTED_WAVE_01"
 assert "ProfitFactor=MISSING" in str(details[0]["Reasons"])
+assert decision["NextAction"] == "REWRITE_ENTRY_OR_REGIME_LOGIC_THEN_RESTART_WAVE_01"
 
-print("RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_TEST_PASS cases=6 rows=24 waves=5")
+expected_rewrite_actions = {
+    2: "REWRITE_CROSS_REGIME_ARCHITECTURE_THEN_RESTART_WAVE_01",
+    3: "REWRITE_TICK_SENSITIVE_ENTRY_EXIT_OR_EXECUTION_LOGIC_THEN_RESTART_WAVE_01",
+    4: "REWRITE_ROBUSTNESS_PORTFOLIO_OR_RISK_ARCHITECTURE_THEN_RESTART_WAVE_01",
+    5: "REWRITE_SEASONAL_ROBUSTNESS_WITHOUT_POSTHOC_CALENDAR_BLOCKS_THEN_RESTART_WAVE_01",
+}
+for failed_wave, expected_action in expected_rewrite_actions.items():
+    prefix = [
+        dict(result)
+        for result, row in zip(all_pass, manifest)
+        if int(row["Wave"]) <= failed_wave
+    ]
+    failed_index = next(
+        index
+        for index, row in enumerate([row for row in manifest if int(row["Wave"]) <= failed_wave])
+        if int(row["Wave"]) == failed_wave
+    )
+    prefix[failed_index]["NetProfit"] = "-0.01"
+    decision, _ = GATE.evaluate_gate(manifest, prefix, launch_locked=False)
+    assert decision["Status"] == f"EXECUTABLE_GATE_REJECTED_WAVE_{failed_wave:02d}"
+    assert decision["NextAction"] == expected_action
+
+print("RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_TEST_PASS cases=11 rows=24 waves=5")
