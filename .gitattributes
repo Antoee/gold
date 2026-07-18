@@ -6,6 +6,11 @@ work/Professional_XAUUSD_Transferable_Portfolio.mq5 -text -diff
 release/transferable-portfolio-v0.1/Professional_XAUUSD_Transferable_Portfolio.mq5 -text -diff
 work/Professional_XAUUSD_Operational_Hardening_Portfolio.mq5 -text -diff
 release/transferable-portfolio-v0.2-rc1/** -text whitespace=cr-at-eol
+work/Professional_XAUUSD_Operational_Hardening_Portfolio_RC2.mq5 -text -diff
+release/transferable-portfolio-v0.2-rc2/** -text whitespace=cr-at-eol
+outputs/operational_hardening_rc2_model1_package/profiles/*.set -text whitespace=cr-at-eol
+outputs/operational_hardening_rc2_model4_package/profiles/*.set -text whitespace=cr-at-eol
+outputs/operational_hardening_rc2_contract_canary/profiles/*.set -text whitespace=cr-at-eol
 outputs/operational_hardening_portfolio_model1_package/profiles/*.set -text whitespace=cr-at-eol
 outputs/operational_hardening_portfolio_model4_package/profiles/*.set -text whitespace=cr-at-eol
 work/Professional_XAUUSD_Forward_Sentinel.mq5 -text

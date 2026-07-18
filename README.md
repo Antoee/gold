@@ -6,11 +6,11 @@ Research and validation repository for a risk-first MetaTrader 5 Expert Advisor 
 
 **Best validated strategy: Transferable Portfolio v0.1 signals**
 
-**Recommended executable candidate: Operational Hardening v0.2-rc1. It has identical historical trades and profit, but stricter account and loss controls.**
+**Recommended executable candidate: Operational Hardening v0.2-rc2. It has identical historical trades and profit, but continuously rejects funding drift and unrelated account trading.**
 
 **Forward-test candidate only. Real-account trading remains disabled.**
 
-**2026-07-17 update: v0.2-rc1 passed exact Model1 and Model4 fidelity. Model4 remains +$1,615.36, PF 1.58, 362 trades, and 2.83% drawdown, with 724/724 events matching v0.1. This is an operational safety promotion, not a higher-profit new best. The first forward attachment remains invalid because the demo account has the wrong starting balance.**
+**2026-07-17 update: v0.2-rc2 passed exact Model1 and Model4 fidelity plus a dynamic wrong-capital initialization canary. Model4 remains +$1,615.36, PF 1.58, 362 trades, and 2.83% drawdown, with 724/724 events matching v0.1. This is an operational safety promotion, not a higher-profit new best. The first forward attachment remains invalid because the demo account has the wrong starting balance.**
 
 The candidate combines two date-independent H1 strategies:
 
@@ -20,9 +20,9 @@ The candidate combines two date-independent H1 strategies:
 - Shared maximum equity drawdown guard: `5.00%`
 - Hedging account required
 
-v0.2-rc1 adds a `$10,000`/USD first-attachment contract, `1.25%` weekly and `1.50%` monthly loss limits, a nine-loss/48-hour portfolio cooldown, a `300%` minimum margin level, and fail-close protection if a managed stop disappears. None of those gates changed a historical trade in either validation model.
+v0.2-rc2 retains rc1's `$10,000`/USD first-attachment contract, `1.25%` weekly and `1.50%` monthly loss limits, nine-loss/48-hour portfolio cooldown, `300%` minimum margin level, and missing-stop fail-close protection. It additionally invalidates the account after any new funding/credit/charge/standalone-fee record or non-portfolio buy/sell activity. None of those gates changed a historical trade in either validation model.
 
-Use [`release/transferable-portfolio-v0.2-rc1`](release/transferable-portfolio-v0.2-rc1/README.md) for the operational candidate. The exact frozen forward candidate remains in [`release/transferable-portfolio-v0.1`](release/transferable-portfolio-v0.1/README.md).
+Use [`release/transferable-portfolio-v0.2-rc2`](release/transferable-portfolio-v0.2-rc2/README.md) for the operational candidate. rc1 remains preserved for reproducibility, and the exact frozen forward candidate remains in [`release/transferable-portfolio-v0.1`](release/transferable-portfolio-v0.1/README.md).
 
 ## Frozen Forward Demo
 
@@ -41,6 +41,8 @@ The replacement-account activation gate is prepared but has not been executed. T
 The terminal process later stopped during an interrupted isolated-research run. Restarting the same session preserved every frozen identity and the zero-trade account, but the read-only sentinel could not refresh while terminal-level algorithmic trading remained disabled. Re-enabling that switch would also wake the candidate on the invalid account, so the terminal was stopped again and the safety lock was retained. The stale heartbeat and stopped terminal are explicit failures, not forward evidence; valid days remain `0`.
 
 ## Latest Research Screens
+
+Operational Hardening rc2 closes a persisted-account-approval gap in rc1. It records the account's funding-history count at registration, invalidates that contract after any later balance/credit/charge/correction/bonus/standalone-commission/interest record, and rejects buy/sell history outside the allowed XAUUSD portfolio identity. The final source compiled with `0 errors, 0 warnings`; Model1 reproduced `740 / 740` events and Model4 reproduced `724 / 724` events exactly. A deliberately wrong `$100,000` tester account was dynamically rejected during `OnInit`, with zero trades and zero net. Funding-drift and dedicated-account behavior still require observation on a correctly registered demo, so rc2 is not live-ready. See the [decision](outputs/OPERATIONAL_HARDENING_RC2_DECISION.md), [fidelity table](outputs/OPERATIONAL_HARDENING_RC2_FIDELITY.csv), and [account-contract canary](outputs/OPERATIONAL_HARDENING_RC2_CONTRACT_CANARY.md).
 
 The operational-hardening fork compiled with `0 errors, 0 warnings` and reproduced the released strategy exactly. Model1 returned `+$1,616.49`, PF `1.58`, 370 trades, and `3.24%` drawdown with `740 / 740` exact lane events. Model4 real ticks returned `+$1,615.36`, PF `1.58`, 362 trades, and `2.83%` drawdown with `724 / 724` exact events. It is promoted as `v0.2-rc1` because it closes live-operation gaps without claiming additional historical edge. It still has zero valid forward days and trades. See the [decision](outputs/OPERATIONAL_HARDENING_PORTFOLIO_DECISION.md) and [fidelity table](outputs/OPERATIONAL_HARDENING_PORTFOLIO_FIDELITY.csv).
 
@@ -130,13 +132,13 @@ These checks reduce start-date dependence. They do not prove future profitabilit
 
 ## Frozen Identity
 
-The recommended operational candidate has a separate identity from the still-frozen v0.1 forward run:
+The recommended rc2 operational candidate has a separate identity from rc1 and the still-frozen v0.1 forward run:
 
-| v0.2-rc1 artifact | SHA-256 |
+| v0.2-rc2 artifact | SHA-256 |
 |---|---|
-| EA source | `015DCCDBA020796895C1A71B150C31B4F0F276A9334243BD7474293F73385EB4` |
-| Compiled binary | `4C0BF9BEF949772DA537091EB8E3464FCF9910F9AF55D2A17B7305E1E8ED4756` |
-| Model4 profile | `7E7081A9BF179BC1B93623316D8EFFFB3C0CED91ACF0FFDE91BD61ABD712F6B2` |
+| EA source | `9141137A9550F3394DE85E1725E018671B4F2A2FF0F43A3EF23F9FB1238CD302` |
+| Compiled binary | `710C20730933E6EB2AE1AD14079C67E33C592881E1471BF0110E045335153EE5` |
+| Model4 profile | `5C45D578B42609D3792EA692D5A13A9E0D90C8C14D0376F807E6F6079EC6B827` |
 
 The frozen v0.1 forward identity remains:
 
@@ -160,9 +162,11 @@ No backtest can make an EA work forever without monitoring. The future process i
 
 ## Repository Map
 
+- [`release/transferable-portfolio-v0.2-rc2`](release/transferable-portfolio-v0.2-rc2/README.md): recommended dedicated-account/funding-drift hardened source, profile, fidelity evidence, and manifest
 - [`release/transferable-portfolio-v0.2-rc1`](release/transferable-portfolio-v0.2-rc1/README.md): operationally hardened source, profile, exact-fidelity results, and SHA-256 manifest
 - [`release/transferable-portfolio-v0.1`](release/transferable-portfolio-v0.1/README.md): current source, profile, reports, ledgers, stress results, and SHA-256 manifest
 - [`outputs/OPERATIONAL_HARDENING_PORTFOLIO_DECISION.md`](outputs/OPERATIONAL_HARDENING_PORTFOLIO_DECISION.md): v0.2-rc1 safety promotion and remaining live-readiness block
+- [`outputs/OPERATIONAL_HARDENING_RC2_DECISION.md`](outputs/OPERATIONAL_HARDENING_RC2_DECISION.md): rc2 funding/dedicated-account safety promotion and remaining demo requirement
 - [`outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md`](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md): current frozen forward-demo progress and integrity gates
 - [`outputs/TRANSFERABLE_FORWARD_SENTINEL_REGISTRATION.json`](outputs/TRANSFERABLE_FORWARD_SENTINEL_REGISTRATION.json): read-only operational/account contract monitor identity
 - [`outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md`](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md): disabled-trading account-switch and clock-start gate
