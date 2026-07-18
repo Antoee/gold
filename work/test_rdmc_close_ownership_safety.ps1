@@ -86,7 +86,7 @@ $closeEnd = if($closeMatch.Success) { $source.IndexOf('bool TradePriceMatches(',
 $close = if($closeMatch.Success -and $closeEnd -gt $closeMatch.Index) { $source.Substring($closeMatch.Index, $closeEnd - $closeMatch.Index) } else { '' }
 $partial = Get-Section $source "bool ExecutePositionClosePartial(CTrade &executor," "bool ExecuteOrderDelete(CTrade &executor,"
 
-Add-Check "source version is 1.22" ($source.Contains('#property version   "1.22"')) "version"
+Add-Check "source version is 1.23" ($source.Contains('#property version   "1.23"')) "version"
 Add-Check "description advertises ownership-checked execution" ($source.Contains('ownership-checked execution')) "description"
 Add-Check "one raw full-close send site remains" ([regex]::Matches($source, '\.PositionClose\(').Count -eq 1) "raw full close=1"
 Add-Check "one raw partial-close send site remains" ([regex]::Matches($source, '\.PositionClosePartial\(').Count -eq 1) "raw partial close=1"
@@ -100,7 +100,7 @@ Add-Check "full close verifies ownership before send" ($close.IndexOf('SelectOwn
 Add-Check "full close uses exact ticket" ($close.Contains('executor.PositionClose(ticket)')) "ticket request"
 Add-Check "full close accepts completed broker retcodes" (@('TRADE_RETCODE_DONE','TRADE_RETCODE_DONE_PARTIAL','TRADE_RETCODE_POSITION_CLOSED').Where({ $close.Contains($_) }).Count -eq 3) "retcodes"
 Add-Check "full close requires position disappearance" ($close.Contains('bool closed = !PositionSelectByTicket(ticket);') -and $close.Contains('return closed;')) "closed state"
-Add-Check "forced-close marker clears only after disappearance" ($close.IndexOf('if(closed)', [StringComparison]::Ordinal) -lt $close.IndexOf('DeleteCriticalPersistentState(PostFillForcedCloseKey(ticket, magic));', [StringComparison]::Ordinal)) "marker cleanup"
+Add-Check "forced-close marker clears only after disappearance" ($close.Contains('string forcedCloseKey = PostFillForcedCloseKey(ticket, magic);') -and $close.IndexOf('if(closed)', [StringComparison]::Ordinal) -lt $close.IndexOf('DeleteCriticalPersistentState(forcedCloseKey);', [StringComparison]::Ordinal)) "marker cleanup"
 Add-Check "post-fill failure uses verified close wrapper" ($source.Contains('if(!ExecutePositionClose(executor, ticket))')) "post-fill close"
 Add-Check "primary manager uses verified close wrapper" ($source.Contains('if(!ExecutePositionClose(trade, ticket))')) "primary close"
 Add-Check "momentum manager uses verified close wrapper" ($source.Contains('if(ExecutePositionClose(m_trade, ticket))')) "momentum close"

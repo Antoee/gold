@@ -47,15 +47,19 @@ This package supersedes the uncompiled v1 package before its first MT5 run. It p
 - Partial-close, basket-harvest, and post-partial target-expansion actions reserve durable one-shot state before the broker request. Reservation failure blocks the action; broker failure rolls the reservation back, and failed rollback forces the unhealthy state.
 - Initial fill-to-stop risk must persist before an entry is accepted and logged. Failure rejects and immediately closes the exact fill; any surviving owned exposure is flattened before momentum processing or optional risk-close settings on the next tick.
 - MFE and MAE persistence writes are coalesced: the terminal global is rewritten only when the recorded favorable maximum or adverse minimum advances.
+- Every per-position key is compactly namespaced by base-36 account login, strategy magic, and immutable `POSITION_IDENTIFIER`; even modeled maximum-width 64-bit values remain below MT5 terminal-global name limits.
+- Primary initial risk, MFE, MAE, partial-close, basket-harvest, runner-target, and forced-close state plus momentum risk state are isolated across account switches, strategies, and position identities.
+- Partial exits retain runner state while a matching expert-owned position identifier remains open. Full exits retire all scoped state, both immediately after verified EA closes and after broker-originated closing deals.
+- An unreadable active-position scan preserves persistent state instead of deleting it, and every obsolete ticket-only key family is absent from the source.
 
 ## Frozen identity
 
-- Source SHA-256: `4368F29B16E01682B3F72E88B70A9FB0AF9DD8980AC45E2DE14D3607269BFA45`
-- Profile SHA-256: `B3511BC6ED2CF02C43EE7D27FEC09FBFC356280CB17F5BFA7E71E2A8F31D24B0`
+- Source SHA-256: `25B00D793F0726BF0359A023BA85D04DF3604DADEEED3E98EEDA06445657D155`
+- Profile SHA-256: `DECECA3C1938D9CF8668D92E382F370DE1505B3F6D4B422F1E66F6AE7680A737`
 - Predecessor source SHA-256: `4740338598E290360946FE414CC6F2FE0CF3B704006860514367DCB996A8D2B5`
 - Source/profile inputs: `589 / 589`
 - Queue: `outputs/RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_QUEUE.csv`
 
 ## Hard boundary
 
-The source is tester-only, real-account trading is disabled, and all 12 annual/YTD Model1 rows remain `LOCKED_LOCAL_LAUNCH_DISABLED`. The new cost, margin, hard-cooldown, intrabar emergency, broker-result, persistent-state, and idempotency safeguards can change entries and exits. The active-order reconciliation can change entries and exits. Broker-volume reconciliation can change entries and exits. Post-fill risk reconciliation can change entries and exits. Tightening-only stop enforcement, ownership-checked close reconciliation, and write-ahead one-shot actions can change exits too, so the earlier post-hoc collision score is not attributed to this executable path. Static checks cannot prove compilation, profit, drawdown, or restart behavior inside MT5. Compilation, annual and continuous Model1, annual and continuous real-tick Model4, cost stress, Monte Carlo, broker variation, and valid forward evidence are still required.
+The source is tester-only, real-account trading is disabled, and all 12 annual/YTD Model1 rows remain `LOCKED_LOCAL_LAUNCH_DISABLED`. The new cost, margin, hard-cooldown, intrabar emergency, broker-result, persistent-state, idempotency, and scoped-lifecycle safeguards can change entries and exits. The active-order reconciliation can change entries and exits. Broker-volume reconciliation can change entries and exits. Post-fill risk reconciliation can change entries and exits. Tightening-only stop enforcement, ownership-checked close reconciliation, write-ahead one-shot actions, and position-state retirement can change exits too, so the earlier post-hoc collision score is not attributed to this executable path. Static checks cannot prove compilation, profit, drawdown, or restart behavior inside MT5. Compilation, annual and continuous Model1, annual and continuous real-tick Model4, cost stress, Monte Carlo, broker variation, and valid forward evidence are still required.

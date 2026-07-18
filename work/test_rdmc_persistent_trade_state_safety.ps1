@@ -97,12 +97,12 @@ $finalOnTickIndex = $source.LastIndexOf("void OnTick()", [StringComparison]::Ord
 $finalTransactionIndex = $source.IndexOf("void OnTradeTransaction(", $finalOnTickIndex, [StringComparison]::Ordinal)
 $onTick = if($finalOnTickIndex -ge 0 -and $finalTransactionIndex -gt $finalOnTickIndex) { $source.Substring($finalOnTickIndex, $finalTransactionIndex - $finalOnTickIndex) } else { '' }
 
-Add-Check "source version is 1.22" ($source.Contains('#property version   "1.22"')) "version"
-Add-Check "description advertises verified durable state" ($source.Contains('verified durable trade state')) "description"
+Add-Check "source version is 1.23" ($source.Contains('#property version   "1.23"')) "version"
+Add-Check "description advertises verified account-scoped state" ($source.Contains('verified account-scoped position state')) "description"
 Add-Check "one raw terminal-global write site remains" ([regex]::Matches($source, 'GlobalVariableSet\(').Count -eq 1) "raw set=1"
 Add-Check "one raw terminal-global delete site remains" ([regex]::Matches($source, 'GlobalVariableDel\(').Count -eq 1) "raw delete=1"
 Add-Check "all critical writes route through shared verifier" ([regex]::Matches($source, 'SetCriticalPersistentState\(').Count -eq 15) "definition plus 14 callers"
-Add-Check "all critical deletes route through shared verifier" ([regex]::Matches($source, 'DeleteCriticalPersistentState\(').Count -eq 6) "definition plus five callers"
+Add-Check "all critical deletes route through shared verifier" ([regex]::Matches($source, 'DeleteCriticalPersistentState\(').Count -eq 14) "definition plus 13 callers"
 Add-Check "write verifier rejects invalid keys and values" ($setHelper.Contains('StringLen(key) <= 0') -and $setHelper.Contains('!MathIsValidNumber(value)')) "input validation"
 Add-Check "write verifier checks broker write and key existence" ($setHelper.Contains('GlobalVariableSet(key, value) <= 0') -and $setHelper.Contains('!GlobalVariableCheck(key)')) "write result"
 Add-Check "write verifier validates finite readback" ($setHelper.Contains('double stored = GlobalVariableGet(key)') -and $setHelper.Contains('!MathIsValidNumber(stored)')) "readback"
@@ -118,11 +118,11 @@ Add-Check "initial-risk storage returns verified status" ($initialRisk.Contains(
 Add-Check "invalid initial-risk identity poisons health" ($initialRisk.Contains('ticket == 0 || riskDistance <= 0.0') -and $initialRisk.Contains('g_criticalPersistenceHealthy = false;')) "invalid state"
 Add-Check "primary initial-risk failure closes exact fill" ($initialRisk.Contains('PersistPrimaryInitialRiskOrClose') -and $initialRisk.Contains('ExecutePositionClose(executor, ticket)')) "primary emergency close"
 Add-Check "all three primary entry lanes require durable initial risk" ([regex]::Matches($source, 'PersistPrimaryInitialRiskOrClose\(trade\)').Count -eq 3) "three primary paths"
-Add-Check "momentum entry requires durable initial risk" ($momentumEntry.Contains('SetCriticalPersistentState(RiskKey(filledTicket), filledRiskDistance)')) "momentum risk state"
+Add-Check "momentum entry requires durable initial risk" ($momentumEntry.Contains('SetCriticalPersistentState(MomentumRiskKey(filledTicket), filledRiskDistance)')) "momentum risk state"
 Add-Check "momentum risk failure closes exact fill" ($momentumEntry.Contains('ExecutePositionClose(m_trade, filledTicket)') -and $momentumEntry.Contains('return false;')) "momentum emergency close"
 
-Add-Check "partial marker uses verified write" ($stateMethods.Contains('bool MarkPartialClose(') -and $stateMethods.Contains('SetCriticalPersistentState(key, TimeCurrent())')) "partial reserve"
-Add-Check "partial marker has verified rollback" ($stateMethods.Contains('bool ClearPartialClose(') -and $stateMethods.Contains('DeleteCriticalPersistentState("PXEA_PARTIAL_"')) "partial rollback"
+Add-Check "partial marker uses verified write" ($stateMethods.Contains('bool MarkPartialClose(') -and $stateMethods.Contains('SetCriticalPersistentState(PartialCloseKey(ticket), TimeCurrent())')) "partial reserve"
+Add-Check "partial marker has verified rollback" ($stateMethods.Contains('bool ClearPartialClose(') -and $stateMethods.Contains('DeleteCriticalPersistentState(PartialCloseKey(ticket))')) "partial rollback"
 Add-Check "basket marker uses verified write and rollback" ($stateMethods.Contains('bool MarkBasketHarvest(') -and $stateMethods.Contains('bool ClearBasketHarvest(') -and $stateMethods.Contains('SetCriticalPersistentState(BasketHarvestKey(ticket), TimeCurrent())') -and $stateMethods.Contains('DeleteCriticalPersistentState(BasketHarvestKey(ticket))')) "basket reserve"
 Add-Check "runner target marker uses verified write and rollback" ($stateMethods.Contains('bool MarkPostPartialRunnerTPExpanded(') -and $stateMethods.Contains('bool ClearPostPartialRunnerTPExpanded(') -and $stateMethods.Contains('SetCriticalPersistentState(PostPartialRunnerTPKey(ticket), TimeCurrent())') -and $stateMethods.Contains('DeleteCriticalPersistentState(PostPartialRunnerTPKey(ticket))')) "target reserve"
 Add-Check "runner target reserves before modification" ($tpExpansion.IndexOf('MarkPostPartialRunnerTPExpanded(ticket)', [StringComparison]::Ordinal) -lt $tpExpansion.IndexOf('ModifyAndLog(ticket', [StringComparison]::Ordinal)) "write-ahead target"

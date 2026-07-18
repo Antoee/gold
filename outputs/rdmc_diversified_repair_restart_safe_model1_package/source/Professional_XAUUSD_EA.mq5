@@ -4,8 +4,8 @@
 //| No martingale, grid, averaging down, or recovery systems           |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.22"
-#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with verified durable trade state and ownership-checked execution; tester-only until independently validated."
+#property version   "1.23"
+#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with verified account-scoped position state and ownership-checked execution; tester-only until independently validated."
 
 #include <Trade/Trade.mqh>
 
@@ -2200,10 +2200,45 @@ double CalculatedAccountOpenRiskPercent(bool &hasUnprotectedPosition,
    return 100.0 * riskMoney / equity;
 }
 
-string PostFillForcedCloseKey(const ulong ticket, const long magic)
+string UnsignedBase36(ulong value)
 {
-   return "PF_" + (string)AccountInfoInteger(ACCOUNT_LOGIN) +
-          "_" + (string)magic + "_" + (string)ticket;
+   const string digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+   if(value == 0)
+      return "0";
+
+   string encoded = "";
+   while(value > 0)
+   {
+      int digit = (int)(value % 36);
+      encoded = StringSubstr(digits, digit, 1) + encoded;
+      value /= 36;
+   }
+   return encoded;
+}
+
+ulong PersistentPositionIdentity(const ulong ticketOrIdentifier)
+{
+   if(ticketOrIdentifier > 0 && PositionSelectByTicket(ticketOrIdentifier))
+   {
+      long identifier = PositionGetInteger(POSITION_IDENTIFIER);
+      if(identifier > 0)
+         return (ulong)identifier;
+   }
+   return ticketOrIdentifier;
+}
+
+string PositionScopedStateKey(const string prefix,
+                              const long magic,
+                              const ulong ticketOrIdentifier)
+{
+   return prefix + "_" + UnsignedBase36((ulong)AccountInfoInteger(ACCOUNT_LOGIN)) +
+          "_" + UnsignedBase36((ulong)magic) +
+          "_" + UnsignedBase36(PersistentPositionIdentity(ticketOrIdentifier));
+}
+
+string PostFillForcedCloseKey(const ulong ticketOrIdentifier, const long magic)
+{
+   return PositionScopedStateKey("PF", magic, ticketOrIdentifier);
 }
 
 class CValidatedTrade : public CTrade
@@ -2539,6 +2574,8 @@ bool SelectOwnedExpertPosition(CTrade &executor,
 }
 
 bool ExecutePositionClose(CTrade &executor, const ulong ticket);
+bool RetirePrimaryPersistentPositionState(const ulong positionIdentifier);
+bool RetireMomentumPersistentPositionState(const ulong positionIdentifier);
 
 bool ExecuteMarketEntry(CValidatedTrade &executor,
                         const bool buy,
@@ -2588,6 +2625,8 @@ bool ExecutePositionClose(CTrade &executor, const ulong ticket)
       return false;
 
    long magic = (long)executor.RequestMagic();
+   ulong positionIdentifier = PersistentPositionIdentity(ticket);
+   string forcedCloseKey = PostFillForcedCloseKey(ticket, magic);
    if(!executor.PositionClose(ticket))
       return false;
 
@@ -2598,7 +2637,13 @@ bool ExecutePositionClose(CTrade &executor, const ulong ticket)
       return false;
    bool closed = !PositionSelectByTicket(ticket);
    if(closed)
-      DeleteCriticalPersistentState(PostFillForcedCloseKey(ticket, magic));
+   {
+      DeleteCriticalPersistentState(forcedCloseKey);
+      if(positionIdentifier > 0 && magic == InpMagicNumber)
+         RetirePrimaryPersistentPositionState(positionIdentifier);
+      else if(positionIdentifier > 0 && magic == InpMOMagicNumber)
+         RetireMomentumPersistentPositionState(positionIdentifier);
+   }
    return closed;
 }
 
@@ -2994,19 +3039,88 @@ bool EntryTradePermissionsAllow(const ENUM_TRADE_BIAS bias, string &reason)
    return false;
 }
 
-string InitialRiskKey(const ulong ticket)
+string InitialRiskKey(const ulong ticketOrIdentifier)
 {
-   return "PXEA_INITIAL_RISK_" + (string)ticket;
+   return PositionScopedStateKey("IR", InpMagicNumber, ticketOrIdentifier);
 }
 
-string TradeMFEKey(const ulong ticket)
+string TradeMFEKey(const ulong ticketOrIdentifier)
 {
-   return "PXEA_MFE_R_" + (string)ticket;
+   return PositionScopedStateKey("MF", InpMagicNumber, ticketOrIdentifier);
 }
 
-string TradeMAEKey(const ulong ticket)
+string TradeMAEKey(const ulong ticketOrIdentifier)
 {
-   return "PXEA_MAE_R_" + (string)ticket;
+   return PositionScopedStateKey("MA", InpMagicNumber, ticketOrIdentifier);
+}
+
+string PartialCloseKey(const ulong ticketOrIdentifier)
+{
+   return PositionScopedStateKey("PC", InpMagicNumber, ticketOrIdentifier);
+}
+
+string BasketHarvestKey(const ulong ticketOrIdentifier)
+{
+   return PositionScopedStateKey("BH", InpMagicNumber, ticketOrIdentifier);
+}
+
+string PostPartialRunnerTPKey(const ulong ticketOrIdentifier)
+{
+   return PositionScopedStateKey("TP", InpMagicNumber, ticketOrIdentifier);
+}
+
+string MomentumRiskKey(const ulong ticketOrIdentifier)
+{
+   return PositionScopedStateKey("MR", InpMOMagicNumber, ticketOrIdentifier);
+}
+
+bool ResearchPositionIdentifierOpen(const ulong positionIdentifier, const long magic)
+{
+   if(positionIdentifier == 0)
+      return true;
+
+   for(int i = PositionsTotal() - 1; i >= 0; --i)
+   {
+      ulong ticket = PositionGetTicket(i);
+      if(ticket == 0)
+         return true;
+      if(PositionGetString(POSITION_SYMBOL) == _Symbol &&
+         PositionGetInteger(POSITION_MAGIC) == magic &&
+         PositionGetInteger(POSITION_REASON) == POSITION_REASON_EXPERT &&
+         PositionGetInteger(POSITION_IDENTIFIER) == (long)positionIdentifier)
+         return true;
+   }
+   return false;
+}
+
+bool RetirePrimaryPersistentPositionState(const ulong positionIdentifier)
+{
+   bool retired = true;
+   if(!DeleteCriticalPersistentState(InitialRiskKey(positionIdentifier)))
+      retired = false;
+   if(!DeleteCriticalPersistentState(TradeMFEKey(positionIdentifier)))
+      retired = false;
+   if(!DeleteCriticalPersistentState(TradeMAEKey(positionIdentifier)))
+      retired = false;
+   if(!DeleteCriticalPersistentState(PartialCloseKey(positionIdentifier)))
+      retired = false;
+   if(!DeleteCriticalPersistentState(BasketHarvestKey(positionIdentifier)))
+      retired = false;
+   if(!DeleteCriticalPersistentState(PostPartialRunnerTPKey(positionIdentifier)))
+      retired = false;
+   if(!DeleteCriticalPersistentState(PostFillForcedCloseKey(positionIdentifier, InpMagicNumber)))
+      retired = false;
+   return retired;
+}
+
+bool RetireMomentumPersistentPositionState(const ulong positionIdentifier)
+{
+   bool retired = true;
+   if(!DeleteCriticalPersistentState(MomentumRiskKey(positionIdentifier)))
+      retired = false;
+   if(!DeleteCriticalPersistentState(PostFillForcedCloseKey(positionIdentifier, InpMOMagicNumber)))
+      retired = false;
+   return retired;
 }
 
 bool StoreInitialRisk(const ulong ticket, const double riskDistance)
@@ -16964,24 +17078,17 @@ private:
 
    bool AlreadyPartiallyClosed(const ulong ticket)
    {
-      string key = "PXEA_PARTIAL_" + (string)ticket;
-      return GlobalVariableCheck(key);
+      return GlobalVariableCheck(PartialCloseKey(ticket));
    }
 
    bool MarkPartialClose(const ulong ticket)
    {
-      string key = "PXEA_PARTIAL_" + (string)ticket;
-      return SetCriticalPersistentState(key, TimeCurrent());
+      return SetCriticalPersistentState(PartialCloseKey(ticket), TimeCurrent());
    }
 
    bool ClearPartialClose(const ulong ticket)
    {
-      return DeleteCriticalPersistentState("PXEA_PARTIAL_" + (string)ticket);
-   }
-
-   string BasketHarvestKey(const ulong ticket)
-   {
-      return "PXEA_BASKET_HARVEST_" + (string)ticket;
+      return DeleteCriticalPersistentState(PartialCloseKey(ticket));
    }
 
    bool AlreadyBasketHarvested(const ulong ticket)
@@ -16997,11 +17104,6 @@ private:
    bool ClearBasketHarvest(const ulong ticket)
    {
       return DeleteCriticalPersistentState(BasketHarvestKey(ticket));
-   }
-
-   string PostPartialRunnerTPKey(const ulong ticket)
-   {
-      return "PXEA_POST_PARTIAL_TP_" + (string)ticket;
    }
 
    bool AlreadyPostPartialRunnerTPExpanded(const ulong ticket)
@@ -18544,11 +18646,6 @@ private:
       return false;
    }
 
-   string RiskKey(const ulong ticket)
-   {
-      return "RDMC_MO_RISK_" + IntegerToString((long)ticket);
-   }
-
    datetime CurrentDayStart()
    {
       return iTime(_Symbol, PERIOD_D1, 0);
@@ -18809,7 +18906,7 @@ private:
       ulong filledTicket = m_trade.LastFilledPositionTicket();
       double filledRiskDistance = m_trade.LastFilledRiskDistance();
       if(filledTicket == 0 || filledRiskDistance <= 0.0 ||
-         !SetCriticalPersistentState(RiskKey(filledTicket), filledRiskDistance))
+         !SetCriticalPersistentState(MomentumRiskKey(filledTicket), filledRiskDistance))
       {
          g_criticalPersistenceHealthy = false;
          Print("Momentum initial-risk persistence failed for position ", filledTicket, ".");
@@ -18862,8 +18959,8 @@ private:
       double takeProfit = PositionGetDouble(POSITION_TP);
       double current = buy ? SymbolInfoDouble(_Symbol, SYMBOL_BID)
                            : SymbolInfoDouble(_Symbol, SYMBOL_ASK);
-      double initialRisk = GlobalVariableCheck(RiskKey(ticket))
-                           ? GlobalVariableGet(RiskKey(ticket))
+      double initialRisk = GlobalVariableCheck(MomentumRiskKey(ticket))
+                           ? GlobalVariableGet(MomentumRiskKey(ticket))
                            : MathAbs(openPrice - oldSl);
       if(initialRisk <= 0.0 || current <= 0.0)
          return;
@@ -19027,8 +19124,9 @@ public:
                    HistoryDealGetDouble(transaction.deal, DEAL_VOLUME),
                    HistoryDealGetDouble(transaction.deal, DEAL_PRICE), 0.0, 0.0, 0.0, profit,
                    HistoryDealGetString(transaction.deal, DEAL_COMMENT), 0.0);
-      if(positionId > 0)
-         DeleteCriticalPersistentState(RiskKey((ulong)positionId));
+      if(positionId > 0 &&
+         !ResearchPositionIdentifierOpen((ulong)positionId, InpMOMagicNumber))
+         RetireMomentumPersistentPositionState((ulong)positionId);
    }
 };
 
@@ -25157,7 +25255,10 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,
       return;
    if(HistoryDealGetInteger(trans.deal, DEAL_MAGIC) != InpMagicNumber)
       return;
-   if(HistoryDealGetInteger(trans.deal, DEAL_ENTRY) != DEAL_ENTRY_OUT)
+   long entryType = HistoryDealGetInteger(trans.deal, DEAL_ENTRY);
+   if(entryType != DEAL_ENTRY_OUT &&
+      entryType != DEAL_ENTRY_OUT_BY &&
+      entryType != DEAL_ENTRY_INOUT)
       return;
 
    double profit = HistoryDealGetDouble(trans.deal, DEAL_PROFIT) +
@@ -25181,6 +25282,9 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,
                 EMPTY_VALUE,
                 EMPTY_VALUE,
                 heldBars);
+   if(positionId > 0 &&
+      !ResearchPositionIdentifierOpen((ulong)positionId, InpMagicNumber))
+      RetirePrimaryPersistentPositionState((ulong)positionId);
 }
 
 void OnTrade()

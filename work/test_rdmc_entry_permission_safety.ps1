@@ -56,15 +56,15 @@ if(@($checks | Where-Object { !$_.Pass }).Count -gt 0) {
 
 $source = Get-Content -LiteralPath $sourcePath -Raw
 $profile = Read-Profile $profilePath
-$permissions = Get-Section $source "bool EntryTradePermissionsAllow(" "string InitialRiskKey(const ulong ticket)"
+$permissions = Get-Section $source "bool EntryTradePermissionsAllow(" "string InitialRiskKey("
 $exposure = Get-Section $source "bool ExposureAllows(const ENUM_TRADE_BIAS bias," "class CTrendFilter"
 $closeWrapper = Get-Section $source "bool ExecutePositionClose(CTrade &executor," "bool TradePriceMatches("
 $finalOnTickIndex = $source.LastIndexOf('void OnTick()', [StringComparison]::Ordinal)
 $finalTransactionIndex = $source.LastIndexOf('void OnTradeTransaction', [StringComparison]::Ordinal)
 $onTick = if($finalOnTickIndex -ge 0 -and $finalTransactionIndex -gt $finalOnTickIndex) { $source.Substring($finalOnTickIndex, $finalTransactionIndex - $finalOnTickIndex) } else { '' }
 
-Add-Check "source version is 1.22" ($source.Contains('#property version   "1.22"')) "version"
-Add-Check "description advertises permission gate" ($source.Contains('hedging-locked and permission-gated')) "description"
+Add-Check "source version is 1.23" ($source.Contains('#property version   "1.23"')) "version"
+Add-Check "description advertises permission gate" ($source.Contains('permission-gated XAUUSD research portfolio')) "description"
 Add-Check "invalid entry direction fails closed" ($permissions.Contains('bias != BIAS_BUY && bias != BIAS_SELL') -and $permissions.Contains('entry permission invalid direction')) "direction gate"
 Add-Check "live-only permission block is explicit" ($permissions.Contains('if(!MQLInfoInteger(MQL_TESTER))')) "tester isolation"
 Add-Check "terminal connection is required live" ($permissions.Contains('TerminalInfoInteger(TERMINAL_CONNECTED)') -and $permissions.Contains('terminal disconnected')) "connection"
