@@ -1,0 +1,5 @@
+Model,Lane,BaselineEvents,RC2Events,MismatchedEvents,IdentityMismatches,Exact,BaselineNetProfit,RC2NetProfit,BaselineProfitFactor,RC2ProfitFactor,BaselineTrades,RC2Trades,BaselineMaxDrawdownPercent,RC2MaxDrawdownPercent
+Model1,reversion,100,100,0,0,TRUE,1616.49,1616.49,1.58,1.58,370,370,3.24,3.24
+Model1,momentum,640,640,0,0,TRUE,1616.49,1616.49,1.58,1.58,370,370,3.24,3.24
+Model4,reversion,96,96,0,0,TRUE,1615.36,1615.36,1.58,1.58,362,362,2.83,2.83
+Model4,momentum,628,628,0,0,TRUE,1615.36,1615.36,1.58,1.58,362,362,2.83,2.83

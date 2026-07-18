@@ -1,0 +1,6 @@
+"Marker","Expected","Pass"
+"WrongDeposit","initial deposit 100000.00 USD","True"
+"RunIdentity","InpEvidenceRunLabel=operational_hardening_rc2_wrong_capital_canary","True"
+"CapitalLock","SAFETY: initialization blocked by starting-capital contract","True"
+"InitFailure","tester stopped because OnInit returns non-zero code 1","True"
+"FlatReport","0 trades, 0 net, 100000 balance","True"
