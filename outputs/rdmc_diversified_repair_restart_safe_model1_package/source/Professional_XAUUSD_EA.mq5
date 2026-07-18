@@ -4,8 +4,8 @@
 //| No martingale, grid, averaging down, or recovery systems           |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.23"
-#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with verified account-scoped position state and ownership-checked execution; tester-only until independently validated."
+#property version   "1.24"
+#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with verified account-scoped position state, collision-safe immutable-identifier retirement and ownership-checked execution; tester-only until independently validated."
 
 #include <Trade/Trade.mqh>
 
@@ -2216,29 +2216,41 @@ string UnsignedBase36(ulong value)
    return encoded;
 }
 
-ulong PersistentPositionIdentity(const ulong ticketOrIdentifier)
+ulong PersistentPositionIdentity(const ulong ticket)
 {
-   if(ticketOrIdentifier > 0 && PositionSelectByTicket(ticketOrIdentifier))
+   if(ticket > 0 && PositionSelectByTicket(ticket))
    {
       long identifier = PositionGetInteger(POSITION_IDENTIFIER);
       if(identifier > 0)
          return (ulong)identifier;
    }
-   return ticketOrIdentifier;
+   return ticket;
 }
 
-string PositionScopedStateKey(const string prefix,
-                              const long magic,
-                              const ulong ticketOrIdentifier)
+string PositionScopedStateKeyForIdentifier(const string prefix,
+                                           const long magic,
+                                           const ulong positionIdentifier)
 {
    return prefix + "_" + UnsignedBase36((ulong)AccountInfoInteger(ACCOUNT_LOGIN)) +
           "_" + UnsignedBase36((ulong)magic) +
-          "_" + UnsignedBase36(PersistentPositionIdentity(ticketOrIdentifier));
+          "_" + UnsignedBase36(positionIdentifier);
 }
 
-string PostFillForcedCloseKey(const ulong ticketOrIdentifier, const long magic)
+string PositionScopedStateKeyForTicket(const string prefix,
+                                       const long magic,
+                                       const ulong ticket)
 {
-   return PositionScopedStateKey("PF", magic, ticketOrIdentifier);
+   return PositionScopedStateKeyForIdentifier(prefix, magic, PersistentPositionIdentity(ticket));
+}
+
+string PostFillForcedCloseKey(const ulong ticket, const long magic)
+{
+   return PositionScopedStateKeyForTicket("PF", magic, ticket);
+}
+
+string PostFillForcedCloseIdentifierKey(const ulong positionIdentifier, const long magic)
+{
+   return PositionScopedStateKeyForIdentifier("PF", magic, positionIdentifier);
 }
 
 class CValidatedTrade : public CTrade
@@ -3039,39 +3051,39 @@ bool EntryTradePermissionsAllow(const ENUM_TRADE_BIAS bias, string &reason)
    return false;
 }
 
-string InitialRiskKey(const ulong ticketOrIdentifier)
+string InitialRiskKey(const ulong ticket)
 {
-   return PositionScopedStateKey("IR", InpMagicNumber, ticketOrIdentifier);
+   return PositionScopedStateKeyForTicket("IR", InpMagicNumber, ticket);
 }
 
-string TradeMFEKey(const ulong ticketOrIdentifier)
+string TradeMFEKey(const ulong ticket)
 {
-   return PositionScopedStateKey("MF", InpMagicNumber, ticketOrIdentifier);
+   return PositionScopedStateKeyForTicket("MF", InpMagicNumber, ticket);
 }
 
-string TradeMAEKey(const ulong ticketOrIdentifier)
+string TradeMAEKey(const ulong ticket)
 {
-   return PositionScopedStateKey("MA", InpMagicNumber, ticketOrIdentifier);
+   return PositionScopedStateKeyForTicket("MA", InpMagicNumber, ticket);
 }
 
-string PartialCloseKey(const ulong ticketOrIdentifier)
+string PartialCloseKey(const ulong ticket)
 {
-   return PositionScopedStateKey("PC", InpMagicNumber, ticketOrIdentifier);
+   return PositionScopedStateKeyForTicket("PC", InpMagicNumber, ticket);
 }
 
-string BasketHarvestKey(const ulong ticketOrIdentifier)
+string BasketHarvestKey(const ulong ticket)
 {
-   return PositionScopedStateKey("BH", InpMagicNumber, ticketOrIdentifier);
+   return PositionScopedStateKeyForTicket("BH", InpMagicNumber, ticket);
 }
 
-string PostPartialRunnerTPKey(const ulong ticketOrIdentifier)
+string PostPartialRunnerTPKey(const ulong ticket)
 {
-   return PositionScopedStateKey("TP", InpMagicNumber, ticketOrIdentifier);
+   return PositionScopedStateKeyForTicket("TP", InpMagicNumber, ticket);
 }
 
-string MomentumRiskKey(const ulong ticketOrIdentifier)
+string MomentumRiskKey(const ulong ticket)
 {
-   return PositionScopedStateKey("MR", InpMOMagicNumber, ticketOrIdentifier);
+   return PositionScopedStateKeyForTicket("MR", InpMOMagicNumber, ticket);
 }
 
 bool ResearchPositionIdentifierOpen(const ulong positionIdentifier, const long magic)
@@ -3096,19 +3108,19 @@ bool ResearchPositionIdentifierOpen(const ulong positionIdentifier, const long m
 bool RetirePrimaryPersistentPositionState(const ulong positionIdentifier)
 {
    bool retired = true;
-   if(!DeleteCriticalPersistentState(InitialRiskKey(positionIdentifier)))
+   if(!DeleteCriticalPersistentState(PositionScopedStateKeyForIdentifier("IR", InpMagicNumber, positionIdentifier)))
       retired = false;
-   if(!DeleteCriticalPersistentState(TradeMFEKey(positionIdentifier)))
+   if(!DeleteCriticalPersistentState(PositionScopedStateKeyForIdentifier("MF", InpMagicNumber, positionIdentifier)))
       retired = false;
-   if(!DeleteCriticalPersistentState(TradeMAEKey(positionIdentifier)))
+   if(!DeleteCriticalPersistentState(PositionScopedStateKeyForIdentifier("MA", InpMagicNumber, positionIdentifier)))
       retired = false;
-   if(!DeleteCriticalPersistentState(PartialCloseKey(positionIdentifier)))
+   if(!DeleteCriticalPersistentState(PositionScopedStateKeyForIdentifier("PC", InpMagicNumber, positionIdentifier)))
       retired = false;
-   if(!DeleteCriticalPersistentState(BasketHarvestKey(positionIdentifier)))
+   if(!DeleteCriticalPersistentState(PositionScopedStateKeyForIdentifier("BH", InpMagicNumber, positionIdentifier)))
       retired = false;
-   if(!DeleteCriticalPersistentState(PostPartialRunnerTPKey(positionIdentifier)))
+   if(!DeleteCriticalPersistentState(PositionScopedStateKeyForIdentifier("TP", InpMagicNumber, positionIdentifier)))
       retired = false;
-   if(!DeleteCriticalPersistentState(PostFillForcedCloseKey(positionIdentifier, InpMagicNumber)))
+   if(!DeleteCriticalPersistentState(PostFillForcedCloseIdentifierKey(positionIdentifier, InpMagicNumber)))
       retired = false;
    return retired;
 }
@@ -3116,9 +3128,9 @@ bool RetirePrimaryPersistentPositionState(const ulong positionIdentifier)
 bool RetireMomentumPersistentPositionState(const ulong positionIdentifier)
 {
    bool retired = true;
-   if(!DeleteCriticalPersistentState(MomentumRiskKey(positionIdentifier)))
+   if(!DeleteCriticalPersistentState(PositionScopedStateKeyForIdentifier("MR", InpMOMagicNumber, positionIdentifier)))
       retired = false;
-   if(!DeleteCriticalPersistentState(PostFillForcedCloseKey(positionIdentifier, InpMOMagicNumber)))
+   if(!DeleteCriticalPersistentState(PostFillForcedCloseIdentifierKey(positionIdentifier, InpMOMagicNumber)))
       retired = false;
    return retired;
 }

@@ -77,21 +77,24 @@ $finalTransactionIndex = $source.LastIndexOf("void OnTradeTransaction(", [String
 $finalOnTradeIndex = $source.IndexOf("void OnTrade()", $finalTransactionIndex, [StringComparison]::Ordinal)
 $finalTransaction = if($finalTransactionIndex -ge 0 -and $finalOnTradeIndex -gt $finalTransactionIndex) { $source.Substring($finalTransactionIndex, $finalOnTradeIndex - $finalTransactionIndex) } else { '' }
 
-Add-Check "source version is 1.23" ($source.Contains('#property version   "1.23"')) "version"
+Add-Check "source version is 1.24" ($source.Contains('#property version   "1.24"')) "version"
 Add-Check "description advertises account-scoped position state" ($source.Contains('verified account-scoped position state')) "description"
+Add-Check "description advertises collision-safe identifier retirement" ($source.Contains('collision-safe immutable-identifier retirement')) "description"
 Add-Check "base36 encoder uses a fixed uppercase alphabet" ($namespace.Contains('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')) "alphabet"
 Add-Check "base36 encoder handles zero" ($namespace.Contains('if(value == 0)') -and $namespace.Contains('return "0";')) "zero"
 Add-Check "base36 encoder uses modulo and division" ($namespace.Contains('value % 36') -and $namespace.Contains('value /= 36')) "compact encoding"
-Add-Check "persistent identity selects exact ticket" ($namespace.Contains('PositionSelectByTicket(ticketOrIdentifier)')) "ticket selection"
+Add-Check "persistent identity selects exact ticket" ($namespace.Contains('PositionSelectByTicket(ticket)')) "ticket selection"
 Add-Check "persistent identity prefers immutable identifier" ($namespace.Contains('PositionGetInteger(POSITION_IDENTIFIER)') -and $namespace.Contains('return (ulong)identifier;')) "position identifier"
-Add-Check "persistent identity falls back deterministically" ($namespace.Contains('return ticketOrIdentifier;')) "fallback"
-Add-Check "state key includes account login" ($namespace.Contains('AccountInfoInteger(ACCOUNT_LOGIN)')) "account scope"
-Add-Check "state key includes executor magic" ($namespace.Contains('UnsignedBase36((ulong)magic)')) "magic scope"
-Add-Check "state key includes persistent position identity" ($namespace.Contains('UnsignedBase36(PersistentPositionIdentity(ticketOrIdentifier))')) "position scope"
-Add-Check "all position key families use shared namespace" ([regex]::Matches($source, 'PositionScopedStateKey\(').Count -eq 9) "definition plus eight families"
+Add-Check "persistent identity falls back deterministically" ($namespace.Contains('return ticket;')) "fallback"
+Add-Check "identifier key includes account login" ($namespace.Contains('AccountInfoInteger(ACCOUNT_LOGIN)')) "account scope"
+Add-Check "identifier key includes executor magic" ($namespace.Contains('UnsignedBase36((ulong)magic)')) "magic scope"
+Add-Check "identifier key uses exact identifier" ($namespace.Contains('UnsignedBase36(positionIdentifier)')) "exact identifier"
+Add-Check "ticket key resolves immutable identity" ($namespace.Contains('PositionScopedStateKeyForIdentifier(prefix, magic, PersistentPositionIdentity(ticket))')) "ticket resolution"
+Add-Check "identifier helper never reselects a ticket" (!$namespace.Contains('PersistentPositionIdentity(positionIdentifier)')) "no aliasing"
+Add-Check "all live position key families use ticket-derived namespace" ([regex]::Matches($source, 'PositionScopedStateKeyForTicket\(').Count -eq 9) "definition plus eight families"
 
 foreach($prefix in @('PF','IR','MF','MA','PC','BH','TP','MR')) {
-   Add-Check "scoped key prefix: $prefix" ($source.Contains("PositionScopedStateKey(`"$prefix`",")) $prefix
+   Add-Check "ticket-scoped key prefix: $prefix" ($source.Contains("PositionScopedStateKeyForTicket(`"$prefix`",")) $prefix
 }
 
 foreach($obsolete in @('PXEA_INITIAL_RISK_','PXEA_MFE_R_','PXEA_MAE_R_','PXEA_PARTIAL_','PXEA_BASKET_HARVEST_','PXEA_POST_PARTIAL_TP_','RDMC_MO_RISK_')) {
@@ -106,6 +109,12 @@ Add-Check "same identity is deterministic" ($baseKey -ceq (New-StateKey 'IR' 100
 Add-Check "account switch changes namespace" ($baseKey -cne (New-StateKey 'IR' 10002 26070401 987654321)) "account isolated"
 Add-Check "magic switch changes namespace" ($baseKey -cne (New-StateKey 'IR' 10001 26071831 987654321)) "magic isolated"
 Add-Check "position switch changes namespace" ($baseKey -cne (New-StateKey 'IR' 10001 26070401 987654322)) "position isolated"
+$closedIdentifier = [System.Numerics.BigInteger]987654321
+$collidingOpenTicketIdentifier = [System.Numerics.BigInteger]123456789
+$exactRetirementKey = New-StateKey 'IR' 10001 26070401 $closedIdentifier
+$aliasedRetirementKey = New-StateKey 'IR' 10001 26070401 $collidingOpenTicketIdentifier
+Add-Check "adversarial identifier-ticket collision changes a reselected key" ($exactRetirementKey -cne $aliasedRetirementKey) "exact=$exactRetirementKey alias=$aliasedRetirementKey"
+Add-Check "exact retirement key remains bound to closed identifier" ($exactRetirementKey -ceq (New-StateKey 'IR' 10001 26070401 $closedIdentifier)) $exactRetirementKey
 
 Add-Check "partial marker uses scoped key" ($positionState.Contains('GlobalVariableCheck(PartialCloseKey(ticket))') -and $positionState.Contains('SetCriticalPersistentState(PartialCloseKey(ticket), TimeCurrent())') -and $positionState.Contains('DeleteCriticalPersistentState(PartialCloseKey(ticket))')) "partial state"
 Add-Check "basket marker uses scoped key" ($positionState.Contains('BasketHarvestKey(ticket)')) "basket state"
@@ -118,12 +127,14 @@ Add-Check "open-identifier scan validates expert reason" ($keys.Contains('Positi
 Add-Check "open-identifier scan matches immutable identifier" ($keys.Contains('PositionGetInteger(POSITION_IDENTIFIER) == (long)positionIdentifier')) "identifier ownership"
 Add-Check "unreadable position scan preserves state" ($keys.Contains('if(ticket == 0)') -and $keys.Contains('return true;')) "fail closed"
 
-foreach($keyFunction in @('InitialRiskKey','TradeMFEKey','TradeMAEKey','PartialCloseKey','BasketHarvestKey','PostPartialRunnerTPKey')) {
-   Add-Check "primary retirement deletes $keyFunction" ($retirePrimary.Contains("DeleteCriticalPersistentState($keyFunction(positionIdentifier))")) $keyFunction
+foreach($prefix in @('IR','MF','MA','PC','BH','TP')) {
+   Add-Check "primary retirement deletes exact identifier prefix $prefix" ($retirePrimary.Contains("PositionScopedStateKeyForIdentifier(`"$prefix`", InpMagicNumber, positionIdentifier)")) $prefix
 }
-Add-Check "primary retirement deletes forced-close state" ($retirePrimary.Contains('PostFillForcedCloseKey(positionIdentifier, InpMagicNumber)')) "primary forced close"
-Add-Check "momentum retirement deletes risk state" ($retireMomentum.Contains('MomentumRiskKey(positionIdentifier)')) "momentum risk"
-Add-Check "momentum retirement deletes forced-close state" ($retireMomentum.Contains('PostFillForcedCloseKey(positionIdentifier, InpMOMagicNumber)')) "momentum forced close"
+Add-Check "primary retirement deletes exact forced-close state" ($retirePrimary.Contains('PostFillForcedCloseIdentifierKey(positionIdentifier, InpMagicNumber)')) "primary forced close"
+Add-Check "momentum retirement deletes exact risk state" ($retireMomentum.Contains('PositionScopedStateKeyForIdentifier("MR", InpMOMagicNumber, positionIdentifier)')) "momentum risk"
+Add-Check "momentum retirement deletes exact forced-close state" ($retireMomentum.Contains('PostFillForcedCloseIdentifierKey(positionIdentifier, InpMOMagicNumber)')) "momentum forced close"
+Add-Check "primary retirement never routes identifiers through ticket key helpers" (!$retirePrimary.Contains('InitialRiskKey(positionIdentifier)') -and !$retirePrimary.Contains('TradeMFEKey(positionIdentifier)') -and !$retirePrimary.Contains('TradeMAEKey(positionIdentifier)') -and !$retirePrimary.Contains('PartialCloseKey(positionIdentifier)') -and !$retirePrimary.Contains('BasketHarvestKey(positionIdentifier)') -and !$retirePrimary.Contains('PostPartialRunnerTPKey(positionIdentifier)')) "exact semantics"
+Add-Check "momentum retirement never routes identifiers through ticket key helpers" (!$retireMomentum.Contains('MomentumRiskKey(positionIdentifier)') -and !$retireMomentum.Contains('PostFillForcedCloseKey(positionIdentifier')) "exact semantics"
 
 Add-Check "full-close wrapper captures identifier before send" ($closeWrapper.IndexOf('PersistentPositionIdentity(ticket)', [StringComparison]::Ordinal) -lt $closeWrapper.IndexOf('executor.PositionClose(ticket)', [StringComparison]::Ordinal)) "pre-close identity"
 Add-Check "full-close wrapper retires primary only after disappearance" ($closeWrapper.IndexOf('if(closed)', [StringComparison]::Ordinal) -lt $closeWrapper.IndexOf('RetirePrimaryPersistentPositionState(positionIdentifier)', [StringComparison]::Ordinal)) "primary cleanup"

@@ -69,8 +69,8 @@ $closeMatch = [regex]::Match($source, 'bool ExecutePositionClose\(CTrade &execut
 $closeEnd = if($closeMatch.Success) { $source.IndexOf('bool TradePriceMatches(', $closeMatch.Index, [StringComparison]::Ordinal) } else { -1 }
 $close = if($closeMatch.Success -and $closeEnd -gt $closeMatch.Index) { $source.Substring($closeMatch.Index, $closeEnd - $closeMatch.Index) } else { '' }
 
-Add-Check "source version is 1.23" ($source.Contains('#property version   "1.23"')) "version"
-Add-Check "description advertises scoped ownership-checked execution" ($source.Contains('verified account-scoped position state and ownership-checked execution')) "description"
+Add-Check "source version is 1.24" ($source.Contains('#property version   "1.24"')) "version"
+Add-Check "description advertises scoped ownership-checked execution" ($source.Contains('verified account-scoped position state') -and $source.Contains('ownership-checked execution')) "description"
 Add-Check "post-fill risk tolerance is configurable" ($source.Contains('input double InpMaxPostFillRiskIncreasePercent = 5.00;')) "input"
 Add-Check "cash-risk helper validates side and geometry" ($risk.Contains('ORDER_TYPE_BUY') -and $risk.Contains('ORDER_TYPE_SELL') -and $risk.Contains('entryPrice <= 0.0') -and $risk.Contains('stopPrice <= 0.0') -and $risk.Contains('lots <= 0.0')) "risk inputs"
 Add-Check "cash-risk helper uses broker calculation" ($risk.Contains('OrderCalcProfit(orderType, symbol, lots, entryPrice, stopPrice, stopProfit)') -and $risk.Contains('return MathAbs(stopProfit);')) "OrderCalcProfit"
@@ -109,7 +109,7 @@ Add-Check "post-fill risk caps use current equity" ($validatedTrade.Contains('AC
 Add-Check "actual risk distance comes from fill and attached stop" ($validatedTrade.Contains('m_lastFilledRiskDistance = MathAbs(openPrice - actualSL);')) "actual distance"
 Add-Check "entry wrapper reconciles after deal verification" ($entry.IndexOf('if(executor.ResultDeal() <= 0)', [StringComparison]::Ordinal) -lt $entry.IndexOf('PostFillPositionAllows(', [StringComparison]::Ordinal)) "call order"
 Add-Check "reconciliation failure logs precise reason" ($entry.Contains('Post-fill reconciliation failed:') -and $entry.Contains('reconciliationReason')) "diagnostic"
-Add-Check "forced-close marker is account magic and position scoped" ($source.Contains('PostFillForcedCloseKey(const ulong ticketOrIdentifier, const long magic)') -and $source.Contains('PositionScopedStateKey("PF", magic, ticketOrIdentifier)') -and $source.Contains('AccountInfoInteger(ACCOUNT_LOGIN)')) "account/magic/position"
+Add-Check "forced-close marker is account magic and position scoped" ($source.Contains('PostFillForcedCloseKey(const ulong ticket, const long magic)') -and $source.Contains('PositionScopedStateKeyForTicket("PF", magic, ticket)') -and $source.Contains('PostFillForcedCloseIdentifierKey(const ulong positionIdentifier, const long magic)') -and $source.Contains('PositionScopedStateKeyForIdentifier("PF", magic, positionIdentifier)') -and $source.Contains('AccountInfoInteger(ACCOUNT_LOGIN)')) "account/magic/position"
 Add-Check "failed reconciliation marks exact ticket" ($entry.Contains('SetCriticalPersistentState(PostFillForcedCloseKey(ticket, (long)executor.RequestMagic()),') -and $entry.Contains('TimeCurrent()')) "persistent marker"
 Add-Check "failed reconciliation closes through verified wrapper" ($entry.Contains('ExecutePositionClose(executor, ticket)')) "verified close"
 Add-Check "failed emergency close remains visible" ($entry.Contains('Post-fill emergency close failed:')) "close evidence"
