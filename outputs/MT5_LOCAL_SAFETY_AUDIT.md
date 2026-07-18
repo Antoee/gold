@@ -5,8 +5,8 @@ Offline audit only. This script does not launch MT5.
 - Overall: **PASS**
 - Checks passed: 44 / 44
 - Runner scripts checked: 3
-- MT5 processes running: 1
-- Registered read-only forward terminal safe: True
+- MT5 processes running: 0
+- Registered read-only forward terminal safe: False
 - Unlock file present: False
 - Hidden desktop ack file present: False
 - Hard local launch lock present: True
@@ -18,7 +18,7 @@ Offline audit only. This script does not launch MT5.
 
 | Area | Check | Passed | Evidence | Remediation |
 |---|---|---|---|---|
-| Runtime | No unsafe MT5/MetaEditor process is running | True | One registered main terminal is running read-only; demo identity and sentinel pass; global trading disabled; positions and open risk are zero. | Stop tester/editor/portable processes, or keep only the registered flat demo terminal with valid identity, a fresh sentinel heartbeat, global trading disabled, and zero open risk. |
+| Runtime | No unsafe MT5/MetaEditor process is running | True | No matching process found. | Stop tester/editor/portable processes, or keep only the registered flat demo terminal with valid identity, a fresh sentinel heartbeat, global trading disabled, and zero open risk. |
 | Runtime | ALLOW_MT5_FOCUS_RISK is not enabled | True | Environment variable is empty. | Unset ALLOW_MT5_FOCUS_RISK unless the user explicitly accepts focus risk for a controlled local MT5 run. |
 | Runtime | ALLOW_MT5_HIDDEN_DESKTOP_ACK is not enabled | True | Environment variable is empty. | Unset ALLOW_MT5_HIDDEN_DESKTOP_ACK unless the user explicitly accepts focus risk for a controlled local MT5 run. |
 | Runtime | Unlock file is absent | True | work\ALLOW_MT5_LOCAL_LAUNCH.unlock | Remove work\ALLOW_MT5_LOCAL_LAUNCH.unlock unless a controlled local MT5 run is intentionally allowed. |
