@@ -1,0 +1,8 @@
+"Profile","Phase","Set","ReportsExpected","ReportsParsed","MissingReports","UnparsedReports","TotalNetProfit","WorstWindowNetProfit","BestWindowNetProfit","AverageAnnualizedReturnPercent","WorstAnnualizedReturnPercent","AverageCagrPercent","WorstCagrPercent","LosingWindows","ProfitableWindows","FlatWindows","WorstDrawdownMoney","AverageProfitFactor","AverageSharpeRatio","AverageWinRatePercent","WorstConsecutiveLosses","EvidenceComplete"
+"wgf_center","discovery_model1","independent_m15_weekend_gap_fade","3","3","0","0","-16.08","-8.04","0","-0.02","-0.04","-0.02","-0.04","2","0","1","19.14","0","-0.0733","72.22","1","True"
+"wgf_confirm000","discovery_model1","independent_m15_weekend_gap_fade","3","3","0","0","-26.92","-22","8.54","-0.04","-0.11","-0.04","-0.11","2","1","0","35.92","0.85","-2.0533","60","2","True"
+"wgf_confirm030","discovery_model1","independent_m15_weekend_gap_fade","3","3","0","0","-16.08","-8.04","0","-0.02","-0.04","-0.02","-0.04","2","0","1","9.24","0","0","0","1","True"
+"wgf_gap005","discovery_model1","independent_m15_weekend_gap_fade","3","3","0","0","-16.08","-8.04","0","-0.02","-0.04","-0.02","-0.04","2","0","1","19.14","0","-0.0733","72.22","1","True"
+"wgf_gap012","discovery_model1","independent_m15_weekend_gap_fade","3","3","0","0","-16.08","-8.04","0","-0.02","-0.04","-0.02","-0.04","2","0","1","19.14","0","-0.0733","72.22","1","True"
+"wgf_maxgap035","discovery_model1","independent_m15_weekend_gap_fade","3","3","0","0","-16.08","-8.04","0","-0.02","-0.04","-0.02","-0.04","2","0","1","19.14","0","-0.0733","72.22","1","True"
+"wgf_maxgap065","discovery_model1","independent_m15_weekend_gap_fade","3","3","0","0","-16.08","-8.04","0","-0.02","-0.04","-0.02","-0.04","2","0","1","19.14","0","-0.0733","72.22","1","True"

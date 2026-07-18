@@ -1,0 +1,8 @@
+"Candidate","Older2015To2018Net","Repair2019To2020Net","Continuous2015To2020Net","ContinuousProfitFactor","ContinuousExpectedPayoff","ContinuousTrades","ContinuousMaxDrawdownPercent","ContinuousReturnToDrawdown","ContinuousWinRatePercent","BothDisjointErasPositive","ProfitFactorAtLeast120","TradesAtLeast40","DrawdownAtMost250","ExpectedPayoffPositive","ReturnToDrawdownAtLeast100","BaseGatePass","AdjacentProfilePass","DiscoveryGatePass","Decision"
+"wgf_maxgap065","0","-8.04","-8.04","0","-2.68","3","0.19","-0.4232","66.67","False","False","False","True","False","False","False","False","False","REJECTED_NO_HOLDOUT_NO_MODEL4"
+"wgf_confirm030","0","-8.04","-8.04","0","-8.04","1","0.09","-0.8933","0","False","False","False","True","False","False","False","False","False","REJECTED_NO_HOLDOUT_NO_MODEL4"
+"wgf_maxgap035","0","-8.04","-8.04","0","-2.68","3","0.19","-0.4232","66.67","False","False","False","True","False","False","False","False","False","REJECTED_NO_HOLDOUT_NO_MODEL4"
+"wgf_center","0","-8.04","-8.04","0","-2.68","3","0.19","-0.4232","66.67","False","False","False","True","False","False","False","False","False","REJECTED_NO_HOLDOUT_NO_MODEL4"
+"wgf_gap005","0","-8.04","-8.04","0","-2.68","3","0.19","-0.4232","66.67","False","False","False","True","False","False","False","False","False","REJECTED_NO_HOLDOUT_NO_MODEL4"
+"wgf_gap012","0","-8.04","-8.04","0","-2.68","3","0.19","-0.4232","66.67","False","False","False","True","False","False","False","False","False","REJECTED_NO_HOLDOUT_NO_MODEL4"
+"wgf_confirm000","8.54","-22","-13.46","0.74","-0.9","15","0.36","-0.3739","60","False","False","False","True","False","False","False","False","False","REJECTED_NO_HOLDOUT_NO_MODEL4"
