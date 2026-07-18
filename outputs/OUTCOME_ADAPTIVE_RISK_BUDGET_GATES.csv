@@ -1,0 +1,12 @@
+Gate,Pass,Evidence
+control-reproduction,True,net=1615.36;trades=362
+discovery-improvement,False,improvement=-20.129%
+later-improvement,False,improvement=-11.704%
+continuous-improvement,False,improvement=-16.650%
+cost-improvement,False,improvement=-23.199%
+broad-restarts-positive,True,older_2015_2018=681.32;middle_2019_2022=322.33;recent_2023_2026=459.20
+profit-factor,True,center=1.5741;control=1.5843
+risk-floor-drawdown,True,center=2.3444%;control=2.9209%
+red-years,False,center=4;control=2
+state-activity,True,hot=21.55%;cold=48.34%
+neighbor-support,False,passes=0/7
