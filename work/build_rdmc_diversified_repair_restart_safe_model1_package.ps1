@@ -16,8 +16,8 @@ $launchLock = Join-Path $repo "work\MT5_LOCAL_LAUNCH_DISABLED.lock"
 $launchUnlock = Join-Path $repo "work\ALLOW_MT5_LOCAL_LAUNCH.unlock"
 
 $expectedV1SourceHash = "4740338598E290360946FE414CC6F2FE0CF3B704006860514367DCB996A8D2B5"
-$expectedSourceHash = "645C12AFD46411E3C7F86C3D5FD98BB90887A1EE0FA5F6394F67C0591194AF73"
-$expectedProfileHash = "5396FA3DFE63E3A6DF3E2795190687C19DE0A4E61930C813247109E7C84994A6"
+$expectedSourceHash = "8420E5D3393133674035C0001FA3B0BAF6F543D2A14472BA2CDEF63199C21BB3"
+$expectedProfileHash = "9344CACABBA0E5B86C0B0C5BCA2EDC3F2D9C095618B75AB6A58A5657D40D1E25"
 
 foreach($required in @($source, $profile, $v1Source, $launchLock)) {
    if(!(Test-Path -LiteralPath $required -PathType Leaf)) {
@@ -46,8 +46,8 @@ $duplicateSourceInputs = @($sourceInputs | Group-Object | Where-Object Count -gt
 $duplicateProfileInputs = @($profileInputs | Group-Object | Where-Object Count -gt 1)
 $missingProfileInputs = @($sourceInputs | Where-Object { $_ -notin $profileInputs })
 $extraProfileInputs = @($profileInputs | Where-Object { $_ -notin $sourceInputs })
-if($sourceInputs.Count -ne 588 -or $profileInputs.Count -ne 588) {
-   throw "Expected 588 source/profile inputs; found source=$($sourceInputs.Count) profile=$($profileInputs.Count)."
+if($sourceInputs.Count -ne 589 -or $profileInputs.Count -ne 589) {
+   throw "Expected 589 source/profile inputs; found source=$($sourceInputs.Count) profile=$($profileInputs.Count)."
 }
 if($duplicateSourceInputs.Count -gt 0 -or $duplicateProfileInputs.Count -gt 0 -or
    $missingProfileInputs.Count -gt 0 -or $extraProfileInputs.Count -gt 0) {
@@ -151,6 +151,12 @@ $manifest = [pscustomobject]@{
    ExactBrokerOrderCheck = "ENABLED"
    PreflightFailureBlocksSend = "ENABLED"
    PreflightBrokerCommentEvidence = "ENABLED"
+   PostFillReconciliationStatus = "PASS_66_CHECKS"
+   ResultLinkedPositionIdentity = "ENABLED"
+   AttachedProtectionVerification = "ENABLED"
+   ActualCashRiskReconciliation = "ENABLED"
+   FailedReconciliationForcedClose = "ENABLED"
+   FailedCloseRealtimeRetry = "ENABLED"
    CompileStatus = "NOT_RUN_LOCAL_LOCK_ACTIVE"
    BacktestStatus = "NOT_RUN_LOCAL_LOCK_ACTIVE"
    HistoricalBestChanged = "NO"
@@ -192,18 +198,23 @@ $packageLines = @(
    '- Entry-permission checks stay inside shared exposure approval, so permission loss blocks new exposure without removing the protective management and close paths.',
    '- Both trade executors run MT5 `OrderCheck` on the exact side, volume, price, SL, TP, deviation, filling policy, magic, and comment before any Buy/Sell request.',
    '- A failed broker preflight blocks the send and preserves the check retcode and broker comment in failure evidence; protective close paths do not depend on entry preflight.',
+   '- After a successful send, the exact broker result order or deal-linked immutable position identifier is reconciled to one unique expert-owned position; newest-position guessing is not used.',
+   '- The broker-attached open price, volume, stop loss, and requested take-profit state are verified before an entry is accepted or its initial risk is registered.',
+   '- Planned cash risk is compared with actual fill-to-stop cash risk. Actual risk may exceed planned risk by at most `5%`, and can never exceed the tighter per-entry or account-wide cash-risk cap.',
+   '- Reconciliation failures mark and force-close the exact filled ticket through the verified close wrapper. The marker is scoped to account, EA magic, and ticket; a failed emergency close remains marked for lightweight per-tick retry until the position is confirmed gone.',
+   '- Initial-risk state is stored against the exact filled position ticket using its actual fill-to-stop distance for every entry lane.',
    "",
    "## Frozen identity",
    "",
    ("- Source SHA-256: ``{0}``" -f $sourceHash),
    ("- Profile SHA-256: ``{0}``" -f $profileHash),
    ("- Predecessor source SHA-256: ``{0}``" -f $v1Hash),
-   '- Source/profile inputs: `588 / 588`',
+   '- Source/profile inputs: `589 / 589`',
    '- Queue: `outputs/RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_QUEUE.csv`',
    "",
    "## Hard boundary",
    "",
-   'The source is tester-only, real-account trading is disabled, and all 12 annual/YTD Model1 rows remain `LOCKED_LOCAL_LAUNCH_DISABLED`. The new cost, margin, hard-cooldown, intrabar emergency, broker-result, and active-order reconciliation can change entries and exits. Broker-volume reconciliation can change entries and exits too, so the earlier post-hoc collision score is not attributed to this executable path. Static checks cannot prove compilation, profit, drawdown, or restart behavior inside MT5. Compilation, annual and continuous Model1, annual and continuous real-tick Model4, cost stress, Monte Carlo, broker variation, and valid forward evidence are still required.'
+   'The source is tester-only, real-account trading is disabled, and all 12 annual/YTD Model1 rows remain `LOCKED_LOCAL_LAUNCH_DISABLED`. The new cost, margin, hard-cooldown, intrabar emergency, and broker-result safeguards can change entries and exits. The active-order reconciliation can change entries and exits. Broker-volume reconciliation can change entries and exits. Post-fill risk reconciliation can change entries and exits too, so the earlier post-hoc collision score is not attributed to this executable path. Static checks cannot prove compilation, profit, drawdown, or restart behavior inside MT5. Compilation, annual and continuous Model1, annual and continuous real-tick Model4, cost stress, Monte Carlo, broker variation, and valid forward evidence are still required.'
 )
 [IO.File]::WriteAllLines($packagePath, $packageLines, [Text.Encoding]::ASCII)
 

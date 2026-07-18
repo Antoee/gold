@@ -10,8 +10,8 @@ $queuePath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL
 $manifestPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_MANIFEST.csv"
 $documentPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_PACKAGE.md"
 
-$expectedSourceHash = "645C12AFD46411E3C7F86C3D5FD98BB90887A1EE0FA5F6394F67C0591194AF73"
-$expectedProfileHash = "5396FA3DFE63E3A6DF3E2795190687C19DE0A4E61930C813247109E7C84994A6"
+$expectedSourceHash = "8420E5D3393133674035C0001FA3B0BAF6F543D2A14472BA2CDEF63199C21BB3"
+$expectedProfileHash = "9344CACABBA0E5B86C0B0C5BCA2EDC3F2D9C095618B75AB6A58A5657D40D1E25"
 $expectedV1SourceHash = "4740338598E290360946FE414CC6F2FE0CF3B704006860514367DCB996A8D2B5"
 
 $checks = [System.Collections.Generic.List[object]]::new()
@@ -99,8 +99,8 @@ foreach($line in $profile) {
 }
 $missing = @($sourceInputs | Where-Object { !$profileValues.ContainsKey($_) })
 $extra = @($profileValues.Keys | Where-Object { $_ -notin $sourceInputs })
-Add-Check "588 source inputs remain below MT5 limit" ($sourceInputs.Count -eq 588) "source=$($sourceInputs.Count)"
-Add-Check "profile freezes every source input" ($profileValues.Count -eq 588 -and $missing.Count -eq 0 -and $extra.Count -eq 0) "profile=$($profileValues.Count) missing=$($missing.Count) extra=$($extra.Count)"
+Add-Check "589 source inputs remain below MT5 limit" ($sourceInputs.Count -eq 589) "source=$($sourceInputs.Count)"
+Add-Check "profile freezes every source input" ($profileValues.Count -eq 589 -and $missing.Count -eq 0 -and $extra.Count -eq 0) "profile=$($profileValues.Count) missing=$($missing.Count) extra=$($extra.Count)"
 Add-Check "source inputs are unique" (@($sourceInputs | Group-Object | Where-Object Count -gt 1).Count -eq 0) "inputs=$($sourceInputs.Count)"
 
 foreach($contract in @{
@@ -116,6 +116,7 @@ foreach($contract in @{
    InpUseAccountWideExposureGuard = 'true'
    InpAccountWideMaxOpenRiskPercent = '0.75'
    InpAccountWideMaxPositions = '1'
+   InpMaxPostFillRiskIncreasePercent = '5.00'
    InpMaxEquityDrawdownPercent = '5.00'
 }.GetEnumerator()) {
    Add-Check "profile contract: $($contract.Key)" ($profileValues[$contract.Key] -eq $contract.Value) "$($profileValues[$contract.Key])"
@@ -219,6 +220,7 @@ Add-Check "manifest freezes hedging account mode" ($manifest[0].AccountModeSafet
 Add-Check "manifest freezes entry-permission safety" ($manifest[0].EntryPermissionSafetyStatus -eq 'PASS_50_CHECKS' -and $manifest[0].TerminalPermissionGate -eq 'ENABLED' -and $manifest[0].AccountPermissionGate -eq 'ENABLED' -and $manifest[0].DirectionalSymbolGate -eq 'ENABLED' -and $manifest[0].MarketOrderAndStopLossRequired -eq 'ENABLED') "$($manifest[0].EntryPermissionSafetyStatus)"
 Add-Check "manifest preserves protective exits across entry permission loss" ($manifest[0].ProtectiveExitPathPreserved -eq 'ENABLED') $manifest[0].ProtectiveExitPathPreserved
 Add-Check "manifest freezes exact-request broker preflight" ($manifest[0].OrderPreflightSafetyStatus -eq 'PASS_55_CHECKS' -and $manifest[0].ExactBrokerOrderCheck -eq 'ENABLED' -and $manifest[0].PreflightFailureBlocksSend -eq 'ENABLED' -and $manifest[0].PreflightBrokerCommentEvidence -eq 'ENABLED') "$($manifest[0].OrderPreflightSafetyStatus)"
+Add-Check "manifest freezes post-fill reconciliation" ($manifest[0].PostFillReconciliationStatus -eq 'PASS_66_CHECKS' -and $manifest[0].ResultLinkedPositionIdentity -eq 'ENABLED' -and $manifest[0].AttachedProtectionVerification -eq 'ENABLED' -and $manifest[0].ActualCashRiskReconciliation -eq 'ENABLED' -and $manifest[0].FailedReconciliationForcedClose -eq 'ENABLED' -and $manifest[0].FailedCloseRealtimeRetry -eq 'ENABLED') "$($manifest[0].PostFillReconciliationStatus)"
 
 $document = Get-Content -LiteralPath $documentPath -Raw
 Add-Check "package states restart repair boundary" ($document.Contains('supersedes the uncompiled v1 package') -and $document.Contains('does not establish a new best') -and $document.Contains('Static checks cannot prove compilation')) "boundary present"
@@ -232,6 +234,9 @@ Add-Check "package states hedging-only account contract" ($document.Contains('AC
 Add-Check "package states entry-permission contract" ($document.Contains('terminal, EA, and account trading permission') -and $document.Contains('compatible symbol direction') -and $document.Contains('market-order and protective-stop support')) "boundary present"
 Add-Check "package preserves protective paths when entries are blocked" ($document.Contains('permission loss blocks new exposure') -and $document.Contains('protective management and close paths')) "boundary present"
 Add-Check "package states exact-request broker preflight" ($document.Contains('MT5 `OrderCheck` on the exact side') -and $document.Contains('failed broker preflight blocks the send') -and $document.Contains('protective close paths do not depend on entry preflight')) "boundary present"
+Add-Check "package states result-linked post-fill identity" ($document.Contains('deal-linked immutable position identifier') -and $document.Contains('one unique expert-owned position') -and $document.Contains('newest-position guessing is not used')) "boundary present"
+Add-Check "package states attached-protection and actual-risk contract" ($document.Contains('broker-attached open price, volume, stop loss') -and $document.Contains('actual fill-to-stop cash risk') -and $document.Contains('at most `5%`') -and $document.Contains('account-wide cash-risk cap')) "boundary present"
+Add-Check "package states persistent failed-close recovery" ($document.Contains('force-close the exact filled ticket') -and $document.Contains('scoped to account, EA magic, and ticket') -and $document.Contains('per-tick retry') -and $document.Contains('confirmed gone')) "boundary present"
 Add-Check "registered forward candidate stays unchanged" ($document.Contains('does not') -and $manifest[0].ForwardCandidateChanged -eq 'NO') $manifest[0].ForwardCandidateChanged
 Add-Check "no account identifier published" ($document -notmatch '(?i)account.?id\s*[:=]\s*\d{5,}' -and $document -notmatch '(?i)login\s*[:=]\s*\d{5,}') "public markdown clean"
 Add-Check "no GitHub token published" ($document -notmatch 'github_pat_|gh[pousr]_[A-Za-z0-9]{20,}') "public markdown clean"

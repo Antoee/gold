@@ -47,13 +47,15 @@ $source = Get-Content -LiteralPath $sourcePath -Raw
 $profile = Read-Profile $profilePath
 $validatedTrade = Get-Section $source "class CValidatedTrade : public CTrade" "CValidatedTrade trade;"
 $entry = Get-Section $source "bool ExecuteMarketEntry(CValidatedTrade &executor," "bool ExecutePositionClose(CTrade &executor,"
-$close = Get-Section $source "bool ExecutePositionClose(CTrade &executor," "bool TradePriceMatches("
+$closeMatch = [regex]::Match($source, 'bool ExecutePositionClose\(CTrade &executor, const ulong ticket\)\s*\{')
+$closeEnd = if($closeMatch.Success) { $source.IndexOf('bool TradePriceMatches(', $closeMatch.Index, [StringComparison]::Ordinal) } else { -1 }
+$close = if($closeMatch.Success -and $closeEnd -gt $closeMatch.Index) { $source.Substring($closeMatch.Index, $closeEnd - $closeMatch.Index) } else { '' }
 $finalOnTickIndex = $source.LastIndexOf('void OnTick()', [StringComparison]::Ordinal)
 $finalTransactionIndex = $source.LastIndexOf('void OnTradeTransaction', [StringComparison]::Ordinal)
 $onTick = if($finalOnTickIndex -ge 0 -and $finalTransactionIndex -gt $finalOnTickIndex) { $source.Substring($finalOnTickIndex, $finalTransactionIndex - $finalOnTickIndex) } else { '' }
 
-Add-Check "source version is 1.17" ($source.Contains('#property version   "1.17"')) "version"
-Add-Check "description advertises broker preflight" ($source.Contains('broker-preflighted entries')) "description"
+Add-Check "source version is 1.18" ($source.Contains('#property version   "1.18"')) "version"
+Add-Check "description advertises broker preflight" ($source.Contains('preflighted and reconciled entries')) "description"
 Add-Check "validated executor derives from CTrade" ($validatedTrade.Contains('class CValidatedTrade : public CTrade')) "derived executor"
 Add-Check "market preflight is a public executor method" ($validatedTrade.Contains('public:') -and $validatedTrade.Contains('bool MarketEntryPreflight(')) "public method"
 Add-Check "preflight reads one atomic tick" ([regex]::Matches($validatedTrade, 'SymbolInfoTick\(symbol, tick\)').Count -eq 1) "atomic quote"
@@ -84,7 +86,7 @@ $sellIndex = $entry.IndexOf('executor.Sell(', [StringComparison]::Ordinal)
 Add-Check "entry wrapper preflights before either send" ($preflightIndex -ge 0 -and $buyIndex -gt $preflightIndex -and $sellIndex -gt $preflightIndex) "preflight=$preflightIndex buy=$buyIndex sell=$sellIndex"
 Add-Check "preflight rejection returns before send" ($entry.Contains('if(!executor.MarketEntryPreflight') -and $entry.Contains('return false;')) "fail closed"
 Add-Check "entry wrapper retains completed-retcode requirement" ($entry.Contains('TRADE_RETCODE_DONE') -and $entry.Contains('TRADE_RETCODE_DONE_PARTIAL') -and !$entry.Contains('TRADE_RETCODE_PLACED')) "completed execution"
-Add-Check "entry wrapper retains deal-ticket requirement" ($entry.Contains('return executor.ResultDeal() > 0;')) "deal required"
+Add-Check "entry wrapper retains deal-ticket requirement" ($entry.Contains('if(executor.ResultDeal() <= 0)')) "deal required"
 Add-Check "exactly two validated executors exist" ([regex]::Matches($source, 'CValidatedTrade\s+(?:trade|m_trade)\s*;').Count -eq 2) "primary and momentum"
 Add-Check "all four entry lanes retain one shared wrapper" ([regex]::Matches($source, 'ExecuteMarketEntry\(').Count -eq 5) "definition plus four calls"
 Add-Check "only one broker preflight implementation exists" ([regex]::Matches($source, 'OrderCheck\(request, m_check_result\)').Count -eq 1) "one shared check"

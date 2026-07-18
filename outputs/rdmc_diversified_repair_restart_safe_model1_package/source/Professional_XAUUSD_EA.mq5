@@ -4,8 +4,8 @@
 //| No martingale, grid, averaging down, or recovery systems           |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.17"
-#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with broker-preflighted entries; tester-only until independently validated."
+#property version   "1.18"
+#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with preflighted and reconciled entries; tester-only until independently validated."
 
 #include <Trade/Trade.mqh>
 
@@ -902,6 +902,7 @@ input double InpMaxTradingCostRiskPercent = 12.0;
 input double          InpMaxPositionLots           = 10.0;
 input bool InpAllowMinLotRiskOverflow   = false;
 input double InpMaxOpenRiskPercent        = 0.00;
+input double InpMaxPostFillRiskIncreasePercent = 5.00;
 input bool InpUseHouseMoneyOpenRiskExpansion = false;
 double          InpHouseMoneyOpenRiskStartCushionPercent = 6.0;
 double          InpHouseMoneyOpenRiskFullCushionPercent = 18.0;
@@ -2095,9 +2096,97 @@ double          InpTesterMaxProfitNetPower = 1.35;
 double          InpTesterMaxProfitDrawdownPower = 2.00;
 double          InpTesterMaxProfitQualityPower = 1.00;
 
+double CalculatedOrderRiskMoney(const string symbol,
+                                const ENUM_ORDER_TYPE orderType,
+                                const double entryPrice,
+                                const double stopPrice,
+                                const double lots)
+{
+   if(StringLen(symbol) <= 0 ||
+      (orderType != ORDER_TYPE_BUY && orderType != ORDER_TYPE_SELL) ||
+      entryPrice <= 0.0 || stopPrice <= 0.0 || lots <= 0.0 ||
+      MathAbs(entryPrice - stopPrice) <= 0.0)
+      return 0.0;
+
+   double stopProfit = 0.0;
+   if(!OrderCalcProfit(orderType, symbol, lots, entryPrice, stopPrice, stopProfit))
+      return 0.0;
+   return MathAbs(stopProfit);
+}
+
+string PostFillForcedCloseKey(const ulong ticket, const long magic)
+{
+   return "PF_" + (string)AccountInfoInteger(ACCOUNT_LOGIN) +
+          "_" + (string)magic + "_" + (string)ticket;
+}
+
 class CValidatedTrade : public CTrade
 {
+private:
+   ulong m_lastFilledPositionTicket;
+   double m_lastFilledRiskDistance;
+
+   bool SelectedPositionGeometryMatches(const string symbol,
+                                        const long positionType)
+   {
+      return PositionGetString(POSITION_SYMBOL) == symbol &&
+             PositionGetInteger(POSITION_TYPE) == positionType;
+   }
+
+   bool SelectFilledPosition(const bool buy,
+                             const string symbol,
+                             ulong &ticket)
+   {
+      ticket = 0;
+      long magic = (long)RequestMagic();
+      long positionType = buy ? POSITION_TYPE_BUY : POSITION_TYPE_SELL;
+
+      ulong orderTicket = ResultOrder();
+      if(orderTicket > 0 && PositionSelectByTicket(orderTicket) &&
+         SelectedPositionGeometryMatches(symbol, positionType))
+      {
+         ticket = orderTicket;
+         return true;
+      }
+
+      long positionId = 0;
+      ulong dealTicket = ResultDeal();
+      if(dealTicket > 0 && HistoryDealSelect(dealTicket))
+         positionId = HistoryDealGetInteger(dealTicket, DEAL_POSITION_ID);
+
+      int matches = 0;
+      ulong matchedTicket = 0;
+      for(int i = PositionsTotal() - 1; i >= 0; --i)
+      {
+         ulong currentTicket = PositionGetTicket(i);
+         if(currentTicket == 0 || !PositionSelectByTicket(currentTicket) ||
+            !SelectedPositionGeometryMatches(symbol, positionType))
+            continue;
+         if(positionId > 0 && PositionGetInteger(POSITION_IDENTIFIER) != positionId)
+            continue;
+         if(positionId <= 0 && PositionGetInteger(POSITION_MAGIC) != magic)
+            continue;
+         matches++;
+         matchedTicket = currentTicket;
+      }
+
+      if(matches != 1 || !PositionSelectByTicket(matchedTicket))
+         return false;
+      ticket = matchedTicket;
+      return true;
+   }
+
 public:
+   ulong LastFilledPositionTicket() const
+   {
+      return m_lastFilledPositionTicket;
+   }
+
+   double LastFilledRiskDistance() const
+   {
+      return m_lastFilledRiskDistance;
+   }
+
    bool MarketEntryPreflight(const bool buy,
                              const double volume,
                              const string symbol,
@@ -2105,6 +2194,9 @@ public:
                              const double tp,
                              const string comment)
    {
+      m_lastFilledPositionTicket = 0;
+      m_lastFilledRiskDistance = 0.0;
+
       MqlTick tick;
       if(!SymbolInfoTick(symbol, tick) || tick.bid <= 0.0 ||
          tick.ask <= 0.0 || tick.ask <= tick.bid)
@@ -2138,6 +2230,108 @@ public:
                          : TRADE_RETCODE_ERROR;
       m_result.comment = "preflight: " + m_check_result.comment;
       return false;
+   }
+
+   bool PostFillPositionAllows(const bool buy,
+                               const string symbol,
+                               string &reason)
+   {
+      reason = "";
+      ulong ticket = 0;
+      if(!SelectFilledPosition(buy, symbol, ticket))
+      {
+         reason = "post-fill position not uniquely identified";
+         return false;
+      }
+      m_lastFilledPositionTicket = ticket;
+
+      if(PositionGetInteger(POSITION_MAGIC) != (long)RequestMagic() ||
+         PositionGetInteger(POSITION_REASON) != POSITION_REASON_EXPERT)
+      {
+         reason = "post-fill ownership mismatch";
+         return false;
+      }
+
+      double openPrice = PositionGetDouble(POSITION_PRICE_OPEN);
+      double positionVolume = PositionGetDouble(POSITION_VOLUME);
+      double actualSL = PositionGetDouble(POSITION_SL);
+      double actualTP = PositionGetDouble(POSITION_TP);
+      double requestedPrice = RequestPrice();
+      double requestedVolume = RequestVolume();
+      double requestedSL = RequestSL();
+      double requestedTP = RequestTP();
+      if(openPrice <= 0.0 || positionVolume <= 0.0 || requestedPrice <= 0.0 ||
+         requestedVolume <= 0.0 || actualSL <= 0.0 || requestedSL <= 0.0)
+      {
+         reason = "post-fill missing price volume or protective stop";
+         return false;
+      }
+
+      if((buy && (actualSL >= openPrice || requestedSL >= requestedPrice)) ||
+         (!buy && (actualSL <= openPrice || requestedSL <= requestedPrice)))
+      {
+         reason = "post-fill invalid protective-stop direction";
+         return false;
+      }
+      if(requestedTP > 0.0 &&
+         (actualTP <= 0.0 || (buy && actualTP <= openPrice) || (!buy && actualTP >= openPrice)))
+      {
+         reason = "post-fill take-profit state mismatch";
+         return false;
+      }
+
+      double volumeStep = SymbolInfoDouble(symbol, SYMBOL_VOLUME_STEP);
+      double volumeTolerance = MathMax(volumeStep * 0.5, 0.00000001);
+      double reportedVolume = ResultVolume();
+      if(positionVolume > requestedVolume + volumeTolerance ||
+         (reportedVolume > 0.0 && MathAbs(positionVolume - reportedVolume) > volumeTolerance))
+      {
+         reason = "post-fill volume mismatch";
+         return false;
+      }
+
+      ENUM_ORDER_TYPE orderType = buy ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+      double plannedRiskMoney = CalculatedOrderRiskMoney(symbol,
+                                                         orderType,
+                                                         requestedPrice,
+                                                         requestedSL,
+                                                         requestedVolume);
+      double actualRiskMoney = CalculatedOrderRiskMoney(symbol,
+                                                        orderType,
+                                                        openPrice,
+                                                        actualSL,
+                                                        positionVolume);
+      if(plannedRiskMoney <= 0.0 || actualRiskMoney <= 0.0)
+      {
+         reason = "post-fill cash risk unavailable";
+         return false;
+      }
+
+      double riskIncreaseAllowance = MathMax(0.0, InpMaxPostFillRiskIncreasePercent);
+      double maximumActualRisk = plannedRiskMoney * (1.0 + riskIncreaseAllowance / 100.0);
+      if(actualRiskMoney > maximumActualRisk + 0.01)
+      {
+         reason = "post-fill cash risk exceeds planned allowance";
+         return false;
+      }
+
+      double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+      double hardRiskCap = 0.0;
+      if(InpMaxOpenRiskPercent > 0.0)
+         hardRiskCap = InpMaxOpenRiskPercent;
+      if(InpUseAccountWideExposureGuard && InpAccountWideMaxOpenRiskPercent > 0.0 &&
+         (hardRiskCap <= 0.0 || InpAccountWideMaxOpenRiskPercent < hardRiskCap))
+         hardRiskCap = InpAccountWideMaxOpenRiskPercent;
+      if(equity <= 0.0 ||
+         (hardRiskCap > 0.0 && 100.0 * actualRiskMoney / equity > hardRiskCap + 0.000001))
+      {
+         reason = "post-fill hard open-risk cap";
+         return false;
+      }
+
+      m_lastFilledRiskDistance = MathAbs(openPrice - actualSL);
+      reason = "allowed";
+      return m_lastFilledRiskDistance > 0.0;
    }
 };
 
@@ -2177,6 +2371,8 @@ string TradeResultEvidence(CTrade &executor)
           ", comment=" + executor.ResultComment();
 }
 
+bool ExecutePositionClose(CTrade &executor, const ulong ticket);
+
 bool ExecuteMarketEntry(CValidatedTrade &executor,
                         const bool buy,
                         const double volume,
@@ -2196,11 +2392,28 @@ bool ExecuteMarketEntry(CValidatedTrade &executor,
    uint retcode = executor.ResultRetcode();
    if(retcode != TRADE_RETCODE_DONE && retcode != TRADE_RETCODE_DONE_PARTIAL)
       return false;
-   return executor.ResultDeal() > 0;
+   if(executor.ResultDeal() <= 0)
+      return false;
+
+   string reconciliationReason = "";
+   if(executor.PostFillPositionAllows(buy, symbol, reconciliationReason))
+      return true;
+
+   ulong ticket = executor.LastFilledPositionTicket();
+   Print("Post-fill reconciliation failed: ", reconciliationReason,
+         "; ", TradeResultEvidence(executor), "; position=", ticket);
+   if(ticket > 0 && PositionSelectByTicket(ticket))
+   {
+      GlobalVariableSet(PostFillForcedCloseKey(ticket, (long)executor.RequestMagic()), TimeCurrent());
+      if(!ExecutePositionClose(executor, ticket))
+         Print("Post-fill emergency close failed: ", TradeResultEvidence(executor));
+   }
+   return false;
 }
 
 bool ExecutePositionClose(CTrade &executor, const ulong ticket)
 {
+   long magic = (long)executor.RequestMagic();
    if(!executor.PositionClose(ticket))
       return false;
 
@@ -2209,7 +2422,10 @@ bool ExecutePositionClose(CTrade &executor, const ulong ticket)
       retcode != TRADE_RETCODE_DONE_PARTIAL &&
       retcode != TRADE_RETCODE_POSITION_CLOSED)
       return false;
-   return !PositionSelectByTicket(ticket);
+   bool closed = !PositionSelectByTicket(ticket);
+   if(closed)
+      GlobalVariableDel(PostFillForcedCloseKey(ticket, magic));
+   return closed;
 }
 
 bool TradePriceMatches(const double actual, const double requested)
@@ -3471,22 +3687,7 @@ private:
                                   const double stopPrice,
                                   const double lots)
    {
-      if(StringLen(symbol) <= 0 ||
-         (orderType != ORDER_TYPE_BUY && orderType != ORDER_TYPE_SELL) ||
-         entryPrice <= 0.0 || stopPrice <= 0.0 || lots <= 0.0 ||
-         MathAbs(entryPrice - stopPrice) <= 0.0)
-         return 0.0;
-
-      double stopProfit = 0.0;
-      if(!OrderCalcProfit(orderType,
-                          symbol,
-                          lots,
-                          entryPrice,
-                          stopPrice,
-                          stopProfit))
-         return 0.0;
-
-      return MathAbs(stopProfit);
+      return CalculatedOrderRiskMoney(symbol, orderType, entryPrice, stopPrice, lots);
    }
 
    double RiskMoneyForOrder(const ENUM_ORDER_TYPE orderType,
@@ -5887,6 +6088,17 @@ public:
       {
          reason = "equity drawdown limit";
          return true;
+      }
+
+      for(int i = PositionsTotal() - 1; i >= 0; --i)
+      {
+         ulong ticket = PositionGetTicket(i);
+         long magic = PositionGetInteger(POSITION_MAGIC);
+         if(ticket > 0 && GlobalVariableCheck(PostFillForcedCloseKey(ticket, magic)))
+         {
+            reason = "post-fill reconciliation forced close";
+            return true;
+         }
       }
 
       bool hasUnprotectedPosition = false;
@@ -18316,22 +18528,6 @@ private:
       return buy ? direction > 0 : direction < 0;
    }
 
-   void RegisterRiskForNewestPosition(const double riskDistance)
-   {
-      for(int i = PositionsTotal() - 1; i >= 0; --i)
-      {
-         ulong ticket = PositionGetTicket(i);
-         if(ticket == 0 || !PositionSelectByTicket(ticket))
-            continue;
-         if(PositionGetString(POSITION_SYMBOL) == _Symbol &&
-            PositionGetInteger(POSITION_MAGIC) == InpMOMagicNumber)
-         {
-            GlobalVariableSet(RiskKey(ticket), riskDistance);
-            return;
-         }
-      }
-   }
-
    bool OpenPosition(const bool buy, const double atr)
    {
       MqlTick tick;
@@ -18379,7 +18575,8 @@ private:
          ReportTradeFailure("entry", 0, "daily momentum plus fresh H1 breakout");
          return false;
       }
-      RegisterRiskForNewestPosition(stopDistance);
+      GlobalVariableSet(RiskKey(m_trade.LastFilledPositionTicket()),
+                        m_trade.LastFilledRiskDistance());
       double filledVolume = m_trade.ResultVolume() > 0.0 ? m_trade.ResultVolume() : lots;
       double filledPrice = m_trade.ResultPrice() > 0.0 ? m_trade.ResultPrice() : entryPrice;
       logger.Write("momentum_entry", m_trade.ResultDeal(), buy ? "buy" : "sell", filledVolume,
@@ -22060,37 +22257,6 @@ bool WeakRegimeEntryBlockActive(const SSignal &signal, string &reason)
    return true;
 }
 
-void RegisterInitialRiskForNewestPosition(const ENUM_TRADE_BIAS bias, const double riskDistance)
-{
-   if(riskDistance <= 0.0)
-      return;
-
-   long desiredType = (bias == BIAS_BUY) ? POSITION_TYPE_BUY : POSITION_TYPE_SELL;
-   datetime newestTime = 0;
-   ulong newestTicket = 0;
-
-   for(int i = PositionsTotal() - 1; i >= 0; i--)
-   {
-      ulong ticket = PositionGetTicket(i);
-      if(ticket == 0 || !PositionSelectByTicket(ticket))
-         continue;
-      if(PositionGetString(POSITION_SYMBOL) != _Symbol ||
-         PositionGetInteger(POSITION_MAGIC) != InpMagicNumber)
-         continue;
-      if(PositionGetInteger(POSITION_TYPE) != desiredType)
-         continue;
-
-      datetime positionTime = (datetime)PositionGetInteger(POSITION_TIME);
-      if(positionTime >= newestTime)
-      {
-         newestTime = positionTime;
-         newestTicket = ticket;
-      }
-   }
-
-   StoreInitialRisk(newestTicket, riskDistance);
-}
-
 bool OpenIsolatedBandVWAPReversionSignal(const SSignal &signal)
 {
    if(signal.bias == BIAS_NONE || !signal.isBandVWAPReversion)
@@ -22180,7 +22346,7 @@ bool OpenIsolatedBandVWAPReversionSignal(const SSignal &signal)
                                 _Symbol, sl, tp, tradeComment);
    if(ok)
    {
-      RegisterInitialRiskForNewestPosition(signal.bias, stopDistance);
+      StoreInitialRisk(trade.LastFilledPositionTicket(), trade.LastFilledRiskDistance());
       string biasText = (signal.bias == BIAS_BUY) ? "buy" : "sell";
       string reason = signal.reasons + "Isolated H1 execution;Trade RR " +
                       DoubleToString(tpDistance / stopDistance, 2) + ";";
@@ -22284,7 +22450,7 @@ bool OpenIsolatedDailyDonchianSignal(const SSignal &signal)
                                 _Symbol, sl, tp, tradeComment);
    if(ok)
    {
-      RegisterInitialRiskForNewestPosition(signal.bias, stopDistance);
+      StoreInitialRisk(trade.LastFilledPositionTicket(), trade.LastFilledRiskDistance());
       string biasText = (signal.bias == BIAS_BUY) ? "buy" : "sell";
       string reason = signal.reasons + "Isolated D1 execution;Trade RR " +
                       DoubleToString(tpDistance / stopDistance, 2) + ";";
@@ -22955,7 +23121,7 @@ bool OpenSignal(const SSignal &signal)
 
    if(ok)
    {
-      RegisterInitialRiskForNewestPosition(signal.bias, stopDistance);
+      StoreInitialRisk(trade.LastFilledPositionTicket(), trade.LastFilledRiskDistance());
       string entryReason = signal.reasons;
       if(signal.isRangeReversion)
          entryReason += "Range reversion trade RR " + DoubleToString(tpDistance / stopDistance, 2) + ";";

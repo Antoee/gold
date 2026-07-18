@@ -55,16 +55,18 @@ if(@($checks | Where-Object { !$_.Pass }).Count -gt 0) {
 $source = Get-Content -LiteralPath $sourcePath -Raw
 $profile = Read-Profile $profilePath
 $entry = Get-Section $source "bool ExecuteMarketEntry(CValidatedTrade &executor," "bool ExecutePositionClose(CTrade &executor,"
-$close = Get-Section $source "bool ExecutePositionClose(CTrade &executor," "bool TradePriceMatches("
+$closeMatch = [regex]::Match($source, 'bool ExecutePositionClose\(CTrade &executor, const ulong ticket\)\s*\{')
+$closeEnd = if($closeMatch.Success) { $source.IndexOf('bool TradePriceMatches(', $closeMatch.Index, [StringComparison]::Ordinal) } else { -1 }
+$close = if($closeMatch.Success -and $closeEnd -gt $closeMatch.Index) { $source.Substring($closeMatch.Index, $closeEnd - $closeMatch.Index) } else { '' }
 $modify = Get-Section $source "bool ExecutePositionModify(CTrade &executor," "bool ExecutePositionClosePartial(CTrade &executor,"
 $partial = Get-Section $source "bool ExecutePositionClosePartial(CTrade &executor," "bool ExecuteOrderDelete(CTrade &executor,"
 $delete = Get-Section $source "bool ExecuteOrderDelete(CTrade &executor," "bool IsResearchPortfolioMagic("
 
 Add-Check "entry wrapper checks request submission" ($entry.Contains('if(!submitted)')) "submitted gate"
 Add-Check "entry wrapper accepts only completed market execution" ($entry.Contains('TRADE_RETCODE_DONE') -and $entry.Contains('TRADE_RETCODE_DONE_PARTIAL') -and !$entry.Contains('TRADE_RETCODE_PLACED')) "done or partial"
-Add-Check "entry wrapper requires a deal ticket" ($entry.Contains('return executor.ResultDeal() > 0;')) "deal required"
+Add-Check "entry wrapper requires a deal ticket" ($entry.Contains('if(executor.ResultDeal() <= 0)')) "deal required"
 Add-Check "close wrapper checks broker retcode" ($close.Contains('TRADE_RETCODE_DONE') -and $close.Contains('TRADE_RETCODE_DONE_PARTIAL') -and $close.Contains('TRADE_RETCODE_POSITION_CLOSED')) "close retcodes"
-Add-Check "close wrapper verifies exposure is gone" ($close.Contains('return !PositionSelectByTicket(ticket);')) "position absent"
+Add-Check "close wrapper verifies exposure is gone" ($close.Contains('bool closed = !PositionSelectByTicket(ticket);') -and $close.Contains('return closed;')) "position absent"
 Add-Check "modify wrapper accepts done or exact no-change" ($modify.Contains('TRADE_RETCODE_DONE') -and $modify.Contains('TRADE_RETCODE_NO_CHANGES')) "modify retcodes"
 Add-Check "modify wrapper verifies resulting SL and TP" ($modify.Contains('PositionGetDouble(POSITION_SL)') -and $modify.Contains('PositionGetDouble(POSITION_TP)') -and $modify.Contains('TradePriceMatches')) "state verified"
 Add-Check "partial wrapper checks completed retcode" ($partial.Contains('TRADE_RETCODE_DONE') -and $partial.Contains('TRADE_RETCODE_DONE_PARTIAL')) "partial retcodes"
