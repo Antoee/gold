@@ -102,7 +102,7 @@ $finalOnTickEnd = $source.IndexOf("void OnTradeTransaction(", $finalOnTickIndex,
 $finalOnTick = if($finalOnTickIndex -ge 0 -and $finalOnTickEnd -gt $finalOnTickIndex) { $source.Substring($finalOnTickIndex, $finalOnTickEnd - $finalOnTickIndex) } else { '' }
 $finalOnTrade = if($finalOnTradeIndex -ge 0) { $source.Substring($finalOnTradeIndex) } else { '' }
 
-Add-Check "source version is 1.25" ($source.Contains('#property version   "1.25"')) "version"
+Add-Check "source version is 1.26" ($source.Contains('#property version   "1.26"')) "version"
 Add-Check "description advertises account-scoped position state" ($source.Contains('verified account-scoped')) "description"
 Add-Check "description advertises collision-safe event reconciliation" ($source.Contains('collision-safe and event-reconciled position state')) "description"
 Add-Check "base36 encoder uses a fixed uppercase alphabet" ($namespace.Contains('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')) "alphabet"

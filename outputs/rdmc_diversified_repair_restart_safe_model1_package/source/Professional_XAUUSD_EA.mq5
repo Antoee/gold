@@ -4,8 +4,8 @@
 //| No martingale, grid, averaging down, or recovery systems           |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.25"
-#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with verified account-scoped, collision-safe and event-reconciled position state plus ownership-checked execution; tester-only until independently validated."
+#property version   "1.26"
+#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with verified account-scoped, immutable-identity-required, collision-safe and event-reconciled position state plus ownership-checked execution; tester-only until independently validated."
 
 #include <Trade/Trade.mqh>
 
@@ -2402,6 +2402,12 @@ public:
          PositionGetInteger(POSITION_REASON) != POSITION_REASON_EXPERT)
       {
          reason = "post-fill ownership mismatch";
+         return false;
+      }
+      long positionIdentifier = PositionGetInteger(POSITION_IDENTIFIER);
+      if(positionIdentifier <= 0)
+      {
+         reason = "post-fill immutable position identifier unavailable";
          return false;
       }
 

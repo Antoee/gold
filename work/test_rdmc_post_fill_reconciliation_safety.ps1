@@ -28,6 +28,7 @@ function Read-Profile([string]$Path) {
 function Test-PostFillModel(
    [bool]$Found,
    [bool]$Owned,
+   [bool]$ImmutableIdentifierAvailable,
    [bool]$Protected,
    [bool]$TargetMatched,
    [bool]$VolumeMatched,
@@ -42,7 +43,7 @@ function Test-PostFillModel(
    [int]$AccountPositionCount,
    [int]$AccountPositionCap
 ) {
-   if(!$Found -or !$Owned -or !$Protected -or !$TargetMatched -or !$VolumeMatched) { return $false }
+   if(!$Found -or !$Owned -or !$ImmutableIdentifierAvailable -or !$Protected -or !$TargetMatched -or !$VolumeMatched) { return $false }
    if($PlannedRisk -le 0.0 -or $ActualRisk -le 0.0 -or $Equity -le 0.0) { return $false }
    if($ActualRisk -gt $PlannedRisk * (1.0 + [Math]::Max(0.0, $AllowancePercent) / 100.0) + 0.01) { return $false }
    if($IndividualCapPercent -gt 0.0 -and 100.0 * $ActualRisk / $Equity -gt $IndividualCapPercent + 0.000001) { return $false }
@@ -69,7 +70,7 @@ $closeMatch = [regex]::Match($source, 'bool ExecutePositionClose\(CTrade &execut
 $closeEnd = if($closeMatch.Success) { $source.IndexOf('bool TradePriceMatches(', $closeMatch.Index, [StringComparison]::Ordinal) } else { -1 }
 $close = if($closeMatch.Success -and $closeEnd -gt $closeMatch.Index) { $source.Substring($closeMatch.Index, $closeEnd - $closeMatch.Index) } else { '' }
 
-Add-Check "source version is 1.25" ($source.Contains('#property version   "1.25"')) "version"
+Add-Check "source version is 1.26" ($source.Contains('#property version   "1.26"')) "version"
 Add-Check "description advertises scoped ownership-checked execution" ($source.Contains('verified account-scoped') -and $source.Contains('ownership-checked execution')) "description"
 Add-Check "post-fill risk tolerance is configurable" ($source.Contains('input double InpMaxPostFillRiskIncreasePercent = 5.00;')) "input"
 Add-Check "cash-risk helper validates side and geometry" ($risk.Contains('ORDER_TYPE_BUY') -and $risk.Contains('ORDER_TYPE_SELL') -and $risk.Contains('entryPrice <= 0.0') -and $risk.Contains('stopPrice <= 0.0') -and $risk.Contains('lots <= 0.0')) "risk inputs"
@@ -88,6 +89,9 @@ Add-Check "unlinked fallback still requires magic" ($validatedTrade.Contains('po
 Add-Check "fallback requires exactly one position" ($validatedTrade.Contains('if(matches != 1 || !PositionSelectByTicket(matchedTicket))')) "unique match"
 Add-Check "selected position validates symbol and side" ($validatedTrade.Contains('SelectedPositionGeometryMatches') -and $validatedTrade.Contains('POSITION_SYMBOL') -and $validatedTrade.Contains('POSITION_TYPE')) "geometry"
 Add-Check "selected position validates magic and expert reason" ($validatedTrade.Contains('POSITION_MAGIC') -and $validatedTrade.Contains('POSITION_REASON_EXPERT') -and $validatedTrade.Contains('post-fill ownership mismatch')) "ownership"
+Add-Check "post-fill requires positive immutable position identity" ($validatedTrade.Contains('long positionIdentifier = PositionGetInteger(POSITION_IDENTIFIER);') -and $validatedTrade.Contains('if(positionIdentifier <= 0)') -and $validatedTrade.Contains('post-fill immutable position identifier unavailable')) "immutable identity"
+Add-Check "exact ticket remains captured for failed-identity emergency close" ($validatedTrade.IndexOf('m_lastFilledPositionTicket = ticket;', [StringComparison]::Ordinal) -lt $validatedTrade.IndexOf('if(positionIdentifier <= 0)', [StringComparison]::Ordinal)) "ticket before identity gate"
+Add-Check "immutable identity gate precedes price and risk acceptance" ($validatedTrade.IndexOf('if(positionIdentifier <= 0)', [StringComparison]::Ordinal) -lt $validatedTrade.IndexOf('double openPrice = PositionGetDouble(POSITION_PRICE_OPEN);', [StringComparison]::Ordinal)) "identity before risk"
 Add-Check "post-fill reads broker position state" (@('POSITION_PRICE_OPEN','POSITION_VOLUME','POSITION_SL','POSITION_TP').Where({ $validatedTrade.Contains($_) }).Count -eq 4) "position state"
 Add-Check "missing protective state fails closed" ($validatedTrade.Contains('post-fill missing price volume or protective stop')) "missing state"
 Add-Check "stop direction is verified" ($validatedTrade.Contains('post-fill invalid protective-stop direction')) "stop geometry"
@@ -121,7 +125,7 @@ Add-Check "three primary entries require exact reconciled risk persistence" ([re
 Add-Check "newest-position risk guessing is removed" (!$source.Contains('RegisterInitialRiskForNewestPosition') -and !$source.Contains('RegisterRiskForNewestPosition')) "exact identity only"
 Add-Check "all four entries still use shared wrapper" ([regex]::Matches($source, 'ExecuteMarketEntry\(').Count -eq 5) "definition plus four calls"
 
-$base = @{ Found=$true; Owned=$true; Protected=$true; TargetMatched=$true; VolumeMatched=$true; PlannedRisk=50.0; ActualRisk=50.0; AllowancePercent=5.0; Equity=10000.0; IndividualCapPercent=0.75; AccountRiskAvailable=$true; AccountRisk=50.0; AccountCapPercent=0.75; AccountPositionCount=1; AccountPositionCap=1 }
+$base = @{ Found=$true; Owned=$true; ImmutableIdentifierAvailable=$true; Protected=$true; TargetMatched=$true; VolumeMatched=$true; PlannedRisk=50.0; ActualRisk=50.0; AllowancePercent=5.0; Equity=10000.0; IndividualCapPercent=0.75; AccountRiskAvailable=$true; AccountRisk=50.0; AccountCapPercent=0.75; AccountPositionCount=1; AccountPositionCap=1 }
 $scenarios = @(
    @{ Name='exact fill'; Expected=$true; Values=@{} },
    @{ Name='five percent tolerated'; Expected=$true; Values=@{ActualRisk=52.5;AccountRisk=52.5} },
@@ -132,6 +136,7 @@ $scenarios = @(
    @{ Name='post-fill position cap exceeded'; Expected=$false; Values=@{AccountPositionCount=2} },
    @{ Name='position not found'; Expected=$false; Values=@{Found=$false} },
    @{ Name='ownership mismatch'; Expected=$false; Values=@{Owned=$false} },
+   @{ Name='immutable identifier unavailable'; Expected=$false; Values=@{ImmutableIdentifierAvailable=$false} },
    @{ Name='missing stop'; Expected=$false; Values=@{Protected=$false} },
    @{ Name='target mismatch'; Expected=$false; Values=@{TargetMatched=$false} },
    @{ Name='volume mismatch'; Expected=$false; Values=@{VolumeMatched=$false} },
