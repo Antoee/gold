@@ -10,8 +10,8 @@ $queuePath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL
 $manifestPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_MANIFEST.csv"
 $documentPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_PACKAGE.md"
 
-$expectedSourceHash = "0D59CD8DB67612E10E397766C56B55941A3D6178B84DCC9E611935A981F35FEA"
-$expectedProfileHash = "4ADF1741251591C50C5316503C3B489C95015456B75B4A5A9A940375259C241C"
+$expectedSourceHash = "21CC9D6242594E285BA8E8D1BA8158AA5A0E66C3E5A5985CC201A87D218E1FEF"
+$expectedProfileHash = "161C54EDB76FDF3468CB600E1E49788D794635E0D3573B359A59389199A3B73C"
 $expectedV1SourceHash = "4740338598E290360946FE414CC6F2FE0CF3B704006860514367DCB996A8D2B5"
 
 $checks = [System.Collections.Generic.List[object]]::new()
@@ -38,6 +38,9 @@ function Invoke-CapitalContractModel {
       [int]$ForeignTradeCount = 0,
       [int]$OpenPositionCount = 0,
       [int]$ForeignOpenPositionCount = 0,
+      [int]$ActiveOrderCount = 0,
+      [int]$ForeignActiveOrderCount = 0,
+      [int]$ResearchActiveOrderCount = 0,
       [bool]$StoredBalanceExists = $false,
       [double]$StoredBalance = 0.0,
       [bool]$StoredFundingExists = $false,
@@ -50,13 +53,14 @@ function Invoke-CapitalContractModel {
       if($Expected -le 0.0 -or [Math]::Abs($Balance - $Expected) -gt $tolerance) { return "starting-capital contract" }
       return "allowed"
    }
-   if($ForeignTradeCount -gt 0 -or $ForeignOpenPositionCount -gt 0) { return "dedicated-account contract" }
+   if($ForeignTradeCount -gt 0 -or $ForeignOpenPositionCount -gt 0 -or $ForeignActiveOrderCount -gt 0) { return "dedicated-account contract" }
+   if($ResearchActiveOrderCount -gt 0) { return "active research order" }
    if($StoredBalanceExists) {
       if([Math]::Abs($StoredBalance - $Expected) -gt 0.01) { return "stored starting-capital contract" }
    }
    else {
       if($Expected -le 0.0 -or [Math]::Abs($Balance - $Expected) -gt $tolerance) { return "starting-capital contract" }
-      if($TradeDealCount -gt 0 -or $OpenPositionCount -gt 0) { return "unused flat account contract" }
+      if($TradeDealCount -gt 0 -or $OpenPositionCount -gt 0 -or $ActiveOrderCount -gt 0) { return "unused flat account contract" }
    }
    if($StoredFundingExists) {
       if($StoredFundingCount -ne $FundingCount) { return "funding changed" }
@@ -125,7 +129,7 @@ Add-Check "funding mutation types are explicit" (@('DEAL_TYPE_BALANCE','DEAL_TYP
 Add-Check "broker costs are not classified as funding" (@('DEAL_TYPE_COMMISSION','DEAL_TYPE_CHARGE','DEAL_TYPE_INTEREST').Where({ $fundingSection.Contains($_) }).Count -eq 0) "commission/charge/interest excluded"
 
 $capitalSection = Get-Section $source "bool ResearchCapitalContractAllows()" "bool RealAccountSafetyLockAllows()"
-foreach($marker in @('AccountHistoryContractSnapshot','ForeignOpenPositionCount','GlobalVariableCheck(balanceKey)','FundingCountContractKey()','PeakEquityContractKey()','tradeDealCount > 0 || PositionsTotal() > 0','balanceContractExists','peak-equity persistence is missing')) {
+foreach($marker in @('AccountHistoryContractSnapshot','ForeignOpenPositionCount','ForeignActiveOrderCount','ResearchActiveOrderCount','GlobalVariableCheck(balanceKey)','FundingCountContractKey()','PeakEquityContractKey()','tradeDealCount > 0 || PositionsTotal() > 0 || OrdersTotal() > 0','balanceContractExists','peak-equity persistence is missing')) {
    Add-Check "capital contract marker: $marker" $capitalSection.Contains($marker) $marker
 }
 
@@ -161,6 +165,9 @@ $scenarios = @(
    @{ Name='funding change'; Expected='funding changed'; Args=@{ FundingCount=2; StoredBalanceExists=$true; StoredBalance=10000.0; StoredFundingExists=$true; StoredFundingCount=1; StoredPeakExists=$true; StoredPeak=10000.0 } },
    @{ Name='foreign closed trade'; Expected='dedicated-account contract'; Args=@{ ForeignTradeCount=1 } },
    @{ Name='foreign open position'; Expected='dedicated-account contract'; Args=@{ ForeignOpenPositionCount=1; OpenPositionCount=1 } },
+   @{ Name='foreign active order'; Expected='dedicated-account contract'; Args=@{ ForeignActiveOrderCount=1; ActiveOrderCount=1 } },
+   @{ Name='research active order'; Expected='active research order'; Args=@{ ResearchActiveOrderCount=1; ActiveOrderCount=1 } },
+   @{ Name='unresolved active order registration'; Expected='unused flat account contract'; Args=@{ ActiveOrderCount=1 } },
    @{ Name='missing funding persistence'; Expected='funding persistence missing'; Args=@{ StoredBalanceExists=$true; StoredBalance=10000.0; StoredPeakExists=$true; StoredPeak=10000.0 } },
    @{ Name='missing peak persistence'; Expected='peak persistence missing'; Args=@{ StoredBalanceExists=$true; StoredBalance=10000.0; StoredFundingExists=$true; StoredFundingCount=1 } },
    @{ Name='invalid stored peak'; Expected='stored peak invalid'; Args=@{ StoredBalanceExists=$true; StoredBalance=10000.0; StoredFundingExists=$true; StoredFundingCount=1; StoredPeakExists=$true; StoredPeak=9000.0 } },
@@ -204,13 +211,15 @@ Add-Check "locked package contains no MT5 reports" ($reports.Count -eq 0) "repor
 Add-Check "manifest remains static and unpromoted" ($manifest.Count -eq 1 -and $manifest[0].Status -eq 'STATIC_ONLY_LOCKED' -and $manifest[0].PromotionStatus -eq 'NOT_PROMOTED' -and $manifest[0].HistoricalBestChanged -eq 'NO') "rows=$($manifest.Count)"
 Add-Check "manifest freezes all-entry execution hardening" ($manifest[0].EntryPathSafetyStatus -eq 'PASS_74_CHECKS' -and $manifest[0].MomentumCostMarginGuard -eq 'ENABLED' -and $manifest[0].PortfolioCooldownAllLanes -eq 'ENABLED') "$($manifest[0].EntryPathSafetyStatus)"
 Add-Check "manifest freezes lightweight realtime protection" ($manifest[0].RealtimeProtectionStatus -eq 'PASS_31_CHECKS' -and $manifest[0].RealtimeEquityDrawdownClose -eq 'ENABLED' -and $manifest[0].RealtimeMissingStopClose -eq 'ENABLED' -and $manifest[0].NormalPositionManagement -eq 'NEW_BAR') "$($manifest[0].RealtimeProtectionStatus)"
-Add-Check "manifest freezes broker-result verification" ($manifest[0].TradeResultSafetyStatus -eq 'PASS_53_CHECKS' -and $manifest[0].BrokerRetcodeVerification -eq 'ENABLED' -and $manifest[0].PostRequestStateVerification -eq 'ENABLED' -and $manifest[0].SynchronousTradeRequests -eq 'ENABLED' -and $manifest[0].SymbolNativeOrderFilling -eq 'ENABLED') "$($manifest[0].TradeResultSafetyStatus)"
+Add-Check "manifest freezes broker-result verification" ($manifest[0].TradeResultSafetyStatus -eq 'PASS_60_CHECKS' -and $manifest[0].BrokerRetcodeVerification -eq 'ENABLED' -and $manifest[0].PostRequestStateVerification -eq 'ENABLED' -and $manifest[0].SynchronousTradeRequests -eq 'ENABLED' -and $manifest[0].SymbolNativeOrderFilling -eq 'ENABLED') "$($manifest[0].TradeResultSafetyStatus)"
+Add-Check "manifest freezes pending-order reconciliation" ($manifest[0].PendingOrderSafetyStatus -eq 'PASS_45_CHECKS' -and $manifest[0].ActiveOrderEntryBlock -eq 'ENABLED' -and $manifest[0].VerifiedResearchOrderCancel -eq 'ENABLED' -and $manifest[0].ForeignOrderOwnershipPreserved -eq 'ENABLED' -and $manifest[0].FlattenOrderFirst -eq 'ENABLED') "$($manifest[0].PendingOrderSafetyStatus)"
 
 $document = Get-Content -LiteralPath $documentPath -Raw
 Add-Check "package states restart repair boundary" ($document.Contains('supersedes the uncompiled v1 package') -and $document.Contains('does not establish a new best') -and $document.Contains('Static checks cannot prove compilation')) "boundary present"
 Add-Check "package states entry-hardening evidence boundary" ($document.Contains('All four order-opening sites') -and $document.Contains('earlier post-hoc collision score is not attributed')) "boundary present"
 Add-Check "package states realtime efficiency boundary" ($document.Contains('lightweight per-tick emergency path') -and $document.Contains('performs no trade-history scan') -and $document.Contains('intrabar emergency') -and $document.Contains('can change entries and exits')) "boundary present"
-Add-Check "package states broker-result evidence boundary" ($document.Contains('completed broker retcode') -and $document.Contains('resulting position state') -and $document.Contains('broker-result enforcement can change entries and exits')) "boundary present"
+Add-Check "package states broker-result evidence boundary" ($document.Contains('completed broker retcode') -and $document.Contains('resulting position state') -and $document.Contains('broker-result') -and $document.Contains('can change entries and exits')) "boundary present"
+Add-Check "package states pending-order evidence boundary" ($document.Contains('active account order blocks new exposure') -and $document.Contains('cancel research-owned orders') -and $document.Contains('Foreign orders are never canceled') -and $document.Contains('active-order reconciliation can change entries and exits')) "boundary present"
 Add-Check "registered forward candidate stays unchanged" ($document.Contains('does not') -and $manifest[0].ForwardCandidateChanged -eq 'NO') $manifest[0].ForwardCandidateChanged
 Add-Check "no account identifier published" ($document -notmatch '(?i)account.?id\s*[:=]\s*\d{5,}' -and $document -notmatch '(?i)login\s*[:=]\s*\d{5,}') "public markdown clean"
 Add-Check "no GitHub token published" ($document -notmatch 'github_pat_|gh[pousr]_[A-Za-z0-9]{20,}') "public markdown clean"

@@ -16,8 +16,8 @@ $launchLock = Join-Path $repo "work\MT5_LOCAL_LAUNCH_DISABLED.lock"
 $launchUnlock = Join-Path $repo "work\ALLOW_MT5_LOCAL_LAUNCH.unlock"
 
 $expectedV1SourceHash = "4740338598E290360946FE414CC6F2FE0CF3B704006860514367DCB996A8D2B5"
-$expectedSourceHash = "0D59CD8DB67612E10E397766C56B55941A3D6178B84DCC9E611935A981F35FEA"
-$expectedProfileHash = "4ADF1741251591C50C5316503C3B489C95015456B75B4A5A9A940375259C241C"
+$expectedSourceHash = "21CC9D6242594E285BA8E8D1BA8158AA5A0E66C3E5A5985CC201A87D218E1FEF"
+$expectedProfileHash = "161C54EDB76FDF3468CB600E1E49788D794635E0D3573B359A59389199A3B73C"
 
 foreach($required in @($source, $profile, $v1Source, $launchLock)) {
    if(!(Test-Path -LiteralPath $required -PathType Leaf)) {
@@ -120,11 +120,16 @@ $manifest = [pscustomobject]@{
    RealtimeEquityDrawdownClose = "ENABLED"
    RealtimeMissingStopClose = "ENABLED"
    NormalPositionManagement = "NEW_BAR"
-   TradeResultSafetyStatus = "PASS_53_CHECKS"
+   TradeResultSafetyStatus = "PASS_60_CHECKS"
    BrokerRetcodeVerification = "ENABLED"
    PostRequestStateVerification = "ENABLED"
    SynchronousTradeRequests = "ENABLED"
    SymbolNativeOrderFilling = "ENABLED"
+   PendingOrderSafetyStatus = "PASS_45_CHECKS"
+   ActiveOrderEntryBlock = "ENABLED"
+   VerifiedResearchOrderCancel = "ENABLED"
+   ForeignOrderOwnershipPreserved = "ENABLED"
+   FlattenOrderFirst = "ENABLED"
    CompileStatus = "NOT_RUN_LOCAL_LOCK_ACTIVE"
    BacktestStatus = "NOT_RUN_LOCAL_LOCK_ACTIVE"
    HistoricalBestChanged = "NO"
@@ -156,6 +161,9 @@ $packageLines = @(
    '- All four entries require a completed broker retcode and a nonzero deal ticket; a locally valid or merely placed request is not logged as an entry.',
    '- Full closes, partial closes, and SL/TP modifications verify both the broker retcode and resulting position state before success logs or state markers are written.',
    '- Both trade executors are explicitly synchronous and use the symbol-native filling policy; successful entry logs use broker-confirmed deal, volume, and price fields.',
+   '- Any active account order blocks new exposure, preventing a merely placed market request from being duplicated before it resolves.',
+   '- Emergency, period-risk, weekend, session-end, and manual-news flattening cancel research-owned orders with verified broker results before closing positions.',
+   '- Foreign orders are never canceled by the EA and instead fail the dedicated-account contract closed.',
    "",
    "## Frozen identity",
    "",
@@ -167,7 +175,7 @@ $packageLines = @(
    "",
    "## Hard boundary",
    "",
-   'The source is tester-only, real-account trading is disabled, and all 12 annual/YTD Model1 rows remain `LOCKED_LOCAL_LAUNCH_DISABLED`. The new cost, margin, hard-cooldown, intrabar emergency, and broker-result enforcement can change entries and exits, so the earlier post-hoc collision score is not attributed to this executable path. Static checks cannot prove compilation, profit, drawdown, or restart behavior inside MT5. Compilation, annual and continuous Model1, annual and continuous real-tick Model4, cost stress, Monte Carlo, broker variation, and valid forward evidence are still required.'
+   'The source is tester-only, real-account trading is disabled, and all 12 annual/YTD Model1 rows remain `LOCKED_LOCAL_LAUNCH_DISABLED`. The new cost, margin, hard-cooldown, intrabar emergency, broker-result, and active-order reconciliation can change entries and exits, so the earlier post-hoc collision score is not attributed to this executable path. Static checks cannot prove compilation, profit, drawdown, or restart behavior inside MT5. Compilation, annual and continuous Model1, annual and continuous real-tick Model4, cost stress, Monte Carlo, broker variation, and valid forward evidence are still required.'
 )
 [IO.File]::WriteAllLines($packagePath, $packageLines, [Text.Encoding]::ASCII)
 

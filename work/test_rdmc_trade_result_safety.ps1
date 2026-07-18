@@ -41,6 +41,10 @@ function Test-PartialResult([bool]$Submitted, [string]$Retcode, [bool]$PositionE
    return $Submitted -and $Retcode -in @('DONE', 'DONE_PARTIAL') -and (!$PositionExists -or $After -lt $Before)
 }
 
+function Test-DeleteResult([bool]$Submitted, [string]$Retcode, [bool]$OrderRemains) {
+   return $Submitted -and $Retcode -eq 'DONE' -and !$OrderRemains
+}
+
 Add-Check "restart-safe source exists" (Test-Path -LiteralPath $sourcePath -PathType Leaf) $sourcePath
 Add-Check "restart-safe profile exists" (Test-Path -LiteralPath $profilePath -PathType Leaf) $profilePath
 if(@($checks | Where-Object { !$_.Pass }).Count -gt 0) {
@@ -53,7 +57,8 @@ $profile = Read-Profile $profilePath
 $entry = Get-Section $source "bool ExecuteMarketEntry(CTrade &executor," "bool ExecutePositionClose(CTrade &executor,"
 $close = Get-Section $source "bool ExecutePositionClose(CTrade &executor," "bool TradePriceMatches("
 $modify = Get-Section $source "bool ExecutePositionModify(CTrade &executor," "bool ExecutePositionClosePartial(CTrade &executor,"
-$partial = Get-Section $source "bool ExecutePositionClosePartial(CTrade &executor," "bool IsResearchPortfolioMagic("
+$partial = Get-Section $source "bool ExecutePositionClosePartial(CTrade &executor," "bool ExecuteOrderDelete(CTrade &executor,"
+$delete = Get-Section $source "bool ExecuteOrderDelete(CTrade &executor," "bool IsResearchPortfolioMagic("
 
 Add-Check "entry wrapper checks request submission" ($entry.Contains('if(!submitted)')) "submitted gate"
 Add-Check "entry wrapper accepts only completed market execution" ($entry.Contains('TRADE_RETCODE_DONE') -and $entry.Contains('TRADE_RETCODE_DONE_PARTIAL') -and !$entry.Contains('TRADE_RETCODE_PLACED')) "done or partial"
@@ -64,13 +69,16 @@ Add-Check "modify wrapper accepts done or exact no-change" ($modify.Contains('TR
 Add-Check "modify wrapper verifies resulting SL and TP" ($modify.Contains('PositionGetDouble(POSITION_SL)') -and $modify.Contains('PositionGetDouble(POSITION_TP)') -and $modify.Contains('TradePriceMatches')) "state verified"
 Add-Check "partial wrapper checks completed retcode" ($partial.Contains('TRADE_RETCODE_DONE') -and $partial.Contains('TRADE_RETCODE_DONE_PARTIAL')) "partial retcodes"
 Add-Check "partial wrapper verifies volume reduction" ($partial.Contains('PositionGetDouble(POSITION_VOLUME) < previousVolume - tolerance')) "volume reduced"
+Add-Check "delete wrapper requires completed retcode" ($delete.Contains('executor.ResultRetcode() != TRADE_RETCODE_DONE')) "delete retcode"
+Add-Check "delete wrapper verifies order absence" ($delete.Contains('return !OrderSelect(ticket);')) "order absent"
 
-$rawTradeCalls = [regex]::Matches($source, '\b(?:trade|m_trade)\.(?:Buy|Sell|PositionClose|PositionClosePartial|PositionModify)\s*\(').Count
+$rawTradeCalls = [regex]::Matches($source, '\b(?:trade|m_trade)\.(?:Buy|Sell|PositionClose|PositionClosePartial|PositionModify|OrderDelete)\s*\(').Count
 Add-Check "no lane bypasses result wrappers" ($rawTradeCalls -eq 0) "raw_calls=$rawTradeCalls"
 Add-Check "Buy and Sell exist only in entry wrapper" ([regex]::Matches($source, '\.Buy\s*\(').Count -eq 1 -and [regex]::Matches($source, '\.Sell\s*\(').Count -eq 1) "one each"
 Add-Check "full close exists only in close wrapper" ([regex]::Matches($source, '\.PositionClose\s*\(').Count -eq 1) "one call"
 Add-Check "partial close exists only in partial wrapper" ([regex]::Matches($source, '\.PositionClosePartial\s*\(').Count -eq 1) "one call"
 Add-Check "position modify exists only in modify wrapper" ([regex]::Matches($source, '\.PositionModify\s*\(').Count -eq 1) "one call"
+Add-Check "order delete exists only in delete wrapper" ([regex]::Matches($source, '\.OrderDelete\s*\(').Count -eq 1) "one call"
 Add-Check "all four entries use the entry wrapper" ([regex]::Matches($source, 'ExecuteMarketEntry\(').Count -eq 5) "definition plus four calls"
 Add-Check "successful entry logs use deal tickets" ([regex]::Matches($source, 'logger\.Write\("entry", trade\.ResultDeal\(\)').Count -eq 3 -and $source.Contains('logger.Write("momentum_entry", m_trade.ResultDeal()')) "four deal logs"
 Add-Check "successful entry logs use broker-confirmed fills" ([regex]::Matches($source, 'ResultVolume\(\)').Count -ge 8 -and [regex]::Matches($source, 'ResultPrice\(\)').Count -ge 8) "volume and price fallbacks"
@@ -127,6 +135,17 @@ $partialScenarios = @(
 foreach($scenario in $partialScenarios) {
    $actual = Test-PartialResult $scenario.Submitted $scenario.Retcode $scenario.Exists $scenario.Before $scenario.After
    Add-Check "partial model: $($scenario.Name)" ($actual -eq $scenario.Expected) "actual=$actual"
+}
+
+$deleteScenarios = @(
+   @{ Name='done and absent'; Expected=$true; Submitted=$true; Retcode='DONE'; Remains=$false },
+   @{ Name='done but remains'; Expected=$false; Submitted=$true; Retcode='DONE'; Remains=$true },
+   @{ Name='rejected but absent'; Expected=$false; Submitted=$true; Retcode='REJECT'; Remains=$false },
+   @{ Name='local submission failure'; Expected=$false; Submitted=$false; Retcode='DONE'; Remains=$false }
+)
+foreach($scenario in $deleteScenarios) {
+   $actual = Test-DeleteResult $scenario.Submitted $scenario.Retcode $scenario.Remains
+   Add-Check "delete model: $($scenario.Name)" ($actual -eq $scenario.Expected) "actual=$actual"
 }
 
 foreach($contract in @{

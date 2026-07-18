@@ -4,8 +4,8 @@
 //| No martingale, grid, averaging down, or recovery systems           |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.12"
-#property description "Restart-safe, broker-verified XAUUSD research portfolio; tester-only until independently validated."
+#property version   "1.13"
+#property description "Restart-safe, broker-verified and order-reconciled XAUUSD research portfolio; tester-only until independently validated."
 
 #include <Trade/Trade.mqh>
 
@@ -2182,9 +2182,73 @@ bool ExecutePositionClosePartial(CTrade &executor,
    return PositionGetDouble(POSITION_VOLUME) < previousVolume - tolerance;
 }
 
+bool ExecuteOrderDelete(CTrade &executor, const ulong ticket)
+{
+   if(!executor.OrderDelete(ticket))
+      return false;
+   if(executor.ResultRetcode() != TRADE_RETCODE_DONE)
+      return false;
+   return !OrderSelect(ticket);
+}
+
 bool IsResearchPortfolioMagic(const long magic)
 {
    return magic == InpMagicNumber || (InpMOEnabled && magic == InpMOMagicNumber);
+}
+
+int ResearchActiveOrderCount()
+{
+   int count = 0;
+   for(int i = OrdersTotal() - 1; i >= 0; --i)
+   {
+      ulong ticket = OrderGetTicket(i);
+      if(ticket == 0)
+         continue;
+      if(OrderGetString(ORDER_SYMBOL) == _Symbol &&
+         IsResearchPortfolioMagic(OrderGetInteger(ORDER_MAGIC)))
+         count++;
+   }
+   return count;
+}
+
+int ForeignActiveOrderCount()
+{
+   int count = 0;
+   for(int i = OrdersTotal() - 1; i >= 0; --i)
+   {
+      ulong ticket = OrderGetTicket(i);
+      if(ticket == 0)
+         continue;
+      if(OrderGetString(ORDER_SYMBOL) != _Symbol ||
+         !IsResearchPortfolioMagic(OrderGetInteger(ORDER_MAGIC)))
+         count++;
+   }
+   return count;
+}
+
+bool CancelResearchOrders(const string reason)
+{
+   bool allCanceled = true;
+   for(int i = OrdersTotal() - 1; i >= 0; --i)
+   {
+      ulong ticket = OrderGetTicket(i);
+      if(ticket == 0)
+      {
+         allCanceled = false;
+         continue;
+      }
+      if(OrderGetString(ORDER_SYMBOL) != _Symbol ||
+         !IsResearchPortfolioMagic(OrderGetInteger(ORDER_MAGIC)))
+         continue;
+      if(!ExecuteOrderDelete(trade, ticket))
+      {
+         allCanceled = false;
+         if(InpLogLevel >= LOG_ERRORS)
+            Print("Order cancel failed for ", ticket, ": ", reason,
+                  " / ", TradeResultEvidence(trade));
+      }
+   }
+   return allCanceled && ResearchActiveOrderCount() == 0;
 }
 
 bool g_accountHistoryStateDirty = true;
@@ -2273,9 +2337,15 @@ bool RuntimeAccountHistoryContractAllows(string &reason)
       return true;
    }
 
-   if(InpUseDedicatedAccountContract && ForeignOpenPositionCount() > 0)
+   if(InpUseDedicatedAccountContract &&
+      (ForeignOpenPositionCount() > 0 || ForeignActiveOrderCount() > 0))
    {
-      reason = "dedicated-account open-position contract";
+      reason = "dedicated-account active-exposure contract";
+      return false;
+   }
+   if(ResearchActiveOrderCount() > 0)
+   {
+      reason = "active research order";
       return false;
    }
    if(!g_peakEquityPersistenceHealthy)
@@ -5647,6 +5717,12 @@ public:
 
    bool RealtimeProtectionLimitHit(string &reason)
    {
+      if(OrdersTotal() > 0)
+      {
+         reason = "active account order";
+         return true;
+      }
+
       if(InpMaxEquityDrawdownPercent > 0.0 &&
          CurrentEquityDrawdownPercent() >= InpMaxEquityDrawdownPercent)
       {
@@ -5734,6 +5810,12 @@ public:
    {
       if(InpUseAccountWideExposureGuard)
       {
+         if(OrdersTotal() > 0)
+         {
+            reason = "account-wide active order";
+            return false;
+         }
+
          bool hasAccountUnprotectedPosition = false;
          int accountPositionCount = 0;
          double accountOpenRiskPercent = AccountWideOpenRiskPercent(hasAccountUnprotectedPosition,
@@ -24043,9 +24125,15 @@ bool ResearchCapitalContractAllows()
       return false;
    }
    if(InpUseDedicatedAccountContract &&
-      (foreignTradeCount > 0 || ForeignOpenPositionCount() > 0))
+      (foreignTradeCount > 0 || ForeignOpenPositionCount() > 0 ||
+       ForeignActiveOrderCount() > 0))
    {
       Print("Account contract failed: the account contains foreign trading activity.");
+      return false;
+   }
+   if(ResearchActiveOrderCount() > 0)
+   {
+      Print("Account contract failed: an unresolved research order is active.");
       return false;
    }
 
@@ -24072,7 +24160,7 @@ bool ResearchCapitalContractAllows()
                   DoubleToString(balance, 2), ".");
             return false;
          }
-         if(tradeDealCount > 0 || PositionsTotal() > 0)
+         if(tradeDealCount > 0 || PositionsTotal() > 0 || OrdersTotal() > 0)
          {
             Print("Initial-balance registration failed: first registration requires a flat, unused account.");
             return false;
@@ -24258,6 +24346,7 @@ void OnTick()
       string realtimeRiskReason = "";
       if(riskManager.RealtimeProtectionLimitHit(realtimeRiskReason))
       {
+         CancelResearchOrders(realtimeRiskReason);
          positionManager.CloseAll(realtimeRiskReason);
          g_momentum.CloseAll(realtimeRiskReason);
          g_lastBlockReason = realtimeRiskReason;
@@ -24348,6 +24437,7 @@ void OnTick()
       string riskExitReason = "";
       if(riskManager.RiskLimitHit(riskExitReason))
       {
+         CancelResearchOrders(riskExitReason);
          positionManager.CloseAll(riskExitReason);
          g_momentum.CloseAll(riskExitReason);
          g_lastBlockReason = riskExitReason;
@@ -24359,6 +24449,7 @@ void OnTick()
 
    if(WeekendCloseWindowActive())
    {
+      CancelResearchOrders("weekend close");
       positionManager.CloseAll("weekend close");
       g_momentum.CloseAll("weekend close");
       g_lastBlockReason = "weekend close";
@@ -24369,6 +24460,7 @@ void OnTick()
 
    if(sessionFilter.CloseWindowActive())
    {
+      CancelResearchOrders("session end close");
       positionManager.CloseAll("session end close");
       g_lastBlockReason = "session end close";
       blockDiagnostics.Write(g_lastBlockReason, trendBias, signal);
@@ -24396,6 +24488,7 @@ void OnTick()
    {
       if(InpClosePositionsOnManualNews)
       {
+         CancelResearchOrders("manual news filter");
          positionManager.CloseAll("manual news filter");
          g_momentum.CloseAll("manual news filter");
       }
