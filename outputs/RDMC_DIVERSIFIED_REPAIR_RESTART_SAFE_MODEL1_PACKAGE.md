@@ -16,6 +16,7 @@ This package supersedes the uncompiled v1 package before its first MT5 run. It p
 - The momentum lane now uses the same trading-cost and margin guards as the other three lanes.
 - Isolated lanes may bypass adaptive strategy pauses, but the hard portfolio consecutive-loss and four-hour post-loss cooldown gates can no longer be bypassed.
 - A lightweight per-tick emergency path issues close requests for both magic families on the 5% lifetime equity-drawdown limit or a missing/invalid protective stop.
+- Independently of optional risk-close settings, every ready tick requires each owned position to retain a positive immutable identifier and a finite, positive initial-risk record under its exact account/magic/identifier key. Missing or corrupt state flattens both research lanes before management or entry.
 - The emergency path performs no trade-history scan, sleep, or retry loop; ordinary trailing, channel exits, and full period-risk calculations remain new-bar work.
 - All four entries require a completed broker retcode and a nonzero deal ticket; a locally valid or merely placed request is not logged as an entry.
 - Full closes, partial closes, and SL/TP modifications verify both the broker retcode and resulting position state before success logs or state markers are written.
@@ -60,12 +61,12 @@ This package supersedes the uncompiled v1 package before its first MT5 run. It p
 
 ## Frozen identity
 
-- Source SHA-256: `F0070D8568A653A417099EA20F5F590B86271F08744AD60511C8E5E5A799C0E9`
-- Profile SHA-256: `882A96BD743621A3D73817B5C9900923EFF140736282CA0E7C6488F25FF9708A`
+- Source SHA-256: `7DB8F233D4F1886B073FBCEBFB70E1261DD5AE43EF593935D598149F8F2E7F22`
+- Profile SHA-256: `624B8EF78D2EBC8B0FAAA9664193EE5C8235FB45B52A887D535B4CE6B00E8D02`
 - Predecessor source SHA-256: `4740338598E290360946FE414CC6F2FE0CF3B704006860514367DCB996A8D2B5`
 - Source/profile inputs: `589 / 589`
 - Queue: `outputs/RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_QUEUE.csv`
 
 ## Hard boundary
 
-The source is tester-only, real-account trading is disabled, and all 12 annual/YTD Model1 rows remain `LOCKED_LOCAL_LAUNCH_DISABLED`. The new cost, margin, hard-cooldown, intrabar emergency, broker-result, persistent-state, idempotency, immutable-fill-identity, exact-attached-protection, scoped-lifecycle, identifier-ticket alias, and event-driven orphan-reconciliation safeguards can change entries and exits. The active-order reconciliation can change entries and exits. Broker-volume reconciliation can change entries and exits. Post-fill risk reconciliation can change entries and exits. Tightening-only stop enforcement, ownership-checked close reconciliation, write-ahead one-shot actions, and position-state retirement can change exits too, so the earlier post-hoc collision score is not attributed to this executable path. Static checks cannot prove compilation, profit, drawdown, or restart behavior inside MT5. Compilation, annual and continuous Model1, annual and continuous real-tick Model4, cost stress, Monte Carlo, broker variation, and valid forward evidence are still required.
+The source is tester-only, real-account trading is disabled, and all 12 annual/YTD Model1 rows remain `LOCKED_LOCAL_LAUNCH_DISABLED`. The new cost, margin, hard-cooldown, intrabar emergency, broker-result, persistent-state, always-on live initial-risk validation, idempotency, immutable-fill-identity, exact-attached-protection, scoped-lifecycle, identifier-ticket alias, and event-driven orphan-reconciliation safeguards can change entries and exits. The active-order reconciliation can change entries and exits. Broker-volume reconciliation can change entries and exits. Post-fill risk reconciliation can change entries and exits. Tightening-only stop enforcement, ownership-checked close reconciliation, write-ahead one-shot actions, and position-state retirement can change exits too, so the earlier post-hoc collision score is not attributed to this executable path. Static checks cannot prove compilation, profit, drawdown, or restart behavior inside MT5. Compilation, annual and continuous Model1, annual and continuous real-tick Model4, cost stress, Monte Carlo, broker variation, and valid forward evidence are still required.

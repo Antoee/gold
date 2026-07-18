@@ -25,6 +25,19 @@ function Read-Profile([string]$Path) {
    return $values
 }
 
+function Test-CriticalPositionStateModel(
+   [bool]$Readable,
+   [bool]$ResearchOwned,
+   [bool]$IdentifierAvailable,
+   [bool]$StatePresent,
+   [double]$InitialRisk
+) {
+   if(!$Readable) { return $false }
+   if(!$ResearchOwned) { return $true }
+   if(!$IdentifierAvailable -or !$StatePresent) { return $false }
+   return ![double]::IsNaN($InitialRisk) -and ![double]::IsInfinity($InitialRisk) -and $InitialRisk -gt 0.0
+}
+
 Add-Check "restart-safe source exists" (Test-Path -LiteralPath $sourcePath -PathType Leaf) $sourcePath
 Add-Check "restart-safe profile exists" (Test-Path -LiteralPath $profilePath -PathType Leaf) $profilePath
 if(@($checks | Where-Object { !$_.Pass }).Count -gt 0) {
@@ -37,9 +50,18 @@ $profile = Read-Profile $profilePath
 $realtime = Get-Section $source "bool RealtimeProtectionLimitHit(string &reason)" "double NormalizeLots(const double lots)"
 $drawdown = Get-Section $source "double CurrentEquityDrawdownPercent()" "void RefreshConsecutiveLosses()"
 $positionRisk = Get-Section $source "double PositionRiskMoney(const ulong ticket, bool &unprotected)" "double OpenRiskPercent(bool &hasUnprotectedPosition)"
+$criticalState = Get-Section $source "bool CriticalResearchPositionStateAllows(string &reason)" "bool ResearchPositionIdentifierOpen(const ulong positionIdentifier, const long magic)"
 
 Add-Check "realtime guard checks lifetime equity drawdown" ($realtime.Contains('CurrentEquityDrawdownPercent() >= InpMaxEquityDrawdownPercent') -and $realtime.Contains('reason = "equity drawdown limit";')) "equity DD"
 Add-Check "realtime guard checks missing protective stops" ($realtime.Contains('OpenRiskPercent(hasUnprotectedPosition);') -and $realtime.Contains('hasUnprotectedPosition && InpBlockUnprotectedExposure')) "unprotected exposure"
+Add-Check "critical-state guard scans every open position" ($criticalState.Contains('for(int i = PositionsTotal() - 1; i >= 0; --i)')) "full position scan"
+Add-Check "critical-state guard fails on unreadable snapshots" ($criticalState.Contains('ticket == 0 || !PositionSelectByTicket(ticket)') -and $criticalState.Contains('critical position snapshot unavailable')) "snapshot"
+Add-Check "critical-state guard scopes expert positions on the chart symbol" ($criticalState.Contains('PositionGetString(POSITION_SYMBOL) != _Symbol') -and $criticalState.Contains('PositionGetInteger(POSITION_REASON) != POSITION_REASON_EXPERT')) "ownership scope"
+Add-Check "critical-state guard covers both research magics" ($criticalState.Contains('magic == InpMagicNumber') -and $criticalState.Contains('magic == InpMOMagicNumber') -and $criticalState.Contains('statePrefix = "IR";') -and $criticalState.Contains('statePrefix = "MR";')) "primary and momentum"
+Add-Check "critical-state guard requires immutable identity" ($criticalState.Contains('POSITION_IDENTIFIER') -and $criticalState.Contains('if(positionIdentifier <= 0)') -and $criticalState.Contains('critical position identity unavailable')) "identity"
+Add-Check "critical-state guard builds keys from exact identifiers" ($criticalState.Contains('PositionScopedStateKeyForIdentifier(statePrefix,') -and $criticalState.Contains('(ulong)positionIdentifier')) "identifier key"
+Add-Check "critical-state guard rejects missing initial risk" ($criticalState.Contains('if(!GlobalVariableCheck(key))') -and $criticalState.Contains('critical initial-risk state missing')) "missing state"
+Add-Check "critical-state guard rejects nonfinite or nonpositive risk" ($criticalState.Contains('!MathIsValidNumber(initialRisk) || initialRisk <= 0.0') -and $criticalState.Contains('critical initial-risk state invalid')) "invalid state"
 Add-Check "realtime guard has no history scan" ($realtime -notmatch 'HistorySelect|HistoryDealsTotal|PeriodProfit|RefreshConsecutiveLosses|ClosedProfit|EntriesSince') "lightweight path"
 Add-Check "realtime guard has no delay or retry loop" ($realtime -notmatch '\bSleep\s*\(|\bwhile\s*\(') "nonblocking path"
 Add-Check "drawdown check persists lifetime peak" ($drawdown.Contains('UpdatePeakEquity(equity);') -and $drawdown.Contains('if(!g_peakEquityPersistenceHealthy)') -and $drawdown.Contains('return DBL_MAX;')) "persistent peak"
@@ -57,6 +79,10 @@ $primaryCloseIndex = $onTick.IndexOf('positionManager.CloseAll(realtimeRiskReaso
 $momentumCloseIndex = $onTick.IndexOf('g_momentum.CloseAll(realtimeRiskReason);', [StringComparison]::Ordinal)
 $urgentReturnIndex = $onTick.IndexOf('return;', $momentumCloseIndex, [StringComparison]::Ordinal)
 $realtimeCallCount = @([regex]::Matches($onTick, 'RealtimeProtectionLimitHit\(')).Count
+$criticalStateIndex = $onTick.IndexOf('CriticalResearchPositionStateAllows(realtimeRiskReason)', [StringComparison]::Ordinal)
+$optionalRiskIndex = $onTick.IndexOf('if(!realtimeRiskHit && InpClosePositionsOnRiskLimit)', [StringComparison]::Ordinal)
+Add-Check "critical-state guard runs unconditionally on every ready tick" ($criticalStateIndex -ge 0 -and $optionalRiskIndex -gt $criticalStateIndex) "state=$criticalStateIndex optional=$optionalRiskIndex"
+Add-Check "optional risk switch cannot bypass critical-state flatten" ($onTick.Contains('bool realtimeRiskHit = !CriticalResearchPositionStateAllows(realtimeRiskReason);') -and $onTick.Contains('if(realtimeRiskHit)')) "unconditional integrity"
 Add-Check "realtime guard runs before new-bar calculation" ($realtimeIndex -ge 0 -and $newBarIndex -gt $realtimeIndex) "guard=$realtimeIndex newbar=$newBarIndex"
 Add-Check "realtime guard runs before momentum management or entry" ($realtimeIndex -ge 0 -and $momentumIndex -gt $realtimeIndex) "guard=$realtimeIndex momentum=$momentumIndex"
 Add-Check "realtime guard runs before ordinary new-bar early return" ($realtimeIndex -ge 0 -and $earlyReturnIndex -gt $realtimeIndex) "guard=$realtimeIndex return_gate=$earlyReturnIndex"
@@ -72,6 +98,23 @@ $momentumClose = Get-Section $momentumClass "void CloseAll(const string reason)"
 Add-Check "primary emergency close owns primary magic" ($primaryClose.Contains('PositionGetInteger(POSITION_MAGIC) != InpMagicNumber') -and $primaryClose.Contains('CloseAndLog(ticket,')) "primary close"
 Add-Check "primary emergency close logs broker rejection" ($positionManager.Contains('ReportTradeFailure("position close", ticket, reason)') -and $positionManager.Contains('TradeResultEvidence(trade)')) "primary failure visible"
 Add-Check "momentum emergency close owns momentum magic" ($momentumClose.Contains('PositionGetInteger(POSITION_MAGIC) != InpMOMagicNumber') -and $momentumClose.Contains('ClosePosition(ticket, reason)') -and $momentumClass.Contains('ExecutePositionClose(m_trade, ticket)')) "momentum close"
+
+$criticalStateScenarios = @(
+   @{ Name='valid primary state'; Readable=$true; ResearchOwned=$true; IdentifierAvailable=$true; StatePresent=$true; InitialRisk=12.5; Expected=$true },
+   @{ Name='valid momentum state'; Readable=$true; ResearchOwned=$true; IdentifierAvailable=$true; StatePresent=$true; InitialRisk=4.25; Expected=$true },
+   @{ Name='foreign position ignored'; Readable=$true; ResearchOwned=$false; IdentifierAvailable=$false; StatePresent=$false; InitialRisk=0.0; Expected=$true },
+   @{ Name='unreadable snapshot'; Readable=$false; ResearchOwned=$false; IdentifierAvailable=$false; StatePresent=$false; InitialRisk=0.0; Expected=$false },
+   @{ Name='missing immutable identifier'; Readable=$true; ResearchOwned=$true; IdentifierAvailable=$false; StatePresent=$true; InitialRisk=12.5; Expected=$false },
+   @{ Name='missing initial-risk key'; Readable=$true; ResearchOwned=$true; IdentifierAvailable=$true; StatePresent=$false; InitialRisk=12.5; Expected=$false },
+   @{ Name='zero initial risk'; Readable=$true; ResearchOwned=$true; IdentifierAvailable=$true; StatePresent=$true; InitialRisk=0.0; Expected=$false },
+   @{ Name='negative initial risk'; Readable=$true; ResearchOwned=$true; IdentifierAvailable=$true; StatePresent=$true; InitialRisk=-1.0; Expected=$false },
+   @{ Name='NaN initial risk'; Readable=$true; ResearchOwned=$true; IdentifierAvailable=$true; StatePresent=$true; InitialRisk=[double]::NaN; Expected=$false },
+   @{ Name='infinite initial risk'; Readable=$true; ResearchOwned=$true; IdentifierAvailable=$true; StatePresent=$true; InitialRisk=[double]::PositiveInfinity; Expected=$false }
+)
+foreach($scenario in $criticalStateScenarios) {
+   $actual = Test-CriticalPositionStateModel -Readable $scenario.Readable -ResearchOwned $scenario.ResearchOwned -IdentifierAvailable $scenario.IdentifierAvailable -StatePresent $scenario.StatePresent -InitialRisk $scenario.InitialRisk
+   Add-Check "critical-state model: $($scenario.Name)" ($actual -eq $scenario.Expected) "actual=$actual"
+}
 
 foreach($contract in @{
    InpTradeOnlyNewBar = 'true'

@@ -86,7 +86,7 @@ $closeEnd = if($closeMatch.Success) { $source.IndexOf('bool TradePriceMatches(',
 $close = if($closeMatch.Success -and $closeEnd -gt $closeMatch.Index) { $source.Substring($closeMatch.Index, $closeEnd - $closeMatch.Index) } else { '' }
 $partial = Get-Section $source "bool ExecutePositionClosePartial(CTrade &executor," "bool ExecuteOrderDelete(CTrade &executor,"
 
-Add-Check "source version is 1.27" ($source.Contains('#property version   "1.27"')) "version"
+Add-Check "source version is 1.28" ($source.Contains('#property version   "1.28"')) "version"
 Add-Check "description advertises ownership-checked execution" ($source.Contains('ownership-checked execution')) "description"
 Add-Check "one raw full-close send site remains" ([regex]::Matches($source, '\.PositionClose\(').Count -eq 1) "raw full close=1"
 Add-Check "one raw partial-close send site remains" ([regex]::Matches($source, '\.PositionClosePartial\(').Count -eq 1) "raw partial close=1"

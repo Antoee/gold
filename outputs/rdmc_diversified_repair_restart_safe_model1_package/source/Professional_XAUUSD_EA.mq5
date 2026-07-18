@@ -4,8 +4,8 @@
 //| No martingale, grid, averaging down, or recovery systems           |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.27"
-#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with exact attached protection, verified account-scoped immutable identity, collision-safe event reconciliation and ownership-checked execution; tester-only until independently validated."
+#property version   "1.28"
+#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with exact attached protection, verified account-scoped immutable identity and continuously checked live risk state, collision-safe event reconciliation and ownership-checked execution; tester-only until independently validated."
 
 #include <Trade/Trade.mqh>
 
@@ -3125,6 +3125,57 @@ string PostPartialRunnerTPKey(const ulong ticket)
 string MomentumRiskKey(const ulong ticket)
 {
    return PositionScopedStateKeyForTicket("MR", InpMOMagicNumber, ticket);
+}
+
+bool CriticalResearchPositionStateAllows(string &reason)
+{
+   reason = "";
+   for(int i = PositionsTotal() - 1; i >= 0; --i)
+   {
+      ulong ticket = PositionGetTicket(i);
+      if(ticket == 0 || !PositionSelectByTicket(ticket))
+      {
+         reason = "critical position snapshot unavailable";
+         return false;
+      }
+
+      if(PositionGetString(POSITION_SYMBOL) != _Symbol ||
+         PositionGetInteger(POSITION_REASON) != POSITION_REASON_EXPERT)
+         continue;
+
+      long magic = PositionGetInteger(POSITION_MAGIC);
+      string statePrefix = "";
+      if(magic == InpMagicNumber)
+         statePrefix = "IR";
+      else if(magic == InpMOMagicNumber)
+         statePrefix = "MR";
+      else
+         continue;
+
+      long positionIdentifier = PositionGetInteger(POSITION_IDENTIFIER);
+      if(positionIdentifier <= 0)
+      {
+         reason = "critical position identity unavailable";
+         return false;
+      }
+
+      string key = PositionScopedStateKeyForIdentifier(statePrefix,
+                                                       magic,
+                                                       (ulong)positionIdentifier);
+      if(!GlobalVariableCheck(key))
+      {
+         reason = "critical initial-risk state missing";
+         return false;
+      }
+
+      double initialRisk = GlobalVariableGet(key);
+      if(!MathIsValidNumber(initialRisk) || initialRisk <= 0.0)
+      {
+         reason = "critical initial-risk state invalid";
+         return false;
+      }
+   }
+   return true;
 }
 
 bool ResearchPositionIdentifierOpen(const ulong positionIdentifier, const long magic)
@@ -25175,18 +25226,18 @@ void OnTick()
       DrawDashboard();
       return;
    }
-   if(InpClosePositionsOnRiskLimit)
+   string realtimeRiskReason = "";
+   bool realtimeRiskHit = !CriticalResearchPositionStateAllows(realtimeRiskReason);
+   if(!realtimeRiskHit && InpClosePositionsOnRiskLimit)
+      realtimeRiskHit = riskManager.RealtimeProtectionLimitHit(realtimeRiskReason);
+   if(realtimeRiskHit)
    {
-      string realtimeRiskReason = "";
-      if(riskManager.RealtimeProtectionLimitHit(realtimeRiskReason))
-      {
-         CancelResearchOrders(realtimeRiskReason);
-         positionManager.CloseAll(realtimeRiskReason);
-         g_momentum.CloseAll(realtimeRiskReason);
-         g_lastBlockReason = realtimeRiskReason;
-         DrawDashboard();
-         return;
-      }
+      CancelResearchOrders(realtimeRiskReason);
+      positionManager.CloseAll(realtimeRiskReason);
+      g_momentum.CloseAll(realtimeRiskReason);
+      g_lastBlockReason = realtimeRiskReason;
+      DrawDashboard();
+      return;
    }
    bool newBar = IsNewBar();
    g_momentum.OnTick();
