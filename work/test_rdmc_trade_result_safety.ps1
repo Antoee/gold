@@ -38,7 +38,7 @@ function Test-ModifyResult([bool]$Submitted, [string]$Retcode, [bool]$PositionEx
 }
 
 function Test-PartialResult([bool]$Submitted, [string]$Retcode, [bool]$PositionExists, [double]$Before, [double]$After) {
-   return $Submitted -and $Retcode -in @('DONE', 'DONE_PARTIAL') -and (!$PositionExists -or $After -lt $Before)
+   return $Submitted -and $Retcode -in @('DONE', 'DONE_PARTIAL') -and $PositionExists -and $After -lt $Before
 }
 
 function Test-DeleteResult([bool]$Submitted, [string]$Retcode, [bool]$OrderRemains) {
@@ -70,7 +70,7 @@ Add-Check "close wrapper verifies exposure is gone" ($close.Contains('bool close
 Add-Check "modify wrapper accepts done or exact no-change" ($modify.Contains('TRADE_RETCODE_DONE') -and $modify.Contains('TRADE_RETCODE_NO_CHANGES')) "modify retcodes"
 Add-Check "modify wrapper verifies resulting SL and TP" ($modify.Contains('PositionGetDouble(POSITION_SL)') -and $modify.Contains('PositionGetDouble(POSITION_TP)') -and $modify.Contains('TradePriceMatches')) "state verified"
 Add-Check "partial wrapper checks completed retcode" ($partial.Contains('TRADE_RETCODE_DONE') -and $partial.Contains('TRADE_RETCODE_DONE_PARTIAL')) "partial retcodes"
-Add-Check "partial wrapper verifies volume reduction" ($partial.Contains('PositionGetDouble(POSITION_VOLUME) < previousVolume - tolerance')) "volume reduced"
+Add-Check "partial wrapper requires the owned position and verifies volume reduction" ($partial.Contains('SelectOwnedExpertPosition(executor, ticket, resultingSymbol)') -and $partial.Contains('resultingVolume < previousVolume - tolerance')) "position remains and volume reduced"
 Add-Check "delete wrapper requires completed retcode" ($delete.Contains('executor.ResultRetcode() != TRADE_RETCODE_DONE')) "delete retcode"
 Add-Check "delete wrapper verifies order absence" ($delete.Contains('return !OrderSelect(ticket);')) "order absent"
 
@@ -130,7 +130,7 @@ foreach($scenario in $modifyScenarios) {
 $partialScenarios = @(
    @{ Name='done and reduced'; Expected=$true; Submitted=$true; Retcode='DONE'; Exists=$true; Before=0.10; After=0.05 },
    @{ Name='partial and reduced'; Expected=$true; Submitted=$true; Retcode='DONE_PARTIAL'; Exists=$true; Before=0.10; After=0.07 },
-   @{ Name='position fully gone'; Expected=$true; Submitted=$true; Retcode='DONE'; Exists=$false; Before=0.10; After=0.00 },
+   @{ Name='position fully gone'; Expected=$false; Submitted=$true; Retcode='DONE'; Exists=$false; Before=0.10; After=0.00 },
    @{ Name='unchanged volume'; Expected=$false; Submitted=$true; Retcode='DONE'; Exists=$true; Before=0.10; After=0.10 },
    @{ Name='rejected'; Expected=$false; Submitted=$true; Retcode='REJECT'; Exists=$true; Before=0.10; After=0.10 }
 )

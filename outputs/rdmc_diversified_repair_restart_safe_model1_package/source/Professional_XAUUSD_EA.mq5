@@ -4,8 +4,8 @@
 //| No martingale, grid, averaging down, or recovery systems           |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.20"
-#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with reconciled entries and tightening-only protective stops; tester-only until independently validated."
+#property version   "1.21"
+#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with reconciled entries, stops and ownership-checked closes; tester-only until independently validated."
 
 #include <Trade/Trade.mqh>
 
@@ -2483,6 +2483,19 @@ string TradeResultEvidence(CTrade &executor)
           ", comment=" + executor.ResultComment();
 }
 
+bool SelectOwnedExpertPosition(CTrade &executor,
+                               const ulong ticket,
+                               string &symbol)
+{
+   symbol = "";
+   if(ticket == 0 || !PositionSelectByTicket(ticket))
+      return false;
+   symbol = PositionGetString(POSITION_SYMBOL);
+   return StringLen(symbol) > 0 &&
+          PositionGetInteger(POSITION_MAGIC) == (long)executor.RequestMagic() &&
+          PositionGetInteger(POSITION_REASON) == POSITION_REASON_EXPERT;
+}
+
 bool ExecutePositionClose(CTrade &executor, const ulong ticket);
 
 bool ExecuteMarketEntry(CValidatedTrade &executor,
@@ -2525,6 +2538,11 @@ bool ExecuteMarketEntry(CValidatedTrade &executor,
 
 bool ExecutePositionClose(CTrade &executor, const ulong ticket)
 {
+   string symbol = "";
+   if(!SelectOwnedExpertPosition(executor, ticket, symbol) ||
+      StringLen(symbol) <= 0)
+      return false;
+
    long magic = (long)executor.RequestMagic();
    if(!executor.PositionClose(ticket))
       return false;
@@ -2561,15 +2579,13 @@ bool ExecutePositionModify(CTrade &executor,
                            const double sl,
                            const double tp)
 {
-   if(ticket == 0 || !PositionSelectByTicket(ticket))
+   string symbol = "";
+   if(!SelectOwnedExpertPosition(executor, ticket, symbol))
       return false;
 
-   string symbol = PositionGetString(POSITION_SYMBOL);
    long positionType = PositionGetInteger(POSITION_TYPE);
    double currentSL = PositionGetDouble(POSITION_SL);
-   if(StringLen(symbol) <= 0 || currentSL <= 0.0 || sl <= 0.0 ||
-      PositionGetInteger(POSITION_MAGIC) != (long)executor.RequestMagic() ||
-      PositionGetInteger(POSITION_REASON) != POSITION_REASON_EXPERT)
+   if(currentSL <= 0.0 || sl <= 0.0)
       return false;
 
    double point = SymbolInfoDouble(symbol, SYMBOL_POINT);
@@ -2588,7 +2604,9 @@ bool ExecutePositionModify(CTrade &executor,
    uint retcode = executor.ResultRetcode();
    if(retcode != TRADE_RETCODE_DONE && retcode != TRADE_RETCODE_NO_CHANGES)
       return false;
-   if(!PositionSelectByTicket(ticket))
+   string resultingSymbol = "";
+   if(!SelectOwnedExpertPosition(executor, ticket, resultingSymbol) ||
+      resultingSymbol != symbol)
       return false;
    return TradePriceMatches(symbol, PositionGetDouble(POSITION_SL), sl) &&
           TradePriceMatches(symbol, PositionGetDouble(POSITION_TP), tp);
@@ -2599,18 +2617,41 @@ bool ExecutePositionClosePartial(CTrade &executor,
                                  const double closeVolume,
                                  const double previousVolume)
 {
+   string symbol = "";
+   if(!SelectOwnedExpertPosition(executor, ticket, symbol))
+      return false;
+
+   double currentVolume = PositionGetDouble(POSITION_VOLUME);
+   double volumeStep = SymbolInfoDouble(symbol, SYMBOL_VOLUME_STEP);
+   double minLot = SymbolInfoDouble(symbol, SYMBOL_VOLUME_MIN);
+   if(currentVolume <= 0.0 || previousVolume <= 0.0 || closeVolume <= 0.0 ||
+      volumeStep <= 0.0 || minLot <= 0.0)
+      return false;
+
+   double tolerance = MathMax(volumeStep * 0.5, 0.00000001);
+   double alignmentTolerance = MathMax(volumeStep * 0.000001, 0.00000001);
+   double normalizedClose = NormalizeVolumeDown(closeVolume, volumeStep);
+   double expectedVolume = NormalizeVolumeDown(previousVolume - closeVolume, volumeStep);
+   if(MathAbs(currentVolume - previousVolume) > tolerance ||
+      MathAbs(normalizedClose - closeVolume) > alignmentTolerance ||
+      normalizedClose < minLot - alignmentTolerance ||
+      closeVolume >= currentVolume - tolerance ||
+      expectedVolume < minLot - alignmentTolerance)
+      return false;
+
    if(!executor.PositionClosePartial(ticket, closeVolume))
       return false;
 
    uint retcode = executor.ResultRetcode();
    if(retcode != TRADE_RETCODE_DONE && retcode != TRADE_RETCODE_DONE_PARTIAL)
       return false;
-   if(!PositionSelectByTicket(ticket))
-      return true;
-
-   double volumeStep = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
-   double tolerance = MathMax(volumeStep * 0.5, 0.00000001);
-   return PositionGetDouble(POSITION_VOLUME) < previousVolume - tolerance;
+   string resultingSymbol = "";
+   if(!SelectOwnedExpertPosition(executor, ticket, resultingSymbol) ||
+      resultingSymbol != symbol)
+      return false;
+   double resultingVolume = PositionGetDouble(POSITION_VOLUME);
+   return resultingVolume < previousVolume - tolerance &&
+          MathAbs(resultingVolume - expectedVolume) <= tolerance;
 }
 
 bool ExecuteOrderDelete(CTrade &executor, const ulong ticket)

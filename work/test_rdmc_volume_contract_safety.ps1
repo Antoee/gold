@@ -60,7 +60,7 @@ $riskNormalizeCalls = [regex]::Matches($riskLots, 'NormalizeVolumeDown\(').Count
 $partialNormalizeCalls = [regex]::Matches($positionManage, 'closeLots = NormalizeVolumeDown\(closeLots, step\);').Count
 $allNormalizeCalls = [regex]::Matches($source, 'NormalizeVolumeDown\(').Count
 
-Add-Check "source version is 1.20" ($source.Contains('#property version   "1.20"')) "version"
+Add-Check "source version is 1.21" ($source.Contains('#property version   "1.21"')) "version"
 Add-Check "step precision supports zero through eight decimals" ($digits.Contains('for(int digits = 0; digits <= 8; ++digits)')) "0..8"
 Add-Check "step precision uses tolerance rather than exact floating equality" ($digits.Contains('MathAbs(NormalizeDouble(step, digits) - step) <= tolerance')) "tolerant precision"
 Add-Check "normalizer rejects non-positive values" ($normalize.Contains('volume <= 0.0 || step <= 0.0')) "invalid volume blocked"
@@ -74,7 +74,7 @@ Add-Check "margin cap normalizes best and every minimum-lot result" ($marginLots
 Add-Check "margin cap has no fixed two-decimal lot return" ($marginLots -notmatch 'NormalizeDouble\([^\r\n]+, 2\)') "no fixed precision"
 Add-Check "basket partial close uses shared step normalizer" ($basketPartial.Contains('closeLots = NormalizeVolumeDown(closeLots, step);')) "basket partial"
 Add-Check "all three standard partial paths use shared normalizer" ($partialNormalizeCalls -eq 3) "calls=$partialNormalizeCalls"
-Add-Check "all source volume normalization routes are centralized" ($allNormalizeCalls -eq 12) "calls=$allNormalizeCalls"
+Add-Check "all source volume normalization routes are centralized" ($allNormalizeCalls -eq 14) "calls=$allNormalizeCalls"
 Add-Check "no lot path retains hardcoded two-decimal normalization" ($source -notmatch 'NormalizeDouble\((?:normalized|cappedLots|best|minLot|closeLots), 2\)') "fixed volume precision absent"
 
 $scenarios = @(

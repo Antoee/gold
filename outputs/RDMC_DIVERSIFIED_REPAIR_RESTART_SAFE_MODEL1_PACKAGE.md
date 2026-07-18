@@ -40,15 +40,18 @@ This package supersedes the uncompiled v1 package before its first MT5 run. It p
 - One shared wrapper owns every raw `PositionModify` request. It selects the exact ticket first and verifies executor magic plus expert ownership before sending.
 - Existing and requested protective stops must both be present. Buy stops cannot move lower and sell stops cannot move higher beyond symbol-native half-tick tolerance; unavailable symbol geometry, stop removal, and unknown position types fail closed.
 - TP-only changes remain allowed when the stop is preserved. Completed modification retcodes and the final broker-attached SL/TP state are still verified before success.
+- One shared ownership selector gates every raw full-close, partial-close, and modification request by exact ticket, executor magic, expert reason, and symbol identity.
+- A full close succeeds only after an accepted broker retcode and confirmed ticket disappearance. A partial close must leave the same owned position open at the exact requested broker-step-normalized remainder.
+- Partial closes reject stale volume snapshots, off-step or below-minimum requests, full-close-sized requests, below-minimum remainders, unavailable symbol geometry, and unexpected position disappearance.
 
 ## Frozen identity
 
-- Source SHA-256: `9CB91A770BDBC8E680E3251B4EB3698A87AB6EA0E1235E5CA10184AB6C5B606D`
-- Profile SHA-256: `2CAC9DA462C775BC57CA4046088EA467A4D926B9DB87728DABB6C7B865E888FC`
+- Source SHA-256: `9B5D41B4B55B8FFB69A06ECA4F435F13FBB0D043EDDCC6B24339B25298783785`
+- Profile SHA-256: `89D2EEDC11F8C2C08C37D115D059EA5D61B378CF3397B0B66930E77DD2E4FECD`
 - Predecessor source SHA-256: `4740338598E290360946FE414CC6F2FE0CF3B704006860514367DCB996A8D2B5`
 - Source/profile inputs: `589 / 589`
 - Queue: `outputs/RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_QUEUE.csv`
 
 ## Hard boundary
 
-The source is tester-only, real-account trading is disabled, and all 12 annual/YTD Model1 rows remain `LOCKED_LOCAL_LAUNCH_DISABLED`. The new cost, margin, hard-cooldown, intrabar emergency, and broker-result safeguards can change entries and exits. The active-order reconciliation can change entries and exits. Broker-volume reconciliation can change entries and exits. Post-fill risk reconciliation can change entries and exits. Tightening-only stop enforcement can change exits too, so the earlier post-hoc collision score is not attributed to this executable path. Static checks cannot prove compilation, profit, drawdown, or restart behavior inside MT5. Compilation, annual and continuous Model1, annual and continuous real-tick Model4, cost stress, Monte Carlo, broker variation, and valid forward evidence are still required.
+The source is tester-only, real-account trading is disabled, and all 12 annual/YTD Model1 rows remain `LOCKED_LOCAL_LAUNCH_DISABLED`. The new cost, margin, hard-cooldown, intrabar emergency, and broker-result safeguards can change entries and exits. The active-order reconciliation can change entries and exits. Broker-volume reconciliation can change entries and exits. Post-fill risk reconciliation can change entries and exits. Tightening-only stop enforcement and ownership-checked close reconciliation can change exits too, so the earlier post-hoc collision score is not attributed to this executable path. Static checks cannot prove compilation, profit, drawdown, or restart behavior inside MT5. Compilation, annual and continuous Model1, annual and continuous real-tick Model4, cost stress, Monte Carlo, broker variation, and valid forward evidence are still required.

@@ -10,8 +10,8 @@ $queuePath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL
 $manifestPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_MANIFEST.csv"
 $documentPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_PACKAGE.md"
 
-$expectedSourceHash = "9CB91A770BDBC8E680E3251B4EB3698A87AB6EA0E1235E5CA10184AB6C5B606D"
-$expectedProfileHash = "2CAC9DA462C775BC57CA4046088EA467A4D926B9DB87728DABB6C7B865E888FC"
+$expectedSourceHash = "9B5D41B4B55B8FFB69A06ECA4F435F13FBB0D043EDDCC6B24339B25298783785"
+$expectedProfileHash = "89D2EEDC11F8C2C08C37D115D059EA5D61B378CF3397B0B66930E77DD2E4FECD"
 $expectedV1SourceHash = "4740338598E290360946FE414CC6F2FE0CF3B704006860514367DCB996A8D2B5"
 
 $checks = [System.Collections.Generic.List[object]]::new()
@@ -222,6 +222,7 @@ Add-Check "manifest preserves protective exits across entry permission loss" ($m
 Add-Check "manifest freezes exact-request broker preflight" ($manifest[0].OrderPreflightSafetyStatus -eq 'PASS_55_CHECKS' -and $manifest[0].ExactBrokerOrderCheck -eq 'ENABLED' -and $manifest[0].PreflightFailureBlocksSend -eq 'ENABLED' -and $manifest[0].PreflightBrokerCommentEvidence -eq 'ENABLED') "$($manifest[0].OrderPreflightSafetyStatus)"
 Add-Check "manifest freezes post-fill reconciliation" ($manifest[0].PostFillReconciliationStatus -eq 'PASS_77_CHECKS' -and $manifest[0].ResultLinkedPositionIdentity -eq 'ENABLED' -and $manifest[0].AttachedProtectionVerification -eq 'ENABLED' -and $manifest[0].ActualCashRiskReconciliation -eq 'ENABLED' -and $manifest[0].AggregateAccountRiskReconciliation -eq 'ENABLED' -and $manifest[0].IncompleteAccountRiskFailsClosed -eq 'ENABLED' -and $manifest[0].PostFillPositionCountReconciliation -eq 'ENABLED' -and $manifest[0].FailedReconciliationForcedClose -eq 'ENABLED' -and $manifest[0].FailedCloseRealtimeRetry -eq 'ENABLED') "$($manifest[0].PostFillReconciliationStatus)"
 Add-Check "manifest freezes tightening-only stop modification" ($manifest[0].StopModificationSafetyStatus -eq 'PASS_50_CHECKS' -and $manifest[0].ModifyOwnershipVerification -eq 'ENABLED' -and $manifest[0].TighteningOnlyStopModification -eq 'ENABLED' -and $manifest[0].StopRemovalBlocked -eq 'ENABLED' -and $manifest[0].SymbolNativeModifyTolerance -eq 'ENABLED') "$($manifest[0].StopModificationSafetyStatus)"
+Add-Check "manifest freezes ownership-checked closes" ($manifest[0].CloseOwnershipSafetyStatus -eq 'PASS_57_CHECKS' -and $manifest[0].FullCloseOwnershipVerification -eq 'ENABLED' -and $manifest[0].PartialCloseOwnershipVerification -eq 'ENABLED' -and $manifest[0].StrictPartialVolumeContract -eq 'ENABLED' -and $manifest[0].PartialCloseDisappearanceRejected -eq 'ENABLED' -and $manifest[0].ExactPartialRemainderVerification -eq 'ENABLED') "$($manifest[0].CloseOwnershipSafetyStatus)"
 
 $document = Get-Content -LiteralPath $documentPath -Raw
 Add-Check "package states restart repair boundary" ($document.Contains('supersedes the uncompiled v1 package') -and $document.Contains('does not establish a new best') -and $document.Contains('Static checks cannot prove compilation')) "boundary present"
@@ -240,6 +241,7 @@ Add-Check "package states attached-protection and actual-risk contract" ($docume
 Add-Check "package states aggregate account-risk reconciliation" ($document.Contains('every open account position is reselected') -and $document.Contains('post-fill position-count breach') -and $document.Contains('aggregate account-risk breach rejects the fill') -and $document.Contains('same fail-closed account-risk helper') -and $document.Contains('multi-position profile')) "boundary present"
 Add-Check "package states persistent failed-close recovery" ($document.Contains('force-close the exact filled ticket') -and $document.Contains('scoped to account, EA magic, and ticket') -and $document.Contains('per-tick retry') -and $document.Contains('confirmed gone')) "boundary present"
 Add-Check "package states tightening-only stop contract" ($document.Contains('One shared wrapper owns every raw `PositionModify` request') -and $document.Contains('Buy stops cannot move lower') -and $document.Contains('sell stops cannot move higher') -and $document.Contains('unavailable symbol geometry') -and $document.Contains('stop removal') -and $document.Contains('TP-only changes remain allowed')) "boundary present"
+Add-Check "package states close ownership and exact partial contract" ($document.Contains('One shared ownership selector gates every raw full-close') -and $document.Contains('confirmed ticket disappearance') -and $document.Contains('exact requested broker-step-normalized remainder') -and $document.Contains('reject stale volume snapshots') -and $document.Contains('unexpected position disappearance')) "boundary present"
 Add-Check "registered forward candidate stays unchanged" ($document.Contains('does not') -and $manifest[0].ForwardCandidateChanged -eq 'NO') $manifest[0].ForwardCandidateChanged
 Add-Check "no account identifier published" ($document -notmatch '(?i)account.?id\s*[:=]\s*\d{5,}' -and $document -notmatch '(?i)login\s*[:=]\s*\d{5,}') "public markdown clean"
 Add-Check "no GitHub token published" ($document -notmatch 'github_pat_|gh[pousr]_[A-Za-z0-9]{20,}') "public markdown clean"
