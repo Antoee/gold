@@ -26,7 +26,9 @@ Research and validation repository for a risk-first MetaTrader 5 Expert Advisor 
 
 **2026-07-17 clean session-transfer update: no new best. A standalone trend-aligned M15 liquidity-reclaim EA removed the old session bot's calendar controls and tuned surface, compiled cleanly, and parsed 28/28 pre-2021 Model1 reports. All seven profiles lost in 2015-2018 and continuously; the least-bad row lost $31.32 at PF 0.92. No post-2020 or Model4 test was opened.**
 
-**Forward-prep update: a separate rc2 profile, read-only sentinel, immutable registration drafts, and activation preflight are now packaged. The `$10,000` canary passes; the `$100,000` canary is refused on balance and equity. Nothing is registered or installed, valid forward days/trades remain zero, and real-money use is still not approved.**
+**2026-07-17 momentum-volatility update: no new best. Behavior-preserving telemetry nominated rounded `0.24%`, `0.26%`, and `0.28%` maximum H1 ATR/price caps from 2015-2018. All three made the reserved 2019-2020 result worse than the unchanged control: `-$149.28`, `-$156.32`, and `-$153.76` versus `-$105.45`. All 8/8 reports parsed; post-2020 holdout and Model4 stayed unopened.**
+
+**Forward-demo status: the unchanged candidate is attached to a `$100,000` demo account that violates the frozen `$10,000` capital contract. The attachment contributes exactly zero eligible days, trades, P/L, and lane activity; elapsed wall time is informational only. The terminal and stale sentinel also fail health checks, and real-money use remains disabled.**
 
 The candidate combines two date-independent H1 strategies:
 
@@ -63,6 +65,8 @@ rc2 now has a separate, unregistered forward package. Its profile changes only t
 The read-only preflight requires a fresh identity-matched heartbeat, USD demo hedging mode, exactly `$10,000` balance and equity within `$1`, accessible history, zero foreign trades, a flat/protected account, zero candidate risk, empty dedicated logs, and terminal/MQL algorithmic trading disabled. A deterministic `$10,000` fixture passed; a `$100,000` fixture matching the invalid attached account was refused on both capital gates. The checker did not mutate either draft or freeze a funding baseline. See the [package](outputs/OPERATIONAL_HARDENING_RC2_FORWARD_PACKAGE.md), [canary](outputs/OPERATIONAL_HARDENING_RC2_FORWARD_PREFLIGHT_TEST.md), and [candidate registration draft](outputs/OPERATIONAL_HARDENING_RC2_FORWARD_REGISTRATION_DRAFT.json).
 
 ## Latest Research Screens
+
+The exact rc2 momentum lane was instrumented without changing a signal or order to record channel geometry, breakout distance, H1/D1 efficiency, D1 momentum strength, ATR regime, candle geometry, tick volume, and stop distance. The telemetry fork compiled with `0 errors, 0 warnings`; its 2015-2018 portfolio reproduction returned `+$814.70`, PF `1.87`, 152 trades, and `1.01%` drawdown, matching the known control-era result. A rounded maximum H1 ATR/price family was then frozen at `0.24%`, `0.26%`, and `0.28%` before opening 2019-2020. Every cap lost more in that reserved era than the exact control (`-$149.28`, `-$156.32`, and `-$153.76` versus `-$105.45`). The family was [rejected in repair](outputs/RC2_MOMENTUM_ATR_CAP_REPAIR_DECISION.md), with no post-2020 holdout, Model4 run, new best, or candidate change. The [contract](outputs/RC2_MOMENTUM_ATR_CAP_REPAIR_CONTRACT.md) records the frozen one-factor neighborhood and gate.
 
 The strongest mechanism from the older high-PF session research was rebuilt as a clean standalone EA instead of importing that monolithic strategy. It requires an H1 EMA-200 trend and slope, minimum ADX, a fresh M15 rolling-liquidity sweep and reclaim, directional body/close confirmation, a structure stop, a fixed `2.0R` target, `09:00-11:00` broker-time entry, broker-native sizing at `0.10%` risk, and optional 7/14/21-day post-loss quarantine. The source compiled with `0 errors, 0 warnings`; all `28 / 28` frozen pre-2021 Model1 reports passed source identity after three exact startup-race retries. Every profile lost in 2015-2018 and continuously. The no-quarantine control lost `-$85.36`, PF `0.81`, on 79 trades; the 14-day center lost `-$90.68`, PF `0.73`, on 61 trades; and the least-bad 7-day row still lost `-$31.32`, PF `0.92`, on 69 trades. The family was [rejected in discovery](outputs/TREND_LIQUIDITY_RECLAIM_DISCOVERY_DECISION.md), proving that the old session headline does not survive clean extraction. No recent holdout, Model4 run, new best, or candidate change was allowed. The [contract](outputs/TREND_LIQUIDITY_RECLAIM_DISCOVERY_CONTRACT.md) preserves the decision boundary.
 
@@ -215,7 +219,7 @@ The source compiles with `0 errors, 0 warnings`. Both published source snapshots
 
 ## What Remains
 
-1. Prioritize a genuinely independent return stream, freeze each experiment before results, and do not tune the rejected momentum breakout-quality thresholds after seeing their losses.
+1. Prioritize a genuinely independent return stream, freeze each experiment before results, and do not retune the rejected momentum candle/volume or ATR-cap thresholds after seeing their losses.
 2. Provision a fresh `$10,000` USD demo hedging account for a separately reviewed candidate, pass the rc2 read-only activation preflight, and collect at least 90 valid calendar days and 30 closed trades.
 3. Reproduce the frozen profile on a second broker's XAUUSD specification.
 4. Review forward slippage, missed trades, disconnect handling, and the loss-streak warning.
@@ -236,6 +240,8 @@ No backtest can make an EA work forever without monitoring. The future process i
 - [`outputs/RC2_MOMENTUM_RISK_EXTENSION_YEARLY_MODEL4_DECISION.md`](outputs/RC2_MOMENTUM_RISK_EXTENSION_YEARLY_MODEL4_DECISION.md): exact annual restart results and the two failed frozen gates
 - [`outputs/RC2_DI_REPAIR_PORTFOLIO_DISCOVERY_DECISION.md`](outputs/RC2_DI_REPAIR_PORTFOLIO_DISCOVERY_DECISION.md): exact 24-report rejection of the near-miss directional-edge repair family
 - [`outputs/RC2_DI_REPAIR_PORTFOLIO_DISCOVERY_CONTRACT.md`](outputs/RC2_DI_REPAIR_PORTFOLIO_DISCOVERY_CONTRACT.md): frozen pre-2021 DI-repair neighborhood, gate, and untouched-data boundary
+- [`outputs/RC2_MOMENTUM_ATR_CAP_REPAIR_DECISION.md`](outputs/RC2_MOMENTUM_ATR_CAP_REPAIR_DECISION.md): exact eight-report rejection of the momentum high-volatility entry cap
+- [`outputs/RC2_MOMENTUM_ATR_CAP_REPAIR_CONTRACT.md`](outputs/RC2_MOMENTUM_ATR_CAP_REPAIR_CONTRACT.md): frozen telemetry-derived neighborhood and post-2020 boundary
 - [`outputs/INDEPENDENT_M15_ASIAN_RANGE_SWEEP_DISCOVERY_DECISION.md`](outputs/INDEPENDENT_M15_ASIAN_RANGE_SWEEP_DISCOVERY_DECISION.md): exact 30-report rejection of the standalone Asian-range sweep/reclaim family
 - [`outputs/INDEPENDENT_M15_ASIAN_RANGE_SWEEP_DISCOVERY_CONTRACT.md`](outputs/INDEPENDENT_M15_ASIAN_RANGE_SWEEP_DISCOVERY_CONTRACT.md): frozen source identity, one-factor neighborhood, gates, and untouched-data boundary
 - [`outputs/RC2_MOMENTUM_RISK_EXTENSION_STRESS_DECISION.md`](outputs/RC2_MOMENTUM_RISK_EXTENSION_STRESS_DECISION.md): deterministic execution-cost pass and seeded bootstrap failure

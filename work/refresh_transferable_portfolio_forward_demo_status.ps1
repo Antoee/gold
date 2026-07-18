@@ -299,10 +299,7 @@ foreach($exit in $exits) {
 
 $now = Get-Date
 $registeredAt = [datetimeoffset]::Parse($registration.registeredAtLocal, [System.Globalization.CultureInfo]::InvariantCulture)
-$calendarDays = [math]::Max(0.0, ([datetimeoffset]$now - $registeredAt).TotalDays)
-$minimumDaysMet = $calendarDays -ge [double]$registration.minimumCalendarDays
-$minimumTradesMet = $exits.Count -ge [int]$registration.minimumClosedTrades
-$sampleComplete = $minimumDaysMet -and $minimumTradesMet
+$elapsedCalendarDays = [math]::Max(0.0, ([datetimeoffset]$now - $registeredAt).TotalDays)
 $candidateIdentityPass = $sourceHashMatch -and $profileHashMatch -and $binaryHashMatch
 $sentinelRegistrationIdentityPass =
    $sentinelRegistration.candidateSourceSha256 -eq $registration.sourceSha256 -and
@@ -382,10 +379,23 @@ if($sentinelHeartbeatValid) {
       $positionIsolationPass -and $protectionPass -and $openRiskPass
 }
 
-$profitGatePass = $netProfit -gt 0.0
-$profitFactorGatePass = $profitFactor -ge [double]$registration.minimumProfitFactor
-$drawdownGatePass = $maximumClosedDrawdownPercent -le [double]$registration.maximumClosedTradeDrawdownPercent
-$lossStreakGatePass = $maximumLossStreak -le [int]$registration.maximumConsecutiveLosses
+$validCalendarDays = if($accountContractPass) { $elapsedCalendarDays } else { 0.0 }
+$validEntryCount = if($accountContractPass) { $entries.Count } else { 0 }
+$validExitCount = if($accountContractPass) { $exits.Count } else { 0 }
+$validNetProfit = if($accountContractPass) { $netProfit } else { 0.0 }
+$validProfitFactor = if($accountContractPass) { $profitFactor } else { 0.0 }
+$validWinRate = if($accountContractPass) { $winRate } else { 0.0 }
+$validExpectancy = if($accountContractPass) { $expectancy } else { 0.0 }
+$validMaximumClosedDrawdownPercent = if($accountContractPass) { $maximumClosedDrawdownPercent } else { 0.0 }
+$validMaximumLossStreak = if($accountContractPass) { $maximumLossStreak } else { 0 }
+$minimumDaysMet = $validCalendarDays -ge [double]$registration.minimumCalendarDays
+$minimumTradesMet = $validExitCount -ge [int]$registration.minimumClosedTrades
+$sampleComplete = $minimumDaysMet -and $minimumTradesMet
+
+$profitGatePass = $validNetProfit -gt 0.0
+$profitFactorGatePass = $validProfitFactor -ge [double]$registration.minimumProfitFactor
+$drawdownGatePass = $validMaximumClosedDrawdownPercent -le [double]$registration.maximumClosedTradeDrawdownPercent
+$lossStreakGatePass = $validMaximumLossStreak -le [int]$registration.maximumConsecutiveLosses
 
 if(!$identityPass -or !$evidenceFilesPass -or !$evidenceIdentityPass) {
    $status = "FAIL"
@@ -421,8 +431,8 @@ else {
    $decision = "The completed forward sample failed at least one preregistered performance gate. Do not retune this run; retire or separately research a new version."
 }
 
-$lastEvent = if($allRows.Count -gt 0) { ($allRows | Sort-Object Timestamp | Select-Object -Last 1).Timestamp } else { $null }
-$profitFactorText = if([double]::IsPositiveInfinity($profitFactor)) { "INF" } else { Format-Number -Value $profitFactor -Digits 2 }
+$lastEvent = if($accountContractPass -and $allRows.Count -gt 0) { ($allRows | Sort-Object Timestamp | Select-Object -Last 1).Timestamp } else { $null }
+$profitFactorText = if([double]::IsPositiveInfinity($validProfitFactor)) { "INF" } else { Format-Number -Value $validProfitFactor -Digits 2 }
 $lastEventText = if($null -eq $lastEvent) { "none" } else { $lastEvent.ToString("yyyy-MM-dd HH:mm:ss") }
 $updatedText = $now.ToString("yyyy-MM-dd HH:mm:ss zzz")
 
@@ -430,21 +440,22 @@ $statusRow = [pscustomobject]@{
    UpdatedLocal = $updatedText
    Status = $status
    RegisteredAtLocal = $registration.registeredAtLocal
-   CalendarDays = [math]::Round($calendarDays, 3)
+   CalendarDays = [math]::Round($validCalendarDays, 3)
+   ElapsedSinceRegistrationDays = [math]::Round($elapsedCalendarDays, 3)
    MinimumCalendarDays = [int]$registration.minimumCalendarDays
-   EntryEvents = $entries.Count
-   ClosedTrades = $exits.Count
+   EntryEvents = $validEntryCount
+   ClosedTrades = $validExitCount
    MinimumClosedTrades = [int]$registration.minimumClosedTrades
-   NetProfit = [math]::Round($netProfit, 2)
+   NetProfit = [math]::Round($validNetProfit, 2)
    ProfitFactor = $profitFactorText
-   WinRatePercent = [math]::Round($winRate, 2)
-   Expectancy = [math]::Round($expectancy, 2)
-   MaximumClosedDrawdownPercent = [math]::Round($maximumClosedDrawdownPercent, 3)
-   MaximumConsecutiveLosses = $maximumLossStreak
-   ReversionEntries = @($rvEvidence.Rows | Where-Object Event -eq "entry").Count
-   ReversionExits = @($rvEvidence.Rows | Where-Object Event -eq "exit").Count
-   MomentumEntries = @($moEvidence.Rows | Where-Object Event -eq "entry").Count
-   MomentumExits = @($moEvidence.Rows | Where-Object Event -eq "exit").Count
+   WinRatePercent = [math]::Round($validWinRate, 2)
+   Expectancy = [math]::Round($validExpectancy, 2)
+   MaximumClosedDrawdownPercent = [math]::Round($validMaximumClosedDrawdownPercent, 3)
+   MaximumConsecutiveLosses = $validMaximumLossStreak
+   ReversionEntries = if($accountContractPass) { @($rvEvidence.Rows | Where-Object Event -eq "entry").Count } else { 0 }
+   ReversionExits = if($accountContractPass) { @($rvEvidence.Rows | Where-Object Event -eq "exit").Count } else { 0 }
+   MomentumEntries = if($accountContractPass) { @($moEvidence.Rows | Where-Object Event -eq "entry").Count } else { 0 }
+   MomentumExits = if($accountContractPass) { @($moEvidence.Rows | Where-Object Event -eq "exit").Count } else { 0 }
    InvalidRows = $invalidRows
    ForeignIdentityRows = $foreignRows
    TerminalRunning = $terminalRunning
@@ -525,15 +536,16 @@ $markdown += "## Progress"
 $markdown += ""
 $markdown += "| Metric | Current | Required |"
 $markdown += "|---|---:|---:|"
-$markdown += "| Calendar days | $(Format-Number -Value $calendarDays -Digits 2) | $($registration.minimumCalendarDays) |"
-$markdown += "| Closed trades | $($exits.Count) | $($registration.minimumClosedTrades) |"
-$markdown += "| Entry events | $($entries.Count) | information only |"
-$markdown += "| Net profit | `$$((Format-Number -Value $netProfit -Digits 2)) | > `$0 after sample completes |"
+$markdown += "| Eligible calendar days | $(Format-Number -Value $validCalendarDays -Digits 2) | $($registration.minimumCalendarDays) |"
+$markdown += "| Elapsed since registration | $(Format-Number -Value $elapsedCalendarDays -Digits 2) | information only; invalid while account contract fails |"
+$markdown += "| Closed trades | $validExitCount | $($registration.minimumClosedTrades) |"
+$markdown += "| Entry events | $validEntryCount | information only |"
+$markdown += "| Net profit | `$$((Format-Number -Value $validNetProfit -Digits 2)) | > `$0 after sample completes |"
 $markdown += "| Profit factor | $profitFactorText | >= $(Format-Number -Value ([double]$registration.minimumProfitFactor) -Digits 2) after sample completes |"
-$markdown += "| Win rate | $(Format-Percent -Value $winRate -Digits 2) | information only |"
-$markdown += "| Expectancy | `$$((Format-Number -Value $expectancy -Digits 2)) | > `$0 after sample completes |"
-$markdown += "| Closed-trade drawdown | $(Format-Percent -Value $maximumClosedDrawdownPercent -Digits 3) | <= $(Format-Percent -Value ([double]$registration.maximumClosedTradeDrawdownPercent) -Digits 2) |"
-$markdown += "| Consecutive losses | $maximumLossStreak | <= $($registration.maximumConsecutiveLosses) |"
+$markdown += "| Win rate | $(Format-Percent -Value $validWinRate -Digits 2) | information only |"
+$markdown += "| Expectancy | `$$((Format-Number -Value $validExpectancy -Digits 2)) | > `$0 after sample completes |"
+$markdown += "| Closed-trade drawdown | $(Format-Percent -Value $validMaximumClosedDrawdownPercent -Digits 3) | <= $(Format-Percent -Value ([double]$registration.maximumClosedTradeDrawdownPercent) -Digits 2) |"
+$markdown += "| Consecutive losses | $validMaximumLossStreak | <= $($registration.maximumConsecutiveLosses) |"
 $markdown += "| Last event | $lastEventText | information only |"
 $markdown += ""
 $markdown += "## Integrity"
@@ -547,23 +559,24 @@ $markdown += "| Demo account and capital contract | $accountStatus | mode=$accou
 $markdown += "| Connection and trading permissions | $operationalStatus | connected=$connected; terminal=$terminalTradeAllowed; account=$accountTradeAllowed; expert=$accountExpertAllowed; MQL=$mqlTradeAllowed |"
 $markdown += "| MT5 process running | $terminalStatus | process count=$($terminalProcesses.Count) |"
 $markdown += "| Dedicated evidence logs and identity | $evidenceStatus | RV=$($rvEvidence.Exists); MO=$($moEvidence.Exists); foreign rows=$foreignRows; invalid rows=$invalidRows |"
-$markdown += "| Minimum observation sample | $sampleStatus | days=$(Format-Number -Value $calendarDays -Digits 2)/$($registration.minimumCalendarDays); trades=$($exits.Count)/$($registration.minimumClosedTrades) |"
+$markdown += "| Minimum observation sample | $sampleStatus | eligible days=$(Format-Number -Value $validCalendarDays -Digits 2)/$($registration.minimumCalendarDays); valid trades=$validExitCount/$($registration.minimumClosedTrades) |"
 $markdown += "| Preregistered performance gates | $performanceStatus | evaluated only after both sample requirements pass |"
 $markdown += ""
 $markdown += "## Lane Activity"
 $markdown += ""
 $markdown += "| Lane | Entries | Exits | Log bytes |"
 $markdown += "|---|---:|---:|---:|"
-$markdown += "| H1 Band/VWAP reversion | $(@($rvEvidence.Rows | Where-Object Event -eq 'entry').Count) | $(@($rvEvidence.Rows | Where-Object Event -eq 'exit').Count) | $($rvEvidence.Length) |"
-$markdown += "| Multiscale momentum | $(@($moEvidence.Rows | Where-Object Event -eq 'entry').Count) | $(@($moEvidence.Rows | Where-Object Event -eq 'exit').Count) | $($moEvidence.Length) |"
+$markdown += "| H1 Band/VWAP reversion | $(if($accountContractPass) { @($rvEvidence.Rows | Where-Object Event -eq 'entry').Count } else { 0 }) | $(if($accountContractPass) { @($rvEvidence.Rows | Where-Object Event -eq 'exit').Count } else { 0 }) | $($rvEvidence.Length) |"
+$markdown += "| Multiscale momentum | $(if($accountContractPass) { @($moEvidence.Rows | Where-Object Event -eq 'entry').Count } else { 0 }) | $(if($accountContractPass) { @($moEvidence.Rows | Where-Object Event -eq 'exit').Count } else { 0 }) | $($moEvidence.Length) |"
 $markdown += ""
 $markdown += "This file is generated by ``work/refresh_transferable_portfolio_forward_demo_status.ps1``. Refreshing the status does not modify the EA or its settings. Closed-trade drawdown excludes intratrade equity excursions and is not a substitute for a full MT5 report."
 
 $markdown -join [Environment]::NewLine | Set-Content -LiteralPath $StatusMarkdownPath -Encoding UTF8
 Write-Output "STATUS=$status"
-Write-Output "DAYS=$(Format-Number -Value $calendarDays -Digits 3)"
-Write-Output "CLOSED_TRADES=$($exits.Count)"
-Write-Output "NET_PROFIT=$(Format-Number -Value $netProfit -Digits 2)"
+Write-Output "DAYS=$(Format-Number -Value $validCalendarDays -Digits 3)"
+Write-Output "ELAPSED_DAYS=$(Format-Number -Value $elapsedCalendarDays -Digits 3)"
+Write-Output "CLOSED_TRADES=$validExitCount"
+Write-Output "NET_PROFIT=$(Format-Number -Value $validNetProfit -Digits 2)"
 Write-Output "TERMINAL_RUNNING=$terminalRunning"
 Write-Output "IDENTITY_PASS=$identityPass"
 Write-Output "EVIDENCE_PASS=$($evidenceFilesPass -and $evidenceIdentityPass)"

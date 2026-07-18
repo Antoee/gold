@@ -1,0 +1,5 @@
+"Candidate","ProfileSha256","RepairNetProfit","ContinuousNetProfit","ContinuousReturnPercent","ContinuousProfitFactor","ContinuousTrades","ContinuousMaxDrawdownPercent","ContinuousRecoveryFactor","BasicGatePass","QualityGatePass","AdjacentPass","Decision"
+"mac_fixed_control","CC1A680775559F458460DB75B5FAA72B61AC238D2A4EBC74A179AF9BFA6BB31C","-105.45","694.13","6.94","1.42","225","2.77","2.2843","False","True","False","CONTROL_ONLY"
+"mac_cap024","DDBB357B82E4E46C6F9B47A48CA3DD85B0CA100B1A9A2F187BCED87AF94C4EB9","-149.28","672.32","6.72","1.47","185","2.76","2.2197","False","False","False","REJECT_BEFORE_HOLDOUT"
+"mac_cap026","1FF8B21DD2D9B321ED1DD1A2B91BD1D5AB75A8080C7A2B7B9E465D1997ABA044","-156.32","739.58","7.4","1.5","196","2.69","2.4867","False","True","False","REJECT_BEFORE_HOLDOUT"
+"mac_cap028","F3F2BB0E040218CE0669C2B32E886290CEDA2A4B8531D13A110A4F4A6D0E65BE","-153.76","747.44","7.47","1.49","204","2.91","2.3208","False","True","False","REJECT_BEFORE_HOLDOUT"

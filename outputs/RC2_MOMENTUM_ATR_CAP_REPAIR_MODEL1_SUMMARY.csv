@@ -1,0 +1,2 @@
+"Profile","Phase","Set","ReportsExpected","ReportsParsed","MissingReports","UnparsedReports","TotalNetProfit","WorstWindowNetProfit","BestWindowNetProfit","AverageAnnualizedReturnPercent","WorstAnnualizedReturnPercent","AverageCagrPercent","WorstCagrPercent","LosingWindows","ProfitableWindows","FlatWindows","WorstDrawdownMoney","AverageProfitFactor","AverageSharpeRatio","AverageWinRatePercent","WorstConsecutiveLosses","EvidenceComplete"
+"","","","8","8","0","0","2288.66","-156.32","747.44","","","","","4","4","0","322.06","1.1225","0.9638","39.27","7","True"
