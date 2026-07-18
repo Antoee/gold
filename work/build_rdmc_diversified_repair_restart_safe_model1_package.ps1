@@ -16,8 +16,8 @@ $launchLock = Join-Path $repo "work\MT5_LOCAL_LAUNCH_DISABLED.lock"
 $launchUnlock = Join-Path $repo "work\ALLOW_MT5_LOCAL_LAUNCH.unlock"
 
 $expectedV1SourceHash = "4740338598E290360946FE414CC6F2FE0CF3B704006860514367DCB996A8D2B5"
-$expectedSourceHash = "8420E5D3393133674035C0001FA3B0BAF6F543D2A14472BA2CDEF63199C21BB3"
-$expectedProfileHash = "9344CACABBA0E5B86C0B0C5BCA2EDC3F2D9C095618B75AB6A58A5657D40D1E25"
+$expectedSourceHash = "0F7F19588D421E4833CC05BFCBAE4ADFEAEA57CCEDBAC95A9E8EC68B75F0F0DD"
+$expectedProfileHash = "3AAC4CBBB2F6CCAE7CC9EAFB9C47BD423CF18FFF2BF47E1A7C8B99A46550AC5F"
 
 foreach($required in @($source, $profile, $v1Source, $launchLock)) {
    if(!(Test-Path -LiteralPath $required -PathType Leaf)) {
@@ -151,10 +151,13 @@ $manifest = [pscustomobject]@{
    ExactBrokerOrderCheck = "ENABLED"
    PreflightFailureBlocksSend = "ENABLED"
    PreflightBrokerCommentEvidence = "ENABLED"
-   PostFillReconciliationStatus = "PASS_66_CHECKS"
+   PostFillReconciliationStatus = "PASS_77_CHECKS"
    ResultLinkedPositionIdentity = "ENABLED"
    AttachedProtectionVerification = "ENABLED"
    ActualCashRiskReconciliation = "ENABLED"
+   AggregateAccountRiskReconciliation = "ENABLED"
+   IncompleteAccountRiskFailsClosed = "ENABLED"
+   PostFillPositionCountReconciliation = "ENABLED"
    FailedReconciliationForcedClose = "ENABLED"
    FailedCloseRealtimeRetry = "ENABLED"
    CompileStatus = "NOT_RUN_LOCAL_LOCK_ACTIVE"
@@ -200,7 +203,9 @@ $packageLines = @(
    '- A failed broker preflight blocks the send and preserves the check retcode and broker comment in failure evidence; protective close paths do not depend on entry preflight.',
    '- After a successful send, the exact broker result order or deal-linked immutable position identifier is reconciled to one unique expert-owned position; newest-position guessing is not used.',
    '- The broker-attached open price, volume, stop loss, and requested take-profit state are verified before an entry is accepted or its initial risk is registered.',
-   '- Planned cash risk is compared with actual fill-to-stop cash risk. Actual risk may exceed planned risk by at most `5%`, and can never exceed the tighter per-entry or account-wide cash-risk cap.',
+   '- Planned cash risk is compared with actual fill-to-stop cash risk. The new position may exceed planned risk by at most `5%` and can never exceed its configured per-position cash-risk cap.',
+   '- After each fill, every open account position is reselected and broker-valued from its open price to attached stop. An unreadable position, missing/invalid stop, failed valuation, post-fill position-count breach, or aggregate account-risk breach rejects the fill.',
+   '- The entry precheck and post-fill reconciliation share the same fail-closed account-risk helper, so a configurable multi-position profile cannot hide slippage behind a per-position-only comparison.',
    '- Reconciliation failures mark and force-close the exact filled ticket through the verified close wrapper. The marker is scoped to account, EA magic, and ticket; a failed emergency close remains marked for lightweight per-tick retry until the position is confirmed gone.',
    '- Initial-risk state is stored against the exact filled position ticket using its actual fill-to-stop distance for every entry lane.',
    "",

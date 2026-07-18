@@ -4,8 +4,8 @@
 //| No martingale, grid, averaging down, or recovery systems           |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.18"
-#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with preflighted and reconciled entries; tester-only until independently validated."
+#property version   "1.19"
+#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with preflighted, fill- and account-risk-reconciled entries; tester-only until independently validated."
 
 #include <Trade/Trade.mqh>
 
@@ -2114,6 +2114,92 @@ double CalculatedOrderRiskMoney(const string symbol,
    return MathAbs(stopProfit);
 }
 
+double CalculatedPositionRiskMoney(const ulong ticket, bool &unprotected)
+{
+   unprotected = false;
+   if(ticket == 0 || !PositionSelectByTicket(ticket))
+   {
+      unprotected = true;
+      return -1.0;
+   }
+
+   string symbol = PositionGetString(POSITION_SYMBOL);
+   double stopPrice = PositionGetDouble(POSITION_SL);
+   double openPrice = PositionGetDouble(POSITION_PRICE_OPEN);
+   double volume = PositionGetDouble(POSITION_VOLUME);
+   long positionType = PositionGetInteger(POSITION_TYPE);
+   if(StringLen(symbol) <= 0 || stopPrice <= 0.0 ||
+      openPrice <= 0.0 || volume <= 0.0)
+   {
+      unprotected = true;
+      return -1.0;
+   }
+
+   ENUM_ORDER_TYPE orderType;
+   if(positionType == POSITION_TYPE_BUY)
+   {
+      if(stopPrice >= openPrice)
+         return 0.0;
+      orderType = ORDER_TYPE_BUY;
+   }
+   else if(positionType == POSITION_TYPE_SELL)
+   {
+      if(stopPrice <= openPrice)
+         return 0.0;
+      orderType = ORDER_TYPE_SELL;
+   }
+   else
+   {
+      unprotected = true;
+      return -1.0;
+   }
+
+   double riskMoney = CalculatedOrderRiskMoney(symbol,
+                                                orderType,
+                                                openPrice,
+                                                stopPrice,
+                                                volume);
+   if(riskMoney <= 0.0)
+   {
+      unprotected = true;
+      return -1.0;
+   }
+   return riskMoney;
+}
+
+double CalculatedAccountOpenRiskPercent(bool &hasUnprotectedPosition,
+                                        int &positionCount)
+{
+   hasUnprotectedPosition = false;
+   positionCount = 0;
+   double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+   if(equity <= 0.0)
+      return -1.0;
+
+   double riskMoney = 0.0;
+   for(int i = PositionsTotal() - 1; i >= 0; --i)
+   {
+      ulong ticket = PositionGetTicket(i);
+      if(ticket == 0)
+      {
+         hasUnprotectedPosition = true;
+         return -1.0;
+      }
+
+      positionCount++;
+      bool unprotected = false;
+      double positionRiskMoney = CalculatedPositionRiskMoney(ticket, unprotected);
+      if(unprotected || positionRiskMoney < 0.0)
+      {
+         hasUnprotectedPosition = true;
+         return -1.0;
+      }
+      riskMoney += positionRiskMoney;
+   }
+
+   return 100.0 * riskMoney / equity;
+}
+
 string PostFillForcedCloseKey(const ulong ticket, const long magic)
 {
    return "PF_" + (string)AccountInfoInteger(ACCOUNT_LOGIN) +
@@ -2316,17 +2402,43 @@ public:
       }
 
       double equity = AccountInfoDouble(ACCOUNT_EQUITY);
-      double hardRiskCap = 0.0;
-      if(InpMaxOpenRiskPercent > 0.0)
-         hardRiskCap = InpMaxOpenRiskPercent;
-      if(InpUseAccountWideExposureGuard && InpAccountWideMaxOpenRiskPercent > 0.0 &&
-         (hardRiskCap <= 0.0 || InpAccountWideMaxOpenRiskPercent < hardRiskCap))
-         hardRiskCap = InpAccountWideMaxOpenRiskPercent;
-      if(equity <= 0.0 ||
-         (hardRiskCap > 0.0 && 100.0 * actualRiskMoney / equity > hardRiskCap + 0.000001))
+      if(equity <= 0.0)
       {
-         reason = "post-fill hard open-risk cap";
+         reason = "post-fill equity unavailable";
          return false;
+      }
+
+      double actualRiskPercent = 100.0 * actualRiskMoney / equity;
+      if(InpMaxOpenRiskPercent > 0.0 &&
+         actualRiskPercent > InpMaxOpenRiskPercent + 0.000001)
+      {
+         reason = "post-fill individual open-risk cap";
+         return false;
+      }
+
+      if(InpUseAccountWideExposureGuard)
+      {
+         bool hasUnprotectedPosition = false;
+         int accountPositionCount = 0;
+         double accountOpenRiskPercent = CalculatedAccountOpenRiskPercent(hasUnprotectedPosition,
+                                                                          accountPositionCount);
+         if(accountOpenRiskPercent < 0.0 || hasUnprotectedPosition || accountPositionCount <= 0)
+         {
+            reason = "post-fill account-wide risk unavailable";
+            return false;
+         }
+         if(InpAccountWideMaxPositions <= 0 ||
+            accountPositionCount > InpAccountWideMaxPositions)
+         {
+            reason = "post-fill account-wide position cap";
+            return false;
+         }
+         if(InpAccountWideMaxOpenRiskPercent > 0.0 &&
+            accountOpenRiskPercent > InpAccountWideMaxOpenRiskPercent + 0.000001)
+         {
+            reason = "post-fill account-wide open-risk cap";
+            return false;
+         }
       }
 
       m_lastFilledRiskDistance = MathAbs(openPrice - actualSL);
@@ -3767,69 +3879,13 @@ private:
 
    double AccountPositionRiskMoney(const ulong ticket, bool &unprotected)
    {
-      unprotected = false;
-      if(ticket == 0 || !PositionSelectByTicket(ticket))
-         return 0.0;
-
-      string symbol = PositionGetString(POSITION_SYMBOL);
-      double sl = PositionGetDouble(POSITION_SL);
-      double openPrice = PositionGetDouble(POSITION_PRICE_OPEN);
-      double volume = PositionGetDouble(POSITION_VOLUME);
-      long type = PositionGetInteger(POSITION_TYPE);
-      if(StringLen(symbol) <= 0 || sl <= 0.0 || openPrice <= 0.0 || volume <= 0.0)
-      {
-         unprotected = true;
-         return 0.0;
-      }
-
-      ENUM_ORDER_TYPE orderType;
-      if(type == POSITION_TYPE_BUY)
-      {
-         if(sl >= openPrice)
-            return 0.0;
-         orderType = ORDER_TYPE_BUY;
-      }
-      else if(type == POSITION_TYPE_SELL)
-      {
-         if(sl <= openPrice)
-            return 0.0;
-         orderType = ORDER_TYPE_SELL;
-      }
-      else
-      {
-         unprotected = true;
-         return 0.0;
-      }
-
-      double riskMoney = RiskMoneyForSymbolOrder(symbol, orderType, openPrice, sl, volume);
-      if(riskMoney <= 0.0)
-         unprotected = true;
-      return riskMoney;
+      return CalculatedPositionRiskMoney(ticket, unprotected);
    }
 
    double AccountWideOpenRiskPercent(bool &hasUnprotectedPosition,
                                      int &positionCount)
    {
-      hasUnprotectedPosition = false;
-      positionCount = 0;
-      double equity = AccountInfoDouble(ACCOUNT_EQUITY);
-      if(equity <= 0.0)
-         return -1.0;
-
-      double riskMoney = 0.0;
-      for(int i = PositionsTotal() - 1; i >= 0; i--)
-      {
-         ulong ticket = PositionGetTicket(i);
-         if(ticket == 0 || !PositionSelectByTicket(ticket))
-            continue;
-         positionCount++;
-         bool unprotected = false;
-         riskMoney += AccountPositionRiskMoney(ticket, unprotected);
-         if(unprotected)
-            hasUnprotectedPosition = true;
-      }
-
-      return 100.0 * riskMoney / equity;
+      return CalculatedAccountOpenRiskPercent(hasUnprotectedPosition, positionCount);
    }
 
    bool RecentPerformanceSample(const int lookbackTrades,
@@ -6197,7 +6253,7 @@ public:
                                                                     accountPositionCount);
          if(accountOpenRiskPercent < 0.0)
          {
-            reason = "account-wide equity unavailable";
+            reason = "account-wide risk unavailable";
             return false;
          }
          if(hasAccountUnprotectedPosition && InpAccountWideBlockUnprotectedExposure)

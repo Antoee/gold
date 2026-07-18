@@ -10,8 +10,8 @@ $queuePath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL
 $manifestPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_MANIFEST.csv"
 $documentPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_PACKAGE.md"
 
-$expectedSourceHash = "8420E5D3393133674035C0001FA3B0BAF6F543D2A14472BA2CDEF63199C21BB3"
-$expectedProfileHash = "9344CACABBA0E5B86C0B0C5BCA2EDC3F2D9C095618B75AB6A58A5657D40D1E25"
+$expectedSourceHash = "0F7F19588D421E4833CC05BFCBAE4ADFEAEA57CCEDBAC95A9E8EC68B75F0F0DD"
+$expectedProfileHash = "3AAC4CBBB2F6CCAE7CC9EAFB9C47BD423CF18FFF2BF47E1A7C8B99A46550AC5F"
 $expectedV1SourceHash = "4740338598E290360946FE414CC6F2FE0CF3B704006860514367DCB996A8D2B5"
 
 $checks = [System.Collections.Generic.List[object]]::new()
@@ -220,7 +220,7 @@ Add-Check "manifest freezes hedging account mode" ($manifest[0].AccountModeSafet
 Add-Check "manifest freezes entry-permission safety" ($manifest[0].EntryPermissionSafetyStatus -eq 'PASS_50_CHECKS' -and $manifest[0].TerminalPermissionGate -eq 'ENABLED' -and $manifest[0].AccountPermissionGate -eq 'ENABLED' -and $manifest[0].DirectionalSymbolGate -eq 'ENABLED' -and $manifest[0].MarketOrderAndStopLossRequired -eq 'ENABLED') "$($manifest[0].EntryPermissionSafetyStatus)"
 Add-Check "manifest preserves protective exits across entry permission loss" ($manifest[0].ProtectiveExitPathPreserved -eq 'ENABLED') $manifest[0].ProtectiveExitPathPreserved
 Add-Check "manifest freezes exact-request broker preflight" ($manifest[0].OrderPreflightSafetyStatus -eq 'PASS_55_CHECKS' -and $manifest[0].ExactBrokerOrderCheck -eq 'ENABLED' -and $manifest[0].PreflightFailureBlocksSend -eq 'ENABLED' -and $manifest[0].PreflightBrokerCommentEvidence -eq 'ENABLED') "$($manifest[0].OrderPreflightSafetyStatus)"
-Add-Check "manifest freezes post-fill reconciliation" ($manifest[0].PostFillReconciliationStatus -eq 'PASS_66_CHECKS' -and $manifest[0].ResultLinkedPositionIdentity -eq 'ENABLED' -and $manifest[0].AttachedProtectionVerification -eq 'ENABLED' -and $manifest[0].ActualCashRiskReconciliation -eq 'ENABLED' -and $manifest[0].FailedReconciliationForcedClose -eq 'ENABLED' -and $manifest[0].FailedCloseRealtimeRetry -eq 'ENABLED') "$($manifest[0].PostFillReconciliationStatus)"
+Add-Check "manifest freezes post-fill reconciliation" ($manifest[0].PostFillReconciliationStatus -eq 'PASS_77_CHECKS' -and $manifest[0].ResultLinkedPositionIdentity -eq 'ENABLED' -and $manifest[0].AttachedProtectionVerification -eq 'ENABLED' -and $manifest[0].ActualCashRiskReconciliation -eq 'ENABLED' -and $manifest[0].AggregateAccountRiskReconciliation -eq 'ENABLED' -and $manifest[0].IncompleteAccountRiskFailsClosed -eq 'ENABLED' -and $manifest[0].PostFillPositionCountReconciliation -eq 'ENABLED' -and $manifest[0].FailedReconciliationForcedClose -eq 'ENABLED' -and $manifest[0].FailedCloseRealtimeRetry -eq 'ENABLED') "$($manifest[0].PostFillReconciliationStatus)"
 
 $document = Get-Content -LiteralPath $documentPath -Raw
 Add-Check "package states restart repair boundary" ($document.Contains('supersedes the uncompiled v1 package') -and $document.Contains('does not establish a new best') -and $document.Contains('Static checks cannot prove compilation')) "boundary present"
@@ -235,7 +235,8 @@ Add-Check "package states entry-permission contract" ($document.Contains('termin
 Add-Check "package preserves protective paths when entries are blocked" ($document.Contains('permission loss blocks new exposure') -and $document.Contains('protective management and close paths')) "boundary present"
 Add-Check "package states exact-request broker preflight" ($document.Contains('MT5 `OrderCheck` on the exact side') -and $document.Contains('failed broker preflight blocks the send') -and $document.Contains('protective close paths do not depend on entry preflight')) "boundary present"
 Add-Check "package states result-linked post-fill identity" ($document.Contains('deal-linked immutable position identifier') -and $document.Contains('one unique expert-owned position') -and $document.Contains('newest-position guessing is not used')) "boundary present"
-Add-Check "package states attached-protection and actual-risk contract" ($document.Contains('broker-attached open price, volume, stop loss') -and $document.Contains('actual fill-to-stop cash risk') -and $document.Contains('at most `5%`') -and $document.Contains('account-wide cash-risk cap')) "boundary present"
+Add-Check "package states attached-protection and actual-risk contract" ($document.Contains('broker-attached open price, volume, stop loss') -and $document.Contains('actual fill-to-stop cash risk') -and $document.Contains('at most `5%`') -and $document.Contains('per-position cash-risk cap')) "boundary present"
+Add-Check "package states aggregate account-risk reconciliation" ($document.Contains('every open account position is reselected') -and $document.Contains('post-fill position-count breach') -and $document.Contains('aggregate account-risk breach rejects the fill') -and $document.Contains('same fail-closed account-risk helper') -and $document.Contains('multi-position profile')) "boundary present"
 Add-Check "package states persistent failed-close recovery" ($document.Contains('force-close the exact filled ticket') -and $document.Contains('scoped to account, EA magic, and ticket') -and $document.Contains('per-tick retry') -and $document.Contains('confirmed gone')) "boundary present"
 Add-Check "registered forward candidate stays unchanged" ($document.Contains('does not') -and $manifest[0].ForwardCandidateChanged -eq 'NO') $manifest[0].ForwardCandidateChanged
 Add-Check "no account identifier published" ($document -notmatch '(?i)account.?id\s*[:=]\s*\d{5,}' -and $document -notmatch '(?i)login\s*[:=]\s*\d{5,}') "public markdown clean"

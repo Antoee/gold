@@ -54,8 +54,8 @@ $finalOnTickIndex = $source.LastIndexOf('void OnTick()', [StringComparison]::Ord
 $finalTransactionIndex = $source.LastIndexOf('void OnTradeTransaction', [StringComparison]::Ordinal)
 $onTick = if($finalOnTickIndex -ge 0 -and $finalTransactionIndex -gt $finalOnTickIndex) { $source.Substring($finalOnTickIndex, $finalTransactionIndex - $finalOnTickIndex) } else { '' }
 
-Add-Check "source version is 1.18" ($source.Contains('#property version   "1.18"')) "version"
-Add-Check "description advertises broker preflight" ($source.Contains('preflighted and reconciled entries')) "description"
+Add-Check "source version is 1.19" ($source.Contains('#property version   "1.19"')) "version"
+Add-Check "description advertises broker preflight" ($source.Contains('preflighted, fill- and account-risk-reconciled entries')) "description"
 Add-Check "validated executor derives from CTrade" ($validatedTrade.Contains('class CValidatedTrade : public CTrade')) "derived executor"
 Add-Check "market preflight is a public executor method" ($validatedTrade.Contains('public:') -and $validatedTrade.Contains('bool MarketEntryPreflight(')) "public method"
 Add-Check "preflight reads one atomic tick" ([regex]::Matches($validatedTrade, 'SymbolInfoTick\(symbol, tick\)').Count -eq 1) "atomic quote"

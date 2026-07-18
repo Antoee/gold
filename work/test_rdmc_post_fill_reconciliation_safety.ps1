@@ -35,12 +35,20 @@ function Test-PostFillModel(
    [double]$ActualRisk,
    [double]$AllowancePercent,
    [double]$Equity,
-   [double]$HardCapPercent
+   [double]$IndividualCapPercent,
+   [bool]$AccountRiskAvailable,
+   [double]$AccountRisk,
+   [double]$AccountCapPercent,
+   [int]$AccountPositionCount,
+   [int]$AccountPositionCap
 ) {
    if(!$Found -or !$Owned -or !$Protected -or !$TargetMatched -or !$VolumeMatched) { return $false }
    if($PlannedRisk -le 0.0 -or $ActualRisk -le 0.0 -or $Equity -le 0.0) { return $false }
    if($ActualRisk -gt $PlannedRisk * (1.0 + [Math]::Max(0.0, $AllowancePercent) / 100.0) + 0.01) { return $false }
-   if($HardCapPercent -gt 0.0 -and 100.0 * $ActualRisk / $Equity -gt $HardCapPercent + 0.000001) { return $false }
+   if($IndividualCapPercent -gt 0.0 -and 100.0 * $ActualRisk / $Equity -gt $IndividualCapPercent + 0.000001) { return $false }
+   if(!$AccountRiskAvailable -or $AccountRisk -lt 0.0) { return $false }
+   if($AccountPositionCap -le 0 -or $AccountPositionCount -le 0 -or $AccountPositionCount -gt $AccountPositionCap) { return $false }
+   if($AccountCapPercent -gt 0.0 -and 100.0 * $AccountRisk / $Equity -gt $AccountCapPercent + 0.000001) { return $false }
    return $true
 }
 
@@ -61,11 +69,15 @@ $closeMatch = [regex]::Match($source, 'bool ExecutePositionClose\(CTrade &execut
 $closeEnd = if($closeMatch.Success) { $source.IndexOf('bool TradePriceMatches(', $closeMatch.Index, [StringComparison]::Ordinal) } else { -1 }
 $close = if($closeMatch.Success -and $closeEnd -gt $closeMatch.Index) { $source.Substring($closeMatch.Index, $closeEnd - $closeMatch.Index) } else { '' }
 
-Add-Check "source version is 1.18" ($source.Contains('#property version   "1.18"')) "version"
-Add-Check "description advertises reconciled entries" ($source.Contains('preflighted and reconciled entries')) "description"
+Add-Check "source version is 1.19" ($source.Contains('#property version   "1.19"')) "version"
+Add-Check "description advertises fill and account-risk reconciliation" ($source.Contains('preflighted, fill- and account-risk-reconciled entries')) "description"
 Add-Check "post-fill risk tolerance is configurable" ($source.Contains('input double InpMaxPostFillRiskIncreasePercent = 5.00;')) "input"
 Add-Check "cash-risk helper validates side and geometry" ($risk.Contains('ORDER_TYPE_BUY') -and $risk.Contains('ORDER_TYPE_SELL') -and $risk.Contains('entryPrice <= 0.0') -and $risk.Contains('stopPrice <= 0.0') -and $risk.Contains('lots <= 0.0')) "risk inputs"
 Add-Check "cash-risk helper uses broker calculation" ($risk.Contains('OrderCalcProfit(orderType, symbol, lots, entryPrice, stopPrice, stopProfit)') -and $risk.Contains('return MathAbs(stopProfit);')) "OrderCalcProfit"
+Add-Check "position-risk helper fails closed when selection is unreadable" ($risk.Contains('CalculatedPositionRiskMoney(const ulong ticket, bool &unprotected)') -and $risk.Contains('ticket == 0 || !PositionSelectByTicket(ticket)') -and $risk.Contains('return -1.0;')) "position snapshot"
+Add-Check "position-risk helper distinguishes protected profit" ($risk.Contains('if(stopPrice >= openPrice)') -and $risk.Contains('if(stopPrice <= openPrice)') -and $risk.Contains('return 0.0;')) "zero downside"
+Add-Check "account-risk helper scans every open position" ($risk.Contains('CalculatedAccountOpenRiskPercent') -and $risk.Contains('for(int i = PositionsTotal() - 1; i >= 0; --i)') -and $risk.Contains('positionCount++;')) "full account scan"
+Add-Check "account-risk helper fails closed on incomplete valuation" ($risk.Contains('if(unprotected || positionRiskMoney < 0.0)') -and $risk.Contains('hasUnprotectedPosition = true;')) "incomplete valuation"
 Add-Check "validated executor stores exact filled ticket" ($validatedTrade.Contains('ulong m_lastFilledPositionTicket;') -and $validatedTrade.Contains('LastFilledPositionTicket() const')) "ticket"
 Add-Check "validated executor stores actual risk distance" ($validatedTrade.Contains('double m_lastFilledRiskDistance;') -and $validatedTrade.Contains('LastFilledRiskDistance() const')) "risk distance"
 Add-Check "preflight clears stale fill identity" ($validatedTrade.Contains('m_lastFilledPositionTicket = 0;') -and $validatedTrade.Contains('m_lastFilledRiskDistance = 0.0;')) "reset"
@@ -87,9 +99,13 @@ Add-Check "actual cash risk uses broker position" ($validatedTrade.Contains('ope
 Add-Check "unavailable cash risk fails closed" ($validatedTrade.Contains('post-fill cash risk unavailable')) "cash risk"
 Add-Check "risk increase uses configured tolerance" ($validatedTrade.Contains('InpMaxPostFillRiskIncreasePercent') -and $validatedTrade.Contains('maximumActualRisk')) "tolerance"
 Add-Check "excess fill risk fails closed" ($validatedTrade.Contains('post-fill cash risk exceeds planned allowance')) "risk excess"
-Add-Check "individual open-risk cap is retained" ($validatedTrade.Contains('InpMaxOpenRiskPercent')) "individual cap"
-Add-Check "account-wide cap can tighten hard cap" ($validatedTrade.Contains('InpUseAccountWideExposureGuard') -and $validatedTrade.Contains('InpAccountWideMaxOpenRiskPercent')) "account cap"
-Add-Check "hard risk cap uses current equity" ($validatedTrade.Contains('ACCOUNT_EQUITY') -and $validatedTrade.Contains('post-fill hard open-risk cap')) "equity cap"
+Add-Check "individual open-risk cap uses actual filled risk" ($validatedTrade.Contains('actualRiskPercent') -and $validatedTrade.Contains('post-fill individual open-risk cap')) "individual cap"
+Add-Check "account-wide risk is recomputed after fill" ($validatedTrade.Contains('CalculatedAccountOpenRiskPercent(hasUnprotectedPosition,') -and $validatedTrade.Contains('accountPositionCount')) "aggregate snapshot"
+Add-Check "account-wide unreadable risk fails closed" ($validatedTrade.Contains('accountOpenRiskPercent < 0.0') -and $validatedTrade.Contains('post-fill account-wide risk unavailable')) "aggregate unavailable"
+Add-Check "account-wide position ceiling is rechecked after fill" ($validatedTrade.Contains('accountPositionCount > InpAccountWideMaxPositions') -and $validatedTrade.Contains('post-fill account-wide position cap')) "position cap"
+Add-Check "account-wide aggregate cap is enforced" ($validatedTrade.Contains('accountOpenRiskPercent > InpAccountWideMaxOpenRiskPercent') -and $validatedTrade.Contains('post-fill account-wide open-risk cap')) "aggregate cap"
+Add-Check "shared risk manager uses fail-closed account helper" ($source.Contains('return CalculatedAccountOpenRiskPercent(hasUnprotectedPosition, positionCount);')) "shared helper"
+Add-Check "post-fill risk caps use current equity" ($validatedTrade.Contains('ACCOUNT_EQUITY') -and $validatedTrade.Contains('post-fill equity unavailable')) "equity cap"
 Add-Check "actual risk distance comes from fill and attached stop" ($validatedTrade.Contains('m_lastFilledRiskDistance = MathAbs(openPrice - actualSL);')) "actual distance"
 Add-Check "entry wrapper reconciles after deal verification" ($entry.IndexOf('if(executor.ResultDeal() <= 0)', [StringComparison]::Ordinal) -lt $entry.IndexOf('PostFillPositionAllows(', [StringComparison]::Ordinal)) "call order"
 Add-Check "reconciliation failure logs precise reason" ($entry.Contains('Post-fill reconciliation failed:') -and $entry.Contains('reconciliationReason')) "diagnostic"
@@ -105,12 +121,15 @@ Add-Check "three primary entries store exact reconciled risk" ([regex]::Matches(
 Add-Check "newest-position risk guessing is removed" (!$source.Contains('RegisterInitialRiskForNewestPosition') -and !$source.Contains('RegisterRiskForNewestPosition')) "exact identity only"
 Add-Check "all four entries still use shared wrapper" ([regex]::Matches($source, 'ExecuteMarketEntry\(').Count -eq 5) "definition plus four calls"
 
-$base = @{ Found=$true; Owned=$true; Protected=$true; TargetMatched=$true; VolumeMatched=$true; PlannedRisk=50.0; ActualRisk=50.0; AllowancePercent=5.0; Equity=10000.0; HardCapPercent=0.75 }
+$base = @{ Found=$true; Owned=$true; Protected=$true; TargetMatched=$true; VolumeMatched=$true; PlannedRisk=50.0; ActualRisk=50.0; AllowancePercent=5.0; Equity=10000.0; IndividualCapPercent=0.75; AccountRiskAvailable=$true; AccountRisk=50.0; AccountCapPercent=0.75; AccountPositionCount=1; AccountPositionCap=1 }
 $scenarios = @(
    @{ Name='exact fill'; Expected=$true; Values=@{} },
-   @{ Name='five percent tolerated'; Expected=$true; Values=@{ActualRisk=52.5} },
-   @{ Name='risk allowance exceeded'; Expected=$false; Values=@{ActualRisk=52.52} },
-   @{ Name='hard cap exceeded'; Expected=$false; Values=@{PlannedRisk=80.0;ActualRisk=80.0} },
+   @{ Name='five percent tolerated'; Expected=$true; Values=@{ActualRisk=52.5;AccountRisk=52.5} },
+   @{ Name='risk allowance exceeded'; Expected=$false; Values=@{ActualRisk=52.52;AccountRisk=52.52} },
+   @{ Name='individual cap exceeded'; Expected=$false; Values=@{PlannedRisk=80.0;ActualRisk=80.0;AccountRisk=80.0} },
+   @{ Name='aggregate cap exceeded'; Expected=$false; Values=@{AccountRisk=80.0} },
+   @{ Name='aggregate risk unavailable'; Expected=$false; Values=@{AccountRiskAvailable=$false} },
+   @{ Name='post-fill position cap exceeded'; Expected=$false; Values=@{AccountPositionCount=2} },
    @{ Name='position not found'; Expected=$false; Values=@{Found=$false} },
    @{ Name='ownership mismatch'; Expected=$false; Values=@{Owned=$false} },
    @{ Name='missing stop'; Expected=$false; Values=@{Protected=$false} },
