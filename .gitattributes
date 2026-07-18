@@ -78,3 +78,5 @@ outputs/RC2_MOMENTUM_ATR_CAP_REPAIR_CONTRACT.md -text -diff whitespace=cr-at-eol
 work/Professional_XAUUSD_RC2_Reversion_Feature_Telemetry.mq5 -text -diff whitespace=cr-at-eol
 work/Professional_XAUUSD_Reversion_Long_Distance_Guard_Portfolio.mq5 -text -diff whitespace=cr-at-eol
 outputs/REVERSION_LONG_DISTANCE_GUARD_CONTRACT.md -text -diff whitespace=cr-at-eol
+outputs/REVERSION_DI_DISTANCE_INTERACTION_CONTRACT.md -text -diff whitespace=cr-at-eol
+outputs/REVERSION_DI_DISTANCE_INTERACTION_DISCOVERY_MODEL1_RESULTS.csv -text whitespace=cr-at-eol
