@@ -1,0 +1,2 @@
+"Candidate","SourceType","Phase","Expected","ParsedReports","ParsedLogs","ParsedTotal","Missing","Unparsed","TotalNetProfit","WorstNetProfit","AverageAnnualizedReturnPercent","WorstAnnualizedReturnPercent","AverageCagrPercent","WorstCagrPercent","WorstDrawdownPercent","MinProfitFactor","TotalTrades"
+"rc2_reversion_feature_telemetry","behavior_preserving_telemetry_fork","feature_telemetry_model1","1","1","0","1","0","0","814.7","814.7","2.04","2.04","1.98","1.98","1.01","1.87","152"

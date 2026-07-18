@@ -1,0 +1,5 @@
+"Candidate","ProfileSha256","RepairNetProfit","ContinuousNetProfit","ContinuousReturnPercent","ContinuousProfitFactor","ContinuousTrades","ContinuousMaxDrawdownPercent","ContinuousRecoveryFactor","BasicGatePass","QualityGatePass","AdjacentPass","Decision"
+"rld_fixed_control","CB572B61F9EDB86D0D95D4D560E6BCCA55FBD941B94442C3CCDE2CEA53FC08F2","-105.45","694.13","6.94","1.42","225","2.77","2.2843","False","True","False","CONTROL_ONLY"
+"rld_m12","CCA3B2E11410F3EE84DBD8E6C0EEB008ED64C220477AA5D87D5F440228729477","-105.45","728.03","7.28","1.45","224","2.76","2.3959","False","True","False","REJECT_BEFORE_HOLDOUT"
+"rld_m10","EA6F90267E7B7D4C6083B3C31FA3A3134423B0A5086F9B6BF07DDA3C65207648","-66.15","798.76","7.99","1.51","222","2.82","2.56","False","False","False","REJECT_BEFORE_HOLDOUT"
+"rld_m8","CD12342B674C555B0A2F7CEE3F20624D19A105848048822306222260DF8711E5","-66.15","746.54","7.47","1.49","219","2.83","2.3926","False","False","False","REJECT_BEFORE_HOLDOUT"
