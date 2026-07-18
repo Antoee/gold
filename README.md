@@ -32,6 +32,10 @@ Research and validation repository for a risk-first MetaTrader 5 Expert Advisor 
 
 **2026-07-18 DI-distance interaction update: no new best. The preregistered DI `-10` plus H1 distance `-10 ATR` center improved continuous 2015-2020 to `+$819.95`, PF `1.61`, 214 trades, and `1.47%` drawdown, but still lost `-$4.98` at PF `0.98` in the protected 2019 year. All 20/20 reports passed identity after three exact retries; post-2020 holdout and Model4 stayed unopened.**
 
+**2026-07-18 stability-candidate update: the new completed-D1 126-bar `12%` momentum-cap profile passed annual Model1 discovery, both post-2020 holdouts, and a 15-report Model4 parent/neighbor matrix. Full Model4 returned `+$1,555.33` (`+15.55%`, approximately `+1.26%/yr` CAGR), PF `1.68`, 344 trades, `1.59%` drawdown, and `8.72` recovery. It is the strongest stability-focused historical candidate so far, not the highest-profit profile and not the registered forward candidate.**
+
+**2026-07-18 money-readiness update: NOT MONEY-READY. The stability candidate passed 10 of 12 annual real-tick restarts but lost `-$3.77` in 2019 and `-$92.78` in 2022. The frozen no-red-year gate failed, so execution-cost and Monte Carlo stress stayed closed and no forward or real-money substitution occurred.**
+
 **Forward-demo status: the unchanged candidate is attached to a `$100,000` demo account that violates the frozen `$10,000` capital contract. The attachment contributes exactly zero eligible days, trades, P/L, and lane activity; elapsed wall time is informational only. The terminal and stale sentinel also fail health checks, and real-money use remains disabled.**
 
 The candidate combines two date-independent H1 strategies:
@@ -69,6 +73,8 @@ rc2 now has a separate, unregistered forward package. Its profile changes only t
 The read-only preflight requires a fresh identity-matched heartbeat, USD demo hedging mode, exactly `$10,000` balance and equity within `$1`, accessible history, zero foreign trades, a flat/protected account, zero candidate risk, empty dedicated logs, and terminal/MQL algorithmic trading disabled. A deterministic `$10,000` fixture passed; a `$100,000` fixture matching the invalid attached account was refused on both capital gates. The checker did not mutate either draft or freeze a funding baseline. See the [package](outputs/OPERATIONAL_HARDENING_RC2_FORWARD_PACKAGE.md), [canary](outputs/OPERATIONAL_HARDENING_RC2_FORWARD_PREFLIGHT_TEST.md), and [candidate registration draft](outputs/OPERATIONAL_HARDENING_RC2_FORWARD_REGISTRATION_DRAFT.json).
 
 ## Latest Research Screens
+
+The exact 2019 weakness was reduced to two reversion stop-outs. Behavior-preserving telemetry showed both occurred after roughly `16.5%` absolute completed-D1 126-bar displacement, versus a maximum of `11.31%` across the profitable 2015-2018 reversion sample. A rounded `10%` / `12%` / `14%` cap family was frozen before filtered reports. The `12%` center made money in every 2015-2020 Model1 restart, then passed untouched 2021-2023 and 2024-2026 YTD holdouts. On Model4 real ticks it returned `+$1,555.33`, PF `1.68`, 344 trades, `1.59%` drawdown, and `8.72` recovery; the DI parent returned `+$1,427.80`, PF `1.57`, and `1.60%` drawdown, while the `14%` neighbor passed at `+$1,506.97`, PF `1.64`, and `1.59%` drawdown. The [Model4 decision](outputs/REVERSION_D1_MOMENTUM_CAP_MODEL4_DECISION.md) promotes it only as a stability-focused historical candidate. Its [annual money-readiness gate](outputs/REVERSION_D1_MOMENTUM_CAP_ANNUAL_MODEL4_DECISION.md) then failed on red 2019 and 2022 restarts, so cost/Monte Carlo stress, forward substitution, and real-money use stayed closed. The [discovery contract](outputs/REVERSION_D1_MOMENTUM_CAP_CONTRACT.md) and exact [center profile](outputs/REVERSION_D1_MOMENTUM_CAP_CENTER_PROFILE.set) preserve the candidate identity.
 
 The two independently frozen reversion filters were tested together without moving either selected threshold. The nominated DI `-10` plus H1 200-bar distance `-10 ATR` center kept 2020 profitable at `+$105.60` and improved continuous 2015-2020 to `+$819.95`, PF `1.61`, 214 trades, and `1.47%` drawdown. The loose and strict distance neighbors also cleared the continuous quality floor. All three interaction profiles nevertheless returned exactly `-$4.98`, PF `0.98`, in the protected 2019 year. The family was [rejected before holdout](outputs/REVERSION_DI_DISTANCE_INTERACTION_DISCOVERY_DECISION.md), so no post-2020 data, Model4 run, new best, or candidate change was allowed. The [contract](outputs/REVERSION_DI_DISTANCE_INTERACTION_CONTRACT.md) preserves the exact source, fixed interaction, and decision boundary.
 
@@ -138,10 +144,13 @@ MT5 Strategy Tester, XAUUSD, Model 4 real ticks, $10,000 initial balance, 2015-0
 |---|---:|---:|---:|---:|---:|---:|---:|
 | New research best, 0.20% momentum risk | +$1,812.42 | +18.12% | +1.45%/yr | 1.50 | 362 | 3.19% | 5.13 |
 | Current forward candidate, 0.15% momentum risk | +$1,615.36 | +16.15% | +1.31%/yr | 1.58 | 362 | 2.83% | 5.22 |
+| New stability research candidate, D1 cap 12% | +$1,555.33 | +15.55% | +1.26%/yr | 1.68 | 344 | 1.59% | 8.72 |
 
 For the new research profile, Model 1 produced `+$1,866.25` (`+18.66%` total, `+1.49%/yr` CAGR), PF `1.51`, 370 trades, and `3.68%` drawdown. The source and trade signals are unchanged; only requested momentum risk moved from `0.15%` to `0.20%` under the same `0.75%` portfolio cap.
 
 The new row is the highest validated continuous Model4 historical net, not the largest raw historical headline and not the forward candidate. It failed the later annual-restart and Monte Carlo readiness gates. Earlier `+$10,127.76` and other high-profit figures came from experimental Model 1 profiles with weaker transfer evidence and are not live candidates. The 2015-2026 history selected this profile; it cannot prove that the same behavior will continue in future market regimes.
+
+The D1-cap row is intentionally classified by stability rather than absolute profit. It makes `$60.03` less than the current forward candidate over the full path, while reducing reported maximum equity drawdown by about `43.8%` and improving recovery by about `67.1%`. Its red 2019 and 2022 annual restarts prevent a money-ready classification.
 
 ## Historical Research Center Annual Restarts
 
@@ -214,6 +223,8 @@ The recommended rc2 operational candidate has a separate identity from rc1 and t
 
 The new historical research profile uses the same rc2 source and has profile SHA-256 `06AE8127CF2719D7D3A19FEE069ECA3D50B83B3B0329C04F7B08E5F9135AFA5A`. It is deliberately not substituted into the frozen registration or forward package.
 
+The stability-focused D1-cap candidate has source SHA-256 `8B1761EC5F1310C0A961DE30495D4CF52969490A97392721B21424F7D7B8DA2B`, compiled-binary SHA-256 `3E6C2D6A15FE39B99B0E1A4BC6CE7AA6105FA2D4FAF647258213D1EC30E99C03`, and exact profile SHA-256 `BC3ED745E8CEF680BF6785597044A7A24E488E1F45E498E1AC4EC7BCE3B5AEFC`. It is retained for research but blocked from forward substitution by the annual money-readiness failure.
+
 The frozen v0.1 forward identity remains:
 
 | Artifact | SHA-256 |
@@ -227,11 +238,12 @@ The source compiles with `0 errors, 0 warnings`. Both published source snapshots
 
 ## What Remains
 
-1. Prioritize a genuinely independent return stream, freeze each experiment before results, and do not retune the rejected momentum candle/volume, ATR-cap, or reversion-distance thresholds after seeing their losses.
-2. Provision a fresh `$10,000` USD demo hedging account for a separately reviewed candidate, pass the rc2 read-only activation preflight, and collect at least 90 valid calendar days and 30 closed trades.
-3. Reproduce the frozen profile on a second broker's XAUUSD specification.
-4. Review forward slippage, missed trades, disconnect handling, and the loss-streak warning.
-5. Keep live trading disabled until a manual review accepts all remaining evidence.
+1. Diagnose the stability candidate's exact 2019 and 2022 annual failures without retuning the frozen `10%` / `12%` / `14%` D1-cap family.
+2. Prioritize a genuinely independent return stream and freeze every experiment before results.
+3. Provision a fresh `$10,000` USD demo hedging account for a separately reviewed candidate, pass the rc2 read-only activation preflight, and collect at least 90 valid calendar days and 30 closed trades.
+4. Reproduce the frozen profile on a second broker's XAUUSD specification.
+5. Review forward slippage, missed trades, disconnect handling, and the loss-streak warning.
+6. Keep live trading disabled until a manual review accepts all remaining evidence.
 
 No backtest can make an EA work forever without monitoring. The future process is to freeze this candidate, observe it without retuning, detect drift, and stop for review when safety limits or expected behavior break.
 

@@ -80,3 +80,10 @@ work/Professional_XAUUSD_Reversion_Long_Distance_Guard_Portfolio.mq5 -text -diff
 outputs/REVERSION_LONG_DISTANCE_GUARD_CONTRACT.md -text -diff whitespace=cr-at-eol
 outputs/REVERSION_DI_DISTANCE_INTERACTION_CONTRACT.md -text -diff whitespace=cr-at-eol
 outputs/REVERSION_DI_DISTANCE_INTERACTION_DISCOVERY_MODEL1_RESULTS.csv -text whitespace=cr-at-eol
+work/Professional_XAUUSD_Reversion_D1_Momentum_Cap_Portfolio.mq5 -text -diff whitespace=cr-at-eol
+outputs/REVERSION_D1_MOMENTUM_CAP_CONTRACT.md -text -diff whitespace=cr-at-eol
+outputs/REVERSION_D1_MOMENTUM_CAP_HOLDOUT_CONTRACT.md -text -diff whitespace=cr-at-eol
+outputs/REVERSION_D1_MOMENTUM_CAP_MODEL4_CONTRACT.md -text -diff whitespace=cr-at-eol
+outputs/REVERSION_D1_MOMENTUM_CAP_ANNUAL_MODEL4_CONTRACT.md -text -diff whitespace=cr-at-eol
+outputs/REVERSION_D1_MOMENTUM_CAP_*_PROFILE.set -text whitespace=cr-at-eol
+outputs/REVERSION_D1_MOMENTUM_CAP_*_RESULTS.csv -text whitespace=cr-at-eol
