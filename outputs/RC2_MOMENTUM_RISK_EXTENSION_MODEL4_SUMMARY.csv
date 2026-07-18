@@ -1,0 +1,4 @@
+"Candidate","Role","MORiskPercent","OlderNetProfit","MiddleNetProfit","RecentNetProfit","ContinuousNetProfit","TotalReturnPercent","AnnualizedReturnPercent","CagrPercent","ImprovementPercent","ProfitFactor","Trades","MaxDrawdownPercent","RecoveryFactor","GatePass"
+"mre_mo0175","lower_neighbor","0.175","861.6","290.32","464.54","1760.45","17.6","1.53","1.42","8.982","1.55","362","3.24","4.9501","True"
+"mre_mo020_center","center","0.20","931.91","236.45","611.98","1812.42","18.12","1.57","1.45","12.199","1.5","362","3.19","5.1252","True"
+"mre_mo0225","upper_neighbor","0.225","1003.98","231.21","632.55","1880.44","18.8","1.63","1.5","16.41","1.47","362","3.2","5.265","True"
