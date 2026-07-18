@@ -97,3 +97,5 @@ outputs/RDMC_CAP12_MODEL4_2015_2018_MOMENTUM_FEATURES.csv -text whitespace=cr-at
 outputs/RDMC_MOMENTUM_FEATURE_SINGLE_FILTER_SCAN.csv -text whitespace=cr-at-eol
 outputs/RDMC_SIGNAL_RANGE_GATE_SELECTION.csv -text whitespace=cr-at-eol
 outputs/RDMC_SIGNAL_RANGE_GATE_OFFLINE_PRESCREEN_*.csv -text whitespace=cr-at-eol
+outputs/RDMC_DIVERSIFIED_REPAIR_*.csv -text whitespace=cr-at-eol
+outputs/peak_r20_regime_combo_model4_yearly_package/source/Professional_XAUUSD_EA.mq5 -text -diff
