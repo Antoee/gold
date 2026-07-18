@@ -4,8 +4,8 @@
 //| No martingale, grid, averaging down, or recovery systems           |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.21"
-#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with reconciled entries, stops and ownership-checked closes; tester-only until independently validated."
+#property version   "1.22"
+#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with verified durable trade state and ownership-checked execution; tester-only until independently validated."
 
 #include <Trade/Trade.mqh>
 
@@ -2448,6 +2448,7 @@ public:
 };
 
 CValidatedTrade trade;
+bool g_criticalPersistenceHealthy = true;
 
 int VolumeDigitsForStep(const double step)
 {
@@ -2481,6 +2482,47 @@ string TradeResultEvidence(CTrade &executor)
           ", deal=" + (string)executor.ResultDeal() +
           ", order=" + (string)executor.ResultOrder() +
           ", comment=" + executor.ResultComment();
+}
+
+bool SetCriticalPersistentState(const string key, const double value)
+{
+   if(StringLen(key) <= 0 || !MathIsValidNumber(value))
+   {
+      g_criticalPersistenceHealthy = false;
+      return false;
+   }
+
+   if(GlobalVariableSet(key, value) <= 0 || !GlobalVariableCheck(key))
+   {
+      g_criticalPersistenceHealthy = false;
+      return false;
+   }
+
+   double stored = GlobalVariableGet(key);
+   double tolerance = MathMax(0.000000000001, MathAbs(value) * 0.000000000001);
+   if(!MathIsValidNumber(stored) || MathAbs(stored - value) > tolerance)
+   {
+      g_criticalPersistenceHealthy = false;
+      return false;
+   }
+   return true;
+}
+
+bool DeleteCriticalPersistentState(const string key)
+{
+   if(StringLen(key) <= 0)
+   {
+      g_criticalPersistenceHealthy = false;
+      return false;
+   }
+   if(!GlobalVariableCheck(key))
+      return true;
+   if(!GlobalVariableDel(key) || GlobalVariableCheck(key))
+   {
+      g_criticalPersistenceHealthy = false;
+      return false;
+   }
+   return true;
 }
 
 bool SelectOwnedExpertPosition(CTrade &executor,
@@ -2529,7 +2571,9 @@ bool ExecuteMarketEntry(CValidatedTrade &executor,
          "; ", TradeResultEvidence(executor), "; position=", ticket);
    if(ticket > 0 && PositionSelectByTicket(ticket))
    {
-      GlobalVariableSet(PostFillForcedCloseKey(ticket, (long)executor.RequestMagic()), TimeCurrent());
+      if(!SetCriticalPersistentState(PostFillForcedCloseKey(ticket, (long)executor.RequestMagic()),
+                                     TimeCurrent()))
+         Print("Post-fill forced-close persistence failed for position ", ticket, ".");
       if(!ExecutePositionClose(executor, ticket))
          Print("Post-fill emergency close failed: ", TradeResultEvidence(executor));
    }
@@ -2554,7 +2598,7 @@ bool ExecutePositionClose(CTrade &executor, const ulong ticket)
       return false;
    bool closed = !PositionSelectByTicket(ticket);
    if(closed)
-      GlobalVariableDel(PostFillForcedCloseKey(ticket, magic));
+      DeleteCriticalPersistentState(PostFillForcedCloseKey(ticket, magic));
    return closed;
 }
 
@@ -2838,6 +2882,11 @@ bool RuntimeAccountHistoryContractAllows(string &reason)
       reason = "peak-equity persistence";
       return false;
    }
+   if(!g_criticalPersistenceHealthy)
+   {
+      reason = "critical trade-state persistence";
+      return false;
+   }
    if(!g_accountHistoryStateDirty)
    {
       reason = g_cachedAccountHistoryReason;
@@ -2960,11 +3009,14 @@ string TradeMAEKey(const ulong ticket)
    return "PXEA_MAE_R_" + (string)ticket;
 }
 
-void StoreInitialRisk(const ulong ticket, const double riskDistance)
+bool StoreInitialRisk(const ulong ticket, const double riskDistance)
 {
    if(ticket == 0 || riskDistance <= 0.0)
-      return;
-   GlobalVariableSet(InitialRiskKey(ticket), riskDistance);
+   {
+      g_criticalPersistenceHealthy = false;
+      return false;
+   }
+   return SetCriticalPersistentState(InitialRiskKey(ticket), riskDistance);
 }
 
 double InitialRiskDistance(const ulong ticket, const double fallbackDistance)
@@ -2982,8 +3034,20 @@ double InitialRiskDistance(const ulong ticket, const double fallbackDistance)
    }
 
    if(fallback > 0.0)
-      GlobalVariableSet(key, fallback);
+      SetCriticalPersistentState(key, fallback);
    return fallback;
+}
+
+bool PersistPrimaryInitialRiskOrClose(CValidatedTrade &executor)
+{
+   ulong ticket = executor.LastFilledPositionTicket();
+   if(StoreInitialRisk(ticket, executor.LastFilledRiskDistance()))
+      return true;
+
+   Print("Initial-risk persistence failed for position ", ticket, ".");
+   if(ticket > 0 && !ExecutePositionClose(executor, ticket))
+      Print("Initial-risk emergency close failed: ", TradeResultEvidence(executor));
+   return false;
 }
 
 class CIndicators
@@ -3593,7 +3657,7 @@ private:
          return;
       m_peakEquity = equity;
       if(!MQLInfoInteger(MQL_TESTER) &&
-         !GlobalVariableSet(PeakEquityContractKey(), m_peakEquity))
+         !SetCriticalPersistentState(PeakEquityContractKey(), m_peakEquity))
          g_peakEquityPersistenceHealthy = false;
    }
 
@@ -5407,7 +5471,7 @@ public:
       if(!MQLInfoInteger(MQL_TESTER) && GlobalVariableCheck(PeakEquityContractKey()))
          m_peakEquity = MathMax(m_peakEquity, GlobalVariableGet(PeakEquityContractKey()));
       if(!MQLInfoInteger(MQL_TESTER) &&
-         !GlobalVariableSet(PeakEquityContractKey(), m_peakEquity))
+         !SetCriticalPersistentState(PeakEquityContractKey(), m_peakEquity))
          g_peakEquityPersistenceHealthy = false;
    }
 
@@ -6202,6 +6266,12 @@ public:
 
    bool RealtimeProtectionLimitHit(string &reason)
    {
+      if(!g_criticalPersistenceHealthy)
+      {
+         reason = "critical trade-state persistence";
+         return true;
+      }
+
       if(OrdersTotal() > 0)
       {
          reason = "active account order";
@@ -16898,10 +16968,15 @@ private:
       return GlobalVariableCheck(key);
    }
 
-   void MarkPartialClose(const ulong ticket)
+   bool MarkPartialClose(const ulong ticket)
    {
       string key = "PXEA_PARTIAL_" + (string)ticket;
-      GlobalVariableSet(key, TimeCurrent());
+      return SetCriticalPersistentState(key, TimeCurrent());
+   }
+
+   bool ClearPartialClose(const ulong ticket)
+   {
+      return DeleteCriticalPersistentState("PXEA_PARTIAL_" + (string)ticket);
    }
 
    string BasketHarvestKey(const ulong ticket)
@@ -16914,9 +16989,14 @@ private:
       return GlobalVariableCheck(BasketHarvestKey(ticket));
    }
 
-   void MarkBasketHarvest(const ulong ticket)
+   bool MarkBasketHarvest(const ulong ticket)
    {
-      GlobalVariableSet(BasketHarvestKey(ticket), TimeCurrent());
+      return SetCriticalPersistentState(BasketHarvestKey(ticket), TimeCurrent());
+   }
+
+   bool ClearBasketHarvest(const ulong ticket)
+   {
+      return DeleteCriticalPersistentState(BasketHarvestKey(ticket));
    }
 
    string PostPartialRunnerTPKey(const ulong ticket)
@@ -16929,9 +17009,14 @@ private:
       return GlobalVariableCheck(PostPartialRunnerTPKey(ticket));
    }
 
-   void MarkPostPartialRunnerTPExpanded(const ulong ticket)
+   bool MarkPostPartialRunnerTPExpanded(const ulong ticket)
    {
-      GlobalVariableSet(PostPartialRunnerTPKey(ticket), TimeCurrent());
+      return SetCriticalPersistentState(PostPartialRunnerTPKey(ticket), TimeCurrent());
+   }
+
+   bool ClearPostPartialRunnerTPExpanded(const ulong ticket)
+   {
+      return DeleteCriticalPersistentState(PostPartialRunnerTPKey(ticket));
    }
 
    string MFEKey(const ulong ticket)
@@ -16949,8 +17034,13 @@ private:
       string key = MFEKey(ticket);
       double maxR = r;
       if(GlobalVariableCheck(key))
-         maxR = MathMax(GlobalVariableGet(key), r);
-      GlobalVariableSet(key, maxR);
+      {
+         double stored = GlobalVariableGet(key);
+         maxR = MathMax(stored, r);
+         if(maxR <= stored)
+            return stored;
+      }
+      SetCriticalPersistentState(key, maxR);
       return maxR;
    }
 
@@ -16959,8 +17049,13 @@ private:
       string key = MAEKey(ticket);
       double minR = r;
       if(GlobalVariableCheck(key))
-         minR = MathMin(GlobalVariableGet(key), r);
-      GlobalVariableSet(key, minR);
+      {
+         double stored = GlobalVariableGet(key);
+         minR = MathMin(stored, r);
+         if(minR >= stored)
+            return stored;
+      }
+      SetCriticalPersistentState(key, minR);
       return minR;
    }
 
@@ -17422,14 +17517,14 @@ private:
          return;
 
       newTp = NormalizeDouble(newTp, _Digits);
-      if(ModifyAndLog(ticket,
-                      (type == POSITION_TYPE_BUY ? "buy" : "sell"),
-                      volume, openPrice, sl, newTp, r,
-                      PositionGetDouble(POSITION_PROFIT),
-                      "post partial runner TP expansion", atr))
-      {
-         MarkPostPartialRunnerTPExpanded(ticket);
-      }
+      if(!MarkPostPartialRunnerTPExpanded(ticket))
+         return;
+      if(!ModifyAndLog(ticket,
+                       (type == POSITION_TYPE_BUY ? "buy" : "sell"),
+                       volume, openPrice, sl, newTp, r,
+                       PositionGetDouble(POSITION_PROFIT),
+                       "post partial runner TP expansion", atr))
+         ClearPostPartialRunnerTPExpanded(ticket);
    }
 
    void OpenBasketPartialHarvest()
@@ -17485,14 +17580,14 @@ private:
          double atr = 0.0;
          indicators.ATR(1, atr);
          double r = ProfitR(ticket, type, openPrice, sl);
+         if(!MarkBasketHarvest(ticket))
+            continue;
          if(PartialCloseAndLog(ticket,
                                (type == POSITION_TYPE_BUY ? "buy" : "sell"),
                                closeLots, volume, openPrice, sl, tp, r,
                                PositionGetDouble(POSITION_PROFIT),
                                "open basket partial harvest", atr))
          {
-            MarkBasketHarvest(ticket);
-
             if(InpOpenBasketHarvestMoveStop && sl > 0.0)
             {
                double initialRisk = InitialRiskDistance(ticket, MathAbs(openPrice - sl));
@@ -17513,6 +17608,8 @@ private:
                }
             }
          }
+         else
+            ClearBasketHarvest(ticket);
       }
    }
 
@@ -18076,13 +18173,17 @@ public:
 
             if(closeLots >= minLot && volume - closeLots >= minLot)
             {
-               bool partiallyClosed = PartialCloseAndLog(ticket,
-                                                         (type == POSITION_TYPE_BUY ? "buy" : "sell"),
-                                                         closeLots, volume, openPrice,
-                                                         sl, tp, r, profit,
-                                                         "R partial profit lock", atr);
-               if(partiallyClosed)
-                  MarkPartialClose(ticket);
+               bool partiallyClosed = false;
+               if(MarkPartialClose(ticket))
+               {
+                  partiallyClosed = PartialCloseAndLog(ticket,
+                                                        (type == POSITION_TYPE_BUY ? "buy" : "sell"),
+                                                        closeLots, volume, openPrice,
+                                                        sl, tp, r, profit,
+                                                        "R partial profit lock", atr);
+                  if(!partiallyClosed)
+                     ClearPartialClose(ticket);
+               }
                if(partiallyClosed && InpRPartialProfitLockMoveStop && sl > 0.0)
                {
                   double initialRisk = InitialRiskDistance(ticket, MathAbs(openPrice - sl));
@@ -18114,11 +18215,12 @@ public:
 
             if(closeLots >= minLot && volume - closeLots >= minLot)
             {
-               if(PartialCloseAndLog(ticket,
-                                     (type == POSITION_TYPE_BUY ? "buy" : "sell"),
-                                     closeLots, volume, openPrice, sl, tp, r,
-                                     profit, "partial close", atr))
-                  MarkPartialClose(ticket);
+               if(MarkPartialClose(ticket) &&
+                  !PartialCloseAndLog(ticket,
+                                      (type == POSITION_TYPE_BUY ? "buy" : "sell"),
+                                      closeLots, volume, openPrice, sl, tp, r,
+                                      profit, "partial close", atr))
+                  ClearPartialClose(ticket);
             }
          }
 
@@ -18132,13 +18234,17 @@ public:
 
             if(closeLots >= minLot && volume - closeLots >= minLot)
             {
-               bool partiallyClosed = PartialCloseAndLog(ticket,
-                                                         (type == POSITION_TYPE_BUY ? "buy" : "sell"),
-                                                         closeLots, volume, openPrice,
-                                                         sl, tp, r, profit,
-                                                         "protected runner partial close", atr);
-               if(partiallyClosed)
-                  MarkPartialClose(ticket);
+               bool partiallyClosed = false;
+               if(MarkPartialClose(ticket))
+               {
+                  partiallyClosed = PartialCloseAndLog(ticket,
+                                                        (type == POSITION_TYPE_BUY ? "buy" : "sell"),
+                                                        closeLots, volume, openPrice,
+                                                        sl, tp, r, profit,
+                                                        "protected runner partial close", atr);
+                  if(!partiallyClosed)
+                     ClearPartialClose(ticket);
+               }
                if(partiallyClosed && InpProtectedRunnerPartialMoveStop && sl > 0.0)
                {
                   double initialRisk = InitialRiskDistance(ticket, MathAbs(openPrice - sl));
@@ -18700,8 +18806,17 @@ private:
          ReportTradeFailure("entry", 0, "daily momentum plus fresh H1 breakout");
          return false;
       }
-      GlobalVariableSet(RiskKey(m_trade.LastFilledPositionTicket()),
-                        m_trade.LastFilledRiskDistance());
+      ulong filledTicket = m_trade.LastFilledPositionTicket();
+      double filledRiskDistance = m_trade.LastFilledRiskDistance();
+      if(filledTicket == 0 || filledRiskDistance <= 0.0 ||
+         !SetCriticalPersistentState(RiskKey(filledTicket), filledRiskDistance))
+      {
+         g_criticalPersistenceHealthy = false;
+         Print("Momentum initial-risk persistence failed for position ", filledTicket, ".");
+         if(filledTicket > 0 && !ExecutePositionClose(m_trade, filledTicket))
+            Print("Momentum initial-risk emergency close failed: ", TradeResultEvidence(m_trade));
+         return false;
+      }
       double filledVolume = m_trade.ResultVolume() > 0.0 ? m_trade.ResultVolume() : lots;
       double filledPrice = m_trade.ResultPrice() > 0.0 ? m_trade.ResultPrice() : entryPrice;
       logger.Write("momentum_entry", m_trade.ResultDeal(), buy ? "buy" : "sell", filledVolume,
@@ -18913,7 +19028,7 @@ public:
                    HistoryDealGetDouble(transaction.deal, DEAL_PRICE), 0.0, 0.0, 0.0, profit,
                    HistoryDealGetString(transaction.deal, DEAL_COMMENT), 0.0);
       if(positionId > 0)
-         GlobalVariableDel(RiskKey((ulong)positionId));
+         DeleteCriticalPersistentState(RiskKey((ulong)positionId));
    }
 };
 
@@ -22469,9 +22584,10 @@ bool OpenIsolatedBandVWAPReversionSignal(const SSignal &signal)
    string tradeComment = CompactTradeComment(signal);
    bool ok = ExecuteMarketEntry(trade, signal.bias == BIAS_BUY, lots,
                                 _Symbol, sl, tp, tradeComment);
+   if(ok && !PersistPrimaryInitialRiskOrClose(trade))
+      ok = false;
    if(ok)
    {
-      StoreInitialRisk(trade.LastFilledPositionTicket(), trade.LastFilledRiskDistance());
       string biasText = (signal.bias == BIAS_BUY) ? "buy" : "sell";
       string reason = signal.reasons + "Isolated H1 execution;Trade RR " +
                       DoubleToString(tpDistance / stopDistance, 2) + ";";
@@ -22573,9 +22689,10 @@ bool OpenIsolatedDailyDonchianSignal(const SSignal &signal)
    string tradeComment = CompactTradeComment(signal);
    bool ok = ExecuteMarketEntry(trade, signal.bias == BIAS_BUY, lots,
                                 _Symbol, sl, tp, tradeComment);
+   if(ok && !PersistPrimaryInitialRiskOrClose(trade))
+      ok = false;
    if(ok)
    {
-      StoreInitialRisk(trade.LastFilledPositionTicket(), trade.LastFilledRiskDistance());
       string biasText = (signal.bias == BIAS_BUY) ? "buy" : "sell";
       string reason = signal.reasons + "Isolated D1 execution;Trade RR " +
                       DoubleToString(tpDistance / stopDistance, 2) + ";";
@@ -23243,10 +23360,11 @@ bool OpenSignal(const SSignal &signal)
    string tradeComment = CompactTradeComment(signal);
    bool ok = ExecuteMarketEntry(trade, signal.bias == BIAS_BUY, lots,
                                 _Symbol, sl, tp, tradeComment);
+   if(ok && !PersistPrimaryInitialRiskOrClose(trade))
+      ok = false;
 
    if(ok)
    {
-      StoreInitialRisk(trade.LastFilledPositionTicket(), trade.LastFilledRiskDistance());
       string entryReason = signal.reasons;
       if(signal.isRangeReversion)
          entryReason += "Range reversion trade RR " + DoubleToString(tpDistance / stopDistance, 2) + ";";
@@ -24651,7 +24769,7 @@ bool ResearchCapitalContractAllows()
             Print("Account contract failed: funding-count persistence is missing.");
             return false;
          }
-         if(!GlobalVariableSet(fundingKey, (double)fundingCount))
+         if(!SetCriticalPersistentState(fundingKey, (double)fundingCount))
          {
             Print("Account contract failed: funding-count persistence could not be created.");
             return false;
@@ -24679,7 +24797,7 @@ bool ResearchCapitalContractAllows()
       double equity = AccountInfoDouble(ACCOUNT_EQUITY);
       double balance = AccountInfoDouble(ACCOUNT_BALANCE);
       if(equity <= 0.0 || MathAbs(equity - balance) > 0.01 ||
-         !GlobalVariableSet(peakKey, equity))
+         !SetCriticalPersistentState(peakKey, equity))
       {
          Print("Account contract failed: peak-equity persistence could not be created.");
          return false;
@@ -24687,7 +24805,7 @@ bool ResearchCapitalContractAllows()
    }
 
    if(InpUseInitialBalanceContract && !balanceContractExists &&
-      !GlobalVariableSet(InitialBalanceContractKey(), expected))
+      !SetCriticalPersistentState(InitialBalanceContractKey(), expected))
    {
       Print("Account contract failed: starting-capital persistence could not be created.");
       return false;
@@ -24764,9 +24882,9 @@ int OnInit()
       return INIT_FAILED;
    }
    riskManager.Init();
-   if(!g_peakEquityPersistenceHealthy)
+   if(!g_peakEquityPersistenceHealthy || !g_criticalPersistenceHealthy)
    {
-      Print("Failed to initialize persistent peak-equity protection.");
+      Print("Failed to initialize critical persistent risk state.");
       indicators.Release();
       return INIT_FAILED;
    }
@@ -24808,6 +24926,16 @@ void OnTick()
 {
    RefreshAccountHistoryWatchdog();
    tickMicrostructure.Update();
+   if(!g_criticalPersistenceHealthy)
+   {
+      string persistenceReason = "critical trade-state persistence";
+      CancelResearchOrders(persistenceReason);
+      positionManager.CloseAll(persistenceReason);
+      g_momentum.CloseAll(persistenceReason);
+      g_lastBlockReason = persistenceReason;
+      DrawDashboard();
+      return;
+   }
    if(InpClosePositionsOnRiskLimit)
    {
       string realtimeRiskReason = "";

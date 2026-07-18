@@ -60,7 +60,7 @@ $riskNormalizeCalls = [regex]::Matches($riskLots, 'NormalizeVolumeDown\(').Count
 $partialNormalizeCalls = [regex]::Matches($positionManage, 'closeLots = NormalizeVolumeDown\(closeLots, step\);').Count
 $allNormalizeCalls = [regex]::Matches($source, 'NormalizeVolumeDown\(').Count
 
-Add-Check "source version is 1.21" ($source.Contains('#property version   "1.21"')) "version"
+Add-Check "source version is 1.22" ($source.Contains('#property version   "1.22"')) "version"
 Add-Check "step precision supports zero through eight decimals" ($digits.Contains('for(int digits = 0; digits <= 8; ++digits)')) "0..8"
 Add-Check "step precision uses tolerance rather than exact floating equality" ($digits.Contains('MathAbs(NormalizeDouble(step, digits) - step) <= tolerance')) "tolerant precision"
 Add-Check "normalizer rejects non-positive values" ($normalize.Contains('volume <= 0.0 || step <= 0.0')) "invalid volume blocked"

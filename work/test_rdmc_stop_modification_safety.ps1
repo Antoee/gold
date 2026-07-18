@@ -54,8 +54,8 @@ $ownership = Get-Section $source "bool SelectOwnedExpertPosition(" "bool Execute
 $matcher = Get-Section $source "bool TradePriceMatches(" "bool ExecutePositionModify(CTrade &executor,"
 $modify = Get-Section $source "bool ExecutePositionModify(CTrade &executor," "bool ExecutePositionClosePartial(CTrade &executor,"
 
-Add-Check "source version is 1.21" ($source.Contains('#property version   "1.21"')) "version"
-Add-Check "description advertises ownership-checked closes" ($source.Contains('ownership-checked closes')) "description"
+Add-Check "source version is 1.22" ($source.Contains('#property version   "1.22"')) "version"
+Add-Check "description advertises ownership-checked execution" ($source.Contains('ownership-checked execution')) "description"
 Add-Check "one raw PositionModify send site remains" ([regex]::Matches($source, '\.PositionModify\(').Count -eq 1) "raw sends=1"
 Add-Check "all stop changes use the shared wrapper" ([regex]::Matches($source, 'ExecutePositionModify\(').Count -eq 4) "definition plus three callers"
 Add-Check "wrapper selects exact owned ticket before request" ($modify.IndexOf('SelectOwnedExpertPosition(executor, ticket, symbol)', [StringComparison]::Ordinal) -ge 0 -and $modify.IndexOf('SelectOwnedExpertPosition(executor, ticket, symbol)', [StringComparison]::Ordinal) -lt $modify.IndexOf('executor.PositionModify(', [StringComparison]::Ordinal)) "preselect"

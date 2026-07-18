@@ -85,7 +85,7 @@ Add-Check "all four entries use the entry wrapper" ([regex]::Matches($source, 'E
 Add-Check "successful entry logs use deal tickets" ([regex]::Matches($source, 'logger\.Write\("entry", trade\.ResultDeal\(\)').Count -eq 3 -and $source.Contains('logger.Write("momentum_entry", m_trade.ResultDeal()')) "four deal logs"
 Add-Check "successful entry logs use broker-confirmed fills" ([regex]::Matches($source, 'ResultVolume\(\)').Count -ge 8 -and [regex]::Matches($source, 'ResultPrice\(\)').Count -ge 8) "volume and price fallbacks"
 Add-Check "trade result evidence includes retcode deal and order" ($source.Contains('executor.ResultRetcodeDescription()') -and $source.Contains('executor.ResultDeal()') -and $source.Contains('executor.ResultOrder()')) "complete evidence"
-Add-Check "partial markers require verified completion" ($source.Contains('if(partiallyClosed)') -and $source.Contains('if(PartialCloseAndLog(ticket,')) "markers gated"
+Add-Check "partial markers reserve before broker requests and roll back failures" ([regex]::Matches($source, 'MarkPartialClose\(ticket\)').Count -eq 3 -and [regex]::Matches($source, 'ClearPartialClose\(ticket\)').Count -eq 3) "three paths"
 Add-Check "both executors force synchronous mode" ([regex]::Matches($source, 'SetAsyncMode\(false\)').Count -eq 2) "sync_count=2"
 Add-Check "both executors select symbol filling" ([regex]::Matches($source, 'SetTypeFillingBySymbol\(_Symbol\)').Count -eq 2) "filling_count=2"
 Add-Check "both executors set account margin mode" ([regex]::Matches($source, 'SetMarginMode\(\)').Count -eq 2) "margin_count=2"

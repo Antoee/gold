@@ -86,8 +86,9 @@ Add-Check "first registration requires zero active orders" ($capital.Contains('t
 $finalOnTickIndex = $source.LastIndexOf('void OnTick()', [StringComparison]::Ordinal)
 $finalTransactionIndex = $source.LastIndexOf('void OnTradeTransaction', [StringComparison]::Ordinal)
 $onTick = if($finalOnTickIndex -ge 0 -and $finalTransactionIndex -gt $finalOnTickIndex) { $source.Substring($finalOnTickIndex, $finalTransactionIndex - $finalOnTickIndex) } else { '' }
-Add-Check "five flatten paths cancel research orders" ([regex]::Matches($onTick, 'CancelResearchOrders\(').Count -eq 5) "cancel_calls=5"
+Add-Check "six flatten paths cancel research orders" ([regex]::Matches($onTick, 'CancelResearchOrders\(').Count -eq 6) "cancel_calls=6"
 foreach($path in @(
+   @{ Name='persistence failure'; Cancel='CancelResearchOrders(persistenceReason);'; Close='positionManager.CloseAll(persistenceReason);' },
    @{ Name='realtime risk'; Cancel='CancelResearchOrders(realtimeRiskReason);'; Close='positionManager.CloseAll(realtimeRiskReason);' },
    @{ Name='period risk'; Cancel='CancelResearchOrders(riskExitReason);'; Close='positionManager.CloseAll(riskExitReason);' },
    @{ Name='weekend'; Cancel='CancelResearchOrders("weekend close");'; Close='positionManager.CloseAll("weekend close");' },

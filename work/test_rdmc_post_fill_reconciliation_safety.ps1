@@ -69,8 +69,8 @@ $closeMatch = [regex]::Match($source, 'bool ExecutePositionClose\(CTrade &execut
 $closeEnd = if($closeMatch.Success) { $source.IndexOf('bool TradePriceMatches(', $closeMatch.Index, [StringComparison]::Ordinal) } else { -1 }
 $close = if($closeMatch.Success -and $closeEnd -gt $closeMatch.Index) { $source.Substring($closeMatch.Index, $closeEnd - $closeMatch.Index) } else { '' }
 
-Add-Check "source version is 1.21" ($source.Contains('#property version   "1.21"')) "version"
-Add-Check "description advertises reconciled entries" ($source.Contains('with reconciled entries, stops and ownership-checked closes')) "description"
+Add-Check "source version is 1.22" ($source.Contains('#property version   "1.22"')) "version"
+Add-Check "description advertises durable ownership-checked execution" ($source.Contains('verified durable trade state and ownership-checked execution')) "description"
 Add-Check "post-fill risk tolerance is configurable" ($source.Contains('input double InpMaxPostFillRiskIncreasePercent = 5.00;')) "input"
 Add-Check "cash-risk helper validates side and geometry" ($risk.Contains('ORDER_TYPE_BUY') -and $risk.Contains('ORDER_TYPE_SELL') -and $risk.Contains('entryPrice <= 0.0') -and $risk.Contains('stopPrice <= 0.0') -and $risk.Contains('lots <= 0.0')) "risk inputs"
 Add-Check "cash-risk helper uses broker calculation" ($risk.Contains('OrderCalcProfit(orderType, symbol, lots, entryPrice, stopPrice, stopProfit)') -and $risk.Contains('return MathAbs(stopProfit);')) "OrderCalcProfit"
@@ -110,14 +110,14 @@ Add-Check "actual risk distance comes from fill and attached stop" ($validatedTr
 Add-Check "entry wrapper reconciles after deal verification" ($entry.IndexOf('if(executor.ResultDeal() <= 0)', [StringComparison]::Ordinal) -lt $entry.IndexOf('PostFillPositionAllows(', [StringComparison]::Ordinal)) "call order"
 Add-Check "reconciliation failure logs precise reason" ($entry.Contains('Post-fill reconciliation failed:') -and $entry.Contains('reconciliationReason')) "diagnostic"
 Add-Check "forced-close marker is account magic and ticket scoped" ($source.Contains('PostFillForcedCloseKey(const ulong ticket, const long magic)') -and $source.Contains('AccountInfoInteger(ACCOUNT_LOGIN)') -and $source.Contains('"_" + (string)magic + "_" + (string)ticket')) "account/magic/ticket"
-Add-Check "failed reconciliation marks exact ticket" ($entry.Contains('GlobalVariableSet(PostFillForcedCloseKey(ticket, (long)executor.RequestMagic()), TimeCurrent());')) "persistent marker"
+Add-Check "failed reconciliation marks exact ticket" ($entry.Contains('SetCriticalPersistentState(PostFillForcedCloseKey(ticket, (long)executor.RequestMagic()),') -and $entry.Contains('TimeCurrent()')) "persistent marker"
 Add-Check "failed reconciliation closes through verified wrapper" ($entry.Contains('ExecutePositionClose(executor, ticket)')) "verified close"
 Add-Check "failed emergency close remains visible" ($entry.Contains('Post-fill emergency close failed:')) "close evidence"
-Add-Check "successful close clears forced marker" ($close.Contains('GlobalVariableDel(PostFillForcedCloseKey(ticket, magic));')) "marker cleanup"
+Add-Check "successful close clears forced marker" ($close.Contains('DeleteCriticalPersistentState(PostFillForcedCloseKey(ticket, magic));')) "marker cleanup"
 Add-Check "realtime protection retries marked position" ($realtime.Contains('GlobalVariableCheck(PostFillForcedCloseKey(ticket, magic))') -and $realtime.Contains('post-fill reconciliation forced close')) "retry path"
 Add-Check "realtime retry has no history scan or sleep" (!$realtime.Contains('HistorySelect') -and !$realtime.Contains('Sleep(')) "lightweight retry"
-Add-Check "momentum stores exact reconciled risk" ($source.Contains('GlobalVariableSet(RiskKey(m_trade.LastFilledPositionTicket()),') -and $source.Contains('m_trade.LastFilledRiskDistance()')) "momentum risk"
-Add-Check "three primary entries store exact reconciled risk" ([regex]::Matches($source, 'StoreInitialRisk\(trade\.LastFilledPositionTicket\(\), trade\.LastFilledRiskDistance\(\)\);').Count -eq 3) "primary calls=3"
+Add-Check "momentum stores exact reconciled risk" ($source.Contains('filledTicket = m_trade.LastFilledPositionTicket()') -and $source.Contains('filledRiskDistance = m_trade.LastFilledRiskDistance()') -and $source.Contains('SetCriticalPersistentState(RiskKey(filledTicket), filledRiskDistance)')) "momentum risk"
+Add-Check "three primary entries require exact reconciled risk persistence" ([regex]::Matches($source, 'PersistPrimaryInitialRiskOrClose\(trade\)').Count -eq 3 -and $source.Contains('StoreInitialRisk(ticket, executor.LastFilledRiskDistance())')) "primary calls=3"
 Add-Check "newest-position risk guessing is removed" (!$source.Contains('RegisterInitialRiskForNewestPosition') -and !$source.Contains('RegisterRiskForNewestPosition')) "exact identity only"
 Add-Check "all four entries still use shared wrapper" ([regex]::Matches($source, 'ExecuteMarketEntry\(').Count -eq 5) "definition plus four calls"
 
