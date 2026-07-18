@@ -4,7 +4,7 @@
 //| No martingale, grid, averaging down, or recovery systems           |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.13"
+#property version   "1.14"
 #property description "Restart-safe, broker-verified and order-reconciled XAUUSD research portfolio; tester-only until independently validated."
 
 #include <Trade/Trade.mqh>
@@ -2097,6 +2097,31 @@ double          InpTesterMaxProfitQualityPower = 1.00;
 
 CTrade trade;
 
+int VolumeDigitsForStep(const double step)
+{
+   if(step <= 0.0)
+      return 2;
+
+   double tolerance = MathMax(0.000000000001, MathAbs(step) * 0.00000001);
+   for(int digits = 0; digits <= 8; ++digits)
+   {
+      if(MathAbs(NormalizeDouble(step, digits) - step) <= tolerance)
+         return digits;
+   }
+   return 8;
+}
+
+double NormalizeVolumeDown(const double volume, const double step)
+{
+   if(volume <= 0.0 || step <= 0.0)
+      return 0.0;
+
+   double units = MathFloor(volume / step + 0.00000001);
+   if(units <= 0.0)
+      return 0.0;
+   return NormalizeDouble(units * step, VolumeDigitsForStep(step));
+}
+
 string TradeResultEvidence(CTrade &executor)
 {
    return "retcode=" + IntegerToString((int)executor.ResultRetcode()) +
@@ -2255,6 +2280,19 @@ bool g_accountHistoryStateDirty = true;
 bool g_cachedAccountHistoryValid = false;
 string g_cachedAccountHistoryReason = "not evaluated";
 bool g_peakEquityPersistenceHealthy = true;
+datetime g_lastAccountHistoryAuditTime = 0;
+const int ACCOUNT_HISTORY_WATCHDOG_SECONDS = 60;
+
+void RefreshAccountHistoryWatchdog()
+{
+   if(MQLInfoInteger(MQL_TESTER))
+      return;
+
+   datetime now = TimeCurrent();
+   if(now <= 0 || g_lastAccountHistoryAuditTime <= 0 ||
+      now - g_lastAccountHistoryAuditTime >= ACCOUNT_HISTORY_WATCHDOG_SECONDS)
+      g_accountHistoryStateDirty = true;
+}
 
 string InitialBalanceContractKey()
 {
@@ -2385,6 +2423,7 @@ bool RuntimeAccountHistoryContractAllows(string &reason)
       g_cachedAccountHistoryReason = "allowed";
    }
    g_accountHistoryStateDirty = false;
+   g_lastAccountHistoryAuditTime = TimeCurrent();
    reason = g_cachedAccountHistoryReason;
    return g_cachedAccountHistoryValid;
 }
@@ -5755,11 +5794,12 @@ public:
       if(lots < minLot && !InpAllowMinLotRiskOverflow)
          return 0.0;
 
-      double normalized = MathFloor(lots / step) * step;
+      double normalized = NormalizeVolumeDown(lots, step);
       normalized = MathMax(minLot, MathMin(maxLot, normalized));
+      normalized = NormalizeVolumeDown(normalized, step);
       if(normalized < minLot)
          return 0.0;
-      return NormalizeDouble(normalized, 2);
+      return normalized;
    }
 
    double LotsForRisk(const ENUM_TRADE_BIAS bias,
@@ -16977,7 +17017,7 @@ private:
          double tp = PositionGetDouble(POSITION_TP);
          double volume = PositionGetDouble(POSITION_VOLUME);
          double closeLots = volume * MathMin(100.0, MathMax(0.0, InpOpenBasketHarvestClosePercent)) / 100.0;
-         closeLots = MathFloor(closeLots / step) * step;
+         closeLots = NormalizeVolumeDown(closeLots, step);
 
          if(closeLots < minLot || volume - closeLots < minLot)
             continue;
@@ -17572,7 +17612,7 @@ public:
             double closeLots = volume * InpRPartialProfitLockPercent / 100.0;
             double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
             double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
-            closeLots = MathFloor(closeLots / step) * step;
+            closeLots = NormalizeVolumeDown(closeLots, step);
 
             if(closeLots >= minLot && volume - closeLots >= minLot)
             {
@@ -17610,7 +17650,7 @@ public:
             double closeLots = volume * InpPartialClosePercent / 100.0;
             double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
             double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
-            closeLots = MathFloor(closeLots / step) * step;
+            closeLots = NormalizeVolumeDown(closeLots, step);
 
             if(closeLots >= minLot && volume - closeLots >= minLot)
             {
@@ -17628,7 +17668,7 @@ public:
             double closeLots = volume * InpProtectedRunnerPartialClosePercent / 100.0;
             double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
             double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
-            closeLots = MathFloor(closeLots / step) * step;
+            closeLots = NormalizeVolumeDown(closeLots, step);
 
             if(closeLots >= minLot && volume - closeLots >= minLot)
             {
@@ -21150,16 +21190,15 @@ double MarginAwareCappedLots(const ENUM_TRADE_BIAS bias,
       return 0.0;
 
    ENUM_ORDER_TYPE orderType = (bias == BIAS_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
-   double cappedLots = MathMin(lots, maxLot);
-   cappedLots = MathFloor(cappedLots / step) * step;
+   double cappedLots = NormalizeVolumeDown(MathMin(lots, maxLot), step);
    if(cappedLots < minLot)
-      return InpAllowMinLotRiskOverflow ? minLot : 0.0;
+      return InpAllowMinLotRiskOverflow ? NormalizeVolumeDown(minLot, step) : 0.0;
 
    double requiredMargin = 0.0;
    if(OrderCalcMargin(orderType, _Symbol, cappedLots, entryPrice, requiredMargin) &&
       requiredMargin > 0.0 &&
       requiredMargin <= allowedMargin)
-      return NormalizeDouble(cappedLots, 2);
+      return cappedLots;
 
    double low = 0.0;
    double high = cappedLots;
@@ -21167,7 +21206,7 @@ double MarginAwareCappedLots(const ENUM_TRADE_BIAS bias,
    for(int i = 0; i < 24; i++)
    {
       double mid = (low + high) * 0.5;
-      double stepped = MathFloor(mid / step) * step;
+      double stepped = NormalizeVolumeDown(mid, step);
       if(stepped < minLot)
       {
          low = mid;
@@ -21189,7 +21228,7 @@ double MarginAwareCappedLots(const ENUM_TRADE_BIAS bias,
    }
 
    if(best >= minLot)
-      return NormalizeDouble(best, 2);
+      return NormalizeVolumeDown(best, step);
 
    if(!InpAllowMinLotRiskOverflow)
       return 0.0;
@@ -21198,7 +21237,7 @@ double MarginAwareCappedLots(const ENUM_TRADE_BIAS bias,
    if(OrderCalcMargin(orderType, _Symbol, minLot, entryPrice, requiredMargin) &&
       requiredMargin > 0.0 &&
       requiredMargin <= freeMargin)
-      return NormalizeDouble(minLot, 2);
+      return NormalizeVolumeDown(minLot, step);
 
    return 0.0;
 }
@@ -24338,8 +24377,7 @@ bool WeekendCloseWindowActive()
 
 void OnTick()
 {
-   if(!MQLInfoInteger(MQL_TESTER))
-      g_accountHistoryStateDirty = true;
+   RefreshAccountHistoryWatchdog();
    tickMicrostructure.Update();
    if(InpClosePositionsOnRiskLimit)
    {
@@ -24546,7 +24584,9 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,
                          const MqlTradeRequest &request,
                          const MqlTradeResult &result)
 {
-   if(trans.type == TRADE_TRANSACTION_DEAL_ADD)
+   if(trans.type == TRADE_TRANSACTION_DEAL_ADD ||
+      trans.type == TRADE_TRANSACTION_DEAL_UPDATE ||
+      trans.type == TRADE_TRANSACTION_DEAL_DELETE)
       g_accountHistoryStateDirty = true;
    g_momentum.OnTradeTransaction(trans);
 
@@ -24584,4 +24624,9 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,
                 EMPTY_VALUE,
                 EMPTY_VALUE,
                 heldBars);
+}
+
+void OnTrade()
+{
+   g_accountHistoryStateDirty = true;
 }

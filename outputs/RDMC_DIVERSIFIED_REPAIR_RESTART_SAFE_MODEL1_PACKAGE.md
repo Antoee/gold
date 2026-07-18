@@ -23,15 +23,17 @@ This package supersedes the uncompiled v1 package before its first MT5 run. It p
 - Any active account order blocks new exposure, preventing a merely placed market request from being duplicated before it resolves.
 - Emergency, period-risk, weekend, session-end, and manual-news flattening cancel research-owned orders with verified broker results before closing positions.
 - Foreign orders are never canceled by the EA and instead fail the dedicated-account contract closed.
+- Entry, margin-cap, and partial-close volumes are rounded down with the broker-provided `SYMBOL_VOLUME_STEP`; precision is derived from the step instead of being hardcoded to two decimals.
+- Live account-history validation is invalidated by deal and generic trade events, with a fixed 60-second watchdog for missed or delayed events. Active positions and orders remain uncached and are checked on every entry evaluation.
 
 ## Frozen identity
 
-- Source SHA-256: `21CC9D6242594E285BA8E8D1BA8158AA5A0E66C3E5A5985CC201A87D218E1FEF`
-- Profile SHA-256: `161C54EDB76FDF3468CB600E1E49788D794635E0D3573B359A59389199A3B73C`
+- Source SHA-256: `C0C8479499BE03C3E8FBC22FE35C48B21A083F0A657224288186CE10791E3F7E`
+- Profile SHA-256: `3BBA7AF599CDC01C59E82E9D3B2CEB64D267C266FC3E5382A6D910787C02087F`
 - Predecessor source SHA-256: `4740338598E290360946FE414CC6F2FE0CF3B704006860514367DCB996A8D2B5`
 - Source/profile inputs: `588 / 588`
 - Queue: `outputs/RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_QUEUE.csv`
 
 ## Hard boundary
 
-The source is tester-only, real-account trading is disabled, and all 12 annual/YTD Model1 rows remain `LOCKED_LOCAL_LAUNCH_DISABLED`. The new cost, margin, hard-cooldown, intrabar emergency, broker-result, and active-order reconciliation can change entries and exits, so the earlier post-hoc collision score is not attributed to this executable path. Static checks cannot prove compilation, profit, drawdown, or restart behavior inside MT5. Compilation, annual and continuous Model1, annual and continuous real-tick Model4, cost stress, Monte Carlo, broker variation, and valid forward evidence are still required.
+The source is tester-only, real-account trading is disabled, and all 12 annual/YTD Model1 rows remain `LOCKED_LOCAL_LAUNCH_DISABLED`. The new cost, margin, hard-cooldown, intrabar emergency, broker-result, and active-order reconciliation can change entries and exits. Broker-volume reconciliation can change entries and exits too, so the earlier post-hoc collision score is not attributed to this executable path. Static checks cannot prove compilation, profit, drawdown, or restart behavior inside MT5. Compilation, annual and continuous Model1, annual and continuous real-tick Model4, cost stress, Monte Carlo, broker variation, and valid forward evidence are still required.
