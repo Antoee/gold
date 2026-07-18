@@ -10,13 +10,22 @@ $sourcePath = Join-Path $repo 'outputs\rdmc_money_ready_gate_repair_package\sour
 $profilePath = Join-Path $repo 'outputs\rdmc_money_ready_gate_repair_package\profiles\rdmc_money_ready_gate_repair_v1.set'
 $configsPath = Join-Path $repo 'outputs\rdmc_money_ready_gate_repair_executable_package\configs'
 $reportsPath = Join-Path $repo 'outputs\rdmc_money_ready_gate_repair_executable_package\reports_here'
-$decisionPath = Join-Path $repo 'outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_DECISION.csv'
 $contractPath = Join-Path $repo 'outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_CONTRACT.md'
 $expectedManifestHash = 'EB48BDE3D67F9D16BAD427AB5ACC25BC8DFF8D8F29839EB95ADE615F59668972'
 $expectedSourceHash = '104F1B2D77876FA9856C8BECF7BF2D81DAB187F54BF3ED12C07493BCD6F6D6C8'
 $expectedProfileHash = '8A2D3B36ACD6A7B754B20A5D8AF8A98ED2F2AFD739B03CC3EE1A82BD8C2E3E3E'
+$tempRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\')
+$temp = [IO.Path]::GetFullPath((Join-Path $tempRoot ('rdmc-money-ready-queue-test-' + [guid]::NewGuid().ToString('N'))))
+if(!$temp.StartsWith($tempRoot + '\rdmc-money-ready-queue-test-', [StringComparison]::OrdinalIgnoreCase)) { throw 'Unsafe queue-test path.' }
+New-Item -ItemType Directory -Path $temp -Force | Out-Null
+$decisionPath = Join-Path $temp 'decision.csv'
+$decisionMarkdownPath = Join-Path $temp 'decision.md'
+$runPlanPath = Join-Path $temp 'run-plan.csv'
+$runPlanMarkdownPath = Join-Path $temp 'run-plan.md'
 
-& (Join-Path $PSScriptRoot 'build_rdmc_money_ready_gate_repair_executable_queue.ps1') | Out-Null
+& (Join-Path $PSScriptRoot 'build_rdmc_money_ready_gate_repair_executable_queue.ps1') `
+   -DecisionCsvPath $decisionPath -DecisionMarkdownPath $decisionMarkdownPath `
+   -RunPlanCsvPath $runPlanPath -RunPlanMarkdownPath $runPlanMarkdownPath | Out-Null
 
 if((Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash -ne $expectedManifestHash) { throw 'Executable queue manifest hash changed.' }
 if((Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash -ne $expectedSourceHash) { throw 'Executable queue source hash changed.' }
@@ -84,6 +93,8 @@ $repoLock = Test-Path -LiteralPath (Join-Path $PSScriptRoot 'MT5_LOCAL_LAUNCH_DI
 $outerLock = Test-Path -LiteralPath (Join-Path $sharedWork 'MT5_LOCAL_LAUNCH_DISABLED.lock')
 $mt5Processes = @(Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -match 'terminal64|metatester64|metaeditor64' })
 if(!$repoLock -or !$outerLock -or $mt5Processes.Count -ne 0) { throw 'Local launch-safety state changed during offline queue testing.' }
+
+Remove-Item -LiteralPath $temp -Recurse -Force
 
 [pscustomobject]@{
    Status = 'PASS'

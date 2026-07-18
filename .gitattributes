@@ -139,3 +139,4 @@ work/collect_rdmc_money_ready_gate_repair_executable_results.ps1 text eol=lf
 work/evaluate_rdmc_money_ready_gate_repair_executable.py text eol=lf
 work/test_rdmc_money_ready_gate_repair_executable*.ps1 text eol=lf
 work/test_rdmc_money_ready_gate_repair_executable.py text eol=lf
+work/test_rdmc_money_ready_gate_repair_offline_suite.ps1 text eol=lf
