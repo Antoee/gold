@@ -20,10 +20,12 @@ This contract replaces chronological all-at-once testing with early rejection. I
 | 1 | Model1 | 2 | 2 | Reject immediately on the known 2019 or 2022 failure year |
 | 2 | Model1 | 4 | 4 | Check three disjoint broad eras plus the continuous path |
 | 3 | Model4 real ticks | 2 | 2 | Recheck 2019 and 2022 before broad real-tick cost |
-| 4 | Model4 real ticks | 4 | 4 | Check broad eras and continuous risk-adjusted return |
+| 4 | Model4 real ticks | 4 | 3 | Run three disjoint eras, union verified complete-month tick caches, then check continuous risk-adjusted return |
 | 5 | Model4 real ticks | 12 | 6 | Prove annual restart stability only after all earlier gates pass |
 
 A failed or incomplete wave never admits later waves. At most two tests are spent before the first rejection decision and only eight tests are spent before real-tick testing begins.
+
+Wave 4 keeps all four frozen evidence rows but executes them in two stages. The three non-overlapping eras run first on at most three workers. With every portable terminal stopped, only missing complete-month `MetaQuotes-Demo/ticks/XAUUSD/*.tkc` files from January 2015 through June 2026 are copied through SHA-256-verified temporary files to form one cache union. The partial July 2026 cutoff month is never copied because unused tail ticks can differ between roots. Any missing complete month, same-name hash conflict, target overwrite, running portable process, or failed post-copy union stops the wave. The continuous 2015-2026 row starts only after that cache step succeeds.
 
 ## Frozen Gates
 

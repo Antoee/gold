@@ -39,6 +39,8 @@ Each root currently has the same 39 cached real-tick months:
 
 Real-tick months for 2015-2018 and 2021-2024 are not cached. MT5 must obtain them before the later Model4 waves can complete. This is an execution-time efficiency gap, not missing historical evidence and not permission to shorten the frozen test windows.
 
+Wave 4 now avoids downloading that missing history twice for overlapping windows. Its three disjoint era rows run first, then a process-free cache step hashes complete-month XAUUSD `.tkc` files and copies only verified missing months across the four allowlisted roots. The continuous row runs afterward only if all `138` required months from January 2015 through June 2026 are covered. The partial July 2026 cutoff month remains local to each terminal because unused tail ticks can differ; it is reported but never copied. The current inventory sees `39` cached months, with `152` complete-month files hash-checked, zero historical conflicts, and zero cross-root copies currently required. It also reports the important gap: `100` required months are absent from every root and must be downloaded by the disjoint era stage before the continuous row is allowed.
+
 ## Boundaries
 
 - Source/profile identities and all gate thresholds remain unchanged.

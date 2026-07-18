@@ -19,6 +19,8 @@ $manifestPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_EXECUTABLE_GATE
 $parallelRunner = Join-Path $PSScriptRoot "run_mt5_portable_parallel_manifest.ps1"
 $collector = Join-Path $PSScriptRoot "collect_rdmc_diversified_repair_executable_gate_results.ps1"
 $sharedBinaryPreparer = Join-Path $PSScriptRoot "prepare_mt5_portable_shared_expert.ps1"
+$tickCacheHelper = Join-Path $PSScriptRoot "mt5_tick_cache_sync_helpers.ps1"
+$tickCacheSync = Join-Path $PSScriptRoot "sync_mt5_portable_xauusd_tick_cache.ps1"
 $packageSource = Join-Path $repo "outputs\rdmc_diversified_repair_executable_gate_package\source\Professional_XAUUSD_EA.mq5"
 $repoLock = Join-Path $PSScriptRoot "MT5_LOCAL_LAUNCH_DISABLED.lock"
 $outerLock = Join-Path $sharedWork "MT5_LOCAL_LAUNCH_DISABLED.lock"
@@ -31,7 +33,7 @@ function Resolve-RepoPath([string]$Path) {
    return Join-Path $repo $Path
 }
 
-foreach($required in @($decisionPath, $manifestPath, $parallelRunner, $collector,$sharedBinaryPreparer,$packageSource)) {
+foreach($required in @($decisionPath,$manifestPath,$parallelRunner,$collector,$sharedBinaryPreparer,$tickCacheHelper,$tickCacheSync,$packageSource)) {
    if(!(Test-Path -LiteralPath $required -PathType Leaf)) { throw "Required executable-gate artifact is missing: $required" }
 }
 if((Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash.ToUpperInvariant() -ne $expectedManifestHash) {
@@ -71,7 +73,8 @@ $availableRoots = @($PortableRoots | Where-Object {
    (Test-Path -LiteralPath (Join-Path $_ "terminal64.exe") -PathType Leaf) -and
    (Test-Path -LiteralPath (Join-Path $_ "MetaEditor64.exe") -PathType Leaf)
 } | Select-Object -Unique)
-$maxWorkers = [int]($waveRows | Select-Object -First 1).MaxParallelism
+$executionMode = if($Wave -eq 4) { "DISJOINT_THEN_SYNC_THEN_CONTINUOUS" } else { "SINGLE_STAGE" }
+$maxWorkers = if($Wave -eq 4) { 3 } else { [int]($waveRows | Select-Object -First 1).MaxParallelism }
 $workerCount = [Math]::Min($maxWorkers, $availableRoots.Count)
 $sharedBinaryPlan = if($availableRoots.Count -gt 0) {
    & $sharedBinaryPreparer -SourcePath $packageSource -ExpectedSourceSha256 $expectedSourceHash `
@@ -97,6 +100,8 @@ $planRows = foreach($row in $waveRows) {
       AvailableWorkers = $workerCount
       MaxCpuPercent = $MaxCpuPercent
       TimeoutMinutesPerConfig = $TimeoutMinutesPerConfig
+      ExecutionStage = if($Wave -eq 4 -and $row.Role -eq "continuous") { 2 } else { 1 }
+      ExecutionMode = $executionMode
       SharedBinaryStatus = $sharedBinaryPlan.Status
       SharedBinaryAction = $sharedBinaryPlan.Action
    }
@@ -114,6 +119,7 @@ $markdown = @(
    "- Rows: ``$($waveRows.Count)``",
    "- Available workers: ``$workerCount`` of ``$maxWorkers`` allowed",
    "- CPU ceiling per worker: ``$MaxCpuPercent%``",
+   "- Execution mode: ``$executionMode``",
    "- Shared binary status: ``$($sharedBinaryPlan.Status)``",
    "- Shared binary action: ``$($sharedBinaryPlan.Action)``",
    "- Repository hard lock: ``$repoLocked``",
@@ -123,6 +129,8 @@ $markdown = @(
    "Plan mode never launches MT5. Run mode requires explicit focus-risk authorization, both hard locks absent, both unlock acknowledgements, and the launch-guard environment flags. Only the currently admitted wave manifest is passed to the generic parallel runner.",
    "",
    "Before workers start, run mode compiles the exact candidate once on one allowlisted leader and distributes that byte-identical source, EX5, and identity file to every portable root. Workers receive the prepared binary hash and are prohibited from recompiling independently.",
+   "",
+   "Wave 4 is staged without changing any frozen evidence row: three disjoint real-tick eras run first on at most three workers, verified missing complete-month XAUUSD tick caches are unioned across stopped portable roots, and only then does the continuous 2015-2026 row run on a warm cache. A complete-month same-name hash conflict stops the wave; the frozen partial July 2026 cutoff month is never copied.",
    "",
    "Interrupted work is resumable only through identity sidecars generated after a complete terminal exit. A cached report without matching report, config, source, and compiled-binary hashes is ignored and rerun."
 )
@@ -146,11 +154,50 @@ if($sharedBinary.Status -notin @("REUSED_SHARED_BINARY","COMPILED_ONCE_AND_DISTR
 }
 
 $waveManifest = "outputs\RDMC_DIVERSIFIED_REPAIR_EXECUTABLE_GATE_WAVE_{0:D2}_MANIFEST.csv" -f $Wave
-$outputPrefix = "RDMC_EXECUTABLE_GATE_WAVE_{0:D2}_WORKER" -f $Wave
-& $parallelRunner -ManifestPath $waveManifest -PortableRoots $availableRoots[0..($workerCount - 1)] `
-   -UserAuthorizedFocusRisk -OutputPrefix $outputPrefix -MaxCpuPercent $MaxCpuPercent `
-   -TimeoutMinutesPerConfig $TimeoutMinutesPerConfig `
-   -ExpectedPortableBinarySha256 $sharedBinary.PortableBinarySha256
-if($LASTEXITCODE -ne 0) { throw "Parallel executable-wave runner failed." }
-& $collector -Wave $Wave
-if($LASTEXITCODE -ne 0) { throw "Executable-wave collector failed." }
+if($Wave -eq 4) {
+   $broadRows = @($waveRows | Where-Object Role -eq "broad" | Sort-Object { [int]$_.QueueRank })
+   $continuousRows = @($waveRows | Where-Object Role -eq "continuous" | Sort-Object { [int]$_.QueueRank })
+   if($broadRows.Count -ne 3 -or $continuousRows.Count -ne 1) {
+      throw "Wave 4 no longer matches the frozen three-era plus continuous staging contract."
+   }
+   $stageToken = [guid]::NewGuid().ToString("N")
+   $broadManifest = Join-Path $env:TEMP ("rdmc_wave04_broad_" + $stageToken + ".csv")
+   $continuousManifest = Join-Path $env:TEMP ("rdmc_wave04_continuous_" + $stageToken + ".csv")
+   $stageAPrefix = "RDMC_EXECUTABLE_GATE_WAVE_04_STAGE_A_WORKER"
+   $stageBPrefix = "RDMC_EXECUTABLE_GATE_WAVE_04_STAGE_B_WORKER"
+   try {
+      $broadRows | Export-Csv -LiteralPath $broadManifest -NoTypeInformation -Encoding ASCII
+      $continuousRows | Export-Csv -LiteralPath $continuousManifest -NoTypeInformation -Encoding ASCII
+      Get-ChildItem -Path (Join-Path $repo "outputs\RDMC_EXECUTABLE_GATE_WAVE_04_STAGE_A_WORKER_*.csv") -File -ErrorAction SilentlyContinue |
+         Remove-Item -Force
+      Get-ChildItem -Path (Join-Path $repo "outputs\RDMC_EXECUTABLE_GATE_WAVE_04_STAGE_B_WORKER_*.csv") -File -ErrorAction SilentlyContinue |
+         Remove-Item -Force
+      $stageARoots = @($availableRoots | Select-Object -First $workerCount)
+      & $parallelRunner -ManifestPath $broadManifest -PortableRoots $stageARoots `
+         -UserAuthorizedFocusRisk -OutputPrefix $stageAPrefix -MaxCpuPercent $MaxCpuPercent `
+         -TimeoutMinutesPerConfig $TimeoutMinutesPerConfig `
+         -ExpectedPortableBinarySha256 $sharedBinary.PortableBinarySha256
+
+      $cacheResult = & $tickCacheSync -PortableRoots $availableRoots -Synchronize -UserAuthorizedCacheWrite
+      if($cacheResult.Status -notin @("ALREADY_SYNCHRONIZED","SYNCHRONIZED_NOW")) {
+         throw "Wave 4 tick-cache union did not complete."
+      }
+
+      & $parallelRunner -ManifestPath $continuousManifest -PortableRoots @($availableRoots[0]) `
+         -UserAuthorizedFocusRisk -OutputPrefix $stageBPrefix -MaxCpuPercent $MaxCpuPercent `
+         -TimeoutMinutesPerConfig $TimeoutMinutesPerConfig `
+         -ExpectedPortableBinarySha256 $sharedBinary.PortableBinarySha256
+      & $collector -Wave $Wave -RunnerLedgerGlob "outputs\RDMC_EXECUTABLE_GATE_WAVE_04_STAGE_*_WORKER_*.csv"
+   }
+   finally {
+      Remove-Item -LiteralPath $broadManifest,$continuousManifest -Force -ErrorAction SilentlyContinue
+   }
+}
+else {
+   $outputPrefix = "RDMC_EXECUTABLE_GATE_WAVE_{0:D2}_WORKER" -f $Wave
+   & $parallelRunner -ManifestPath $waveManifest -PortableRoots $availableRoots[0..($workerCount - 1)] `
+      -UserAuthorizedFocusRisk -OutputPrefix $outputPrefix -MaxCpuPercent $MaxCpuPercent `
+      -TimeoutMinutesPerConfig $TimeoutMinutesPerConfig `
+      -ExpectedPortableBinarySha256 $sharedBinary.PortableBinarySha256
+   & $collector -Wave $Wave
+}

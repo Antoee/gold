@@ -60,6 +60,8 @@ $reportIdentityHelperPath = Join-Path $WorkDir "mt5_report_identity_helpers.ps1"
 $portableConfigRunnerPath = Join-Path $WorkDir "run_mt5_portable_config_hidden.ps1"
 $portableWorkerPath = Join-Path $WorkDir "run_mt5_portable_package_worker.ps1"
 $sharedBinaryPreparerPath = Join-Path $WorkDir "prepare_mt5_portable_shared_expert.ps1"
+$tickCacheHelperPath = Join-Path $WorkDir "mt5_tick_cache_sync_helpers.ps1"
+$tickCacheSyncPath = Join-Path $WorkDir "sync_mt5_portable_xauusd_tick_cache.ps1"
 $stagedWaveRunnerPath = Join-Path $WorkDir "run_rdmc_diversified_repair_executable_gate_wave.ps1"
 $stopHelperPath = Join-Path $WorkDir "stop_mt5_stray_processes.ps1"
 $stopWatchdogPath = Join-Path $WorkDir "stop_mt5_focus_watchdog.ps1"
@@ -207,10 +209,16 @@ Add-Result $rows "Report integrity" "Portable runner requires fresh completed re
 Add-Result $rows "Report integrity" "Portable worker resumes only identity-bound evidence" ((Contains-Text $portableWorkerText 'Read-MT5ReportIdentityEvidence') -and (Contains-Text $portableWorkerText 'Write-MT5ReportIdentityEvidence') -and (Contains-Text $portableWorkerText 'ReportIdentityReused') -and (Contains-Text $portableWorkerText 'PackageConfigSha256')) $portableWorkerPath "Require matching config, source, binary, and report identities before reusing a completed row."
 
 $sharedBinaryPreparerText = Read-TextSafe $sharedBinaryPreparerPath
+$tickCacheHelperText = Read-TextSafe $tickCacheHelperPath
+$tickCacheSyncText = Read-TextSafe $tickCacheSyncPath
+$tickCacheContractText = $tickCacheSyncText + "`n" + $tickCacheHelperText
 $stagedWaveRunnerText = Read-TextSafe $stagedWaveRunnerPath
 Add-Result $rows "Shared binary" "Compile-once preparer is guarded and exact" ((Test-Path -LiteralPath $sharedBinaryPreparerPath) -and (Contains-Text $sharedBinaryPreparerText 'assert_mt5_launch_allowed.ps1') -and (Contains-Text $sharedBinaryPreparerText 'COMPILED_ONCE_AND_DISTRIBUTED') -and (Contains-Text $sharedBinaryPreparerText 'Shared expert distribution verification failed') -and ([regex]::Matches($sharedBinaryPreparerText, [regex]::Escape('HiddenProcess]::StartHidden')).Count -eq 1)) $sharedBinaryPreparerPath "Compile once on one allowlisted leader and verify exact source, binary, and identity bytes on every root."
 Add-Result $rows "Shared binary" "Staged wave prepares before parallel execution" ((Contains-Text $stagedWaveRunnerText '& $sharedBinaryPreparer') -and (Contains-Text $stagedWaveRunnerText '-ExpectedPortableBinarySha256 $sharedBinary.PortableBinarySha256') -and $stagedWaveRunnerText.LastIndexOf('& $sharedBinaryPreparer', [StringComparison]::Ordinal) -lt $stagedWaveRunnerText.IndexOf('& $parallelRunner', [StringComparison]::Ordinal)) $stagedWaveRunnerPath "Prepare and attest one shared EX5 before starting parallel workers."
 Add-Result $rows "Shared binary" "Direct workers cannot compile after shared preparation" ((Contains-Text $portableConfigRunnerText 'independent worker compilation is prohibited') -and (Contains-Text $portableWorkerText 'differs from the prepared shared binary') -and (Contains-Text $portableWorkerText 'ExpectedPortableBinarySha256')) $portableWorkerPath "Fail before testing when prepared source, binary, or identity bytes drift."
+Add-Result $rows "Tick cache" "Cache union is XAUUSD-only and process-free" ((Test-Path -LiteralPath $tickCacheSyncPath) -and (Test-Path -LiteralPath $tickCacheHelperPath) -and (Contains-Text $tickCacheContractText 'bases\MetaQuotes-Demo\ticks\XAUUSD') -and (Contains-Text $tickCacheSyncText 'Portable MT5 processes must be fully stopped') -and !(Contains-Text $tickCacheContractText 'Start-Process') -and !(Contains-Text $tickCacheContractText 'Start-MT5Hidden')) $tickCacheSyncPath "Restrict synchronization to allowlisted XAUUSD tick caches and require stopped portable terminals."
+Add-Result $rows "Tick cache" "Cache copies are complete-month, hash-bound, and no-overwrite" ((Contains-Text $tickCacheContractText 'SKIPPED_PARTIAL_CUTOFF') -and (Contains-Text $tickCacheContractText 'MISSING_ALL_ROOTS') -and (Contains-Text $tickCacheContractText 'HASH_CONFLICT') -and (Contains-Text $tickCacheContractText 'sync.tmp.') -and (Contains-Text $tickCacheContractText 'refusing overwrite') -and (Contains-Text $tickCacheSyncText 'did not produce one exact union')) $tickCacheSyncPath "Never copy the partial cutoff month; require complete-month coverage, reject conflicts, and verify every missing-file copy."
+Add-Result $rows "Tick cache" "Wave 4 warms cache before continuous real ticks" ((Contains-Text $stagedWaveRunnerText 'DISJOINT_THEN_SYNC_THEN_CONTINUOUS') -and (Contains-Text $stagedWaveRunnerText '$cacheResult = & $tickCacheSync') -and $stagedWaveRunnerText.IndexOf('& $parallelRunner -ManifestPath $broadManifest', [StringComparison]::Ordinal) -lt $stagedWaveRunnerText.IndexOf('$cacheResult = & $tickCacheSync', [StringComparison]::Ordinal) -and $stagedWaveRunnerText.IndexOf('$cacheResult = & $tickCacheSync', [StringComparison]::Ordinal) -lt $stagedWaveRunnerText.IndexOf('& $parallelRunner -ManifestPath $continuousManifest', [StringComparison]::Ordinal)) $stagedWaveRunnerPath "Run disjoint eras, union verified complete-month ticks, then run the overlapping continuous row."
 
 $stopHelperText = Read-TextSafe $stopHelperPath
 Add-Result $rows "Cleanup" "Stop-stray helper exists" (Test-Path -LiteralPath $stopHelperPath) $stopHelperPath "Restore work\stop_mt5_stray_processes.ps1."
@@ -234,7 +242,7 @@ Add-Result $rows "Money-ready refresh" "Money-ready refresh does not launch MT5"
 $scriptFiles = @(Get-ChildItem -LiteralPath $WorkDir -Filter "*.ps1" -File)
 $runnerFiles = New-Object System.Collections.Generic.List[object]
 foreach($file in $scriptFiles) {
-   if($file.Name -in @("assert_mt5_launch_allowed.ps1", "mt5_background_helpers.ps1", "mt5_focus_watchdog.ps1", "stop_mt5_focus_watchdog.ps1", "audit_mt5_local_safety.ps1", "stop_mt5_stray_processes.ps1", "build_report_import_preflight.ps1", "test_mt5_hidden_launcher_lock.ps1", "test_first_pass_hidden_runner_lock.ps1")) {
+   if($file.Name -in @("assert_mt5_launch_allowed.ps1", "mt5_background_helpers.ps1", "mt5_focus_watchdog.ps1", "stop_mt5_focus_watchdog.ps1", "audit_mt5_local_safety.ps1", "stop_mt5_stray_processes.ps1", "build_report_import_preflight.ps1", "test_mt5_hidden_launcher_lock.ps1", "test_first_pass_hidden_runner_lock.ps1", "test_mt5_portable_xauusd_tick_cache_sync.ps1")) {
       continue
    }
 
