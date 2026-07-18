@@ -10,8 +10,8 @@ $queuePath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL
 $manifestPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_MANIFEST.csv"
 $documentPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_PACKAGE.md"
 
-$expectedSourceHash = "7884B0890C0BAF0053DC2ED122C8F1AD9BD139017ED67FEEED2BB4B5CD499F5D"
-$expectedProfileHash = "36B13286D026B5D8C365F197416E2A4D4FFF8B99AA56F78752988B875952965D"
+$expectedSourceHash = "AE56DD40DD5A0619A54252081F64CBABDEF7F002066C50AEE3ECA9C8CF100AB8"
+$expectedProfileHash = "0CE2FAFCE3AD8BDC88D655B4C94364EA5F2B03C3BB4A5EC24C6308B6CC1D35E8"
 $expectedV1SourceHash = "4740338598E290360946FE414CC6F2FE0CF3B704006860514367DCB996A8D2B5"
 
 $checks = [System.Collections.Generic.List[object]]::new()
@@ -203,10 +203,12 @@ Add-Check "every config embeds the exact profile" $configProfilePass "profile_li
 Add-Check "locked package contains no MT5 reports" ($reports.Count -eq 0) "reports=$($reports.Count)"
 Add-Check "manifest remains static and unpromoted" ($manifest.Count -eq 1 -and $manifest[0].Status -eq 'STATIC_ONLY_LOCKED' -and $manifest[0].PromotionStatus -eq 'NOT_PROMOTED' -and $manifest[0].HistoricalBestChanged -eq 'NO') "rows=$($manifest.Count)"
 Add-Check "manifest freezes all-entry execution hardening" ($manifest[0].EntryPathSafetyStatus -eq 'PASS_74_CHECKS' -and $manifest[0].MomentumCostMarginGuard -eq 'ENABLED' -and $manifest[0].PortfolioCooldownAllLanes -eq 'ENABLED') "$($manifest[0].EntryPathSafetyStatus)"
+Add-Check "manifest freezes lightweight realtime protection" ($manifest[0].RealtimeProtectionStatus -eq 'PASS_31_CHECKS' -and $manifest[0].RealtimeEquityDrawdownClose -eq 'ENABLED' -and $manifest[0].RealtimeMissingStopClose -eq 'ENABLED' -and $manifest[0].NormalPositionManagement -eq 'NEW_BAR') "$($manifest[0].RealtimeProtectionStatus)"
 
 $document = Get-Content -LiteralPath $documentPath -Raw
 Add-Check "package states restart repair boundary" ($document.Contains('supersedes the uncompiled v1 package') -and $document.Contains('does not establish a new best') -and $document.Contains('Static checks cannot prove compilation')) "boundary present"
 Add-Check "package states entry-hardening evidence boundary" ($document.Contains('All four order-opening sites') -and $document.Contains('earlier post-hoc collision score is not attributed')) "boundary present"
+Add-Check "package states realtime efficiency boundary" ($document.Contains('lightweight per-tick emergency path') -and $document.Contains('performs no trade-history scan') -and $document.Contains('intrabar emergency enforcement can change entries and exits')) "boundary present"
 Add-Check "registered forward candidate stays unchanged" ($document.Contains('does not') -and $manifest[0].ForwardCandidateChanged -eq 'NO') $manifest[0].ForwardCandidateChanged
 Add-Check "no account identifier published" ($document -notmatch '(?i)account.?id\s*[:=]\s*\d{5,}' -and $document -notmatch '(?i)login\s*[:=]\s*\d{5,}') "public markdown clean"
 Add-Check "no GitHub token published" ($document -notmatch 'github_pat_|gh[pousr]_[A-Za-z0-9]{20,}') "public markdown clean"

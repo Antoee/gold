@@ -5560,6 +5560,27 @@ public:
       return false;
    }
 
+   bool RealtimeProtectionLimitHit(string &reason)
+   {
+      if(InpMaxEquityDrawdownPercent > 0.0 &&
+         CurrentEquityDrawdownPercent() >= InpMaxEquityDrawdownPercent)
+      {
+         reason = "equity drawdown limit";
+         return true;
+      }
+
+      bool hasUnprotectedPosition = false;
+      OpenRiskPercent(hasUnprotectedPosition);
+      if(hasUnprotectedPosition && InpBlockUnprotectedExposure)
+      {
+         reason = "unprotected open exposure";
+         return true;
+      }
+
+      reason = "";
+      return false;
+   }
+
    double NormalizeLots(const double lots)
    {
       double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
@@ -17022,6 +17043,9 @@ public:
 
          if(trade.PositionClose(ticket))
             logger.Write("risk_exit", ticket, (type == POSITION_TYPE_BUY ? "buy" : "sell"), volume, openPrice, sl, tp, 0, profit, reason, atr);
+         else if(InpLogLevel >= LOG_ERRORS)
+            Print("Risk close failed for ", ticket, ": ", reason,
+                  " / ", trade.ResultRetcodeDescription());
       }
    }
 
@@ -23988,6 +24012,18 @@ void OnTick()
    if(!MQLInfoInteger(MQL_TESTER))
       g_accountHistoryStateDirty = true;
    tickMicrostructure.Update();
+   if(InpClosePositionsOnRiskLimit)
+   {
+      string realtimeRiskReason = "";
+      if(riskManager.RealtimeProtectionLimitHit(realtimeRiskReason))
+      {
+         positionManager.CloseAll(realtimeRiskReason);
+         g_momentum.CloseAll(realtimeRiskReason);
+         g_lastBlockReason = realtimeRiskReason;
+         DrawDashboard();
+         return;
+      }
+   }
    bool newBar = IsNewBar();
    g_momentum.OnTick();
    if(InpTradeOnlyNewBar && !newBar)
