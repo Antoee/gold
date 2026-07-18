@@ -1,14 +1,13 @@
 [CmdletBinding()]
 param(
-   [string]$RegistrationPath = 'outputs\RDMC_FORWARD_DEMO_DRAFT_REGISTRATION.json',
-   [string]$PrimaryDecisionPath = 'outputs\RDMC_DIVERSIFIED_REPAIR_EXECUTABLE_GATE_DECISION.csv',
-   [string]$LedgerDecisionPath = 'outputs\RDMC_EXECUTABLE_LEDGER_STRESS_DECISION.csv',
-   [string]$SecondBrokerDecisionPath = 'outputs\RDMC_SECOND_BROKER_VALIDATION_DECISION.csv',
+   [string]$RegistrationPath = 'outputs\RDMC_MONEY_READY_GATE_REPAIR_FORWARD_DEMO_DRAFT_REGISTRATION.json',
+   [string]$PrimaryDecisionPath = 'outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_DECISION.csv',
+   [string]$LedgerDecisionPath = 'outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_LEDGER_STRESS_DECISION.csv',
+   [string]$SecondBrokerDecisionPath = 'outputs\RDMC_MONEY_READY_GATE_REPAIR_SECOND_BROKER_VALIDATION_DECISION.csv',
    [string]$HeartbeatPath = '',
    [string]$EvidenceLogPath = '',
-   [string]$StatusCsvPath = 'outputs\RDMC_FORWARD_DEMO_PREFLIGHT.csv',
-   [string]$StatusMarkdownPath = 'outputs\RDMC_FORWARD_DEMO_PREFLIGHT.md',
-   [switch]$AllowValidatedBandVWAPReversion
+   [string]$StatusCsvPath = 'outputs\RDMC_MONEY_READY_GATE_REPAIR_FORWARD_DEMO_PREFLIGHT.csv',
+   [string]$StatusMarkdownPath = 'outputs\RDMC_MONEY_READY_GATE_REPAIR_FORWARD_DEMO_PREFLIGHT.md'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -105,7 +104,7 @@ $auditTempMarkdown = Join-Path ([IO.Path]::GetTempPath()) "rdmc-forward-audit-$P
 try {
    $static = & (Join-Path $PSScriptRoot 'audit_rdmc_forward_demo_profile.ps1') `
       -ProfilePath $forwardProfile -StatusCsvPath $auditTempCsv -StatusMarkdownPath $auditTempMarkdown `
-      -AllowValidatedBandVWAPReversion:$AllowValidatedBandVWAPReversion
+      -AllowValidatedBandVWAPReversion
 }
 finally {
    Remove-Item -LiteralPath $auditTempCsv,$auditTempMarkdown -Force -ErrorAction SilentlyContinue
@@ -195,7 +194,7 @@ $failed = @($gates | Where-Object { !$_.Pass })
 $ready = $failed.Count -eq 0
 $gates | Export-Csv -LiteralPath $statusCsvFull -NoTypeInformation -Encoding ASCII
 @(
-   '# RDMC Forward-Demo Activation Preflight', '',
+   '# RDMC Money-Ready Gate-Repair Forward-Demo Activation Preflight', '',
    "**Ready to register: $ready.**", '',
    'This read-only preflight did not register an account, freeze a funding baseline, amend the candidate, or publish an account identifier.', '',
    "- Draft state: ``$($registration.activationStatus)``",
