@@ -1,0 +1,49 @@
+# RDMC Forward-Demo Activation Preflight
+
+**Ready to register: False.**
+
+This read-only preflight did not register an account, freeze a funding baseline, amend the candidate, or publish an account identifier.
+
+- Draft state: `PREPARED_NOT_REGISTERED`
+- Observed balance: `NaN`
+- Required balance: `10000` (+/- `1`)
+- Observed funding-history count: `-1` (not frozen)
+- Failed gates: `static-trade-readiness, primary-executable-gate, executable-ledger-stress, distinct-broker-gate, candidate-compiled-binary, sentinel-compiled-binary, heartbeat-present, heartbeat-schema, heartbeat-fresh, heartbeat-identity, demo-hedging-usd, expected-symbol, history-available, funding-baseline-observable, no-foreign-trades, connected, starting-balance, starting-equity, flat-account, no-unprotected-positions, zero-open-risk, algorithmic-trading-disabled`
+
+| Gate | Pass | Evidence |
+|---|---:|---|
+| draft-state | True | No registration time or funding baseline exists. |
+| account-identifier-excluded | True | No account or server identifier field is permitted. |
+| candidate-source-hash | True | Frozen source identity. |
+| research-profile-hash | True | Frozen research profile identity. |
+| forward-profile-hash | True | Derived demo profile identity. |
+| sentinel-source-hash | True | Read-only sentinel source identity. |
+| sentinel-profile-hash | True | Read-only sentinel profile identity. |
+| input-count | True | Both profiles must contain exactly 589 inputs. |
+| operational-difference-allowlist | True | Changed fields: InpEvidenceProfileId, InpEvidenceRunLabel, InpLogFileName, InpLogLevel, InpUseResearchTesterOnlyLock, InpUseTradeReadinessSafetyGate. |
+| strategy-risk-inputs-unchanged | True | No strategy or risk setting was changed for the draft. |
+| static-blocker-identity | True | Blockers: band-vwap-reversion-disabled, consecutive-loss-cap. |
+| static-trade-readiness | False | Status=BLOCKED; blockers=band-vwap-reversion-disabled, consecutive-loss-cap. |
+| primary-executable-gate | False | status=LOCKED_AWAITING_WAVE_01_REPORTS; identity=True. |
+| executable-ledger-stress | False | status=AWAITING_EXECUTABLE_MT5_GATE; identity=True. |
+| distinct-broker-gate | False | status=AWAITING_PRIMARY_EXECUTABLE_LEDGER_STRESS; identity=True. |
+| candidate-compiled-binary | False | status=PENDING_EXECUTABLE_GATE. |
+| sentinel-compiled-binary | False | status=PENDING_LOCKED_COMPILE. |
+| heartbeat-present | False | Dedicated read-only heartbeat exists. |
+| heartbeat-schema | False | One row with the exact nonidentifying account-contract schema. |
+| heartbeat-fresh | False | Heartbeat unavailable or invalid. |
+| heartbeat-identity | False | Heartbeat unavailable or invalid. |
+| demo-hedging-usd | False | Heartbeat unavailable or invalid. |
+| expected-symbol | False | Heartbeat unavailable or invalid. |
+| history-available | False | Heartbeat unavailable or invalid. |
+| funding-baseline-observable | False | Heartbeat unavailable or invalid. |
+| no-foreign-trades | False | Heartbeat unavailable or invalid. |
+| connected | False | Heartbeat unavailable or invalid. |
+| starting-balance | False | Heartbeat unavailable or invalid. |
+| starting-equity | False | Heartbeat unavailable or invalid. |
+| flat-account | False | Heartbeat unavailable or invalid. |
+| no-unprotected-positions | False | Heartbeat unavailable or invalid. |
+| zero-open-risk | False | Heartbeat unavailable or invalid. |
+| algorithmic-trading-disabled | False | Heartbeat unavailable or invalid. |
+| empty-evidence-log | True | Dedicated evidence log is absent or empty. |
+| real-account-lock | True | Real-account trading remains disabled. |

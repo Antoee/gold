@@ -1,0 +1,5 @@
+"Scenario","ReadyToRegister","ExpectedReady","RequiredFailure","Pass"
+"clean_10000_but_prerequisites_pending","False","False","static/executable/stress/broker/binaries","True"
+"wrong_100000_capital","False","False","starting-balance;starting-equity","True"
+"wrong_candidate_identity","False","False","heartbeat-identity","True"
+"stale_sentinel_heartbeat","False","False","heartbeat-fresh","True"
