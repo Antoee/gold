@@ -1,0 +1,9 @@
+Sampler,StressScenario,Trials,Seed,BlockLength,PreservesLocalOrder,MaxSlippageR,MaxDelayR,MaxSpreadShockR,SpreadShockProbability,MissedWinnerProbability,P05TradeCount,MedianTradeCount,P95TradeCount,P05NetProfit,MedianNetProfit,P95NetProfit,MedianProfitFactor,P95MaxClosedDrawdownPercent,P95MaxConsecutiveLosses,RedTrialPercent,GatePass
+moving_block_08,standard,10000,26071821,8,True,0.04,0.06,0.08,0.1,0.05,368.0,368.0,368.0,824.05,1556.71,2355.79,1.6323,2.5404,11.0,0.01,True
+moving_block_08,severe,10000,26071822,8,True,0.08,0.12,0.16,0.2,0.1,368.0,368.0,368.0,342.65,1044.03,1820.43,1.3949,3.5836,13.0,0.64,True
+moving_block_16,standard,10000,26071823,16,True,0.04,0.06,0.08,0.1,0.05,368.0,368.0,368.0,796.17,1543.95,2377.71,1.6286,2.2894,10.0,0.02,True
+moving_block_16,severe,10000,26071824,16,True,0.08,0.12,0.16,0.2,0.1,368.0,368.0,368.0,305.18,1035.71,1830.79,1.393,3.4144,11.0,0.69,True
+moving_block_24,standard,10000,26071825,24,True,0.04,0.06,0.08,0.1,0.05,368.0,368.0,368.0,778.95,1543.75,2452.45,1.6273,2.1497,9.0,0.03,True
+moving_block_24,severe,10000,26071826,24,True,0.08,0.12,0.16,0.2,0.1,368.0,368.0,368.0,279.2,1031.18,1868.96,1.3907,3.3219,11.0,0.86,True
+whole_window,standard,10000,26071827,0,True,0.04,0.06,0.08,0.1,0.05,281.0,371.0,447.0,1053.55,1547.8,2113.54,1.6333,1.5912,9.0,0.0,True
+whole_window,severe,10000,26071828,0,True,0.08,0.12,0.16,0.2,0.1,283.0,371.0,448.0,523.89,1043.79,1604.01,1.3953,2.5372,12.0,0.04,True

@@ -1,0 +1,5 @@
+Component,Trades,TradeSharePercent,NetProfit,NetSharePercent,InitialRiskSum,RiskSharePercent,ComponentProfitFactor,IsLargestNetContributor,IsLargestRiskContributor,LeaveOneOutNetProfit,LeaveOneOutProfitFactor,LeaveOneOutMaxClosedDrawdownPercent,LeaveOneOutPositiveWindows,LeaveOneOutOlder2015To2018,LeaveOneOutMiddle2019To2022,LeaveOneOutRecent2023To2026
+DDB045_ANNUAL_RESTART,2,0.543,14.48,0.7,40.41,0.768,1.7739,False,False,2053.16,1.8952,0.8668,12,673.03,650.83,729.3
+MTSM_CAP12_ANNUAL,311,84.511,484.12,23.414,3656.85,69.524,1.282,False,True,1583.52,3.6607,1.0726,12,284.21,718.82,580.49
+R20_CURRENT_SOURCE_ANNUAL,22,5.978,263.72,12.755,518.06,9.849,2.4491,False,False,1803.92,1.8468,0.873,11,687.51,515.68,600.73
+RRO_DI12_CAP12_CONTINUOUS,33,8.967,1305.32,63.131,1044.54,19.859,4.3092,True,False,762.32,1.3975,1.7603,9,417.78,67.16,277.38
