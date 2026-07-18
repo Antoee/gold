@@ -69,6 +69,7 @@ $tests = @(
    @('identity-bound execution harness', 'test_rdmc_money_ready_gate_repair_execution_harness.ps1'),
    @('compile-once wave runner', 'test_rdmc_money_ready_gate_repair_executable_wave_runner.ps1'),
    @('hard-locked source staging', 'test_rdmc_money_ready_gate_repair_source_staging.ps1'),
+   @('strategy rewrite escalation policy', 'test_rdmc_strategy_rewrite_escalation_policy.ps1'),
    @('identity-bound collector', 'test_rdmc_money_ready_gate_repair_executable_collector.ps1'),
    @('executable ledger stress', 'test_rdmc_money_ready_gate_repair_ledger_package.ps1'),
    @('distinct-broker gate', 'test_rdmc_money_ready_gate_repair_second_broker_harness.ps1'),
@@ -122,6 +123,14 @@ if($sourceStagingRows.Count -ne 4 -or @($sourceStagingRows | Where-Object {
    $_.Pass -ne 'True' -or $_.MQL5Launched -ne 'False'
 }).Count -ne 0) {
    throw 'Hard-locked source staging no longer preserves its identity and no-launch boundary.'
+}
+
+$rewritePolicy = @(Import-Csv -LiteralPath (Join-Path $repo 'outputs\RDMC_STRATEGY_REWRITE_ESCALATION_POLICY.csv'))
+$rewritePolicyTests = @(Import-Csv -LiteralPath (Join-Path $repo 'outputs\RDMC_STRATEGY_REWRITE_ESCALATION_POLICY_TESTS.csv'))
+if($rewritePolicy.Count -ne 5 -or ($rewritePolicy.CumulativeValidReports -join ',') -ne '2,6,8,12,24' -or
+   @($rewritePolicy | Select-Object -Skip 1 | Where-Object Disposition -ne 'CODE_REWRITE_REQUIRED').Count -ne 0 -or
+   $rewritePolicyTests.Count -ne 10 -or @($rewritePolicyTests | Where-Object Pass -ne 'True').Count -ne 0) {
+   throw 'Strategy rewrite escalation policy no longer binds failed waves to deterministic code-change decisions.'
 }
 
 $ledger = Import-OneCsvRow (Join-Path $repo 'outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_LEDGER_STRESS_DECISION.csv') 'Ledger-stress decision'
@@ -181,9 +190,10 @@ if($afterProcesses.Count -ne 0 -or !(Test-Path -LiteralPath $repoLock) -or !(Tes
 
 $summary = [pscustomobject][ordered]@{
    Status = 'PASS'
-   DirectTestEntrypoints = 11
+   DirectTestEntrypoints = 12
    SourceStagingScenarios = 4
    ExactSourceWorkersStaged = 4
+   RewritePolicyChecks = 10
    StaticChecksPassed = 63
    ExecutableRows = 24
    ExecutableReportsPresent = 0
@@ -207,8 +217,9 @@ $summary | Export-Csv -LiteralPath $summaryCsv -NoTypeInformation -Encoding ASCI
 @(
    '# RDMC Money-Ready Gate-Repair Offline Audit', '',
    '**PASS. The complete successor offline stack is deterministic, launch-locked, identity-bound, and fail-closed with zero executable or forward evidence.**', '',
-   '- Direct test entrypoints: `11`',
+   '- Direct test entrypoints: `12`',
    '- Hard-locked source-staging regressions: `4/4` on four portable workers',
+   '- Strategy rewrite escalation checks: `10/10`',
    '- Static readiness: `63/63`',
    '- Executable queue: `24` rows in waves `2,4,2,4,12`',
    '- Executable evaluator regressions: `6/6`',
@@ -232,7 +243,7 @@ if(!$SkipCleanWorktreeCheck) {
 
 [pscustomobject]@{
    Status = 'PASS'
-   DirectTestEntrypoints = 11
+   DirectTestEntrypoints = 12
    CanonicalDriftDetected = $false
    CleanWorktreeVerified = !$SkipCleanWorktreeCheck
    ReportsPresent = 0
