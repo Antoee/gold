@@ -109,3 +109,7 @@ outputs/rdmc_diversified_repair_executable_gate_package/configs/*.ini -text whit
 outputs/RDMC_EXECUTABLE_LEDGER_STRESS_*.csv text eol=lf
 outputs/RDMC_EXECUTABLE_LEDGER_STRESS_*.md text eol=lf
 work/*rdmc_executable_trade_ledger_stress.py text eol=lf
+outputs/RDMC_SECOND_BROKER_*.csv -text whitespace=cr-at-eol
+outputs/RDMC_SECOND_BROKER_VALIDATION_*.md text eol=lf
+outputs/rdmc_second_broker_validation_package/*.md text eol=lf
+work/*rdmc_second_broker*.py text eol=lf

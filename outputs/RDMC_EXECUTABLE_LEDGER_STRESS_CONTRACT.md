@@ -53,5 +53,6 @@ All eight sampler/stress rows must pass.
 
 - Monte Carlo drawdown is a closed-trade path statistic. Identity-bound MT5 reports remain authoritative for intratrade equity drawdown.
 - A pass is trade-level executable evidence, not proof of future profit and not real-money approval.
-- Broker specification/cost variation and valid forward evidence on the frozen `$10,000` demo contract remain mandatory.
+- The preregistered `RDMC_SECOND_BROKER_VALIDATION_CONTRACT.md` must pass on genuinely distinct broker data; proxy cost inputs cannot substitute for it.
+- Valid forward evidence on the frozen `$10,000` demo contract remains mandatory.
 - The registered forward candidate, source/profile/binary/run identity, and real-account lock do not change through this analyzer.
