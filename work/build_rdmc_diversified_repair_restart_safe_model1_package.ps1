@@ -16,8 +16,8 @@ $launchLock = Join-Path $repo "work\MT5_LOCAL_LAUNCH_DISABLED.lock"
 $launchUnlock = Join-Path $repo "work\ALLOW_MT5_LOCAL_LAUNCH.unlock"
 
 $expectedV1SourceHash = "4740338598E290360946FE414CC6F2FE0CF3B704006860514367DCB996A8D2B5"
-$expectedSourceHash = "10DF970C59843F88A9A2DF16DBF5EF6C067F818680DFAE380717781DFEBC6517"
-$expectedProfileHash = "C46152D20D32B3C55E8E0B53A599E70DFF9C58138553676FF878750E24CF1922"
+$expectedSourceHash = "7884B0890C0BAF0053DC2ED122C8F1AD9BD139017ED67FEEED2BB4B5CD499F5D"
+$expectedProfileHash = "36B13286D026B5D8C365F197416E2A4D4FFF8B99AA56F78752988B875952965D"
 
 foreach($required in @($source, $profile, $v1Source, $launchLock)) {
    if(!(Test-Path -LiteralPath $required -PathType Leaf)) {
@@ -113,6 +113,9 @@ $manifest = [pscustomobject]@{
    SourceInputs = $sourceInputs.Count
    ProfileInputs = $profileInputs.Count
    ConfigCount = $queue.Count
+   EntryPathSafetyStatus = "PASS_74_CHECKS"
+   MomentumCostMarginGuard = "ENABLED"
+   PortfolioCooldownAllLanes = "ENABLED"
    CompileStatus = "NOT_RUN_LOCAL_LOCK_ACTIVE"
    BacktestStatus = "NOT_RUN_LOCAL_LOCK_ACTIVE"
    HistoricalBestChanged = "NO"
@@ -136,6 +139,9 @@ $packageLines = @(
    '- Deposits, withdrawals, credits, corrections, bonuses, foreign trade history, foreign open positions, missing persistence, and invalid stored peaks fail closed.',
    '- Broker commission, charge, and interest deal types are not misclassified as new funding.',
    '- Runtime history is refreshed before either momentum or primary entry evaluation. Position management and protective exits remain available.',
+   '- All four order-opening sites now require broker-native lot sizing, account-wide exposure approval, trading-cost approval, margin approval, explicit magic, and bounded deviation before Buy/Sell.',
+   '- The momentum lane now uses the same trading-cost and margin guards as the other three lanes.',
+   '- Isolated lanes may bypass adaptive strategy pauses, but the hard portfolio consecutive-loss and four-hour post-loss cooldown gates can no longer be bypassed.',
    "",
    "## Frozen identity",
    "",
@@ -147,7 +153,7 @@ $packageLines = @(
    "",
    "## Hard boundary",
    "",
-   'The source is tester-only, real-account trading is disabled, and all 12 annual/YTD Model1 rows remain `LOCKED_LOCAL_LAUNCH_DISABLED`. Static checks cannot prove compilation, executable strategy equivalence, profit, drawdown, or restart behavior inside MT5. Compilation, annual and continuous Model1, annual and continuous real-tick Model4, cost stress, Monte Carlo, broker variation, and valid forward evidence are still required.'
+   'The source is tester-only, real-account trading is disabled, and all 12 annual/YTD Model1 rows remain `LOCKED_LOCAL_LAUNCH_DISABLED`. The new cost, margin, and hard-cooldown enforcement can reject historical entries, so the earlier post-hoc collision score is not attributed to this executable path. Static checks cannot prove compilation, profit, drawdown, or restart behavior inside MT5. Compilation, annual and continuous Model1, annual and continuous real-tick Model4, cost stress, Monte Carlo, broker variation, and valid forward evidence are still required.'
 )
 [IO.File]::WriteAllLines($packagePath, $packageLines, [Text.Encoding]::ASCII)
 

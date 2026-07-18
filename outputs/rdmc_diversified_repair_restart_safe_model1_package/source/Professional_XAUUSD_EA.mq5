@@ -5425,8 +5425,7 @@ public:
          return false;
       }
 
-      if(!bypassStrategyLossState &&
-         InpMaxConsecutiveLosses > 0 && m_consecutiveLosses >= InpMaxConsecutiveLosses)
+      if(InpMaxConsecutiveLosses > 0 && m_consecutiveLosses >= InpMaxConsecutiveLosses)
       {
          if(InpCooldownMinutesAfterLoss <= 0 || m_lastLossTime <= 0)
          {
@@ -5441,7 +5440,7 @@ public:
          }
       }
 
-      if(!bypassStrategyLossState && m_lastLossTime > 0 && InpCooldownMinutesAfterLoss > 0)
+      if(m_lastLossTime > 0 && InpCooldownMinutesAfterLoss > 0)
       {
          if(TimeCurrent() - m_lastLossTime < InpCooldownMinutesAfterLoss * 60)
          {
@@ -17594,6 +17593,13 @@ bool IndicatorBufferValue(const int handle, const int buffer, const int shift, d
 
 bool TradeEnvironmentAllows(string &reason);
 bool WeekendCloseWindowActive();
+bool TradingCostGuardAllows(const double stopDistance,
+                            const double lots,
+                            string &reason);
+bool MarginGuardAllows(const ENUM_TRADE_BIAS bias,
+                       const double lots,
+                       const double entryPrice,
+                       string &reason);
 
 class CMomentumLane
 {
@@ -17863,6 +17869,12 @@ private:
       lots = riskManager.NormalizeLots(MathMin(lots, MathMax(0.0, InpMOMaximumPositionLots)));
       string exposureReason = "";
       if(lots <= 0.0 || !riskManager.ExposureAllows(bias, entryPrice, stopDistance, lots, exposureReason))
+         return false;
+      string costReason = "";
+      if(!TradingCostGuardAllows(stopDistance, lots, costReason))
+         return false;
+      string marginReason = "";
+      if(!MarginGuardAllows(bias, lots, entryPrice, marginReason))
          return false;
       m_trade.SetExpertMagicNumber(InpMOMagicNumber);
       m_trade.SetDeviationInPoints(InpMODeviationPoints);
