@@ -4,8 +4,8 @@
 //| No martingale, grid, averaging down, or recovery systems           |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.15"
-#property description "Restart-safe, hedging-locked and broker-reconciled XAUUSD research portfolio; tester-only until independently validated."
+#property version   "1.16"
+#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio; tester-only until independently validated."
 
 #include <Trade/Trade.mqh>
 
@@ -2426,6 +2426,76 @@ bool RuntimeAccountHistoryContractAllows(string &reason)
    g_lastAccountHistoryAuditTime = TimeCurrent();
    reason = g_cachedAccountHistoryReason;
    return g_cachedAccountHistoryValid;
+}
+
+bool EntryTradePermissionsAllow(const ENUM_TRADE_BIAS bias, string &reason)
+{
+   if(bias != BIAS_BUY && bias != BIAS_SELL)
+   {
+      reason = "entry permission invalid direction";
+      return false;
+   }
+
+   if(!MQLInfoInteger(MQL_TESTER))
+   {
+      if(!TerminalInfoInteger(TERMINAL_CONNECTED))
+      {
+         reason = "entry permission terminal disconnected";
+         return false;
+      }
+      if(!TerminalInfoInteger(TERMINAL_TRADE_ALLOWED))
+      {
+         reason = "entry permission terminal automated trading disabled";
+         return false;
+      }
+      if(!MQLInfoInteger(MQL_TRADE_ALLOWED))
+      {
+         reason = "entry permission EA automated trading disabled";
+         return false;
+      }
+      if(!AccountInfoInteger(ACCOUNT_TRADE_ALLOWED))
+      {
+         reason = "entry permission account trading disabled";
+         return false;
+      }
+      if(!AccountInfoInteger(ACCOUNT_TRADE_EXPERT))
+      {
+         reason = "entry permission account expert trading disabled";
+         return false;
+      }
+   }
+
+   long orderMode = SymbolInfoInteger(_Symbol, SYMBOL_ORDER_MODE);
+   if((orderMode & SYMBOL_ORDER_MARKET) == 0)
+   {
+      reason = "entry permission market orders disabled";
+      return false;
+   }
+   if((orderMode & SYMBOL_ORDER_SL) == 0)
+   {
+      reason = "entry permission protective stops disabled";
+      return false;
+   }
+
+   ENUM_SYMBOL_TRADE_MODE tradeMode =
+      (ENUM_SYMBOL_TRADE_MODE)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_MODE);
+   if(tradeMode == SYMBOL_TRADE_MODE_FULL ||
+      (bias == BIAS_BUY && tradeMode == SYMBOL_TRADE_MODE_LONGONLY) ||
+      (bias == BIAS_SELL && tradeMode == SYMBOL_TRADE_MODE_SHORTONLY))
+   {
+      reason = "allowed";
+      return true;
+   }
+
+   if(tradeMode == SYMBOL_TRADE_MODE_DISABLED)
+      reason = "entry permission symbol disabled";
+   else if(tradeMode == SYMBOL_TRADE_MODE_CLOSEONLY)
+      reason = "entry permission symbol close-only";
+   else if(bias == BIAS_BUY)
+      reason = "entry permission long direction disabled";
+   else
+      reason = "entry permission short direction disabled";
+   return false;
 }
 
 string InitialRiskKey(const ulong ticket)
@@ -5848,6 +5918,9 @@ public:
                        const double lots,
                        string &reason)
    {
+      if(!EntryTradePermissionsAllow(bias, reason))
+         return false;
+
       if(InpUseAccountWideExposureGuard)
       {
          if(OrdersTotal() > 0)

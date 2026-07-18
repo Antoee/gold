@@ -26,11 +26,13 @@ This package supersedes the uncompiled v1 package before its first MT5 run. It p
 - Entry, margin-cap, and partial-close volumes are rounded down with the broker-provided `SYMBOL_VOLUME_STEP`; precision is derived from the step instead of being hardcoded to two decimals.
 - Live account-history validation is invalidated by deal and generic trade events, with a fixed 60-second watchdog for missed or delayed events. Active positions and orders remain uncached and are checked on every entry evaluation.
 - Initialization requires `ACCOUNT_MARGIN_MODE_RETAIL_HEDGING` before capital registration, indicator allocation, or executor setup. Netting, exchange, and unknown accounting modes fail closed because ticket ownership and partial-close behavior depend on hedging semantics.
+- Every new entry requires live terminal, EA, and account trading permission plus a compatible symbol direction with market-order and protective-stop support.
+- Entry-permission checks stay inside shared exposure approval, so permission loss blocks new exposure without removing the protective management and close paths.
 
 ## Frozen identity
 
-- Source SHA-256: `0C14343AA9BE19936A0DD1EFC7645E6FCA2A413442E69DD60C222B6D2440644F`
-- Profile SHA-256: `C6E041873D597E4709E8B4A6E18B29F11CB7FF9996D34025CDFF025385FC3806`
+- Source SHA-256: `636ED7DB22675954EEBD72FFC122AA90299EA4943EFCF6A8D423CCB56B4C7763`
+- Profile SHA-256: `C9BC7620EFECD24CB4DD4FE9C650916163AD33F422697E43591C38D4C57BF661`
 - Predecessor source SHA-256: `4740338598E290360946FE414CC6F2FE0CF3B704006860514367DCB996A8D2B5`
 - Source/profile inputs: `588 / 588`
 - Queue: `outputs/RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_QUEUE.csv`
