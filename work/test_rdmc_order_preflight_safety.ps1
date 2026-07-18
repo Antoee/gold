@@ -54,7 +54,7 @@ $finalOnTickIndex = $source.LastIndexOf('void OnTick()', [StringComparison]::Ord
 $finalTransactionIndex = $source.LastIndexOf('void OnTradeTransaction', [StringComparison]::Ordinal)
 $onTick = if($finalOnTickIndex -ge 0 -and $finalTransactionIndex -gt $finalOnTickIndex) { $source.Substring($finalOnTickIndex, $finalTransactionIndex - $finalOnTickIndex) } else { '' }
 
-Add-Check "source version is 1.29" ($source.Contains('#property version   "1.29"')) "version"
+Add-Check "source version is 1.30" ($source.Contains('#property version   "1.30"')) "version"
 Add-Check "description advertises scoped ownership-checked execution" ($source.Contains('verified account-scoped') -and $source.Contains('ownership-checked execution')) "description"
 Add-Check "validated executor derives from CTrade" ($validatedTrade.Contains('class CValidatedTrade : public CTrade')) "derived executor"
 Add-Check "market preflight is a public executor method" ($validatedTrade.Contains('public:') -and $validatedTrade.Contains('bool MarketEntryPreflight(')) "public method"

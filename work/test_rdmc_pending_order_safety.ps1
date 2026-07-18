@@ -37,6 +37,10 @@ function Test-ResearchOrderOwnership([bool]$SymbolMatches, [bool]$MagicMatches) 
    return $SymbolMatches -and $MagicMatches
 }
 
+function Test-ResearchOrderRegistrationGate([int]$ActiveOrders, [bool]$BalanceContractExists) {
+   return $ActiveOrders -eq 0 -or $BalanceContractExists
+}
+
 Add-Check "restart-safe source exists" (Test-Path -LiteralPath $sourcePath -PathType Leaf) $sourcePath
 Add-Check "restart-safe profile exists" (Test-Path -LiteralPath $profilePath -PathType Leaf) $profilePath
 if(@($checks | Where-Object { !$_.Pass }).Count -gt 0) {
@@ -80,13 +84,21 @@ Add-Check "entry order gate blocks duplicate exposure" ($exposure.Contains('reas
 Add-Check "runtime contract rejects foreign active orders" ($runtime.Contains('ForeignActiveOrderCount() > 0') -and $runtime.Contains('dedicated-account active-exposure contract')) "foreign blocked"
 Add-Check "runtime contract rejects unresolved research orders" ($runtime.Contains('ResearchActiveOrderCount() > 0') -and $runtime.Contains('reason = "active research order";')) "research blocked"
 Add-Check "initial account contract rejects foreign orders" ($capital.Contains('ForeignActiveOrderCount() > 0') -and $capital.Contains('foreign trading activity')) "foreign registration blocked"
-Add-Check "initial account contract rejects research orders" ($capital.Contains('ResearchActiveOrderCount() > 0') -and $capital.Contains('unresolved research order')) "research registration blocked"
+Add-Check "initial account contract rejects research orders before registration" ($capital.Contains('ResearchActiveOrderCount() > 0 && !balanceContractExists') -and $capital.Contains('unresolved research order is active before starting-capital registration')) "research registration blocked"
+$storedBalanceIndex = $capital.IndexOf('balanceContractExists = true;', [StringComparison]::Ordinal)
+$registrationOrderIndex = $capital.IndexOf('ResearchActiveOrderCount() > 0 && !balanceContractExists', [StringComparison]::Ordinal)
+Add-Check "registered restart order gate follows stored balance verification" ($storedBalanceIndex -ge 0 -and $registrationOrderIndex -gt $storedBalanceIndex) "balance=$storedBalanceIndex order=$registrationOrderIndex"
 Add-Check "first registration requires zero active orders" ($capital.Contains('tradeDealCount > 0 || PositionsTotal() > 0 || OrdersTotal() > 0')) "unused account"
 
 $finalOnTickIndex = $source.LastIndexOf('void OnTick()', [StringComparison]::Ordinal)
 $finalTransactionIndex = $source.LastIndexOf('void OnTradeTransaction', [StringComparison]::Ordinal)
 $onTick = if($finalOnTickIndex -ge 0 -and $finalTransactionIndex -gt $finalOnTickIndex) { $source.Substring($finalOnTickIndex, $finalTransactionIndex - $finalOnTickIndex) } else { '' }
 Add-Check "six flatten paths cancel research orders" ([regex]::Matches($onTick, 'CancelResearchOrders\(').Count -eq 6) "cancel_calls=6"
+$criticalStateIndex = $onTick.IndexOf('CriticalResearchPositionStateAllows(realtimeRiskReason)', [StringComparison]::Ordinal)
+$restartOrderIndex = $onTick.IndexOf('ResearchActiveOrderCount() > 0', [StringComparison]::Ordinal)
+$optionalRiskIndex = $onTick.IndexOf('if(!realtimeRiskHit && InpClosePositionsOnRiskLimit)', [StringComparison]::Ordinal)
+Add-Check "registered restart order recovery is always on" ($onTick.Contains('if(!realtimeRiskHit && ResearchActiveOrderCount() > 0)') -and $onTick.Contains('realtimeRiskReason = "active research order";') -and $onTick.Contains('realtimeRiskHit = true;')) "unconditional recovery"
+Add-Check "restart order recovery precedes optional risk gate" ($criticalStateIndex -ge 0 -and $restartOrderIndex -gt $criticalStateIndex -and $optionalRiskIndex -gt $restartOrderIndex) "state=$criticalStateIndex order=$restartOrderIndex optional=$optionalRiskIndex"
 foreach($path in @(
    @{ Name='persistence failure'; Cancel='CancelResearchOrders(persistenceReason);'; Close='positionManager.CloseAll(persistenceReason);' },
    @{ Name='realtime risk'; Cancel='CancelResearchOrders(realtimeRiskReason);'; Close='positionManager.CloseAll(realtimeRiskReason);' },
@@ -107,7 +119,9 @@ foreach($scenario in @(
    @{ Name='realtime with placed order'; Actual=(Test-RealtimeOrderGate 1); Expected=$true },
    @{ Name='owned research order'; Actual=(Test-ResearchOrderOwnership $true $true); Expected=$true },
    @{ Name='foreign symbol order'; Actual=(Test-ResearchOrderOwnership $false $true); Expected=$false },
-   @{ Name='foreign magic order'; Actual=(Test-ResearchOrderOwnership $true $false); Expected=$false }
+   @{ Name='foreign magic order'; Actual=(Test-ResearchOrderOwnership $true $false); Expected=$false },
+   @{ Name='first registration with research order'; Actual=(Test-ResearchOrderRegistrationGate 1 $false); Expected=$false },
+   @{ Name='registered restart with research order'; Actual=(Test-ResearchOrderRegistrationGate 1 $true); Expected=$true }
 )) {
    Add-Check "state model: $($scenario.Name)" ($scenario.Actual -eq $scenario.Expected) "actual=$($scenario.Actual)"
 }

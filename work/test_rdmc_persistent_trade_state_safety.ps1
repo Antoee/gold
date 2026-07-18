@@ -97,7 +97,7 @@ $finalOnTickIndex = $source.LastIndexOf("void OnTick()", [StringComparison]::Ord
 $finalTransactionIndex = $source.IndexOf("void OnTradeTransaction(", $finalOnTickIndex, [StringComparison]::Ordinal)
 $onTick = if($finalOnTickIndex -ge 0 -and $finalTransactionIndex -gt $finalOnTickIndex) { $source.Substring($finalOnTickIndex, $finalTransactionIndex - $finalOnTickIndex) } else { '' }
 
-Add-Check "source version is 1.29" ($source.Contains('#property version   "1.29"')) "version"
+Add-Check "source version is 1.30" ($source.Contains('#property version   "1.30"')) "version"
 Add-Check "description advertises verified account-scoped state" ($source.Contains('verified account-scoped')) "description"
 Add-Check "one raw terminal-global write site remains" ([regex]::Matches($source, 'GlobalVariableSet\(').Count -eq 1) "raw set=1"
 Add-Check "one raw terminal-global delete site remains" ([regex]::Matches($source, 'GlobalVariableDel\(').Count -eq 1) "raw delete=1"

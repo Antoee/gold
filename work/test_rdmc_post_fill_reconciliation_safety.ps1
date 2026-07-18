@@ -71,7 +71,7 @@ $closeMatch = [regex]::Match($source, 'bool ExecutePositionClose\(CTrade &execut
 $closeEnd = if($closeMatch.Success) { $source.IndexOf('bool TradePriceMatches(', $closeMatch.Index, [StringComparison]::Ordinal) } else { -1 }
 $close = if($closeMatch.Success -and $closeEnd -gt $closeMatch.Index) { $source.Substring($closeMatch.Index, $closeEnd - $closeMatch.Index) } else { '' }
 
-Add-Check "source version is 1.29" ($source.Contains('#property version   "1.29"')) "version"
+Add-Check "source version is 1.30" ($source.Contains('#property version   "1.30"')) "version"
 Add-Check "description advertises exact scoped ownership-checked execution" ($source.Contains('exact attached protection') -and $source.Contains('verified account-scoped immutable identity') -and $source.Contains('ownership-checked execution')) "description"
 Add-Check "post-fill risk tolerance is configurable" ($source.Contains('input double InpMaxPostFillRiskIncreasePercent = 5.00;')) "input"
 Add-Check "cash-risk helper validates side and geometry" ($risk.Contains('ORDER_TYPE_BUY') -and $risk.Contains('ORDER_TYPE_SELL') -and $risk.Contains('entryPrice <= 0.0') -and $risk.Contains('stopPrice <= 0.0') -and $risk.Contains('lots <= 0.0')) "risk inputs"

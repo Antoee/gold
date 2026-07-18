@@ -4,7 +4,7 @@
 //| No martingale, grid, averaging down, or recovery systems           |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.29"
+#property version   "1.30"
 #property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with exact attached protection, verified account-scoped immutable identity, disabled-lane cleanup, collision-safe event reconciliation and ownership-checked execution; tester-only until independently validated."
 
 #include <Trade/Trade.mqh>
@@ -25013,12 +25013,6 @@ bool ResearchCapitalContractAllows()
       Print("Account contract failed: the account contains foreign trading activity.");
       return false;
    }
-   if(ResearchActiveOrderCount() > 0)
-   {
-      Print("Account contract failed: an unresolved research order is active.");
-      return false;
-   }
-
    bool balanceContractExists = false;
    if(InpUseInitialBalanceContract)
    {
@@ -25048,6 +25042,12 @@ bool ResearchCapitalContractAllows()
             return false;
          }
       }
+   }
+
+   if(ResearchActiveOrderCount() > 0 && !balanceContractExists)
+   {
+      Print("Account contract failed: an unresolved research order is active before starting-capital registration.");
+      return false;
    }
 
    if(InpRejectFundingChangesAfterRegistration)
@@ -25252,6 +25252,11 @@ void OnTick()
    }
    string realtimeRiskReason = "";
    bool realtimeRiskHit = !CriticalResearchPositionStateAllows(realtimeRiskReason);
+   if(!realtimeRiskHit && ResearchActiveOrderCount() > 0)
+   {
+      realtimeRiskReason = "active research order";
+      realtimeRiskHit = true;
+   }
    if(!realtimeRiskHit && InpClosePositionsOnRiskLimit)
       realtimeRiskHit = riskManager.RealtimeProtectionLimitHit(realtimeRiskReason);
    if(realtimeRiskHit)
