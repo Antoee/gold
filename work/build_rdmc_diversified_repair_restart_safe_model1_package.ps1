@@ -16,8 +16,8 @@ $launchLock = Join-Path $repo "work\MT5_LOCAL_LAUNCH_DISABLED.lock"
 $launchUnlock = Join-Path $repo "work\ALLOW_MT5_LOCAL_LAUNCH.unlock"
 
 $expectedV1SourceHash = "4740338598E290360946FE414CC6F2FE0CF3B704006860514367DCB996A8D2B5"
-$expectedSourceHash = "863C1A202717F1AD858B3DD7CA26C3237B3A1FD9837632216D68487EB1CD63E1"
-$expectedProfileHash = "D5BF4673EDBF42B84F686706389A71E3CE353F1B2E7C289248B5AF8B9C4CAAD1"
+$expectedSourceHash = "B8D00554D291226CAA97BF1458DEB42162ACEBB06B36901FD43392038778DC14"
+$expectedProfileHash = "AC05545DB9602DD52D6975C72612AFE84884CF747A3AD1EED6C4D7A24CFD7B11"
 
 foreach($required in @($source, $profile, $v1Source, $launchLock)) {
    if(!(Test-Path -LiteralPath $required -PathType Leaf)) {
@@ -180,13 +180,20 @@ $manifest = [pscustomobject]@{
    InitialRiskPersistenceRequired = "ENABLED"
    PersistenceFailureEmergencyFlatten = "ENABLED"
    ExcursionWriteCoalescing = "ENABLED"
-   PersistentPositionIdentitySafetyStatus = "PASS_78_CHECKS"
+   PersistentPositionIdentitySafetyStatus = "PASS_101_CHECKS"
    AccountScopedPositionState = "ENABLED"
    MagicScopedPositionState = "ENABLED"
    ImmutablePositionIdentifierState = "ENABLED"
    TicketDerivedStateKeying = "ENABLED"
    IdentifierExactStateRetirement = "ENABLED"
    IdentifierTicketAliasGuard = "ENABLED"
+   OrphanedPositionStateReconciliation = "ENABLED"
+   OfflineExitStateRetirement = "ENABLED"
+   InitializationStateReconciliation = "ENABLED"
+   TransactionDrivenStateReconciliation = "ENABLED"
+   UnreadablePositionSnapshotBlocksProcessing = "ENABLED"
+   Base36StateSchemaValidation = "ENABLED"
+   PerTickGlobalVariableScan = "DISABLED"
    CompactBase36GlobalKeys = "ENABLED"
    TerminalGlobalNameLimitGuard = "ENABLED"
    PartialExitStatePreservation = "ENABLED"
@@ -256,6 +263,9 @@ $packageLines = @(
    '- Primary initial risk, MFE, MAE, partial-close, basket-harvest, runner-target, and forced-close state plus momentum risk state are isolated across account switches, strategies, and position identities.',
    '- Live reads and writes derive identity only from a selected position ticket. Retirement keys accept the closed immutable identifier directly and never reinterpret it as a ticket.',
    '- This semantic split prevents an unrelated open ticket whose number equals a closed identifier from redirecting cleanup to another position namespace.',
+   '- Initialization and trade events reconcile orphaned state left by offline SL/TP exits or transaction ordering. A successful reconciliation clears its dirty flag, so terminal globals are not scanned on every tick.',
+   '- Reconciliation accepts only the exact account/magic prefix plus an uppercase base-36 identifier suffix. Unrelated or malformed terminal globals are ignored.',
+   '- If any indexed position or owned open-position identifier is unreadable, active state is preserved and processing remains blocked until a complete snapshot succeeds.',
    '- Partial exits retain runner state while a matching expert-owned position identifier remains open. Full exits retire all scoped state, both immediately after verified EA closes and after broker-originated closing deals.',
    '- An unreadable active-position scan preserves persistent state instead of deleting it, and every obsolete ticket-only key family is absent from the source.',
    "",
@@ -269,7 +279,7 @@ $packageLines = @(
    "",
    "## Hard boundary",
    "",
-   'The source is tester-only, real-account trading is disabled, and all 12 annual/YTD Model1 rows remain `LOCKED_LOCAL_LAUNCH_DISABLED`. The new cost, margin, hard-cooldown, intrabar emergency, broker-result, persistent-state, idempotency, scoped-lifecycle, and identifier-ticket alias safeguards can change entries and exits. The active-order reconciliation can change entries and exits. Broker-volume reconciliation can change entries and exits. Post-fill risk reconciliation can change entries and exits. Tightening-only stop enforcement, ownership-checked close reconciliation, write-ahead one-shot actions, and position-state retirement can change exits too, so the earlier post-hoc collision score is not attributed to this executable path. Static checks cannot prove compilation, profit, drawdown, or restart behavior inside MT5. Compilation, annual and continuous Model1, annual and continuous real-tick Model4, cost stress, Monte Carlo, broker variation, and valid forward evidence are still required.'
+   'The source is tester-only, real-account trading is disabled, and all 12 annual/YTD Model1 rows remain `LOCKED_LOCAL_LAUNCH_DISABLED`. The new cost, margin, hard-cooldown, intrabar emergency, broker-result, persistent-state, idempotency, scoped-lifecycle, identifier-ticket alias, and event-driven orphan-reconciliation safeguards can change entries and exits. The active-order reconciliation can change entries and exits. Broker-volume reconciliation can change entries and exits. Post-fill risk reconciliation can change entries and exits. Tightening-only stop enforcement, ownership-checked close reconciliation, write-ahead one-shot actions, and position-state retirement can change exits too, so the earlier post-hoc collision score is not attributed to this executable path. Static checks cannot prove compilation, profit, drawdown, or restart behavior inside MT5. Compilation, annual and continuous Model1, annual and continuous real-tick Model4, cost stress, Monte Carlo, broker variation, and valid forward evidence are still required.'
 )
 [IO.File]::WriteAllLines($packagePath, $packageLines, [Text.Encoding]::ASCII)
 

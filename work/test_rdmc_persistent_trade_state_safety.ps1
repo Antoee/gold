@@ -97,12 +97,12 @@ $finalOnTickIndex = $source.LastIndexOf("void OnTick()", [StringComparison]::Ord
 $finalTransactionIndex = $source.IndexOf("void OnTradeTransaction(", $finalOnTickIndex, [StringComparison]::Ordinal)
 $onTick = if($finalOnTickIndex -ge 0 -and $finalTransactionIndex -gt $finalOnTickIndex) { $source.Substring($finalOnTickIndex, $finalTransactionIndex - $finalOnTickIndex) } else { '' }
 
-Add-Check "source version is 1.24" ($source.Contains('#property version   "1.24"')) "version"
-Add-Check "description advertises verified account-scoped state" ($source.Contains('verified account-scoped position state')) "description"
+Add-Check "source version is 1.25" ($source.Contains('#property version   "1.25"')) "version"
+Add-Check "description advertises verified account-scoped state" ($source.Contains('verified account-scoped')) "description"
 Add-Check "one raw terminal-global write site remains" ([regex]::Matches($source, 'GlobalVariableSet\(').Count -eq 1) "raw set=1"
 Add-Check "one raw terminal-global delete site remains" ([regex]::Matches($source, 'GlobalVariableDel\(').Count -eq 1) "raw delete=1"
 Add-Check "all critical writes route through shared verifier" ([regex]::Matches($source, 'SetCriticalPersistentState\(').Count -eq 15) "definition plus 14 callers"
-Add-Check "all critical deletes route through shared verifier" ([regex]::Matches($source, 'DeleteCriticalPersistentState\(').Count -eq 14) "definition plus 13 callers"
+Add-Check "all critical deletes route through shared verifier" ([regex]::Matches($source, 'DeleteCriticalPersistentState\(').Count -eq 15) "definition plus 14 callers"
 Add-Check "write verifier rejects invalid keys and values" ($setHelper.Contains('StringLen(key) <= 0') -and $setHelper.Contains('!MathIsValidNumber(value)')) "input validation"
 Add-Check "write verifier checks broker write and key existence" ($setHelper.Contains('GlobalVariableSet(key, value) <= 0') -and $setHelper.Contains('!GlobalVariableCheck(key)')) "write result"
 Add-Check "write verifier validates finite readback" ($setHelper.Contains('double stored = GlobalVariableGet(key)') -and $setHelper.Contains('!MathIsValidNumber(stored)')) "readback"
@@ -138,7 +138,7 @@ Add-Check "peak-equity writes use verified persistence" ([regex]::Matches($sourc
 Add-Check "capital registration uses verified persistence" ($capital.Contains('SetCriticalPersistentState(fundingKey, (double)fundingCount)') -and $capital.Contains('SetCriticalPersistentState(peakKey, equity)') -and $capital.Contains('SetCriticalPersistentState(InitialBalanceContractKey(), expected)')) "three capital keys"
 Add-Check "MFE writes only when the maximum advances" ($stateMethods.Contains('if(maxR <= stored)') -and $stateMethods.Contains('SetCriticalPersistentState(key, maxR)')) "efficient MFE"
 Add-Check "MAE writes only when the minimum advances" ($stateMethods.Contains('if(minR >= stored)') -and $stateMethods.Contains('SetCriticalPersistentState(key, minR)')) "efficient MAE"
-Add-Check "initialization fails on critical persistence" ($onInit.Contains('!g_peakEquityPersistenceHealthy || !g_criticalPersistenceHealthy') -and $onInit.Contains('return INIT_FAILED;')) "init fail closed"
+Add-Check "initialization fails on critical persistence" ($onInit.Contains('if(!g_peakEquityPersistenceHealthy ||') -and $onInit.Contains('!g_criticalPersistenceHealthy ||') -and $onInit.Contains('return INIT_FAILED;')) "init fail closed"
 Add-Check "runtime account contract blocks unhealthy persistence" ($source.Contains('reason = "critical trade-state persistence";') -and $source.Contains('if(!g_criticalPersistenceHealthy)')) "entry block"
 Add-Check "OnTick flattens on persistence failure unconditionally" ($onTick.IndexOf('if(!g_criticalPersistenceHealthy)', [StringComparison]::Ordinal) -lt $onTick.IndexOf('if(InpClosePositionsOnRiskLimit)', [StringComparison]::Ordinal) -and $onTick.Contains('positionManager.CloseAll(persistenceReason)') -and $onTick.Contains('g_momentum.CloseAll(persistenceReason)')) "hard flatten"
 Add-Check "persistence failure blocks momentum processing" ($onTick.IndexOf('if(!g_criticalPersistenceHealthy)', [StringComparison]::Ordinal) -lt $onTick.IndexOf('g_momentum.OnTick()', [StringComparison]::Ordinal)) "before lane tick"

@@ -51,6 +51,25 @@ function Test-RetirementModel([bool]$IdentifierValid, [bool]$PositionScanReadabl
    return $true
 }
 
+function Test-Base36Text([string]$Value) {
+   return $Value -cmatch '^[0-9A-Z]+$'
+}
+
+function Test-OrphanReconciliationModel(
+   [string]$Key,
+   [string]$ScopedPrefix,
+   [bool]$SnapshotReadable,
+   [bool]$MatchingPositionOpen,
+   [bool]$OpenIdentifierReadable
+) {
+   if(!$SnapshotReadable) { return 'BLOCK_PRESERVE' }
+   if(!$Key.StartsWith($ScopedPrefix, [StringComparison]::Ordinal)) { return 'IGNORE' }
+   $identifierText = $Key.Substring($ScopedPrefix.Length)
+   if(!(Test-Base36Text $identifierText)) { return 'IGNORE' }
+   if($MatchingPositionOpen -or !$OpenIdentifierReadable) { return 'KEEP' }
+   return 'DELETE'
+}
+
 Add-Check "restart-safe source exists" (Test-Path -LiteralPath $sourcePath -PathType Leaf) $sourcePath
 Add-Check "restart-safe profile exists" (Test-Path -LiteralPath $profilePath -PathType Leaf) $profilePath
 if(@($checks | Where-Object { !$_.Pass }).Count -gt 0) {
@@ -67,6 +86,7 @@ $retireMomentumIndex = $source.LastIndexOf("bool RetireMomentumPersistentPositio
 $storeRiskIndex = $source.IndexOf("bool StoreInitialRisk(", $retireMomentumIndex, [StringComparison]::Ordinal)
 $retirePrimary = if($retirePrimaryIndex -ge 0 -and $retireMomentumIndex -gt $retirePrimaryIndex) { $source.Substring($retirePrimaryIndex, $retireMomentumIndex - $retirePrimaryIndex) } else { '' }
 $retireMomentum = if($retireMomentumIndex -ge 0 -and $storeRiskIndex -gt $retireMomentumIndex) { $source.Substring($retireMomentumIndex, $storeRiskIndex - $retireMomentumIndex) } else { '' }
+$orphanState = Get-Section $source "bool ResearchPositionSnapshotReadable()" "bool StoreInitialRisk("
 $positionState = Get-Section $source "   bool AlreadyPartiallyClosed(" "   double ProfitR("
 $partialWrapper = Get-Section $source "bool ExecutePositionClosePartial(CTrade &executor," "bool ExecuteOrderDelete("
 $closeMatch = [regex]::Match($source, 'bool ExecutePositionClose\(CTrade &executor, const ulong ticket\)\s*\{')
@@ -76,10 +96,15 @@ $momentumTransaction = Get-Section $source "   void OnTradeTransaction(const Mql
 $finalTransactionIndex = $source.LastIndexOf("void OnTradeTransaction(", [StringComparison]::Ordinal)
 $finalOnTradeIndex = $source.IndexOf("void OnTrade()", $finalTransactionIndex, [StringComparison]::Ordinal)
 $finalTransaction = if($finalTransactionIndex -ge 0 -and $finalOnTradeIndex -gt $finalTransactionIndex) { $source.Substring($finalTransactionIndex, $finalOnTradeIndex - $finalTransactionIndex) } else { '' }
+$onInit = Get-Section $source "int OnInit()" "void OnDeinit("
+$finalOnTickIndex = $source.LastIndexOf("void OnTick()", [StringComparison]::Ordinal)
+$finalOnTickEnd = $source.IndexOf("void OnTradeTransaction(", $finalOnTickIndex, [StringComparison]::Ordinal)
+$finalOnTick = if($finalOnTickIndex -ge 0 -and $finalOnTickEnd -gt $finalOnTickIndex) { $source.Substring($finalOnTickIndex, $finalOnTickEnd - $finalOnTickIndex) } else { '' }
+$finalOnTrade = if($finalOnTradeIndex -ge 0) { $source.Substring($finalOnTradeIndex) } else { '' }
 
-Add-Check "source version is 1.24" ($source.Contains('#property version   "1.24"')) "version"
-Add-Check "description advertises account-scoped position state" ($source.Contains('verified account-scoped position state')) "description"
-Add-Check "description advertises collision-safe identifier retirement" ($source.Contains('collision-safe immutable-identifier retirement')) "description"
+Add-Check "source version is 1.25" ($source.Contains('#property version   "1.25"')) "version"
+Add-Check "description advertises account-scoped position state" ($source.Contains('verified account-scoped')) "description"
+Add-Check "description advertises collision-safe event reconciliation" ($source.Contains('collision-safe and event-reconciled position state')) "description"
 Add-Check "base36 encoder uses a fixed uppercase alphabet" ($namespace.Contains('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')) "alphabet"
 Add-Check "base36 encoder handles zero" ($namespace.Contains('if(value == 0)') -and $namespace.Contains('return "0";')) "zero"
 Add-Check "base36 encoder uses modulo and division" ($namespace.Contains('value % 36') -and $namespace.Contains('value /= 36')) "compact encoding"
@@ -136,6 +161,23 @@ Add-Check "momentum retirement deletes exact forced-close state" ($retireMomentu
 Add-Check "primary retirement never routes identifiers through ticket key helpers" (!$retirePrimary.Contains('InitialRiskKey(positionIdentifier)') -and !$retirePrimary.Contains('TradeMFEKey(positionIdentifier)') -and !$retirePrimary.Contains('TradeMAEKey(positionIdentifier)') -and !$retirePrimary.Contains('PartialCloseKey(positionIdentifier)') -and !$retirePrimary.Contains('BasketHarvestKey(positionIdentifier)') -and !$retirePrimary.Contains('PostPartialRunnerTPKey(positionIdentifier)')) "exact semantics"
 Add-Check "momentum retirement never routes identifiers through ticket key helpers" (!$retireMomentum.Contains('MomentumRiskKey(positionIdentifier)') -and !$retireMomentum.Contains('PostFillForcedCloseKey(positionIdentifier')) "exact semantics"
 
+Add-Check "position-state reconciliation starts dirty" ($source.Contains('bool g_positionStateReconciliationDue = true;')) "startup reconciliation"
+Add-Check "position snapshot validates every indexed ticket" ($orphanState.Contains('int total = PositionsTotal();') -and $orphanState.Contains('PositionGetTicket(i) == 0') -and $orphanState.Contains('return false;')) "readable snapshot"
+Add-Check "open-state matching validates magic and expert reason" ($orphanState.Contains('PositionGetInteger(POSITION_MAGIC) == magic') -and $orphanState.Contains('PositionGetInteger(POSITION_REASON) == POSITION_REASON_EXPERT')) "ownership"
+Add-Check "open-state matching uses exact immutable identifier" ($orphanState.Contains('PositionGetInteger(POSITION_IDENTIFIER)') -and $orphanState.Contains('PositionScopedStateKeyForIdentifier(prefix, magic, (ulong)positionIdentifier) == key')) "exact identity"
+Add-Check "unreadable open identifier preserves state" ($orphanState.Contains('positionIdentifier <= 0 ||')) "fail closed"
+Add-Check "orphan scan validates account and magic prefix" ($orphanState.Contains('PositionScopedStatePrefix(prefix, magic)') -and $orphanState.Contains('StringFind(key, scopedPrefix) != 0')) "scoped prefix"
+Add-Check "orphan scan validates base36 identifier schema" ($orphanState.Contains('StringSubstr(key, scopedPrefixLength)') -and $orphanState.Contains('UnsignedBase36TextAllows(identifierText)')) "schema"
+Add-Check "orphan scan walks terminal globals backwards" ($orphanState.Contains('GlobalVariablesTotal()') -and $orphanState.Contains('for(int i = total - 1; i >= 0; --i)') -and $orphanState.Contains('GlobalVariableName(i)')) "stable deletion order"
+Add-Check "orphan deletion follows open-position preservation" ($orphanState.IndexOf('PersistentStateKeyHasOpenPosition(key, prefix, magic)', [StringComparison]::Ordinal) -lt $orphanState.IndexOf('DeleteCriticalPersistentState(key)', [StringComparison]::Ordinal)) "delete order"
+Add-Check "reconciliation covers every primary and momentum namespace" ([regex]::Matches($orphanState, 'RetireOrphanedPersistentStateNamespace\(').Count -eq 10) "definition plus nine namespaces"
+Add-Check "reconciliation clears dirty flag only after all namespaces" ($orphanState.IndexOf('g_positionStateReconciliationDue = false;', [StringComparison]::Ordinal) -gt $orphanState.LastIndexOf('RetireOrphanedPersistentStateNamespace(', [StringComparison]::Ordinal)) "success only"
+Add-Check "initialization reconciles before momentum starts" ($onInit.IndexOf('riskManager.Init();', [StringComparison]::Ordinal) -lt $onInit.IndexOf('ReconcileOrphanedPersistentPositionState()', [StringComparison]::Ordinal) -and $onInit.IndexOf('ReconcileOrphanedPersistentPositionState()', [StringComparison]::Ordinal) -lt $onInit.IndexOf('g_momentum.Init()', [StringComparison]::Ordinal)) "init ordering"
+Add-Check "tick reconciliation runs only while dirty" ($finalOnTick.Contains('if(g_positionStateReconciliationDue)') -and [regex]::Matches($finalOnTick, 'ReconcileOrphanedPersistentPositionState\(\)').Count -eq 1) "event driven"
+Add-Check "healthy reconciliation failure blocks further processing" ($finalOnTick.Contains('if(!positionStateReady)') -and $finalOnTick.Contains('position-state reconciliation unavailable') -and $finalOnTick.IndexOf('if(!positionStateReady)', [StringComparison]::Ordinal) -lt $finalOnTick.IndexOf('if(InpClosePositionsOnRiskLimit)', [StringComparison]::Ordinal)) "entry blocked"
+Add-Check "deal transactions mark position state dirty" ($finalTransaction.Contains('g_positionStateReconciliationDue = true;')) "transaction driven"
+Add-Check "generic trade events mark position state dirty" ($finalOnTrade.Contains('g_positionStateReconciliationDue = true;')) "trade driven"
+
 Add-Check "full-close wrapper captures identifier before send" ($closeWrapper.IndexOf('PersistentPositionIdentity(ticket)', [StringComparison]::Ordinal) -lt $closeWrapper.IndexOf('executor.PositionClose(ticket)', [StringComparison]::Ordinal)) "pre-close identity"
 Add-Check "full-close wrapper retires primary only after disappearance" ($closeWrapper.IndexOf('if(closed)', [StringComparison]::Ordinal) -lt $closeWrapper.IndexOf('RetirePrimaryPersistentPositionState(positionIdentifier)', [StringComparison]::Ordinal)) "primary cleanup"
 Add-Check "full-close wrapper retires momentum only after disappearance" ($closeWrapper.IndexOf('if(closed)', [StringComparison]::Ordinal) -lt $closeWrapper.IndexOf('RetireMomentumPersistentPositionState(positionIdentifier)', [StringComparison]::Ordinal)) "momentum cleanup"
@@ -154,6 +196,20 @@ foreach($scenario in @(
 )) {
    $actual = Test-RetirementModel $scenario.Valid $scenario.Readable $scenario.Open
    Add-Check "retirement model: $($scenario.Name)" ($actual -eq $scenario.Expected) "actual=$actual"
+}
+
+$modelPrefix = 'IR_7PT_FIS1T_'
+foreach($scenario in @(
+   @{ Name='offline final exit deletes orphan'; Key=$modelPrefix+'GC0UY9'; Prefix=$modelPrefix; Snapshot=$true; Open=$false; Identifier=$true; Expected='DELETE' },
+   @{ Name='open position preserves state'; Key=$modelPrefix+'GC0UY9'; Prefix=$modelPrefix; Snapshot=$true; Open=$true; Identifier=$true; Expected='KEEP' },
+   @{ Name='partial exit preserves runner state'; Key=$modelPrefix+'GC0UY9'; Prefix=$modelPrefix; Snapshot=$true; Open=$true; Identifier=$true; Expected='KEEP' },
+   @{ Name='unreadable position snapshot preserves all'; Key=$modelPrefix+'GC0UY9'; Prefix=$modelPrefix; Snapshot=$false; Open=$false; Identifier=$true; Expected='BLOCK_PRESERVE' },
+   @{ Name='unreadable open identifier preserves namespace'; Key=$modelPrefix+'GC0UY9'; Prefix=$modelPrefix; Snapshot=$true; Open=$true; Identifier=$false; Expected='KEEP' },
+   @{ Name='malformed suffix is ignored'; Key=$modelPrefix+'bad-id'; Prefix=$modelPrefix; Snapshot=$true; Open=$false; Identifier=$true; Expected='IGNORE' },
+   @{ Name='different account or magic prefix is ignored'; Key='IR_OTHER_MAGIC_GC0UY9'; Prefix=$modelPrefix; Snapshot=$true; Open=$false; Identifier=$true; Expected='IGNORE' }
+)) {
+   $actual = Test-OrphanReconciliationModel $scenario.Key $scenario.Prefix $scenario.Snapshot $scenario.Open $scenario.Identifier
+   Add-Check "orphan model: $($scenario.Name)" ($actual -eq $scenario.Expected) "actual=$actual"
 }
 
 foreach($contract in @{

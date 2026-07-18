@@ -4,8 +4,8 @@
 //| No martingale, grid, averaging down, or recovery systems           |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.24"
-#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with verified account-scoped position state, collision-safe immutable-identifier retirement and ownership-checked execution; tester-only until independently validated."
+#property version   "1.25"
+#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with verified account-scoped, collision-safe and event-reconciled position state plus ownership-checked execution; tester-only until independently validated."
 
 #include <Trade/Trade.mqh>
 
@@ -2216,6 +2216,21 @@ string UnsignedBase36(ulong value)
    return encoded;
 }
 
+bool UnsignedBase36TextAllows(const string value)
+{
+   int length = StringLen(value);
+   if(length <= 0)
+      return false;
+   for(int i = 0; i < length; ++i)
+   {
+      int character = StringGetCharacter(value, i);
+      if(!((character >= 48 && character <= 57) ||
+           (character >= 65 && character <= 90)))
+         return false;
+   }
+   return true;
+}
+
 ulong PersistentPositionIdentity(const ulong ticket)
 {
    if(ticket > 0 && PositionSelectByTicket(ticket))
@@ -2227,13 +2242,18 @@ ulong PersistentPositionIdentity(const ulong ticket)
    return ticket;
 }
 
+string PositionScopedStatePrefix(const string prefix, const long magic)
+{
+   return prefix + "_" + UnsignedBase36((ulong)AccountInfoInteger(ACCOUNT_LOGIN)) +
+          "_" + UnsignedBase36((ulong)magic) +
+          "_";
+}
+
 string PositionScopedStateKeyForIdentifier(const string prefix,
                                            const long magic,
                                            const ulong positionIdentifier)
 {
-   return prefix + "_" + UnsignedBase36((ulong)AccountInfoInteger(ACCOUNT_LOGIN)) +
-          "_" + UnsignedBase36((ulong)magic) +
-          "_" + UnsignedBase36(positionIdentifier);
+   return PositionScopedStatePrefix(prefix, magic) + UnsignedBase36(positionIdentifier);
 }
 
 string PositionScopedStateKeyForTicket(const string prefix,
@@ -2496,6 +2516,7 @@ public:
 
 CValidatedTrade trade;
 bool g_criticalPersistenceHealthy = true;
+bool g_positionStateReconciliationDue = true;
 
 int VolumeDigitsForStep(const double step)
 {
@@ -3133,6 +3154,82 @@ bool RetireMomentumPersistentPositionState(const ulong positionIdentifier)
    if(!DeleteCriticalPersistentState(PostFillForcedCloseIdentifierKey(positionIdentifier, InpMOMagicNumber)))
       retired = false;
    return retired;
+}
+
+bool ResearchPositionSnapshotReadable()
+{
+   int total = PositionsTotal();
+   for(int i = total - 1; i >= 0; --i)
+   {
+      if(PositionGetTicket(i) == 0)
+         return false;
+   }
+   return true;
+}
+
+bool PersistentStateKeyHasOpenPosition(const string key,
+                                       const string prefix,
+                                       const long magic)
+{
+   for(int i = PositionsTotal() - 1; i >= 0; --i)
+   {
+      ulong ticket = PositionGetTicket(i);
+      if(ticket == 0)
+         return true;
+      if(PositionGetInteger(POSITION_MAGIC) == magic &&
+         PositionGetInteger(POSITION_REASON) == POSITION_REASON_EXPERT)
+      {
+         long positionIdentifier = PositionGetInteger(POSITION_IDENTIFIER);
+         if(positionIdentifier <= 0 ||
+            PositionScopedStateKeyForIdentifier(prefix, magic, (ulong)positionIdentifier) == key)
+            return true;
+      }
+   }
+   return false;
+}
+
+bool RetireOrphanedPersistentStateNamespace(const string prefix, const long magic)
+{
+   string scopedPrefix = PositionScopedStatePrefix(prefix, magic);
+   int scopedPrefixLength = StringLen(scopedPrefix);
+   int total = GlobalVariablesTotal();
+   for(int i = total - 1; i >= 0; --i)
+   {
+      string key = GlobalVariableName(i);
+      if(StringLen(key) <= 0)
+         return false;
+      if(StringFind(key, scopedPrefix) != 0)
+         continue;
+
+      string identifierText = StringSubstr(key, scopedPrefixLength);
+      if(!UnsignedBase36TextAllows(identifierText))
+         continue;
+      if(PersistentStateKeyHasOpenPosition(key, prefix, magic))
+         continue;
+      if(!DeleteCriticalPersistentState(key))
+         return false;
+   }
+   return true;
+}
+
+bool ReconcileOrphanedPersistentPositionState()
+{
+   if(!ResearchPositionSnapshotReadable())
+      return false;
+
+   if(!RetireOrphanedPersistentStateNamespace("PF", InpMagicNumber) ||
+      !RetireOrphanedPersistentStateNamespace("IR", InpMagicNumber) ||
+      !RetireOrphanedPersistentStateNamespace("MF", InpMagicNumber) ||
+      !RetireOrphanedPersistentStateNamespace("MA", InpMagicNumber) ||
+      !RetireOrphanedPersistentStateNamespace("PC", InpMagicNumber) ||
+      !RetireOrphanedPersistentStateNamespace("BH", InpMagicNumber) ||
+      !RetireOrphanedPersistentStateNamespace("TP", InpMagicNumber) ||
+      !RetireOrphanedPersistentStateNamespace("PF", InpMOMagicNumber) ||
+      !RetireOrphanedPersistentStateNamespace("MR", InpMOMagicNumber))
+      return false;
+
+   g_positionStateReconciliationDue = false;
+   return true;
 }
 
 bool StoreInitialRisk(const ulong ticket, const double riskDistance)
@@ -24992,9 +25089,12 @@ int OnInit()
       return INIT_FAILED;
    }
    riskManager.Init();
-   if(!g_peakEquityPersistenceHealthy || !g_criticalPersistenceHealthy)
+   bool positionStateReconciled = ReconcileOrphanedPersistentPositionState();
+   if(!g_peakEquityPersistenceHealthy ||
+      !g_criticalPersistenceHealthy ||
+      !positionStateReconciled)
    {
-      Print("Failed to initialize critical persistent risk state.");
+      Print("Failed to initialize or reconcile critical persistent risk state.");
       indicators.Release();
       return INIT_FAILED;
    }
@@ -25036,6 +25136,9 @@ void OnTick()
 {
    RefreshAccountHistoryWatchdog();
    tickMicrostructure.Update();
+   bool positionStateReady = true;
+   if(g_positionStateReconciliationDue)
+      positionStateReady = ReconcileOrphanedPersistentPositionState();
    if(!g_criticalPersistenceHealthy)
    {
       string persistenceReason = "critical trade-state persistence";
@@ -25043,6 +25146,12 @@ void OnTick()
       positionManager.CloseAll(persistenceReason);
       g_momentum.CloseAll(persistenceReason);
       g_lastBlockReason = persistenceReason;
+      DrawDashboard();
+      return;
+   }
+   if(!positionStateReady)
+   {
+      g_lastBlockReason = "position-state reconciliation unavailable";
       DrawDashboard();
       return;
    }
@@ -25254,7 +25363,10 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,
    if(trans.type == TRADE_TRANSACTION_DEAL_ADD ||
       trans.type == TRADE_TRANSACTION_DEAL_UPDATE ||
       trans.type == TRADE_TRANSACTION_DEAL_DELETE)
+   {
       g_accountHistoryStateDirty = true;
+      g_positionStateReconciliationDue = true;
+   }
    g_momentum.OnTradeTransaction(trans);
 
    if(trans.type != TRADE_TRANSACTION_DEAL_ADD)
@@ -25302,4 +25414,5 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,
 void OnTrade()
 {
    g_accountHistoryStateDirty = true;
+   g_positionStateReconciliationDue = true;
 }
