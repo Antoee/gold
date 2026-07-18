@@ -1,0 +1,2 @@
+"QueueRank","Candidate","Window","Model","PackageConfig","ExpectedReportName","ReportDestination","ProfileSha256","StopRule"
+"3","mre_mo020_center","2017","4","outputs\rc2_momentum_risk_extension_yearly_model4_package\configs\003_mre_mo020_2017_m4.ini","mre_mo020_2017_m4","outputs\rc2_momentum_risk_extension_yearly_model4_package\reports_here\mre_mo020_2017_m4","06AE8127CF2719D7D3A19FEE069ECA3D50B83B3B0329C04F7B08E5F9135AFA5A","Apply the frozen annual restart gate; do not retune after results."

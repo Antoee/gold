@@ -12,6 +12,8 @@ Research and validation repository for a risk-first MetaTrader 5 Expert Advisor 
 
 **2026-07-17 research update: the preregistered 0.20% momentum-risk center passed 28/28 Model1 and 12/12 Model4 reports. Continuous Model4 improved from +$1,615.36 to +$1,812.42: +18.12% total, +1.45%/yr CAGR, PF 1.50, 362 trades, 3.19% drawdown, and 5.13 recovery. This is a historical research promotion, not a forward or real-money approval. The first forward attachment remains invalid because the demo account has the wrong starting balance.**
 
+**2026-07-17 money-readiness audit: NOT MONEY-READY. The 0.20% center passed deterministic added-cost stress but failed 2 of 9 annual-restart gates and both frozen Monte Carlo scenarios. Its extra momentum risk worsened tail behavior versus the 0.15% control, so the recommended forward candidate did not change.**
+
 **Forward-prep update: a separate rc2 profile, read-only sentinel, immutable registration drafts, and activation preflight are now packaged. The `$10,000` canary passes; the `$100,000` canary is refused on balance and equity. Nothing is registered or installed, valid forward days/trades remain zero, and real-money use is still not approved.**
 
 The candidate combines two date-independent H1 strategies:
@@ -51,6 +53,8 @@ The read-only preflight requires a fresh identity-matched heartbeat, USD demo he
 ## Latest Research Screens
 
 The exact rc2 source was screened at seven momentum-risk allocations while reversion stayed at `0.45%`, all entries/exits/stops stayed unchanged, and the shared open-risk cap stayed at `0.75%`. All `28 / 28` Model1 reports passed source identity. The preregistered `0.20%` center then passed all frozen gates with both adjacent profiles, so only that three-profile plateau entered Model4. All `12 / 12` real-tick reports passed identity. The center made `+$1,812.42` (`+18.12%` total, `+1.45%/yr` CAGR), PF `1.50`, on `362` trades with `3.19%` drawdown and `5.13` recovery. Its broad restarts were all positive: `+$931.91` in 2015-2018, `+$236.45` in 2019-2022, and `+$611.98` in 2023-2026 YTD. The `0.225%` upper neighbor made more (`+$1,880.44`) but had lower PF (`1.47`) and was registered only as a robustness neighbor, so it was not selected after results. The `0.20%` center is the new historical research best; the frozen forward candidate is unchanged. See the [contract](outputs/RC2_MOMENTUM_RISK_EXTENSION_CONTRACT.md), [Model1 decision](outputs/RC2_MOMENTUM_RISK_EXTENSION_MODEL1_DECISION.md), [Model4 decision](outputs/RC2_MOMENTUM_RISK_EXTENSION_MODEL4_DECISION.md), and [exact research profile](outputs/RC2_MOMENTUM_RISK_EXTENSION_RESEARCH_PROFILE.set).
+
+The subsequent frozen money-readiness audit did not promote it further. Exact yearly Model4 restarts were positive in `9 / 11` completed years and retained `+$1,778.14`, but 2019-2020 combined to `-$117.26` against a preregistered `-$100` floor and 2019 PF was `0.82` against `0.85`. Moderate `0.05R` and severe `0.10R` per-trade cost stress remained profitable. However, the standard bootstrap reached `6.383%` P95 closed drawdown and 15 consecutive losses, while the severe bootstrap had `-$539.32` P05 net, `9.629%` P95 drawdown, and `23.33%` red trials. The [money-readiness decision](outputs/RC2_MOMENTUM_RISK_EXTENSION_MONEY_READINESS_DECISION.md) is therefore `NOT MONEY_READY`; the [annual decision](outputs/RC2_MOMENTUM_RISK_EXTENSION_YEARLY_MODEL4_DECISION.md) and [stress decision](outputs/RC2_MOMENTUM_RISK_EXTENSION_STRESS_DECISION.md) contain the frozen gates.
 
 Before that screen, a date-independent outcome-adaptive risk budget was tested analytically on the exact `362`-trade Model4 ledger. It reduced risk-floor drawdown from `2.92%` to `2.34%`, but cut net from `+$1,615.36` to `+$1,346.40`, lost in both chronological partitions, created four red years versus two, and had `0 / 7` passing neighbors. It was rejected before MQL implementation or MT5 spending. See the [frozen contract](outputs/OUTCOME_ADAPTIVE_RISK_BUDGET_CONTRACT.md) and [decision](outputs/OUTCOME_ADAPTIVE_RISK_BUDGET_DECISION.md).
 
@@ -101,7 +105,26 @@ MT5 Strategy Tester, XAUUSD, Model 4 real ticks, $10,000 initial balance, 2015-0
 
 For the new research profile, Model 1 produced `+$1,866.25` (`+18.66%` total, `+1.49%/yr` CAGR), PF `1.51`, 370 trades, and `3.68%` drawdown. The source and trade signals are unchanged; only requested momentum risk moved from `0.15%` to `0.20%` under the same `0.75%` portfolio cap.
 
-The new row is the current balanced historical research profile, not the largest raw historical headline and not yet the forward candidate. Earlier `+$10,127.76` and other high-profit figures came from experimental Model 1 profiles with weaker transfer evidence and are not live candidates. The 2015-2026 history selected this profile; it cannot prove that the same behavior will continue in future market regimes.
+The new row is the highest validated continuous Model4 historical net, not the largest raw historical headline and not the forward candidate. It failed the later annual-restart and Monte Carlo readiness gates. Earlier `+$10,127.76` and other high-profit figures came from experimental Model 1 profiles with weaker transfer evidence and are not live candidates. The 2015-2026 history selected this profile; it cannot prove that the same behavior will continue in future market regimes.
+
+## Historical Research Center Annual Restarts
+
+Each row independently restarts the `0.20%` momentum-risk profile at `$10,000`; return is the percentage increase or decrease for that calendar window. These rows are robustness tests, not one sequential account curve. 2026 is partial through July 16.
+
+| Year | Trades | Net | Return | PF | Max equity DD |
+|---|---:|---:|---:|---:|---:|
+| 2015 | 21 | +$187.25 | +1.87% | 2.07 | 0.90% |
+| 2016 | 36 | +$231.12 | +2.31% | 1.78 | 0.67% |
+| 2017 | 46 | +$175.30 | +1.75% | 1.40 | 1.23% |
+| 2018 | 49 | +$302.89 | +3.03% | 1.94 | 0.71% |
+| 2019 | 33 | -$52.33 | -0.52% | 0.82 | 1.66% |
+| 2020 | 31 | -$64.93 | -0.65% | 0.87 | 3.00% |
+| 2021 | 30 | +$322.06 | +3.22% | 2.11 | 1.39% |
+| 2022 | 36 | +$30.51 | +0.31% | 1.10 | 1.28% |
+| 2023 | 40 | +$145.64 | +1.46% | 1.42 | 1.32% |
+| 2024 | 31 | +$255.23 | +2.55% | 1.79 | 1.17% |
+| 2025 | 5 | +$36.22 | +0.36% | 1.49 | 1.00% |
+| 2026 YTD | 2 | +$209.18 | +2.09% | all winners | 1.19% |
 
 ## Current Forward Candidate Annual Returns
 
@@ -136,7 +159,7 @@ Each real-tick window resets the account to $10,000 with the same frozen source 
 
 These checks reduce start-date dependence. They do not prove future profitability.
 
-## Stress Evidence
+## Current Forward Candidate Stress Evidence
 
 - Extreme added execution cost still returns `+$726.62`, PF `1.222`, with `3.671%` closed-trade drawdown and all broad eras positive.
 - Standard 10,000-trial Monte Carlo: 5th-percentile net `+$896.54`, median PF `1.378`, 95th-percentile closed drawdown `4.366%`, no red trials.
@@ -168,7 +191,7 @@ The source compiles with `0 errors, 0 warnings`. Both published source snapshots
 
 ## What Remains
 
-1. Run annual/restart, execution-cost, and Monte Carlo stress gates on the new `0.20%` historical research profile without retuning it.
+1. Improve date-independent momentum breakout quality or add a genuinely independent return stream, freeze the experiment before results, and repeat broad Model1, exact Model4, annual-restart, cost, and bootstrap gates.
 2. Provision a fresh `$10,000` USD demo hedging account for a separately reviewed candidate, pass the rc2 read-only activation preflight, and collect at least 90 valid calendar days and 30 closed trades.
 3. Reproduce the frozen profile on a second broker's XAUUSD specification.
 4. Review forward slippage, missed trades, disconnect handling, and the loss-streak warning.
@@ -185,6 +208,9 @@ No backtest can make an EA work forever without monitoring. The future process i
 - [`outputs/OPERATIONAL_HARDENING_PORTFOLIO_DECISION.md`](outputs/OPERATIONAL_HARDENING_PORTFOLIO_DECISION.md): v0.2-rc1 safety promotion and remaining live-readiness block
 - [`outputs/OPERATIONAL_HARDENING_RC2_DECISION.md`](outputs/OPERATIONAL_HARDENING_RC2_DECISION.md): rc2 funding/dedicated-account safety promotion and remaining demo requirement
 - [`outputs/RC2_MOMENTUM_RISK_EXTENSION_MODEL4_DECISION.md`](outputs/RC2_MOMENTUM_RISK_EXTENSION_MODEL4_DECISION.md): new historical research best, exact profile identity, broad-window metrics, and frozen Model4 gate
+- [`outputs/RC2_MOMENTUM_RISK_EXTENSION_MONEY_READINESS_DECISION.md`](outputs/RC2_MOMENTUM_RISK_EXTENSION_MONEY_READINESS_DECISION.md): combined annual, cost, Monte Carlo, forward, broker, and safety decision
+- [`outputs/RC2_MOMENTUM_RISK_EXTENSION_YEARLY_MODEL4_DECISION.md`](outputs/RC2_MOMENTUM_RISK_EXTENSION_YEARLY_MODEL4_DECISION.md): exact annual restart results and the two failed frozen gates
+- [`outputs/RC2_MOMENTUM_RISK_EXTENSION_STRESS_DECISION.md`](outputs/RC2_MOMENTUM_RISK_EXTENSION_STRESS_DECISION.md): deterministic execution-cost pass and seeded bootstrap failure
 - [`outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md`](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_STATUS.md): current frozen forward-demo progress and integrity gates
 - [`outputs/TRANSFERABLE_FORWARD_SENTINEL_REGISTRATION.json`](outputs/TRANSFERABLE_FORWARD_SENTINEL_REGISTRATION.json): read-only operational/account contract monitor identity
 - [`outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md`](outputs/TRANSFERABLE_PORTFOLIO_FORWARD_DEMO_ACTIVATION.md): disabled-trading account-switch and clock-start gate

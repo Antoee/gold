@@ -1,0 +1,5 @@
+Profile,Scenario,Trials,Seed,BootstrapWithReplacement,MaxSlippageR,MaxDelayR,MaxSpreadShockR,SpreadShockProbability,MissedWinnerProbability,P05NetProfit,MedianNetProfit,P95NetProfit,MedianProfitFactor,P95MaxClosedDrawdownPercent,P95MaxConsecutiveLosses,RedTrialPercent,GatePass
+control_mo015,standard,10000,26071801,True,0.04,0.06,0.08,0.1,0.05,236.26,1078.93,1986.29,1.3676,5.1797,15.0,1.71,False
+control_mo015,severe,10000,26071802,True,0.08,0.12,0.16,0.2,0.1,-313.31,542.14,1434.27,1.172,7.3845,16.0,14.93,False
+center_mo020,standard,10000,26071801,True,0.04,0.06,0.08,0.1,0.05,158.22,1132.1,2147.8,1.2931,6.3829,15.0,2.77,False
+center_mo020,severe,10000,26071802,True,0.08,0.12,0.16,0.2,0.1,-539.32,435.84,1445.93,1.1052,9.629,16.0,23.33,False
