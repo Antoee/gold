@@ -2,7 +2,8 @@
 param(
    [string]$ProfilePath = "outputs\RDMC_FORWARD_DEMO_DRAFT_PROFILE.set",
    [string]$StatusCsvPath = "outputs\RDMC_FORWARD_DEMO_STATIC_READINESS.csv",
-   [string]$StatusMarkdownPath = "outputs\RDMC_FORWARD_DEMO_STATIC_READINESS.md"
+   [string]$StatusMarkdownPath = "outputs\RDMC_FORWARD_DEMO_STATIC_READINESS.md",
+   [switch]$AllowValidatedBandVWAPReversion
 )
 
 $ErrorActionPreference = "Stop"
@@ -146,7 +147,32 @@ $riskBoost = (Get-BoolValue $inputs 'InpUseProfitOnlyRiskBoost') -or (Get-BoolVa
 Add-Rule $rows 'risk-boosts-disabled' (!$riskBoost) 'Profit- and streak-based risk boosts must remain disabled.'
 Add-Rule $rows 'unlimited-runners-disabled' (!(Get-BoolValue $inputs 'InpUseProtectedCushionUnlimitedRunner') -and !(Get-BoolValue $inputs 'InpUseEliteContinuationUnlimitedRunner')) 'Unlimited runners must remain disabled.'
 Add-Rule $rows 'fmlr-lane-disabled' (!(Get-BoolValue $inputs 'InpUseFlatMonthLiquidityReclaimLane') -and !(Get-BoolValue $inputs 'InpAllowFlatMonthLiquidityReclaimOutsideMonthFilter')) 'Experimental FMLR behavior must remain disabled.'
-Add-Rule $rows 'band-vwap-reversion-disabled' (!(Get-BoolValue $inputs 'InpUseBandVWAPReversionLane')) 'The source gate classifies Band/VWAP reversion as experimental.'
+if($AllowValidatedBandVWAPReversion) {
+   $bandRisk = (Get-DoubleValue $inputs 'InpRiskPercent') * (Get-DoubleValue $inputs 'InpBandVWAPReversionRiskMultiplier')
+   $bandReady = !(Get-BoolValue $inputs 'InpUseBandVWAPReversionLane') -or (
+      (Get-BoolValue $inputs 'InpBandVWAPReversionUseIsolatedExecution') -and
+      (Get-DoubleValue $inputs 'InpBandVWAPReversionRiskMultiplier') -gt 0.0 -and
+      (Get-DoubleValue $inputs 'InpBandVWAPReversionRiskMultiplier') -le 0.90 -and
+      $bandRisk -le 0.4500001 -and
+      (Get-IntValue $inputs 'InpBandVWAPReversionMaxMonthlyEntries') -gt 0 -and
+      (Get-IntValue $inputs 'InpBandVWAPReversionMaxMonthlyEntries') -le 16 -and
+      (Get-IntValue $inputs 'InpBandVWAPReversionSpacingMinutes') -ge 240 -and
+      (Get-DoubleValue $inputs 'InpBandVWAPReversionMaxSpreadATRPercent') -gt 0.0 -and
+      (Get-DoubleValue $inputs 'InpBandVWAPReversionMaxSpreadATRPercent') -le 18.0 -and
+      (Get-DoubleValue $inputs 'InpBandVWAPReversionMaxStopATR') -gt 0.0 -and
+      (Get-DoubleValue $inputs 'InpBandVWAPReversionMaxStopATR') -le 2.20 -and
+      (Get-DoubleValue $inputs 'InpBandVWAPReversionMinRR') -ge 1.20 -and
+      (Get-BoolValue $inputs 'InpBandVWAPReversionUseDIEdgeGate') -and
+      (Get-DoubleValue $inputs 'InpBandVWAPReversionMinDIEdge') -ge -12.0 -and
+      (Get-BoolValue $inputs 'InpBandVWAPReversionUseD1MomentumCap') -and
+      (Get-DoubleValue $inputs 'InpBandVWAPReversionMaxAbsoluteD1MomentumPercent') -gt 0.0 -and
+      (Get-DoubleValue $inputs 'InpBandVWAPReversionMaxAbsoluteD1MomentumPercent') -le 12.0
+   )
+   Add-Rule $rows 'band-vwap-reversion-safety-contract' $bandReady "Validated lane requires isolated execution, <=0.45% requested risk, bounded frequency/spread/stop, >=1.20 RR, DI >= -12, and D1 momentum <=12%; requested risk=$bandRisk%."
+}
+else {
+   Add-Rule $rows 'band-vwap-reversion-disabled' (!(Get-BoolValue $inputs 'InpUseBandVWAPReversionLane')) 'The source gate classifies Band/VWAP reversion as experimental.'
+}
 Add-Rule $rows 'tick-speed-impulse-disabled' (!(Get-BoolValue $inputs 'InpUseTickSpeedImpulse')) 'Tick-speed impulse must remain disabled.'
 
 $failed = @($rows | Where-Object { !$_.Pass })
