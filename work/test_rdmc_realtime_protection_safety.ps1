@@ -28,12 +28,14 @@ function Read-Profile([string]$Path) {
 function Test-CriticalPositionStateModel(
    [bool]$Readable,
    [bool]$ResearchOwned,
+   [bool]$LaneEnabled,
    [bool]$IdentifierAvailable,
    [bool]$StatePresent,
    [double]$InitialRisk
 ) {
    if(!$Readable) { return $false }
    if(!$ResearchOwned) { return $true }
+   if(!$LaneEnabled) { return $false }
    if(!$IdentifierAvailable -or !$StatePresent) { return $false }
    return ![double]::IsNaN($InitialRisk) -and ![double]::IsInfinity($InitialRisk) -and $InitialRisk -gt 0.0
 }
@@ -51,6 +53,11 @@ $realtime = Get-Section $source "bool RealtimeProtectionLimitHit(string &reason)
 $drawdown = Get-Section $source "double CurrentEquityDrawdownPercent()" "void RefreshConsecutiveLosses()"
 $positionRisk = Get-Section $source "double PositionRiskMoney(const ulong ticket, bool &unprotected)" "double OpenRiskPercent(bool &hasUnprotectedPosition)"
 $criticalState = Get-Section $source "bool CriticalResearchPositionStateAllows(string &reason)" "bool ResearchPositionIdentifierOpen(const ulong positionIdentifier, const long magic)"
+$magicContract = Get-Section $source "bool ResearchMagicContractAllows()" "bool IsResearchPortfolioMagic(const long magic)"
+$magicOwnership = Get-Section $source "bool IsResearchPortfolioMagic(const long magic)" "int ResearchActiveOrderCount()"
+$momentumClass = Get-Section $source "class CMomentumLane" "CMomentumLane g_momentum;"
+$momentumInit = Get-Section $momentumClass "bool Init()" "void Deinit()"
+$momentumClose = Get-Section $momentumClass "void CloseAll(const string reason)" "void OnTradeTransaction(const MqlTradeTransaction &transaction)"
 
 Add-Check "realtime guard checks lifetime equity drawdown" ($realtime.Contains('CurrentEquityDrawdownPercent() >= InpMaxEquityDrawdownPercent') -and $realtime.Contains('reason = "equity drawdown limit";')) "equity DD"
 Add-Check "realtime guard checks missing protective stops" ($realtime.Contains('OpenRiskPercent(hasUnprotectedPosition);') -and $realtime.Contains('hasUnprotectedPosition && InpBlockUnprotectedExposure')) "unprotected exposure"
@@ -58,6 +65,12 @@ Add-Check "critical-state guard scans every open position" ($criticalState.Conta
 Add-Check "critical-state guard fails on unreadable snapshots" ($criticalState.Contains('ticket == 0 || !PositionSelectByTicket(ticket)') -and $criticalState.Contains('critical position snapshot unavailable')) "snapshot"
 Add-Check "critical-state guard scopes expert positions on the chart symbol" ($criticalState.Contains('PositionGetString(POSITION_SYMBOL) != _Symbol') -and $criticalState.Contains('PositionGetInteger(POSITION_REASON) != POSITION_REASON_EXPERT')) "ownership scope"
 Add-Check "critical-state guard covers both research magics" ($criticalState.Contains('magic == InpMagicNumber') -and $criticalState.Contains('magic == InpMOMagicNumber') -and $criticalState.Contains('statePrefix = "IR";') -and $criticalState.Contains('statePrefix = "MR";')) "primary and momentum"
+Add-Check "research ownership does not depend on momentum enable state" ($magicOwnership.Contains('magic == InpMagicNumber || magic == InpMOMagicNumber') -and !$magicOwnership.Contains('InpMOEnabled')) "stable ownership"
+Add-Check "research magic contract requires positive distinct identities" ($magicContract.Contains('InpMagicNumber <= 0') -and $magicContract.Contains('InpMOMagicNumber <= 0') -and $magicContract.Contains('InpMagicNumber == InpMOMagicNumber') -and $magicContract.Contains('must be positive and distinct')) "magic contract"
+Add-Check "critical-state guard rejects disabled momentum exposure" ($criticalState.Contains('if(!InpMOEnabled)') -and $criticalState.Contains('reason = "disabled momentum exposure";')) "disabled lane"
+Add-Check "momentum invalid magic is rejected while disabled" ($momentumInit.Contains('InpMagicNumber <= 0') -and $momentumInit.Contains('InpMOMagicNumber <= 0') -and $momentumInit.IndexOf('InpMOMagicNumber == InpMagicNumber', [StringComparison]::Ordinal) -ge 0 -and $momentumInit.IndexOf('InpMOMagicNumber == InpMagicNumber', [StringComparison]::Ordinal) -lt $momentumInit.IndexOf('if(!InpMOEnabled)', [StringComparison]::Ordinal)) "valid ownership"
+Add-Check "momentum close executor is configured while disabled" ($momentumInit.IndexOf('m_trade.SetExpertMagicNumber(InpMOMagicNumber);', [StringComparison]::Ordinal) -ge 0 -and $momentumInit.IndexOf('m_trade.SetTypeFillingBySymbol(_Symbol)', [StringComparison]::Ordinal) -lt $momentumInit.IndexOf('if(!InpMOEnabled)', [StringComparison]::Ordinal)) "close executor ready"
+Add-Check "momentum emergency close has no enable-state bypass" (!$momentumClose.Contains('if(!InpMOEnabled)') -and $momentumClose.Contains('ClosePosition(ticket, reason)') -and $momentumClass.Contains('ExecutePositionClose(m_trade, ticket)')) "disabled lane closes"
 Add-Check "critical-state guard requires immutable identity" ($criticalState.Contains('POSITION_IDENTIFIER') -and $criticalState.Contains('if(positionIdentifier <= 0)') -and $criticalState.Contains('critical position identity unavailable')) "identity"
 Add-Check "critical-state guard builds keys from exact identifiers" ($criticalState.Contains('PositionScopedStateKeyForIdentifier(statePrefix,') -and $criticalState.Contains('(ulong)positionIdentifier')) "identifier key"
 Add-Check "critical-state guard rejects missing initial risk" ($criticalState.Contains('if(!GlobalVariableCheck(key))') -and $criticalState.Contains('critical initial-risk state missing')) "missing state"
@@ -71,6 +84,11 @@ Add-Check "profitable break-even stops are not misclassified" ($positionRisk.Con
 $finalOnTickIndex = $source.LastIndexOf('void OnTick()', [StringComparison]::Ordinal)
 $finalTransactionIndex = $source.LastIndexOf('void OnTradeTransaction', [StringComparison]::Ordinal)
 $onTick = if($finalOnTickIndex -ge 0 -and $finalTransactionIndex -gt $finalOnTickIndex) { $source.Substring($finalOnTickIndex, $finalTransactionIndex - $finalOnTickIndex) } else { '' }
+$onInitStart = $source.LastIndexOf('int OnInit()', [StringComparison]::Ordinal)
+$onInit = if($onInitStart -ge 0 -and $finalOnTickIndex -gt $onInitStart) { $source.Substring($onInitStart, $finalOnTickIndex - $onInitStart) } else { '' }
+$magicContractIndex = $onInit.IndexOf('ResearchMagicContractAllows()', [StringComparison]::Ordinal)
+$capitalContractIndex = $onInit.IndexOf('ResearchCapitalContractAllows()', [StringComparison]::Ordinal)
+Add-Check "magic contract runs before capital-state registration" ($magicContractIndex -ge 0 -and $capitalContractIndex -gt $magicContractIndex) "magic=$magicContractIndex capital=$capitalContractIndex"
 $realtimeIndex = $onTick.IndexOf('riskManager.RealtimeProtectionLimitHit(realtimeRiskReason)', [StringComparison]::Ordinal)
 $newBarIndex = $onTick.IndexOf('bool newBar = IsNewBar();', [StringComparison]::Ordinal)
 $momentumIndex = $onTick.IndexOf('g_momentum.OnTick();', [StringComparison]::Ordinal)
@@ -93,26 +111,25 @@ Add-Check "full bar-based risk gate remains present" ($onTick.Contains('riskMana
 
 $positionManager = Get-Section $source "class CPositionManager" "CPositionManager positionManager;"
 $primaryClose = Get-Section $positionManager "void CloseAll(const string reason)" "void Manage(const ENUM_TRADE_BIAS currentSignalBias)"
-$momentumClass = Get-Section $source "class CMomentumLane" "CMomentumLane g_momentum;"
-$momentumClose = Get-Section $momentumClass "void CloseAll(const string reason)" "void OnTradeTransaction(const MqlTradeTransaction &transaction)"
 Add-Check "primary emergency close owns primary magic" ($primaryClose.Contains('PositionGetInteger(POSITION_MAGIC) != InpMagicNumber') -and $primaryClose.Contains('CloseAndLog(ticket,')) "primary close"
 Add-Check "primary emergency close logs broker rejection" ($positionManager.Contains('ReportTradeFailure("position close", ticket, reason)') -and $positionManager.Contains('TradeResultEvidence(trade)')) "primary failure visible"
 Add-Check "momentum emergency close owns momentum magic" ($momentumClose.Contains('PositionGetInteger(POSITION_MAGIC) != InpMOMagicNumber') -and $momentumClose.Contains('ClosePosition(ticket, reason)') -and $momentumClass.Contains('ExecutePositionClose(m_trade, ticket)')) "momentum close"
 
 $criticalStateScenarios = @(
-   @{ Name='valid primary state'; Readable=$true; ResearchOwned=$true; IdentifierAvailable=$true; StatePresent=$true; InitialRisk=12.5; Expected=$true },
-   @{ Name='valid momentum state'; Readable=$true; ResearchOwned=$true; IdentifierAvailable=$true; StatePresent=$true; InitialRisk=4.25; Expected=$true },
-   @{ Name='foreign position ignored'; Readable=$true; ResearchOwned=$false; IdentifierAvailable=$false; StatePresent=$false; InitialRisk=0.0; Expected=$true },
-   @{ Name='unreadable snapshot'; Readable=$false; ResearchOwned=$false; IdentifierAvailable=$false; StatePresent=$false; InitialRisk=0.0; Expected=$false },
-   @{ Name='missing immutable identifier'; Readable=$true; ResearchOwned=$true; IdentifierAvailable=$false; StatePresent=$true; InitialRisk=12.5; Expected=$false },
-   @{ Name='missing initial-risk key'; Readable=$true; ResearchOwned=$true; IdentifierAvailable=$true; StatePresent=$false; InitialRisk=12.5; Expected=$false },
-   @{ Name='zero initial risk'; Readable=$true; ResearchOwned=$true; IdentifierAvailable=$true; StatePresent=$true; InitialRisk=0.0; Expected=$false },
-   @{ Name='negative initial risk'; Readable=$true; ResearchOwned=$true; IdentifierAvailable=$true; StatePresent=$true; InitialRisk=-1.0; Expected=$false },
-   @{ Name='NaN initial risk'; Readable=$true; ResearchOwned=$true; IdentifierAvailable=$true; StatePresent=$true; InitialRisk=[double]::NaN; Expected=$false },
-   @{ Name='infinite initial risk'; Readable=$true; ResearchOwned=$true; IdentifierAvailable=$true; StatePresent=$true; InitialRisk=[double]::PositiveInfinity; Expected=$false }
+   @{ Name='valid primary state'; Readable=$true; ResearchOwned=$true; LaneEnabled=$true; IdentifierAvailable=$true; StatePresent=$true; InitialRisk=12.5; Expected=$true },
+   @{ Name='valid momentum state'; Readable=$true; ResearchOwned=$true; LaneEnabled=$true; IdentifierAvailable=$true; StatePresent=$true; InitialRisk=4.25; Expected=$true },
+   @{ Name='disabled momentum exposure'; Readable=$true; ResearchOwned=$true; LaneEnabled=$false; IdentifierAvailable=$true; StatePresent=$true; InitialRisk=4.25; Expected=$false },
+   @{ Name='foreign position ignored'; Readable=$true; ResearchOwned=$false; LaneEnabled=$false; IdentifierAvailable=$false; StatePresent=$false; InitialRisk=0.0; Expected=$true },
+   @{ Name='unreadable snapshot'; Readable=$false; ResearchOwned=$false; LaneEnabled=$true; IdentifierAvailable=$false; StatePresent=$false; InitialRisk=0.0; Expected=$false },
+   @{ Name='missing immutable identifier'; Readable=$true; ResearchOwned=$true; LaneEnabled=$true; IdentifierAvailable=$false; StatePresent=$true; InitialRisk=12.5; Expected=$false },
+   @{ Name='missing initial-risk key'; Readable=$true; ResearchOwned=$true; LaneEnabled=$true; IdentifierAvailable=$true; StatePresent=$false; InitialRisk=12.5; Expected=$false },
+   @{ Name='zero initial risk'; Readable=$true; ResearchOwned=$true; LaneEnabled=$true; IdentifierAvailable=$true; StatePresent=$true; InitialRisk=0.0; Expected=$false },
+   @{ Name='negative initial risk'; Readable=$true; ResearchOwned=$true; LaneEnabled=$true; IdentifierAvailable=$true; StatePresent=$true; InitialRisk=-1.0; Expected=$false },
+   @{ Name='NaN initial risk'; Readable=$true; ResearchOwned=$true; LaneEnabled=$true; IdentifierAvailable=$true; StatePresent=$true; InitialRisk=[double]::NaN; Expected=$false },
+   @{ Name='infinite initial risk'; Readable=$true; ResearchOwned=$true; LaneEnabled=$true; IdentifierAvailable=$true; StatePresent=$true; InitialRisk=[double]::PositiveInfinity; Expected=$false }
 )
 foreach($scenario in $criticalStateScenarios) {
-   $actual = Test-CriticalPositionStateModel -Readable $scenario.Readable -ResearchOwned $scenario.ResearchOwned -IdentifierAvailable $scenario.IdentifierAvailable -StatePresent $scenario.StatePresent -InitialRisk $scenario.InitialRisk
+   $actual = Test-CriticalPositionStateModel -Readable $scenario.Readable -ResearchOwned $scenario.ResearchOwned -LaneEnabled $scenario.LaneEnabled -IdentifierAvailable $scenario.IdentifierAvailable -StatePresent $scenario.StatePresent -InitialRisk $scenario.InitialRisk
    Add-Check "critical-state model: $($scenario.Name)" ($actual -eq $scenario.Expected) "actual=$actual"
 }
 

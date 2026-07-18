@@ -4,8 +4,8 @@
 //| No martingale, grid, averaging down, or recovery systems           |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.28"
-#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with exact attached protection, verified account-scoped immutable identity and continuously checked live risk state, collision-safe event reconciliation and ownership-checked execution; tester-only until independently validated."
+#property version   "1.29"
+#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with exact attached protection, verified account-scoped immutable identity, disabled-lane cleanup, collision-safe event reconciliation and ownership-checked execution; tester-only until independently validated."
 
 #include <Trade/Trade.mqh>
 
@@ -2805,9 +2805,20 @@ bool ExecuteOrderDelete(CTrade &executor, const ulong ticket)
    return !OrderSelect(ticket);
 }
 
+bool ResearchMagicContractAllows()
+{
+   if(InpMagicNumber <= 0 || InpMOMagicNumber <= 0 ||
+      InpMagicNumber == InpMOMagicNumber)
+   {
+      Print("Research magic contract failed: primary and momentum magics must be positive and distinct.");
+      return false;
+   }
+   return true;
+}
+
 bool IsResearchPortfolioMagic(const long magic)
 {
-   return magic == InpMagicNumber || (InpMOEnabled && magic == InpMOMagicNumber);
+   return magic == InpMagicNumber || magic == InpMOMagicNumber;
 }
 
 int ResearchActiveOrderCount()
@@ -3148,7 +3159,14 @@ bool CriticalResearchPositionStateAllows(string &reason)
       if(magic == InpMagicNumber)
          statePrefix = "IR";
       else if(magic == InpMOMagicNumber)
+      {
+         if(!InpMOEnabled)
+         {
+            reason = "disabled momentum exposure";
+            return false;
+         }
          statePrefix = "MR";
+      }
       else
          continue;
 
@@ -19226,9 +19244,18 @@ public:
 
    bool Init()
    {
+      if(InpMagicNumber <= 0 || InpMOMagicNumber <= 0 ||
+         InpMOMagicNumber == InpMagicNumber)
+         return false;
+      m_trade.SetExpertMagicNumber(InpMOMagicNumber);
+      m_trade.SetDeviationInPoints(InpMODeviationPoints);
+      m_trade.SetAsyncMode(false);
+      m_trade.SetMarginMode();
+      if(!m_trade.SetTypeFillingBySymbol(_Symbol))
+         return false;
       if(!InpMOEnabled)
          return true;
-      if(InpMOMagicNumber == InpMagicNumber || InpMORiskPercent <= 0.0 || InpRiskPercent <= 0.0 ||
+      if(InpMORiskPercent <= 0.0 || InpRiskPercent <= 0.0 ||
          InpMOMomentumLookbackBars < 20 || InpMOEntryLookbackBars < 3 ||
          InpMOStopLookbackBars < 2 || InpMOExitLookbackBars < 2 || InpMOATRPeriod < 2 ||
          InpMOMinimumStopATR <= 0.0 || InpMOMaximumStopATR < InpMOMinimumStopATR ||
@@ -19238,12 +19265,6 @@ public:
          return false;
       m_atrHandle = iATR(_Symbol, InpMOSignalTimeframe, InpMOATRPeriod);
       if(m_atrHandle == INVALID_HANDLE)
-         return false;
-      m_trade.SetExpertMagicNumber(InpMOMagicNumber);
-      m_trade.SetDeviationInPoints(InpMODeviationPoints);
-      m_trade.SetAsyncMode(false);
-      m_trade.SetMarginMode();
-      if(!m_trade.SetTypeFillingBySymbol(_Symbol))
          return false;
       return true;
    }
@@ -25129,6 +25150,9 @@ int OnInit()
       return INIT_PARAMETERS_INCORRECT;
 
    if(!AccountPositionModeAllows())
+      return INIT_PARAMETERS_INCORRECT;
+
+   if(!ResearchMagicContractAllows())
       return INIT_PARAMETERS_INCORRECT;
 
    if(!ResearchCapitalContractAllows())
