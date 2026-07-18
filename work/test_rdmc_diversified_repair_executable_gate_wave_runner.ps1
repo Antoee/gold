@@ -11,7 +11,8 @@ $before = @(Get-Process -Name terminal,terminal64,metatester,metatester64,MetaEd
 
 try {
    $plan = & $runner -PlanCsv $planCsv -PlanMarkdown $planMd
-   if($plan.Status -ne "LOCKED" -or $plan.Wave -ne 1 -or $plan.Rows -ne 2 -or $plan.MQL5Launched) {
+   if($plan.Status -ne "LOCKED" -or $plan.Wave -ne 1 -or $plan.Rows -ne 2 -or $plan.MQL5Launched -or
+      $plan.SharedBinaryStatus -notin @("LOCKED_COMPILE_ONCE_REQUIRED","SHARED_BINARY_READY")) {
       throw "Wave runner plan did not preserve the locked wave-one contract."
    }
    $rows = @(Import-Csv -LiteralPath $planCsv)
@@ -30,14 +31,20 @@ try {
    $after = @(Get-Process -Name terminal,terminal64,metatester,metatester64,MetaEditor,metaeditor64 -ErrorAction SilentlyContinue)
    if($after.Count -gt $before.Count) { throw "Wave runner test launched an MT5-family process." }
    $text = Get-Content -LiteralPath $runner -Raw
-   foreach($token in @("assert_mt5_launch_allowed.ps1", "run_mt5_portable_parallel_manifest.ps1", "collect_rdmc_diversified_repair_executable_gate_results.ps1", "MaxParallelism", "currentWave")) {
+   foreach($token in @("assert_mt5_launch_allowed.ps1", "prepare_mt5_portable_shared_expert.ps1", "run_mt5_portable_parallel_manifest.ps1", "collect_rdmc_diversified_repair_executable_gate_results.ps1", "MaxParallelism", "currentWave", "PortableBinarySha256")) {
       if($text -notmatch [regex]::Escape($token)) { throw "Wave runner is missing required token: $token" }
+   }
+   $prepareIndex = $text.LastIndexOf('& $sharedBinaryPreparer', [StringComparison]::Ordinal)
+   $parallelIndex = $text.IndexOf('& $parallelRunner', [StringComparison]::Ordinal)
+   if($prepareIndex -lt 0 -or $parallelIndex -lt 0 -or $prepareIndex -ge $parallelIndex) {
+      throw "Wave runner does not prepare one shared binary before parallel workers."
    }
 
    [pscustomobject]@{
       Status = "PASS"
       PlannedWave = $plan.Wave
       PlannedRows = $plan.Rows
+      SharedBinaryStatus = $plan.SharedBinaryStatus
       WrongWaveRejected = $wrongWaveRejected
       HardLockRejected = $hardLockRejected
       MQL5Launched = $false

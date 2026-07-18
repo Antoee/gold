@@ -3,7 +3,8 @@ param(
    [Parameter(Mandatory=$true)][string]$ConfigPath,
    [Parameter(Mandatory=$true)][switch]$UserAuthorizedFocusRisk,
    [ValidateRange(1,100)][int]$MaxCpuPercent = 80,
-   [int]$TimeoutMinutes = 15
+   [int]$TimeoutMinutes = 15,
+   [string]$ExpectedPortableBinarySha256 = ""
 )
 
 Set-StrictMode -Version Latest
@@ -42,6 +43,10 @@ $packageRoot = Split-Path -Parent $configDir
 $packageSource = Join-Path $packageRoot "source\Professional_XAUUSD_EA.mq5"
 if(!(Test-Path -LiteralPath $packageSource -PathType Leaf)) { throw "Package source is missing: $packageSource" }
 if(!$packageSource.StartsWith($repo + "\outputs\", [StringComparison]::OrdinalIgnoreCase)) { throw "Package source is outside workspace outputs." }
+if(![string]::IsNullOrWhiteSpace($ExpectedPortableBinarySha256)) {
+   $ExpectedPortableBinarySha256 = $ExpectedPortableBinarySha256.ToUpperInvariant()
+   if($ExpectedPortableBinarySha256 -notmatch '^[A-F0-9]{64}$') { throw "Expected portable binary identity is invalid." }
+}
 
 function Get-OptionalHash([string]$Path) {
    if(!(Test-Path -LiteralPath $Path -PathType Leaf)) { return "MISSING" }
@@ -86,7 +91,14 @@ function Install-PortablePackageExpert {
                          (Get-OptionalHash $portableSource) -eq $sourceHash
    }
    if($identityMatches) {
+      if(![string]::IsNullOrWhiteSpace($ExpectedPortableBinarySha256) -and
+         $binaryHash -ne $ExpectedPortableBinarySha256) {
+         throw "Prepared shared binary identity changed; independent worker compilation is prohibited."
+      }
       return [pscustomobject]@{ SourceSha256=$sourceHash; BinarySha256=$binaryHash; Recompiled=$false }
+   }
+   if(![string]::IsNullOrWhiteSpace($ExpectedPortableBinarySha256)) {
+      throw "Prepared shared binary identity is missing or invalid; independent worker compilation is prohibited."
    }
 
    Stop-PortableProcesses

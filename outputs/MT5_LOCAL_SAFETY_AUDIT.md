@@ -3,8 +3,8 @@
 Offline audit only. This script does not launch MT5.
 
 - Overall: **PASS**
-- Checks passed: 49 / 49
-- Runner scripts checked: 4
+- Checks passed: 52 / 52
+- Runner scripts checked: 5
 - MT5 processes running: 0
 - Registered read-only forward terminal safe: False
 - Unlock file present: False
@@ -47,6 +47,9 @@ Offline audit only. This script does not launch MT5.
 | Report integrity | Identity-bound report helper exists | True | work\mt5_report_identity_helpers.ps1 | Restore the schema-versioned report identity helper. |
 | Report integrity | Portable runner requires fresh completed report | True | work\run_mt5_portable_config_hidden.ps1 | Remove stale reports, wait for clean terminal exit, and require one stable report. |
 | Report integrity | Portable worker resumes only identity-bound evidence | True | work\run_mt5_portable_package_worker.ps1 | Require matching config, source, binary, and report identities before reusing a completed row. |
+| Shared binary | Compile-once preparer is guarded and exact | True | work\prepare_mt5_portable_shared_expert.ps1 | Compile once on one allowlisted leader and verify exact source, binary, and identity bytes on every root. |
+| Shared binary | Staged wave prepares before parallel execution | True | work\run_rdmc_diversified_repair_executable_gate_wave.ps1 | Prepare and attest one shared EX5 before starting parallel workers. |
+| Shared binary | Direct workers cannot compile after shared preparation | True | work\run_mt5_portable_package_worker.ps1 | Fail before testing when prepared source, binary, or identity bytes drift. |
 | Cleanup | Stop-stray helper exists | True | work\stop_mt5_stray_processes.ps1 | Restore work\stop_mt5_stray_processes.ps1. |
 | Cleanup | Stop-stray helper does not launch MT5 | True | work\stop_mt5_stray_processes.ps1 | Cleanup helper must only stop existing processes. |
 | Cleanup | Stop-watchdog helper preserves quiet marker and avoids self-match | True | work\stop_mt5_focus_watchdog.ps1 | Keep the quiet stop marker in place and avoid matching the stop helper command itself. |
@@ -58,7 +61,7 @@ Offline audit only. This script does not launch MT5.
 | Money-ready refresh | Money-ready refresh child steps run without windows | True | work\refresh_money_ready_status.ps1 | Money-ready refresh child PowerShell steps must use ProcessStartInfo with CreateNoWindow and write logs. |
 | Money-ready refresh | Money-ready refresh avoids direct visible child shells | True | work\refresh_money_ready_status.ps1 | Replace direct powershell child calls with Invoke-QuietPowerShell. |
 | Money-ready refresh | Money-ready refresh does not launch MT5 | True | work\refresh_money_ready_status.ps1 | Money-ready refresh must rebuild state only; it must not launch MT5, MetaEditor, or Strategy Tester. |
-| Runner scripts | All MT5 runner scripts use an approved launch guard | True | Runner scripts checked: 4; unguarded: 0 | Use the legacy hard-lock guard, or the workspace-isolated portable guard that requires focus-risk authorization, hidden launch, bounded cleanup, and frozen-artifact verification. |
+| Runner scripts | All MT5 runner scripts use an approved launch guard | True | Runner scripts checked: 5; unguarded: 0 | Use the legacy hard-lock guard, or the workspace-isolated portable guard that requires focus-risk authorization, hidden launch, bounded cleanup, and frozen-artifact verification. |
 | Runner scripts | No runner uses an unapproved raw terminal launch | True | Raw terminal launch matches: 0 | Route tester launches through Start-MT5Hidden, or the approved workspace-isolated portable hidden runner. |
 | Watchdog | Watchdog script exists | True | work\mt5_focus_watchdog.ps1 | Restore work\mt5_focus_watchdog.ps1. |
 | Watchdog | Watchdog targets MT5 and MetaEditor | True | work\mt5_focus_watchdog.ps1 | Watchdog must stop terminal64, metatester64, and MetaEditor. |
@@ -72,6 +75,7 @@ Offline audit only. This script does not launch MT5.
 
 | File | Guard | Guard Type | Hidden Helper | Raw Terminal Start |
 |---|---|---|---|---|
+| `prepare_mt5_portable_shared_expert.ps1` | True | LegacyLaunchLock | False | False |
 | `run_first_pass_package_hidden.ps1` | True | LegacyLaunchLock | True | False |
 | `run_mt5_portable_config_hidden.ps1` | True | LegacyLaunchLock | False | False |
 | `run_rdmc_diversified_repair_executable_gate_wave.ps1` | True | LegacyLaunchLock | False | False |

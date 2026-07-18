@@ -37,6 +37,8 @@ A failed or incomplete wave never admits later waves. At most two tests are spen
 
 - Plan mode selects only the currently admitted wave and never launches MT5.
 - Parallel, worker, and direct-config launch layers each invoke the hard-lock guard before resolving a runtime or config.
+- Run mode compiles the exact package source once on one allowlisted leader and distributes the same source, EX5, and two-line source/binary identity file to every portable root before workers start.
+- The prepared binary SHA-256 is passed through the orchestrator, parallel runner, worker, and direct launcher. A worker with missing or changed bytes fails before testing and may not compile independently.
 - Every worker rechecks the manifest-pinned config and source hashes and records the compiled binary hash.
 - Before launch, the direct runner removes every same-named report under the admitted portable root. It waits for clean terminal exit and then requires exactly one fresh, non-empty report whose size and timestamp remain stable after exit.
 - A completed worker row is reusable only with an adjacent schema-versioned sidecar binding the exact report hash, config hash, source hash, compiled-binary hash, report name, size, and creation time.

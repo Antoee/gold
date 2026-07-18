@@ -11,6 +11,7 @@ param(
    [ValidatePattern('^[A-Za-z0-9][A-Za-z0-9_.-]*$')][string]$OutputPrefix = "MT5_PORTABLE_WORKER",
    [ValidateRange(1,100)][int]$MaxCpuPercent = 80,
    [ValidateRange(1,1440)][int]$TimeoutMinutesPerConfig = 15,
+   [string]$ExpectedPortableBinarySha256 = "",
    [ValidateRange(1,300)][int]$ProgressIntervalSeconds = 20,
    [switch]$PlanOnly
 )
@@ -18,6 +19,10 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 if(!$UserAuthorizedFocusRisk) { throw "Explicit focus-risk authorization is required." }
+if(![string]::IsNullOrWhiteSpace($ExpectedPortableBinarySha256)) {
+   $ExpectedPortableBinarySha256 = $ExpectedPortableBinarySha256.ToUpperInvariant()
+   if($ExpectedPortableBinarySha256 -notmatch '^[A-F0-9]{64}$') { throw "Expected portable binary identity is invalid." }
+}
 
 $repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $manifestCandidate = if([IO.Path]::IsPathRooted($ManifestPath)) {
@@ -65,6 +70,7 @@ $plan = [pscustomobject]@{
    OutputPrefix = $OutputPrefix
    MaxCpuPercent = $MaxCpuPercent
    TimeoutMinutesPerConfig = $TimeoutMinutesPerConfig
+   ExpectedPortableBinarySha256 = $ExpectedPortableBinarySha256
 }
 if($PlanOnly) {
    $plan
@@ -88,12 +94,20 @@ for($index = 1; $index -le $roots.Count; ++$index) {
    Remove-Item -LiteralPath $out -Force -ErrorAction SilentlyContinue
    $outputPaths.Add($out) | Out-Null
    $job = Start-Job -ScriptBlock {
-      param($Script, $Manifest, $Root, $Index, $Count, $Cpu, $Timeout, $Out)
-      & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $Script `
-         -ManifestPath $Manifest -PortableRoot $Root -WorkerIndex $Index -WorkerCount $Count `
-         -UserAuthorizedFocusRisk -MaxCpuPercent $Cpu -TimeoutMinutesPerConfig $Timeout -OutCsv $Out
+      param($Script, $Manifest, $Root, $Index, $Count, $Cpu, $Timeout, $ExpectedBinary, $Out)
+      if([string]::IsNullOrWhiteSpace($ExpectedBinary)) {
+         & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $Script `
+            -ManifestPath $Manifest -PortableRoot $Root -WorkerIndex $Index -WorkerCount $Count `
+            -UserAuthorizedFocusRisk -MaxCpuPercent $Cpu -TimeoutMinutesPerConfig $Timeout -OutCsv $Out
+      }
+      else {
+         & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $Script `
+            -ManifestPath $Manifest -PortableRoot $Root -WorkerIndex $Index -WorkerCount $Count `
+            -UserAuthorizedFocusRisk -MaxCpuPercent $Cpu -TimeoutMinutesPerConfig $Timeout `
+            -ExpectedPortableBinarySha256 $ExpectedBinary -OutCsv $Out
+      }
       if($LASTEXITCODE -ne 0) { throw "Worker $Index exited with code $LASTEXITCODE" }
-   } -ArgumentList $workerScript, $manifest, $roots[$index - 1], $index, $roots.Count, $MaxCpuPercent, $TimeoutMinutesPerConfig, $out
+   } -ArgumentList $workerScript, $manifest, $roots[$index - 1], $index, $roots.Count, $MaxCpuPercent, $TimeoutMinutesPerConfig, $ExpectedPortableBinarySha256, $out
    $jobs.Add($job) | Out-Null
 }
 

@@ -59,6 +59,8 @@ $helperPath = Join-Path $WorkDir "mt5_background_helpers.ps1"
 $reportIdentityHelperPath = Join-Path $WorkDir "mt5_report_identity_helpers.ps1"
 $portableConfigRunnerPath = Join-Path $WorkDir "run_mt5_portable_config_hidden.ps1"
 $portableWorkerPath = Join-Path $WorkDir "run_mt5_portable_package_worker.ps1"
+$sharedBinaryPreparerPath = Join-Path $WorkDir "prepare_mt5_portable_shared_expert.ps1"
+$stagedWaveRunnerPath = Join-Path $WorkDir "run_rdmc_diversified_repair_executable_gate_wave.ps1"
 $stopHelperPath = Join-Path $WorkDir "stop_mt5_stray_processes.ps1"
 $stopWatchdogPath = Join-Path $WorkDir "stop_mt5_focus_watchdog.ps1"
 $watchdogPath = Join-Path $WorkDir "mt5_focus_watchdog.ps1"
@@ -203,6 +205,12 @@ $portableWorkerText = Read-TextSafe $portableWorkerPath
 Add-Result $rows "Report integrity" "Identity-bound report helper exists" ((Test-Path -LiteralPath $reportIdentityHelperPath) -and (Contains-Text $reportIdentityHelperText 'Read-MT5ReportIdentityEvidence') -and (Contains-Text $reportIdentityHelperText 'Write-MT5ReportIdentityEvidence') -and (Contains-Text $reportIdentityHelperText 'PortableBinarySha256') -and (Contains-Text $reportIdentityHelperText 'ReportSha256')) $reportIdentityHelperPath "Restore the schema-versioned report identity helper."
 Add-Result $rows "Report integrity" "Portable runner requires fresh completed report" ((Contains-Text $portableConfigRunnerText 'Get-MatchingPortableReports') -and (Contains-Text $portableConfigRunnerText 'did not exit cleanly') -and (Contains-Text $portableConfigRunnerText 'ambiguous report set') -and (Contains-Text $portableConfigRunnerText 'still changing after terminal exit')) $portableConfigRunnerPath "Remove stale reports, wait for clean terminal exit, and require one stable report."
 Add-Result $rows "Report integrity" "Portable worker resumes only identity-bound evidence" ((Contains-Text $portableWorkerText 'Read-MT5ReportIdentityEvidence') -and (Contains-Text $portableWorkerText 'Write-MT5ReportIdentityEvidence') -and (Contains-Text $portableWorkerText 'ReportIdentityReused') -and (Contains-Text $portableWorkerText 'PackageConfigSha256')) $portableWorkerPath "Require matching config, source, binary, and report identities before reusing a completed row."
+
+$sharedBinaryPreparerText = Read-TextSafe $sharedBinaryPreparerPath
+$stagedWaveRunnerText = Read-TextSafe $stagedWaveRunnerPath
+Add-Result $rows "Shared binary" "Compile-once preparer is guarded and exact" ((Test-Path -LiteralPath $sharedBinaryPreparerPath) -and (Contains-Text $sharedBinaryPreparerText 'assert_mt5_launch_allowed.ps1') -and (Contains-Text $sharedBinaryPreparerText 'COMPILED_ONCE_AND_DISTRIBUTED') -and (Contains-Text $sharedBinaryPreparerText 'Shared expert distribution verification failed') -and ([regex]::Matches($sharedBinaryPreparerText, [regex]::Escape('HiddenProcess]::StartHidden')).Count -eq 1)) $sharedBinaryPreparerPath "Compile once on one allowlisted leader and verify exact source, binary, and identity bytes on every root."
+Add-Result $rows "Shared binary" "Staged wave prepares before parallel execution" ((Contains-Text $stagedWaveRunnerText '& $sharedBinaryPreparer') -and (Contains-Text $stagedWaveRunnerText '-ExpectedPortableBinarySha256 $sharedBinary.PortableBinarySha256') -and $stagedWaveRunnerText.LastIndexOf('& $sharedBinaryPreparer', [StringComparison]::Ordinal) -lt $stagedWaveRunnerText.IndexOf('& $parallelRunner', [StringComparison]::Ordinal)) $stagedWaveRunnerPath "Prepare and attest one shared EX5 before starting parallel workers."
+Add-Result $rows "Shared binary" "Direct workers cannot compile after shared preparation" ((Contains-Text $portableConfigRunnerText 'independent worker compilation is prohibited') -and (Contains-Text $portableWorkerText 'differs from the prepared shared binary') -and (Contains-Text $portableWorkerText 'ExpectedPortableBinarySha256')) $portableWorkerPath "Fail before testing when prepared source, binary, or identity bytes drift."
 
 $stopHelperText = Read-TextSafe $stopHelperPath
 Add-Result $rows "Cleanup" "Stop-stray helper exists" (Test-Path -LiteralPath $stopHelperPath) $stopHelperPath "Restore work\stop_mt5_stray_processes.ps1."

@@ -18,6 +18,8 @@ $decisionPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_EXECUTABLE_GATE
 $manifestPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_EXECUTABLE_GATE_MANIFEST.csv"
 $parallelRunner = Join-Path $PSScriptRoot "run_mt5_portable_parallel_manifest.ps1"
 $collector = Join-Path $PSScriptRoot "collect_rdmc_diversified_repair_executable_gate_results.ps1"
+$sharedBinaryPreparer = Join-Path $PSScriptRoot "prepare_mt5_portable_shared_expert.ps1"
+$packageSource = Join-Path $repo "outputs\rdmc_diversified_repair_executable_gate_package\source\Professional_XAUUSD_EA.mq5"
 $repoLock = Join-Path $PSScriptRoot "MT5_LOCAL_LAUNCH_DISABLED.lock"
 $outerLock = Join-Path $sharedWork "MT5_LOCAL_LAUNCH_DISABLED.lock"
 $expectedManifestHash = "4DB75F81EB1BF82DD4516654E2070D75563D904B7A17367629911EE261B0E18A"
@@ -29,7 +31,7 @@ function Resolve-RepoPath([string]$Path) {
    return Join-Path $repo $Path
 }
 
-foreach($required in @($decisionPath, $manifestPath, $parallelRunner, $collector)) {
+foreach($required in @($decisionPath, $manifestPath, $parallelRunner, $collector,$sharedBinaryPreparer,$packageSource)) {
    if(!(Test-Path -LiteralPath $required -PathType Leaf)) { throw "Required executable-gate artifact is missing: $required" }
 }
 if((Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash.ToUpperInvariant() -ne $expectedManifestHash) {
@@ -71,6 +73,12 @@ $availableRoots = @($PortableRoots | Where-Object {
 } | Select-Object -Unique)
 $maxWorkers = [int]($waveRows | Select-Object -First 1).MaxParallelism
 $workerCount = [Math]::Min($maxWorkers, $availableRoots.Count)
+$sharedBinaryPlan = if($availableRoots.Count -gt 0) {
+   & $sharedBinaryPreparer -SourcePath $packageSource -ExpectedSourceSha256 $expectedSourceHash `
+      -PortableRoots $availableRoots -MaxCpuPercent $MaxCpuPercent -PlanOnly -NoWritePlan
+} else {
+   [pscustomobject]@{ Status="RUNTIME_MISSING"; Action="PROVISION_RUNTIME"; SharedBinaryReady=$false }
+}
 $repoLocked = Test-Path -LiteralPath $repoLock
 $outerLocked = Test-Path -LiteralPath $outerLock
 $status = if($repoLocked -or $outerLocked) { "LOCKED" } elseif($workerCount -lt 1) { "NO_PORTABLE_RUNTIME" } else { "READY" }
@@ -89,6 +97,8 @@ $planRows = foreach($row in $waveRows) {
       AvailableWorkers = $workerCount
       MaxCpuPercent = $MaxCpuPercent
       TimeoutMinutesPerConfig = $TimeoutMinutesPerConfig
+      SharedBinaryStatus = $sharedBinaryPlan.Status
+      SharedBinaryAction = $sharedBinaryPlan.Action
    }
 }
 $planCsvFull = Resolve-RepoPath $PlanCsv
@@ -104,16 +114,22 @@ $markdown = @(
    "- Rows: ``$($waveRows.Count)``",
    "- Available workers: ``$workerCount`` of ``$maxWorkers`` allowed",
    "- CPU ceiling per worker: ``$MaxCpuPercent%``",
+   "- Shared binary status: ``$($sharedBinaryPlan.Status)``",
+   "- Shared binary action: ``$($sharedBinaryPlan.Action)``",
    "- Repository hard lock: ``$repoLocked``",
    "- Outer workspace hard lock: ``$outerLocked``",
    "- Action: ``$action``",
    "",
-   "Plan mode never launches MT5. Run mode requires explicit focus-risk authorization, both hard locks absent, both unlock acknowledgements, and the launch-guard environment flags. Only the currently admitted wave manifest is passed to the generic parallel runner."
+   "Plan mode never launches MT5. Run mode requires explicit focus-risk authorization, both hard locks absent, both unlock acknowledgements, and the launch-guard environment flags. Only the currently admitted wave manifest is passed to the generic parallel runner.",
+   "",
+   "Before workers start, run mode compiles the exact candidate once on one allowlisted leader and distributes that byte-identical source, EX5, and identity file to every portable root. Workers receive the prepared binary hash and are prohibited from recompiling independently.",
+   "",
+   "Interrupted work is resumable only through identity sidecars generated after a complete terminal exit. A cached report without matching report, config, source, and compiled-binary hashes is ignored and rerun."
 )
 [IO.File]::WriteAllLines($planMarkdownFull, $markdown, [Text.Encoding]::ASCII)
 
 if(!$Run) {
-   [pscustomobject]@{ Status=$status; Wave=$Wave; Rows=$waveRows.Count; Workers=$workerCount; MQL5Launched=$false }
+   [pscustomobject]@{ Status=$status; Wave=$Wave; Rows=$waveRows.Count; Workers=$workerCount; SharedBinaryStatus=$sharedBinaryPlan.Status; MQL5Launched=$false }
    return
 }
 if(!$UserAuthorizedFocusRisk) { throw "Run mode requires explicit focus-risk authorization." }
@@ -121,11 +137,20 @@ if($repoLocked -or $outerLocked) { throw "RDMC executable wave is hard-locked; n
 if($workerCount -lt 1) { throw "No admitted portable runtime is available." }
 . (Join-Path $PSScriptRoot "assert_mt5_launch_allowed.ps1")
 
+$sharedBinary = & $sharedBinaryPreparer -SourcePath $packageSource `
+   -ExpectedSourceSha256 $expectedSourceHash -PortableRoots $availableRoots `
+   -MaxCpuPercent $MaxCpuPercent -UserAuthorizedFocusRisk
+if($sharedBinary.Status -notin @("REUSED_SHARED_BINARY","COMPILED_ONCE_AND_DISTRIBUTED") -or
+   [string]::IsNullOrWhiteSpace([string]$sharedBinary.PortableBinarySha256)) {
+   throw "Shared portable binary preparation failed."
+}
+
 $waveManifest = "outputs\RDMC_DIVERSIFIED_REPAIR_EXECUTABLE_GATE_WAVE_{0:D2}_MANIFEST.csv" -f $Wave
 $outputPrefix = "RDMC_EXECUTABLE_GATE_WAVE_{0:D2}_WORKER" -f $Wave
 & $parallelRunner -ManifestPath $waveManifest -PortableRoots $availableRoots[0..($workerCount - 1)] `
    -UserAuthorizedFocusRisk -OutputPrefix $outputPrefix -MaxCpuPercent $MaxCpuPercent `
-   -TimeoutMinutesPerConfig $TimeoutMinutesPerConfig
+   -TimeoutMinutesPerConfig $TimeoutMinutesPerConfig `
+   -ExpectedPortableBinarySha256 $sharedBinary.PortableBinarySha256
 if($LASTEXITCODE -ne 0) { throw "Parallel executable-wave runner failed." }
 & $collector -Wave $Wave
 if($LASTEXITCODE -ne 0) { throw "Executable-wave collector failed." }

@@ -18,13 +18,24 @@ try {
 
    $plan = & $runner -ManifestPath $validPath -PortableRoots @("worker-a", "worker-b") `
       -UserAuthorizedFocusRisk -OutputPrefix "GENERIC_TEST" -MaxCpuPercent 73 `
-      -TimeoutMinutesPerConfig 9 -PlanOnly
+      -TimeoutMinutesPerConfig 9 -ExpectedPortableBinarySha256 ("A" * 64) -PlanOnly
    if($plan.Rows -ne 3 -or $plan.Workers -ne 2 -or $plan.OutputPrefix -ne "GENERIC_TEST") {
       throw "Generic runner plan does not match the validated manifest."
    }
    if($plan.MaxCpuPercent -ne 73 -or $plan.TimeoutMinutesPerConfig -ne 9) {
       throw "Generic runner plan lost resource controls."
    }
+   if($plan.ExpectedPortableBinarySha256 -ne ("A" * 64)) {
+      throw "Generic runner plan lost the prepared shared binary identity."
+   }
+
+   $invalidBinaryRejected = $false
+   try {
+      & $runner -ManifestPath $validPath -PortableRoots @("worker-a") `
+         -UserAuthorizedFocusRisk -ExpectedPortableBinarySha256 "BAD" -PlanOnly | Out-Null
+   }
+   catch { $invalidBinaryRejected = $_.Exception.Message -match "binary identity is invalid" }
+   if(!$invalidBinaryRejected) { throw "Generic runner accepted an invalid shared binary identity." }
 
    $duplicatePath = Join-Path $tempRoot "duplicate.csv"
    @(
@@ -55,7 +66,7 @@ try {
    if($after.Count -gt $before.Count) { throw "Generic parallel runner created an MT5-family process while locked." }
 
    $runnerText = Get-Content -LiteralPath $runner -Raw
-   foreach($token in @("run_mt5_portable_package_worker.ps1", "assert_mt5_launch_allowed.ps1", "UserAuthorizedFocusRisk", "MaxCpuPercent", "ExpectedRows", "PlanOnly")) {
+   foreach($token in @("run_mt5_portable_package_worker.ps1", "assert_mt5_launch_allowed.ps1", "UserAuthorizedFocusRisk", "MaxCpuPercent", "ExpectedRows", "ExpectedPortableBinarySha256", "PlanOnly")) {
       if($runnerText -notmatch [regex]::Escape($token)) { throw "Generic runner is missing required token: $token" }
    }
 
@@ -64,6 +75,7 @@ try {
       ValidRows = $plan.Rows
       Workers = $plan.Workers
       DuplicateRanksRejected = $duplicateRejected
+      InvalidBinaryRejected = $invalidBinaryRejected
       HardLockRejected = $hardLockRejected
       MQL5Launched = $false
    }

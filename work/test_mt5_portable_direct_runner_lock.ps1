@@ -48,6 +48,12 @@ foreach($token in @("mt5_report_identity_helpers.ps1", "Read-MT5ReportIdentityEv
 foreach($token in @("sharedResearchPortable", "mt5_portable_research", "portableParent.Equals")) {
    if($launcherText -notmatch [regex]::Escape($token)) { throw "Shared portable allowlist is missing: $token" }
 }
+foreach($token in @("ExpectedPortableBinarySha256", "independent worker compilation is prohibited")) {
+   if($launcherText -notmatch [regex]::Escape($token)) { throw "Direct launcher shared-binary enforcement is missing: $token" }
+}
+foreach($token in @("ExpectedPortableBinarySha256", "differs from the prepared shared binary")) {
+   if($workerText -notmatch [regex]::Escape($token)) { throw "Worker shared-binary enforcement is missing: $token" }
+}
 foreach($token in @("Get-MatchingPortableReports", "LastWriteTimeUtc", "did not exit cleanly", "ambiguous report set", "still changing after terminal exit")) {
    if($launcherText -notmatch [regex]::Escape($token)) { throw "Fresh completed-report enforcement is missing: $token" }
 }

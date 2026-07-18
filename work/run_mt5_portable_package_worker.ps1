@@ -6,6 +6,7 @@ param(
    [Parameter(Mandatory=$true)][switch]$UserAuthorizedFocusRisk,
    [ValidateRange(1,100)][int]$MaxCpuPercent = 80,
    [int]$TimeoutMinutesPerConfig = 15,
+   [string]$ExpectedPortableBinarySha256 = "",
    [string]$OutCsv = ""
 )
 
@@ -18,6 +19,10 @@ $repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $manifest = (Resolve-Path -LiteralPath $ManifestPath).Path
 $portable = (Resolve-Path -LiteralPath $PortableRoot).Path
 $runner = Join-Path $PSScriptRoot "run_mt5_portable_config_hidden.ps1"
+if(![string]::IsNullOrWhiteSpace($ExpectedPortableBinarySha256)) {
+   $ExpectedPortableBinarySha256 = $ExpectedPortableBinarySha256.ToUpperInvariant()
+   if($ExpectedPortableBinarySha256 -notmatch '^[A-F0-9]{64}$') { throw "Expected portable binary identity is invalid." }
+}
 if([string]::IsNullOrWhiteSpace($OutCsv)) {
    $OutCsv = Join-Path $repo ("outputs\M15_TREND_PULLBACK_PORTABLE_WORKER_{0}.csv" -f $WorkerIndex)
 }
@@ -77,6 +82,10 @@ foreach($item in $items) {
       $cachedIdentity = Read-MT5ReportIdentityEvidence -ReportPath $existing `
          -IdentityPath $identityPath -ExpectedReportName $expectedReportName `
          -ConfigSha256 $configHash -SourceSha256 $expectedSourceHash
+      if($cachedIdentity -and ![string]::IsNullOrWhiteSpace($ExpectedPortableBinarySha256) -and
+         $cachedIdentity.PortableBinarySha256 -ne $ExpectedPortableBinarySha256) {
+         $cachedIdentity = $null
+      }
    }
    $started = (Get-Date).ToString("s")
    $status = ""
@@ -96,8 +105,17 @@ foreach($item in $items) {
    }
    else {
       try {
-         $run = & $runner -PortableRoot $portable -ConfigPath $config -UserAuthorizedFocusRisk `
-            -MaxCpuPercent $MaxCpuPercent -TimeoutMinutes $TimeoutMinutesPerConfig
+         $runnerArgs = @{
+            PortableRoot = $portable
+            ConfigPath = $config
+            UserAuthorizedFocusRisk = $true
+            MaxCpuPercent = $MaxCpuPercent
+            TimeoutMinutes = $TimeoutMinutesPerConfig
+         }
+         if(![string]::IsNullOrWhiteSpace($ExpectedPortableBinarySha256)) {
+            $runnerArgs.ExpectedPortableBinarySha256 = $ExpectedPortableBinarySha256
+         }
+         $run = & $runner @runnerArgs
          $sourceReport = [string]$run.Report
          if([string]$run.PackageSourceSha256 -ne $expectedSourceHash) {
             throw "Portable runner package-source identity mismatch."
@@ -106,6 +124,10 @@ foreach($item in $items) {
             throw "Portable report does not embed the expected package-source identity."
          }
          $portableBinaryHash = [string]$run.PortableBinarySha256
+         if(![string]::IsNullOrWhiteSpace($ExpectedPortableBinarySha256) -and
+            $portableBinaryHash -ne $ExpectedPortableBinarySha256) {
+            throw "Portable runner binary identity differs from the prepared shared binary."
+         }
          $portableExpertRecompiled = [bool]$run.PortableExpertRecompiled
          $extension = [IO.Path]::GetExtension($sourceReport)
          $target = $destinationBase + $extension
