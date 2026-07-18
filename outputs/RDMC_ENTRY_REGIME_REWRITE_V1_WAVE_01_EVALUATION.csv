@@ -1,0 +1,3 @@
+QueueRank,Window,ExpectedReportName,GatePass,Reasons,NetProfit,ProfitFactor,TotalTrades,MaxDrawdownPercent,RecoveryFactor
+1,2019,rdmc_err1_w01_m1_critical_2019,False,TotalTrades=5<15,4.43,1.39,5,0.15,0.2913
+2,2022,rdmc_err1_w01_m1_critical_2022,False,NetProfit=-3.42<0.01;ProfitFactor=0.91<1.05;TotalTrades=7<20;RecoveryFactor=-0.081<0,-3.42,0.91,7,0.42,-0.081

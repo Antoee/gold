@@ -141,3 +141,7 @@ work/test_rdmc_money_ready_gate_repair_executable*.ps1 text eol=lf
 work/test_rdmc_money_ready_gate_repair_executable.py text eol=lf
 work/test_rdmc_money_ready_gate_repair_offline_suite.ps1 text eol=lf
 work/*rdmc_money_ready_gate_repair_wave_01_readiness.ps1 text eol=lf
+outputs/rdmc_entry_regime_rewrite_v1_package/** -text whitespace=cr-at-eol
+outputs/RDMC_ENTRY_REGIME_REWRITE_V1_* -text whitespace=cr-at-eol
+work/*rdmc_entry_regime_rewrite_v1*.ps1 text eol=lf
+work/*rdmc_entry_regime_rewrite_v1*.py text eol=lf

@@ -10,7 +10,9 @@ Research and validation repository for a risk-first MetaTrader 5 Expert Advisor 
 
 **Forward-test candidate only. Real-account trading remains disabled.**
 
-**2026-07-18 latest executable result: NO NEW BEST. The money-ready gate-repair successor compiled with `0 errors, 0 warnings`, but failed both frozen Wave 1 Model1 windows on the exact `$10,000` contract. It lost `-$17.35` in 2019 (PF `0.00`, 3 trades, `0.17%` drawdown) and `-$34.84` in 2022 (PF `0.41`, 7 trades, `0.46%` drawdown), for `-$52.19` combined. The identity is terminally rejected and cannot be rerun or advanced to later waves. Momentum entries contributed `-$52.97`; the Band/VWAP reversion lane contributed `+$0.78`. The required next step is a new entry/regime code rewrite and a fresh identity starting again at Wave 1. Both launch locks are restored, MT5 is stopped, the registered candidate is unchanged, and real trading remains disabled. See the [decision](outputs/RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_DECISION.md), [Wave 1 metrics](outputs/RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_WAVE_01_METRICS.md), and [lane attribution](outputs/RDMC_MONEY_READY_GATE_REPAIR_WAVE_01_LANE_ATTRIBUTION.md).**
+**2026-07-18 latest executable result: NO NEW BEST. Entry/Regime Rewrite v1 compiled with `0 errors, 0 warnings` and fixed the cross-lane loss-streak starvation defect, but failed both frozen Wave 1 Model1 gates on the exact `$10,000` contract. The 2019 restart made `+$4.43` (`+0.04%`, PF `1.39`, 5 trades, `0.15%` drawdown) but missed the 15-trade floor. The 2022 restart lost `-$3.42` (`-0.03%`, PF `0.91`, 7 trades, `0.42%` drawdown) and failed net, PF, activity, and recovery. Their `+$1.01` sum is only an aggregate two-window gate score, not a sequential account return. The exact source/profile/binary identity is terminally rejected and cannot advance. Both launch locks are restored, MT5 is stopped, the registered candidate is unchanged, the invalid `$100,000` demo still counts as zero evidence, and real trading remains disabled. See the [decision](outputs/RDMC_ENTRY_REGIME_REWRITE_V1_DECISION.md), [Wave 1 metrics](outputs/RDMC_ENTRY_REGIME_REWRITE_V1_WAVE_01_METRICS.md), and [lane attribution](outputs/RDMC_ENTRY_REGIME_REWRITE_V1_WAVE_01_LANE_ATTRIBUTION.md).**
+
+**Previous executable rejection: the money-ready gate-repair predecessor lost `-$17.35` in 2019 and `-$34.84` in 2022, for an aggregate `-$52.19`. That identity remains frozen and terminally rejected. Its momentum entries contributed `-$52.97`, while Band/VWAP reversion contributed `+$0.78`. See the [predecessor decision](outputs/RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_DECISION.md).**
 
 **2026-07-17 research update: the preregistered 0.20% momentum-risk center passed 28/28 Model1 and 12/12 Model4 reports. Continuous Model4 improved from +$1,615.36 to +$1,812.42: +18.12% total, +1.45%/yr CAGR, PF 1.50, 362 trades, 3.19% drawdown, and 5.13 recovery. This is a historical research promotion, not a forward or real-money approval. The first forward attachment remains invalid because the demo account has the wrong starting balance.**
 
@@ -166,7 +168,7 @@ The newer four-lane RDMC candidate now has a separate preregistration contract, 
 
 The source gate currently reports exactly two blockers: `InpMaxConsecutiveLosses=4` and `InpUseBandVWAPReversionLane=true`. Quietly changing either would create an unvalidated trading path, so this draft does not do that. Even after those blockers are resolved through a newly frozen and fully retested candidate, registration still requires primary executable admission, identity-bound ledger stress, distinct-broker validation, frozen candidate and sentinel binaries, and a fresh clean `$10,000` demo heartbeat. The current package contributes zero forward days, trades, and P/L, leaves the existing registration untouched, stores no account identifier, and keeps real-account trading disabled.
 
-The separate gate-repair successor now clears those two static checks under a stricter conditional contract, but it is a new source/profile identity and therefore inherits no historical profit. Its complete 24-row executable queue is frozen with the same thresholds and early-stop order as the original combined candidate. Until that queue, executable-ledger stress, distinct-broker validation, and a new forward registration all pass, the blocked draft above and the registered forward candidate remain unchanged.
+The separate gate-repair successor cleared those two static checks under a stricter conditional contract, but its exact executable identity then failed both critical Wave 1 windows and was frozen. Entry/Regime Rewrite v1 separated primary and momentum soft loss state and added date-independent momentum quality gates, but it also failed Wave 1 under a second new identity. Neither identity inherits historical profit or may advance to ledger, broker, forward, or real-money testing. The blocked draft above and the registered forward candidate remain unchanged.
 
 ## Latest Research Screens
 
@@ -340,8 +342,8 @@ The source compiles with `0 errors, 0 warnings`. Both published source snapshots
 
 ## What Remains
 
-1. Keep the rejected Wave 1 source, profile, binary, reports, and sidecars frozen. Do not rerun or tune that identity.
-2. Rewrite the momentum entry/regime architecture under a new identity and diagnose why the combined executable path suppressed the expected R20 stream.
+1. Keep both rejected Wave 1 source/profile/binary/report identities frozen. Do not rerun or tune either identity.
+2. Preserve the validated cross-lane loss-state isolation fix, but replace the weak momentum entry/regime logic and restore sufficient date-independent activity under a third new identity.
 3. Start the new identity at Model1 2019 and 2022 only. Admit waves 2-5 sequentially only if every preceding frozen gate passes.
 4. If all five waves pass, export the executable trade ledger and run deterministic cost stress, order-aware Monte Carlo, and a distinct-broker XAUUSD test.
 5. Only then provision a fresh `$10,000` USD demo hedging account, pass activation preflight, and collect at least 90 valid calendar days and 30 closed trades.

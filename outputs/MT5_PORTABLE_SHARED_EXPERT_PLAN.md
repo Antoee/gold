@@ -2,10 +2,10 @@
 
 - Status: **SHARED_BINARY_READY**
 - Action: `REUSE_EXACT_SHARED_BINARY`
-- Expected source SHA-256: `104F1B2D77876FA9856C8BECF7BF2D81DAB187F54BF3ED12C07493BCD6F6D6C8`
-- Portable roots: `4`
+- Expected source SHA-256: `41768D6A8C21A49B0B8465F90A4C3C254CA0FC714910AB6AAFBDE9B8D4402FED`
+- Portable roots: `2`
 - Runtime failures: `0`
-- Exact-source identities ready: `4`
+- Exact-source identities ready: `2`
 - Unique ready binary identities: `1`
 - Current installed source identities: `1`
 - Current installed binary identities: `1`

@@ -1,0 +1,6 @@
+"EntryTime","ExitTime","EntryYear","EntryMonth","EntryHour","DayOfWeek","Symbol","Side","Volume","EntryPrice","ExitPrice","InitialStop","InitialTarget","InitialRiskMoney","RiskR","HoldMinutes","Profit","Winner","EntrySubtype","EntryComment","ExitComment"
+"2019-01-31T16:00:00","2019-01-31T19:00:00","2019","1","16","Thursday","XAUUSD","buy","0.02","1325.41","1321.33","1319.71","1336.81","11.4","-0.715789","180","-8.16","False","other","MTSM_BUY",""
+"2019-06-14T06:00:00","2019-06-14T10:06:20","2019","6","6","Friday","XAUUSD","buy","0.01","1347.03","1357.94","1341.57","1357.94","5.46","1.998168","246.33","10.91","True","other","MTSM_BUY","tp 1357.94"
+"2019-07-30T13:00:00","2019-07-31T05:00:00","2019","7","13","Tuesday","XAUUSD","buy","0.02","1428.53","1427.95","1422.42","1440.75","12.22","-0.115385","960","-1.41","False","other","MTSM_BUY",""
+"2019-09-23T17:00:00","2019-09-24T03:00:00","2019","9","17","Monday","XAUUSD","buy","0.01","1522.46","1520.77","1515.93","1535.52","6.53","-0.278714","600","-1.82","False","other","MTSM_BUY",""
+"2019-12-27T02:45:00","2019-12-30T23:54:59","2019","12","2","Friday","XAUUSD","buy","0.01","1509.92","1514.96","1492.09",,"17.83","0.275379","5589.98","4.91","True","other","DDB;DDB;Daily Donchian buy;ADX","end of test"

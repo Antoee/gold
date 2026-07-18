@@ -247,7 +247,11 @@ foreach($file in $scriptFiles) {
    }
 
    $text = Get-Content -LiteralPath $file.FullName -Raw
-   $looksLikeRunner = (Contains-Text $text 'terminal64.exe') -or (Contains-Text $text 'terminal.exe') -or (Contains-Text $text 'Start-MT5Hidden') -or (Contains-Text $text '/config:')
+   $mentionsTerminal = (Contains-Text $text 'terminal64.exe') -or (Contains-Text $text 'terminal.exe')
+   $hasProcessLaunch = (Contains-Text $text 'Start-Process') -or (Contains-Text $text 'CreateProcess') -or
+      (Contains-Text $text 'ProcessStartInfo') -or (Contains-Text $text 'HiddenProcess]::StartHidden')
+   $looksLikeRunner = (Contains-Text $text 'Start-MT5Hidden') -or (Contains-Text $text '/config:') -or
+      ($mentionsTerminal -and $hasProcessLaunch)
    if(!$looksLikeRunner) {
       continue
    }
