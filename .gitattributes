@@ -4,6 +4,10 @@ work/Professional_XAUUSD_EA_THREE_LANE_ISOLATED.mq5 -text -diff
 outputs/three_lane_ddb045_model4_validation_package/dependencies/daily_donchian/Professional_XAUUSD_EA.mq5 -text -diff
 work/Professional_XAUUSD_Transferable_Portfolio.mq5 -text -diff
 release/transferable-portfolio-v0.1/Professional_XAUUSD_Transferable_Portfolio.mq5 -text -diff
+work/Professional_XAUUSD_Operational_Hardening_Portfolio.mq5 -text -diff
+release/transferable-portfolio-v0.2-rc1/** -text whitespace=cr-at-eol
+outputs/operational_hardening_portfolio_model1_package/profiles/*.set -text whitespace=cr-at-eol
+outputs/operational_hardening_portfolio_model4_package/profiles/*.set -text whitespace=cr-at-eol
 work/Professional_XAUUSD_Forward_Sentinel.mq5 -text
 outputs/TRANSFERABLE_FORWARD_SENTINEL_PROFILE.set -text
 work/Independent_XAUUSD_M15_Trend_Pullback.mq5 -text -diff whitespace=cr-at-eol
