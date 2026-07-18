@@ -74,3 +74,4 @@ outputs/low_activity_diversifier_holdout_model1_package/*/configs/*.ini -text wh
 outputs/LOW_ACTIVITY_DIVERSIFIER_HOLDOUT_MODEL1_RESULTS.csv -text whitespace=cr-at-eol
 work/Independent_XAUUSD_M15_Failed_Breakout_Trap.mq5 -text -diff whitespace=cr-at-eol
 work/Professional_XAUUSD_RC2_Momentum_Feature_Telemetry.mq5 -text -diff whitespace=cr-at-eol
+outputs/RC2_MOMENTUM_ATR_CAP_REPAIR_CONTRACT.md -text -diff whitespace=cr-at-eol
