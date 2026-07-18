@@ -1,0 +1,9 @@
+Candidate,MinimumSignalRangeATR,Year,PostHocNetProfit,PostHocProfitFactor,PostHocTrades,PostHocWinRatePercent,KeptMomentumTrades,ExcludedMomentumTrades,ExcludedMomentumNet,ProfitableYear,ActivityFloor18,CombinedNet2019And2022,BeatsControlCombined,PostHocProfileGate
+srg_control,off,2019,-3.77,0.9778,32,34.38,32,0,0.00,False,True,-96.55,False,False
+srg_control,off,2022,-92.78,0.5743,35,40.00,34,0,0.00,False,True,-96.55,False,False
+srg_min100,1.00,2019,-47.01,0.6445,24,33.33,24,8,43.24,False,True,-133.37,False,False
+srg_min100,1.00,2022,-86.36,0.3836,22,40.91,21,13,-6.42,False,True,-133.37,False,False
+srg_min125_center,1.25,2019,-16.36,0.8371,19,36.84,19,13,12.59,False,True,-92.78,True,False
+srg_min125_center,1.25,2022,-76.42,0.2883,14,28.57,13,21,-16.36,False,False,-92.78,True,False
+srg_min150,1.50,2019,-14.88,0.6755,11,36.36,11,21,11.11,False,False,-68.19,True,False
+srg_min150,1.50,2022,-53.31,0.3570,10,30.00,9,25,-39.47,False,False,-68.19,True,False

@@ -21,6 +21,8 @@ $collectorPath = Join-Path $repo "work\collect_rdmc_signal_range_gate_repair_res
 $collectorTestPath = Join-Path $repo "work\test_rdmc_signal_range_gate_repair_collector.ps1"
 $decisionPath = Join-Path $repo "work\build_rdmc_signal_range_gate_repair_decision.ps1"
 $decisionTestPath = Join-Path $repo "work\test_rdmc_signal_range_gate_repair_decision.ps1"
+$offlineAnalyzerPath = Join-Path $repo "work\analyze_rdmc_signal_range_gate_offline_prescreen.py"
+$offlineSummaryPath = Join-Path $repo "outputs\RDMC_SIGNAL_RANGE_GATE_OFFLINE_PRESCREEN_SUMMARY.csv"
 
 $sourceHash = (Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash
 $profileHash = (Get-FileHash -LiteralPath $profilePath -Algorithm SHA256).Hash
@@ -72,6 +74,10 @@ Check "decision builder present" (Test-Path -LiteralPath $decisionPath -PathType
 $decisionBuilder = Get-Content -LiteralPath $decisionPath -Raw
 Check "decision freezes gate" ($decisionBuilder -match 'srg_min125_center' -and $decisionBuilder -match 'Trades2019 -ge 18' -and $decisionBuilder -match 'OPEN_MODEL4') "center plus neighbor, 18 trades"
 Check "decision branch tests present" (Test-Path -LiteralPath $decisionTestPath -PathType Leaf) "offline pass/fail fixtures"
+Check "offline pre-screen analyzer present" (Test-Path -LiteralPath $offlineAnalyzerPath -PathType Leaf) "read-only HC cache diagnostic"
+$offlineSummary = @(Import-Csv -LiteralPath $offlineSummaryPath)
+Check "offline pre-screen rows" ($offlineSummary.Count -eq 8) "four profiles by two years"
+Check "offline pre-screen rejects all thresholds" (@($offlineSummary | Where-Object { $_.Candidate -ne 'srg_control' -and $_.PostHocProfileGate -ne 'False' }).Count -eq 0) "no post-hoc pass"
 
 $checks | Format-Table -AutoSize
 "PASS: $($checks.Count) RDMC signal-range repair checks"
