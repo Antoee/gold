@@ -8,6 +8,7 @@ duplicate inputs, and obvious brace/string imbalance.
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import re
 import sys
@@ -144,18 +145,39 @@ class Audit:
             print(f"FAIL: {message}")
 
 
+def repo_path(value: str) -> Path:
+    path = Path(value)
+    return path if path.is_absolute() else ROOT / path
+
+
+def display_path(path: Path) -> str:
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
+
 def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--source", default=str(SOURCE.relative_to(ROOT)))
+    parser.add_argument("--mirror", default=str(MIRROR.relative_to(ROOT)))
+    parser.add_argument("--skip-mirror", action="store_true")
+    args = parser.parse_args()
+    source = repo_path(args.source)
+    mirror = None if args.skip_mirror else repo_path(args.mirror)
+
     audit = Audit()
 
-    audit.check(SOURCE.exists(), "root EA source exists")
-    audit.check(MIRROR.exists(), "mirrored EA source exists")
-    if not SOURCE.exists():
+    audit.check(source.exists(), f"EA source exists: {display_path(source)}")
+    if mirror is not None:
+        audit.check(mirror.exists(), f"mirrored EA source exists: {display_path(mirror)}")
+    if not source.exists():
         return 1
 
-    if MIRROR.exists():
-        audit.check(sha256(SOURCE) == sha256(MIRROR), "root/mirror source SHA-256 hashes match")
+    if mirror is not None and mirror.exists():
+        audit.check(sha256(source) == sha256(mirror), "source/mirror SHA-256 hashes match")
 
-    text = SOURCE.read_text(encoding="utf-8", errors="replace")
+    text = source.read_text(encoding="utf-8", errors="replace")
     code = strip_comments_and_strings(text)
 
     for marker in [
