@@ -16,8 +16,8 @@ $launchLock = Join-Path $repo "work\MT5_LOCAL_LAUNCH_DISABLED.lock"
 $launchUnlock = Join-Path $repo "work\ALLOW_MT5_LOCAL_LAUNCH.unlock"
 
 $expectedV1SourceHash = "4740338598E290360946FE414CC6F2FE0CF3B704006860514367DCB996A8D2B5"
-$expectedSourceHash = "636ED7DB22675954EEBD72FFC122AA90299EA4943EFCF6A8D423CCB56B4C7763"
-$expectedProfileHash = "C9BC7620EFECD24CB4DD4FE9C650916163AD33F422697E43591C38D4C57BF661"
+$expectedSourceHash = "645C12AFD46411E3C7F86C3D5FD98BB90887A1EE0FA5F6394F67C0591194AF73"
+$expectedProfileHash = "5396FA3DFE63E3A6DF3E2795190687C19DE0A4E61930C813247109E7C84994A6"
 
 foreach($required in @($source, $profile, $v1Source, $launchLock)) {
    if(!(Test-Path -LiteralPath $required -PathType Leaf)) {
@@ -147,6 +147,10 @@ $manifest = [pscustomobject]@{
    DirectionalSymbolGate = "ENABLED"
    MarketOrderAndStopLossRequired = "ENABLED"
    ProtectiveExitPathPreserved = "ENABLED"
+   OrderPreflightSafetyStatus = "PASS_55_CHECKS"
+   ExactBrokerOrderCheck = "ENABLED"
+   PreflightFailureBlocksSend = "ENABLED"
+   PreflightBrokerCommentEvidence = "ENABLED"
    CompileStatus = "NOT_RUN_LOCAL_LOCK_ACTIVE"
    BacktestStatus = "NOT_RUN_LOCAL_LOCK_ACTIVE"
    HistoricalBestChanged = "NO"
@@ -186,6 +190,8 @@ $packageLines = @(
    '- Initialization requires `ACCOUNT_MARGIN_MODE_RETAIL_HEDGING` before capital registration, indicator allocation, or executor setup. Netting, exchange, and unknown accounting modes fail closed because ticket ownership and partial-close behavior depend on hedging semantics.',
    '- Every new entry requires live terminal, EA, and account trading permission plus a compatible symbol direction with market-order and protective-stop support.',
    '- Entry-permission checks stay inside shared exposure approval, so permission loss blocks new exposure without removing the protective management and close paths.',
+   '- Both trade executors run MT5 `OrderCheck` on the exact side, volume, price, SL, TP, deviation, filling policy, magic, and comment before any Buy/Sell request.',
+   '- A failed broker preflight blocks the send and preserves the check retcode and broker comment in failure evidence; protective close paths do not depend on entry preflight.',
    "",
    "## Frozen identity",
    "",

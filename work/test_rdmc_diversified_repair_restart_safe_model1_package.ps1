@@ -10,8 +10,8 @@ $queuePath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL
 $manifestPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_MANIFEST.csv"
 $documentPath = Join-Path $repo "outputs\RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_PACKAGE.md"
 
-$expectedSourceHash = "636ED7DB22675954EEBD72FFC122AA90299EA4943EFCF6A8D423CCB56B4C7763"
-$expectedProfileHash = "C9BC7620EFECD24CB4DD4FE9C650916163AD33F422697E43591C38D4C57BF661"
+$expectedSourceHash = "645C12AFD46411E3C7F86C3D5FD98BB90887A1EE0FA5F6394F67C0591194AF73"
+$expectedProfileHash = "5396FA3DFE63E3A6DF3E2795190687C19DE0A4E61930C813247109E7C84994A6"
 $expectedV1SourceHash = "4740338598E290360946FE414CC6F2FE0CF3B704006860514367DCB996A8D2B5"
 
 $checks = [System.Collections.Generic.List[object]]::new()
@@ -218,6 +218,7 @@ Add-Check "manifest freezes bounded history reconciliation" ($manifest[0].Accoun
 Add-Check "manifest freezes hedging account mode" ($manifest[0].AccountModeSafetyStatus -eq 'PASS_34_CHECKS' -and $manifest[0].HedgingAccountRequired -eq 'ENABLED' -and $manifest[0].NettingAccountRejected -eq 'ENABLED' -and $manifest[0].ExchangeAccountRejected -eq 'ENABLED') "$($manifest[0].AccountModeSafetyStatus)"
 Add-Check "manifest freezes entry-permission safety" ($manifest[0].EntryPermissionSafetyStatus -eq 'PASS_50_CHECKS' -and $manifest[0].TerminalPermissionGate -eq 'ENABLED' -and $manifest[0].AccountPermissionGate -eq 'ENABLED' -and $manifest[0].DirectionalSymbolGate -eq 'ENABLED' -and $manifest[0].MarketOrderAndStopLossRequired -eq 'ENABLED') "$($manifest[0].EntryPermissionSafetyStatus)"
 Add-Check "manifest preserves protective exits across entry permission loss" ($manifest[0].ProtectiveExitPathPreserved -eq 'ENABLED') $manifest[0].ProtectiveExitPathPreserved
+Add-Check "manifest freezes exact-request broker preflight" ($manifest[0].OrderPreflightSafetyStatus -eq 'PASS_55_CHECKS' -and $manifest[0].ExactBrokerOrderCheck -eq 'ENABLED' -and $manifest[0].PreflightFailureBlocksSend -eq 'ENABLED' -and $manifest[0].PreflightBrokerCommentEvidence -eq 'ENABLED') "$($manifest[0].OrderPreflightSafetyStatus)"
 
 $document = Get-Content -LiteralPath $documentPath -Raw
 Add-Check "package states restart repair boundary" ($document.Contains('supersedes the uncompiled v1 package') -and $document.Contains('does not establish a new best') -and $document.Contains('Static checks cannot prove compilation')) "boundary present"
@@ -230,6 +231,7 @@ Add-Check "package states bounded history reconciliation" ($document.Contains('g
 Add-Check "package states hedging-only account contract" ($document.Contains('ACCOUNT_MARGIN_MODE_RETAIL_HEDGING') -and $document.Contains('Netting, exchange, and unknown accounting modes fail closed') -and $document.Contains('partial-close behavior depend')) "boundary present"
 Add-Check "package states entry-permission contract" ($document.Contains('terminal, EA, and account trading permission') -and $document.Contains('compatible symbol direction') -and $document.Contains('market-order and protective-stop support')) "boundary present"
 Add-Check "package preserves protective paths when entries are blocked" ($document.Contains('permission loss blocks new exposure') -and $document.Contains('protective management and close paths')) "boundary present"
+Add-Check "package states exact-request broker preflight" ($document.Contains('MT5 `OrderCheck` on the exact side') -and $document.Contains('failed broker preflight blocks the send') -and $document.Contains('protective close paths do not depend on entry preflight')) "boundary present"
 Add-Check "registered forward candidate stays unchanged" ($document.Contains('does not') -and $manifest[0].ForwardCandidateChanged -eq 'NO') $manifest[0].ForwardCandidateChanged
 Add-Check "no account identifier published" ($document -notmatch '(?i)account.?id\s*[:=]\s*\d{5,}' -and $document -notmatch '(?i)login\s*[:=]\s*\d{5,}') "public markdown clean"
 Add-Check "no GitHub token published" ($document -notmatch 'github_pat_|gh[pousr]_[A-Za-z0-9]{20,}') "public markdown clean"

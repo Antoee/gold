@@ -54,7 +54,7 @@ if(@($checks | Where-Object { !$_.Pass }).Count -gt 0) {
 
 $source = Get-Content -LiteralPath $sourcePath -Raw
 $profile = Read-Profile $profilePath
-$entry = Get-Section $source "bool ExecuteMarketEntry(CTrade &executor," "bool ExecutePositionClose(CTrade &executor,"
+$entry = Get-Section $source "bool ExecuteMarketEntry(CValidatedTrade &executor," "bool ExecutePositionClose(CTrade &executor,"
 $close = Get-Section $source "bool ExecutePositionClose(CTrade &executor," "bool TradePriceMatches("
 $modify = Get-Section $source "bool ExecutePositionModify(CTrade &executor," "bool ExecutePositionClosePartial(CTrade &executor,"
 $partial = Get-Section $source "bool ExecutePositionClosePartial(CTrade &executor," "bool ExecuteOrderDelete(CTrade &executor,"

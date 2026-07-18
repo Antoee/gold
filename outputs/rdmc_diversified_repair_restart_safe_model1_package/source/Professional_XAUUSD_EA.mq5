@@ -4,8 +4,8 @@
 //| No martingale, grid, averaging down, or recovery systems           |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.16"
-#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio; tester-only until independently validated."
+#property version   "1.17"
+#property description "Restart-safe, hedging-locked and permission-gated XAUUSD research portfolio with broker-preflighted entries; tester-only until independently validated."
 
 #include <Trade/Trade.mqh>
 
@@ -2095,7 +2095,53 @@ double          InpTesterMaxProfitNetPower = 1.35;
 double          InpTesterMaxProfitDrawdownPower = 2.00;
 double          InpTesterMaxProfitQualityPower = 1.00;
 
-CTrade trade;
+class CValidatedTrade : public CTrade
+{
+public:
+   bool MarketEntryPreflight(const bool buy,
+                             const double volume,
+                             const string symbol,
+                             const double sl,
+                             const double tp,
+                             const string comment)
+   {
+      MqlTick tick;
+      if(!SymbolInfoTick(symbol, tick) || tick.bid <= 0.0 ||
+         tick.ask <= 0.0 || tick.ask <= tick.bid)
+      {
+         ZeroMemory(m_result);
+         m_result.retcode = TRADE_RETCODE_PRICE_OFF;
+         m_result.comment = "preflight: invalid quote";
+         return false;
+      }
+
+      MqlTradeRequest request;
+      ZeroMemory(request);
+      request.action = TRADE_ACTION_DEAL;
+      request.magic = m_magic;
+      request.symbol = symbol;
+      request.volume = volume;
+      request.price = buy ? tick.ask : tick.bid;
+      request.sl = sl;
+      request.tp = tp;
+      request.deviation = m_deviation;
+      request.type = buy ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+      request.type_filling = m_type_filling;
+      request.comment = comment;
+
+      if(OrderCheck(request, m_check_result))
+         return true;
+
+      ZeroMemory(m_result);
+      m_result.retcode = (m_check_result.retcode != 0)
+                         ? m_check_result.retcode
+                         : TRADE_RETCODE_ERROR;
+      m_result.comment = "preflight: " + m_check_result.comment;
+      return false;
+   }
+};
+
+CValidatedTrade trade;
 
 int VolumeDigitsForStep(const double step)
 {
@@ -2127,10 +2173,11 @@ string TradeResultEvidence(CTrade &executor)
    return "retcode=" + IntegerToString((int)executor.ResultRetcode()) +
           " (" + executor.ResultRetcodeDescription() + ")" +
           ", deal=" + (string)executor.ResultDeal() +
-          ", order=" + (string)executor.ResultOrder();
+          ", order=" + (string)executor.ResultOrder() +
+          ", comment=" + executor.ResultComment();
 }
 
-bool ExecuteMarketEntry(CTrade &executor,
+bool ExecuteMarketEntry(CValidatedTrade &executor,
                         const bool buy,
                         const double volume,
                         const string symbol,
@@ -2138,6 +2185,9 @@ bool ExecuteMarketEntry(CTrade &executor,
                         const double tp,
                         const string comment)
 {
+   if(!executor.MarketEntryPreflight(buy, volume, symbol, sl, tp, comment))
+      return false;
+
    bool submitted = buy ? executor.Buy(volume, symbol, 0.0, sl, tp, comment)
                         : executor.Sell(volume, symbol, 0.0, sl, tp, comment);
    if(!submitted)
@@ -18019,7 +18069,7 @@ bool MarginGuardAllows(const ENUM_TRADE_BIAS bias,
 class CMomentumLane
 {
 private:
-   CTrade m_trade;
+   CValidatedTrade m_trade;
    int m_atrHandle;
    datetime m_lastSignalBar;
 

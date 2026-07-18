@@ -28,11 +28,13 @@ This package supersedes the uncompiled v1 package before its first MT5 run. It p
 - Initialization requires `ACCOUNT_MARGIN_MODE_RETAIL_HEDGING` before capital registration, indicator allocation, or executor setup. Netting, exchange, and unknown accounting modes fail closed because ticket ownership and partial-close behavior depend on hedging semantics.
 - Every new entry requires live terminal, EA, and account trading permission plus a compatible symbol direction with market-order and protective-stop support.
 - Entry-permission checks stay inside shared exposure approval, so permission loss blocks new exposure without removing the protective management and close paths.
+- Both trade executors run MT5 `OrderCheck` on the exact side, volume, price, SL, TP, deviation, filling policy, magic, and comment before any Buy/Sell request.
+- A failed broker preflight blocks the send and preserves the check retcode and broker comment in failure evidence; protective close paths do not depend on entry preflight.
 
 ## Frozen identity
 
-- Source SHA-256: `636ED7DB22675954EEBD72FFC122AA90299EA4943EFCF6A8D423CCB56B4C7763`
-- Profile SHA-256: `C9BC7620EFECD24CB4DD4FE9C650916163AD33F422697E43591C38D4C57BF661`
+- Source SHA-256: `645C12AFD46411E3C7F86C3D5FD98BB90887A1EE0FA5F6394F67C0591194AF73`
+- Profile SHA-256: `5396FA3DFE63E3A6DF3E2795190687C19DE0A4E61930C813247109E7C84994A6`
 - Predecessor source SHA-256: `4740338598E290360946FE414CC6F2FE0CF3B704006860514367DCB996A8D2B5`
 - Source/profile inputs: `588 / 588`
 - Queue: `outputs/RDMC_DIVERSIFIED_REPAIR_RESTART_SAFE_MODEL1_QUEUE.csv`
