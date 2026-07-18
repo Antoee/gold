@@ -1,12 +1,13 @@
 # RDMC Money-Ready Gate-Repair Wave 1 Readiness
 
-**Status: HARD_LOCKED_COMPILE_ONCE_REQUIRED. Safe to launch now: False.**
+**Status: HARD_LOCKED_SOURCE_STAGED_COMPILE_ONCE_REQUIRED. Safe to launch now: False.**
 
 - Next action: `DELIBERATE_LOCK_REVIEW_THEN_COMPILE_ONCE_AND_RUN_WAVE_01`
 - Infrastructure ready: `True`
 - Portable workers ready: `2/2` on build `5.0.0.5989`
 - Frozen Wave 1 rows: `2` (2019, 2022, Model1)
 - Model1 history ready: 2019=`True`; 2022=`True`
+- Exact successor source staged: `True`
 - Existing successor shared binary ready: `False`
 - Compile-once action required: `True`
 - Report artifacts present: `0`
@@ -14,7 +15,7 @@
 - Explicit focus-risk authorization ready: `False`
 - Future Model4 tick cache: 2019=`True`; 2022=`False`
 
-The installed worker EAs are older research identities and their EX5 hashes are not shared. This is expected before first execution: the guarded runner must compile the exact successor source once on one leader, then distribute one byte-identical source, EX5, and identity file to both workers.
+The exact successor source may be staged while both launch locks remain present. Existing EX5 and compiled-identity artifacts remain untrusted and untouched; the guarded runner must still compile the exact successor once on one leader, then distribute one byte-identical source, EX5, and identity file to both workers.
 
 The missing 2022 TKC months do not block Wave 1 because Wave 1 is Model1 one-minute OHLC. They are a future Wave 3 Model4 data-download requirement. This report performs no compilation, terminal launch, test, account action, or evidence promotion.
 
@@ -34,6 +35,7 @@ The missing 2022 TKC months do not block Wave 1 because Wave 1 is Model1 one-min
 | minimum-free-disk | True | WAVE_01_RUN | At least 10 GB free on the workspace drive. |
 | launch-locks-cleared | False | WAVE_01_RUN | repository_lock=True; outer_lock=True |
 | explicit-focus-risk-authorization | False | WAVE_01_RUN | env_focus=False; env_hidden=False; unlocks=False/False |
+| exact-successor-source-staged | True | COMPILE_PREP | ready_workers=2/2 |
 | shared-successor-binary | False | REUSE_ONLY | ready_workers=0/2; unique_ready_binaries=0 |
 | model4-ticks-2019 | True | FUTURE_WAVE_03 | months_per_worker=12,12 |
 | model4-ticks-2022 | False | FUTURE_WAVE_03 | months_per_worker=0,0 |

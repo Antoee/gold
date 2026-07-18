@@ -68,6 +68,7 @@ $tests = @(
    @('24-row executable queue', 'test_rdmc_money_ready_gate_repair_executable_queue.ps1'),
    @('identity-bound execution harness', 'test_rdmc_money_ready_gate_repair_execution_harness.ps1'),
    @('compile-once wave runner', 'test_rdmc_money_ready_gate_repair_executable_wave_runner.ps1'),
+   @('hard-locked source staging', 'test_rdmc_money_ready_gate_repair_source_staging.ps1'),
    @('identity-bound collector', 'test_rdmc_money_ready_gate_repair_executable_collector.ps1'),
    @('executable ledger stress', 'test_rdmc_money_ready_gate_repair_ledger_package.ps1'),
    @('distinct-broker gate', 'test_rdmc_money_ready_gate_repair_second_broker_harness.ps1'),
@@ -111,6 +112,17 @@ $planRows = @(Import-Csv -LiteralPath (Join-Path $repo 'outputs\RDMC_MONEY_READY
 if($planRows.Count -ne 2 -or ($planRows.Window -join ',') -ne '2019,2022' -or @($planRows | Where-Object {
    $_.Status -ne 'LOCKED' -or $_.ExecutionMode -ne 'SINGLE_STAGE' -or $_.SharedBinaryStatus -notin @('LOCKED_COMPILE_ONCE_REQUIRED','SHARED_BINARY_READY')
 }).Count -ne 0) { throw 'Canonical Wave 1 plan is stale or unsafe.' }
+
+$sourceStagingRows = @(Import-Csv -LiteralPath (Join-Path $repo 'outputs\RDMC_MONEY_READY_GATE_REPAIR_SOURCE_STAGING.csv'))
+$sourceStagingTests = @(Import-Csv -LiteralPath (Join-Path $repo 'outputs\RDMC_MONEY_READY_GATE_REPAIR_SOURCE_STAGING_TESTS.csv'))
+if($sourceStagingRows.Count -ne 4 -or @($sourceStagingRows | Where-Object {
+   $_.ExactSourceReady -ne 'True' -or $_.SourceChanged -ne 'False' -or $_.BinaryUnchanged -ne 'True' -or
+   $_.IdentityUnchanged -ne 'True' -or $_.MQL5Launched -ne 'False'
+}).Count -ne 0 -or $sourceStagingTests.Count -ne 4 -or @($sourceStagingTests | Where-Object {
+   $_.Pass -ne 'True' -or $_.MQL5Launched -ne 'False'
+}).Count -ne 0) {
+   throw 'Hard-locked source staging no longer preserves its identity and no-launch boundary.'
+}
 
 $ledger = Import-OneCsvRow (Join-Path $repo 'outputs\RDMC_MONEY_READY_GATE_REPAIR_EXECUTABLE_LEDGER_STRESS_DECISION.csv') 'Ledger-stress decision'
 Assert-FrozenIdentity $ledger 'Ledger-stress decision'
@@ -169,7 +181,9 @@ if($afterProcesses.Count -ne 0 -or !(Test-Path -LiteralPath $repoLock) -or !(Tes
 
 $summary = [pscustomobject][ordered]@{
    Status = 'PASS'
-   DirectTestEntrypoints = 10
+   DirectTestEntrypoints = 11
+   SourceStagingScenarios = 4
+   ExactSourceWorkersStaged = 4
    StaticChecksPassed = 63
    ExecutableRows = 24
    ExecutableReportsPresent = 0
@@ -193,7 +207,8 @@ $summary | Export-Csv -LiteralPath $summaryCsv -NoTypeInformation -Encoding ASCI
 @(
    '# RDMC Money-Ready Gate-Repair Offline Audit', '',
    '**PASS. The complete successor offline stack is deterministic, launch-locked, identity-bound, and fail-closed with zero executable or forward evidence.**', '',
-   '- Direct test entrypoints: `10`',
+   '- Direct test entrypoints: `11`',
+   '- Hard-locked source-staging regressions: `4/4` on four portable workers',
    '- Static readiness: `63/63`',
    '- Executable queue: `24` rows in waves `2,4,2,4,12`',
    '- Executable evaluator regressions: `6/6`',
@@ -217,7 +232,7 @@ if(!$SkipCleanWorktreeCheck) {
 
 [pscustomobject]@{
    Status = 'PASS'
-   DirectTestEntrypoints = 10
+   DirectTestEntrypoints = 11
    CanonicalDriftDetected = $false
    CleanWorktreeVerified = !$SkipCleanWorktreeCheck
    ReportsPresent = 0

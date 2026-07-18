@@ -16,13 +16,14 @@ $before = @(Get-Process -Name terminal,terminal64,metatester,metatester64,MetaEd
 try {
    $current = & $builder
    $workers = @(Import-Csv -LiteralPath $workersPath)
-   if($current.Status -ne 'HARD_LOCKED_COMPILE_ONCE_REQUIRED' -or !$current.InfrastructureReady -or $current.SafeToLaunchNow -or
+   if($current.Status -ne 'HARD_LOCKED_SOURCE_STAGED_COMPILE_ONCE_REQUIRED' -or !$current.InfrastructureReady -or $current.SafeToLaunchNow -or
       !$current.LaunchLocksPresent -or $current.RuntimeWorkersReady -ne 2 -or !$current.Model1History2019Ready -or
-      !$current.Model1History2022Ready -or $current.SharedBinaryReady -or !$current.CompilationNeeded -or
+      !$current.Model1History2022Ready -or !$current.StagedSourceReady -or $current.SharedBinaryReady -or !$current.CompilationNeeded -or
       $current.ReportsPresent -ne 0 -or $current.MQL5Launched -or $current.ForwardCandidateChanged -or $current.RealAccountApproved) {
       throw 'Current Wave 1 readiness did not preserve the expected hard-locked compile-once boundary.'
    }
    if($workers.Count -ne 2 -or @($workers | Where-Object RuntimeReady -ne 'True').Count -ne 0 -or
+      @($workers | Where-Object ExactSourceReady -ne 'True').Count -ne 0 -or
       @($workers | Where-Object { $_.History2019Sha256 -eq 'MISSING' -or $_.History2022Sha256 -eq 'MISSING' }).Count -ne 0) {
       throw 'Current Wave 1 worker inventory is incomplete.'
    }
@@ -49,7 +50,7 @@ try {
    if($after.Count -ne $before.Count -or $after.Count -ne 0) { throw 'Wave 1 readiness tests launched an MT5-family process.' }
 
    $scenarios = @(
-      [pscustomobject]@{Scenario='current_hard_locked_runtime';Expected='HARD_LOCKED_COMPILE_ONCE_REQUIRED';Actual=$current.Status;Pass=$true;MQL5Launched=$false},
+      [pscustomobject]@{Scenario='current_hard_locked_runtime';Expected='HARD_LOCKED_SOURCE_STAGED_COMPILE_ONCE_REQUIRED';Actual=$current.Status;Pass=$true;MQL5Launched=$false},
       [pscustomobject]@{Scenario='tampered_wave_manifest';Expected='INFRASTRUCTURE_BLOCKED';Actual=$tampered.Status;Pass=$true;MQL5Launched=$false},
       [pscustomobject]@{Scenario='missing_portable_worker';Expected='INFRASTRUCTURE_BLOCKED';Actual=$missingWorker.Status;Pass=$true;MQL5Launched=$false}
    )
@@ -58,7 +59,7 @@ try {
       '# RDMC Money-Ready Gate-Repair Wave 1 Readiness Tests', '',
       '**PASS. Three no-launch scenarios preserve exact identity, infrastructure, and hard-lock boundaries.**', '',
       '- Current Wave 1 infrastructure: `READY`',
-      '- Current launch state: `HARD_LOCKED_COMPILE_ONCE_REQUIRED`',
+      '- Current launch state: `HARD_LOCKED_SOURCE_STAGED_COMPILE_ONCE_REQUIRED`',
       '- Tampered manifest rejected: `PASS`',
       '- Missing worker rejected: `PASS`',
       '- MT5 launched: `False`', '',

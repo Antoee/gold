@@ -119,6 +119,7 @@ foreach($name in $WorkerNames) {
       TerminalVersion = if(Test-Path -LiteralPath $terminal -PathType Leaf) { (Get-Item -LiteralPath $terminal).VersionInfo.FileVersion } else { 'MISSING' }
       EditorVersion = if(Test-Path -LiteralPath $editor -PathType Leaf) { (Get-Item -LiteralPath $editor).VersionInfo.FileVersion } else { 'MISSING' }
       InstalledSourceSha256 = $installedSourceHash
+      ExactSourceReady = $installedSourceHash -eq $expectedSourceHash
       BinarySha256 = $binaryHash
       CompiledIdentityReady = $identityReady
       History2019Sha256 = Get-OptionalHash $history2019
@@ -139,6 +140,7 @@ $history2022Ready = $history2022Hashes.Count -eq 1 -and $history2022Hashes[0] -n
 $model4Ticks2019Ready = @($workerRows | Where-Object TickMonths2019 -ne 12).Count -eq 0
 $model4Ticks2022Ready = @($workerRows | Where-Object TickMonths2022 -ne 12).Count -eq 0
 $readyBinaries = @($workerRows | Where-Object CompiledIdentityReady)
+$stagedSourceReady = @($workerRows | Where-Object ExactSourceReady).Count -eq 2
 $readyBinaryHashes = @($readyBinaries | Select-Object -ExpandProperty BinarySha256 -Unique)
 $sharedBinaryReady = $readyBinaries.Count -eq 2 -and $readyBinaryHashes.Count -eq 1
 $currentSourceIdentities = @($workerRows | Where-Object InstalledSourceSha256 -ne 'MISSING' | Select-Object -ExpandProperty InstalledSourceSha256 -Unique)
@@ -173,6 +175,7 @@ Add-Gate $gates 'mt5-processes-stopped' ($mt5Processes.Count -eq 0) 'WAVE_01_RUN
 Add-Gate $gates 'minimum-free-disk' $diskReady 'WAVE_01_RUN' 'At least 10 GB free on the workspace drive.'
 Add-Gate $gates 'launch-locks-cleared' $locksCleared 'WAVE_01_RUN' "repository_lock=$repoLock; outer_lock=$outerLock"
 Add-Gate $gates 'explicit-focus-risk-authorization' $authorizationReady 'WAVE_01_RUN' "env_focus=$($env:ALLOW_MT5_FOCUS_RISK -eq '1'); env_hidden=$($env:ALLOW_MT5_HIDDEN_DESKTOP_ACK -eq '1'); unlocks=$unlockFile/$hiddenAckFile"
+Add-Gate $gates 'exact-successor-source-staged' $stagedSourceReady 'COMPILE_PREP' "ready_workers=$(@($workerRows | Where-Object ExactSourceReady).Count)/2"
 Add-Gate $gates 'shared-successor-binary' $sharedBinaryReady 'REUSE_ONLY' "ready_workers=$($readyBinaries.Count)/2; unique_ready_binaries=$($readyBinaryHashes.Count)"
 Add-Gate $gates 'model4-ticks-2019' $model4Ticks2019Ready 'FUTURE_WAVE_03' "months_per_worker=$($workerRows.TickMonths2019 -join ',')"
 Add-Gate $gates 'model4-ticks-2022' $model4Ticks2022Ready 'FUTURE_WAVE_03' "months_per_worker=$($workerRows.TickMonths2022 -join ',')"
@@ -183,7 +186,7 @@ $safeToLaunchNow = $infrastructureReady -and $locksCleared -and $authorizationRe
 $status = if(!$infrastructureReady) {
    'INFRASTRUCTURE_BLOCKED'
 } elseif(!$locksCleared) {
-   if($sharedBinaryReady) { 'HARD_LOCKED_SHARED_BINARY_READY' } else { 'HARD_LOCKED_COMPILE_ONCE_REQUIRED' }
+   if($sharedBinaryReady) { 'HARD_LOCKED_SHARED_BINARY_READY' } elseif($stagedSourceReady) { 'HARD_LOCKED_SOURCE_STAGED_COMPILE_ONCE_REQUIRED' } else { 'HARD_LOCKED_COMPILE_ONCE_REQUIRED' }
 } elseif(!$authorizationReady) {
    'AWAITING_EXPLICIT_FOCUS_RISK_AUTHORIZATION'
 } elseif($sharedBinaryReady) {
@@ -194,6 +197,7 @@ $status = if(!$infrastructureReady) {
 $nextAction = switch($status) {
    'INFRASTRUCTURE_BLOCKED' { 'REPAIR_WAVE_01_INFRASTRUCTURE' }
    'HARD_LOCKED_SHARED_BINARY_READY' { 'DELIBERATE_LOCK_REVIEW_REQUIRED' }
+   'HARD_LOCKED_SOURCE_STAGED_COMPILE_ONCE_REQUIRED' { 'DELIBERATE_LOCK_REVIEW_THEN_COMPILE_ONCE_AND_RUN_WAVE_01' }
    'HARD_LOCKED_COMPILE_ONCE_REQUIRED' { 'DELIBERATE_LOCK_REVIEW_THEN_COMPILE_ONCE_AND_RUN_WAVE_01' }
    'AWAITING_EXPLICIT_FOCUS_RISK_AUTHORIZATION' { 'COMPLETE_EXPLICIT_FOCUS_RISK_AUTHORIZATION' }
    'READY_TO_RUN_WAVE_01' { 'RUN_WAVE_01_ONLY' }
@@ -212,6 +216,7 @@ $summary = [pscustomobject][ordered]@{
    WaveRows = $waveRows.Count
    Model1History2019Ready = $history2019Ready
    Model1History2022Ready = $history2022Ready
+   StagedSourceReady = $stagedSourceReady
    SharedBinaryReady = $sharedBinaryReady
    CompilationNeeded = !$sharedBinaryReady
    CurrentSourceIdentities = $currentSourceIdentities.Count
@@ -237,13 +242,14 @@ $workerRows | Export-Csv -LiteralPath $workersCsv -NoTypeInformation -Encoding A
    "- Portable workers ready: ``$($summary.RuntimeWorkersReady)/2`` on build ``$($summary.RuntimeBuild)``",
    "- Frozen Wave 1 rows: ``$($waveRows.Count)`` (`2019`, `2022`, Model1)",
    "- Model1 history ready: 2019=``$history2019Ready``; 2022=``$history2022Ready``",
+   "- Exact successor source staged: ``$stagedSourceReady``",
    "- Existing successor shared binary ready: ``$sharedBinaryReady``",
    "- Compile-once action required: ``$(!$sharedBinaryReady)``",
    "- Report artifacts present: ``$($reportArtifacts.Count)``",
    "- Hard launch lock present: ``$($repoLock -or $outerLock)``",
    "- Explicit focus-risk authorization ready: ``$authorizationReady``",
    "- Future Model4 tick cache: 2019=``$model4Ticks2019Ready``; 2022=``$model4Ticks2022Ready``", '',
-   'The installed worker EAs are older research identities and their EX5 hashes are not shared. This is expected before first execution: the guarded runner must compile the exact successor source once on one leader, then distribute one byte-identical source, EX5, and identity file to both workers.', '',
+   'The exact successor source may be staged while both launch locks remain present. Existing EX5 and compiled-identity artifacts remain untrusted and untouched; the guarded runner must still compile the exact successor once on one leader, then distribute one byte-identical source, EX5, and identity file to both workers.', '',
    'The missing 2022 TKC months do not block Wave 1 because Wave 1 is Model1 one-minute OHLC. They are a future Wave 3 Model4 data-download requirement. This report performs no compilation, terminal launch, test, account action, or evidence promotion.', '',
    '| Gate | Ready | Required for | Evidence |', '|---|---:|---|---|'
 ) + @($gates | ForEach-Object { "| $($_.Gate) | $($_.Ready) | $($_.RequiredFor) | $($_.Evidence) |" }) |

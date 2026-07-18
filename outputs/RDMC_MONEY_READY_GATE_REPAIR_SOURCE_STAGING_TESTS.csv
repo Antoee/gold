@@ -1,0 +1,5 @@
+"Scenario","Expected","Actual","Pass","MQL5Launched"
+"already_staged_plan","ALREADY_STAGED_OFFLINE_LOCKED","ALREADY_STAGED_OFFLINE_LOCKED","True","False"
+"idempotent_locked_stage","ALREADY_STAGED_OFFLINE_LOCKED","ALREADY_STAGED_OFFLINE_LOCKED","True","False"
+"noncanonical_source","REJECTED","REJECTED","True","False"
+"nonallowlisted_worker","REJECTED","REJECTED","True","False"
