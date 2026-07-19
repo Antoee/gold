@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import csv
 import hashlib
 from datetime import datetime
@@ -23,6 +24,7 @@ OUT_DECISION = REPO / "outputs" / "THREE_LANE_ADAPTIVE_TREND_MODEL4_STRESS_DECIS
 EXPECTED_MANIFEST_SHA256 = "148184FFFD8509EAAD5336B832D7DB36AEA103084B68F34D1AC2870BDEF74643"
 EXPECTED_SOURCE_SHA256 = "51AE67DB56C3B584E8DA3A64C4B43ECAAE9ACE7E96541C22C9C5AC10E389FABB"
 EXPECTED_PROFILE_SHA256 = "48636124EE5E38D516A48D7551F401F4B179A34296B6373C317F843CD3DEF1B1"
+TITLE = "Three-Lane Adaptive Trend Stress Decision"
 
 
 def require(condition: bool, message: str) -> None:
@@ -50,6 +52,41 @@ def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
 def money(value: float) -> str:
     return f"{'+' if value >= 0 else '-'}${abs(value):,.2f}"
 
+
+def repo_path(value: str) -> Path:
+    path = Path(value)
+    return path if path.is_absolute() else REPO / path
+
+
+parser = argparse.ArgumentParser(description="Run deterministic-cost and order-aware Monte Carlo ledger stress.")
+parser.add_argument("--manifest", default=str(MANIFEST))
+parser.add_argument("--results", default=str(RESULTS))
+parser.add_argument("--report-root", default=str(REPORT_ROOT))
+parser.add_argument("--report-name", default=REPORT_NAME)
+parser.add_argument("--ledger", default=str(LEDGER))
+parser.add_argument("--out-cost", default=str(OUT_COST))
+parser.add_argument("--out-mc", default=str(OUT_MC))
+parser.add_argument("--out-decision", default=str(OUT_DECISION))
+parser.add_argument("--expected-manifest-sha256", default=EXPECTED_MANIFEST_SHA256)
+parser.add_argument("--expected-source-sha256", default=EXPECTED_SOURCE_SHA256)
+parser.add_argument("--expected-profile-sha256", default=EXPECTED_PROFILE_SHA256)
+parser.add_argument("--title", default=TITLE)
+args = parser.parse_args()
+
+MANIFEST = repo_path(args.manifest)
+RESULTS = repo_path(args.results)
+REPORT_ROOT = repo_path(args.report_root)
+REPORT_NAME = args.report_name
+REPORT = REPORT_ROOT / f"{REPORT_NAME}.htm"
+IDENTITY = REPORT_ROOT / f"{REPORT_NAME}.identity.json"
+LEDGER = repo_path(args.ledger)
+OUT_COST = repo_path(args.out_cost)
+OUT_MC = repo_path(args.out_mc)
+OUT_DECISION = repo_path(args.out_decision)
+EXPECTED_MANIFEST_SHA256 = args.expected_manifest_sha256.upper()
+EXPECTED_SOURCE_SHA256 = args.expected_source_sha256.upper()
+EXPECTED_PROFILE_SHA256 = args.expected_profile_sha256.upper()
+TITLE = args.title
 
 require(sha256(MANIFEST) == EXPECTED_MANIFEST_SHA256, "Broad Model 4 manifest identity changed")
 manifest_rows = read_csv(MANIFEST)
@@ -113,7 +150,7 @@ mc_pass = all(bool(row["GatePass"]) for row in mc_rows)
 status = "PASS" if cost_pass and mc_pass else "FAIL"
 
 lines = [
-    "# Three-Lane Adaptive Trend Stress Decision",
+    f"# {TITLE}",
     "",
     f"**Status: {status}. This is historical trade-ledger stress, not real-money approval.**",
     "",

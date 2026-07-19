@@ -7,6 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2** |
+| Latest growth-ladder result | **No new best promoted.** The 1.25x neighbor earned more but weakened PF, recovery, and adverse-path robustness. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -30,6 +31,20 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 | Recovery factor | **14.34** |
 
 The DI-11 neighboring profile independently supported the result at `+$1,805.70`, PF `1.77`, 359 trades, and no losing broad era. Model 1 was used only for fast rejection; every promoted number above comes from Model 4 real ticks.
+
+## Latest Research Update
+
+The source-identical RC2 growth ladder finished on `2026-07-19`. No new stable best was promoted.
+
+| Profile | Model 4 net | Increase | CAGR | PF | Max DD | Recovery | Result |
+|---|---:|---:|---:|---:|---:|---:|---|
+| Stable RC2 `1.00x` | +$1,994.62 | +19.95% | +1.59%/yr | 1.82 | 1.19% | 14.34 | Remains best |
+| Growth `1.25x` | +$2,317.95 | +23.18% | +1.83%/yr | 1.73 | 1.48% | 12.75 | Research only |
+| Growth `1.50x` | +$2,702.79 | +27.03% | +2.10%/yr | 1.69 | 1.91% | 11.15 | Rejected |
+
+The 1.25x neighbor passed 12/12 positive annual restarts and hard-risk/cost checks, but raised continuous drawdown by `30.73%` for only `16.21%` more profit. Severe Monte Carlo block paths reached `5.05%-5.87%` P95 drawdown and `3.85%-4.53%` red trials, materially worse than stable RC2. The 1.50x profile also failed the middle-era PF gate at `1.45`; the 2.00x diagnostic failed it in Model 1 at `1.38`.
+
+[Read the exact growth-ladder decision](outputs/THREE_LANE_TRADE_READY_RC2_GROWTH_LADDER_DECISION.md).
 
 ## Increase By Year
 

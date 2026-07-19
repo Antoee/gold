@@ -5,7 +5,7 @@ param(
    [string]$ManifestPath = 'outputs\THREE_LANE_TRADE_READY_RC2_CRITICAL_MODEL1_MANIFEST.csv',
    [string]$ContractPath = 'outputs\THREE_LANE_TRADE_READY_RC2_CRITICAL_MODEL1_CONTRACT.md',
    [ValidateSet(1,4)][int]$Model = 1,
-   [ValidateSet('Critical','Broad','Annual')][string]$Gate = 'Critical'
+   [ValidateSet('Critical','Broad','Annual','Growth','GrowthAnnual')][string]$Gate = 'Critical'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -93,11 +93,18 @@ Set-PinnedInput $base 'InpEvidenceSourceHash' $sourceHash -StringValue
 Set-PinnedInput $base 'InpEvidenceRunLabel' ("three_lane_trade_ready_rc2_{0}" -f $Gate.ToLowerInvariant()) -StringValue
 
 $profiles = @(
-   if($Gate -eq 'Annual') {
-      [pscustomobject]@{Profile='tlat_rc2_di12_center';DIEdge='-12.0'}
+   if($Gate -eq 'Growth') {
+      [pscustomobject]@{Profile='tlat_rc2_growth_100';DIEdge='-12.0';RVRisk='0.45';MORisk='0.15';ATBRisk='0.10';OpenRisk='0.75';RiskScale='1.00'},
+      [pscustomobject]@{Profile='tlat_rc2_growth_125';DIEdge='-12.0';RVRisk='0.5625';MORisk='0.1875';ATBRisk='0.125';OpenRisk='0.9375';RiskScale='1.25'},
+      [pscustomobject]@{Profile='tlat_rc2_growth_150';DIEdge='-12.0';RVRisk='0.675';MORisk='0.225';ATBRisk='0.15';OpenRisk='1.125';RiskScale='1.50'},
+      [pscustomobject]@{Profile='tlat_rc2_growth_200';DIEdge='-12.0';RVRisk='0.90';MORisk='0.30';ATBRisk='0.20';OpenRisk='1.50';RiskScale='2.00'}
+   } elseif($Gate -eq 'GrowthAnnual') {
+      [pscustomobject]@{Profile='tlat_rc2_growth_125';DIEdge='-12.0';RVRisk='0.5625';MORisk='0.1875';ATBRisk='0.125';OpenRisk='0.9375';RiskScale='1.25'}
+   } elseif($Gate -eq 'Annual') {
+      [pscustomobject]@{Profile='tlat_rc2_di12_center';DIEdge='-12.0';RVRisk='0.45';MORisk='0.15';ATBRisk='0.10';OpenRisk='0.75';RiskScale='1.00'}
    } else {
-      [pscustomobject]@{Profile='tlat_rc2_di11';DIEdge='-11.0'},
-      [pscustomobject]@{Profile='tlat_rc2_di12_center';DIEdge='-12.0'}
+      [pscustomobject]@{Profile='tlat_rc2_di11';DIEdge='-11.0';RVRisk='0.45';MORisk='0.15';ATBRisk='0.10';OpenRisk='0.75';RiskScale='1.00'},
+      [pscustomobject]@{Profile='tlat_rc2_di12_center';DIEdge='-12.0';RVRisk='0.45';MORisk='0.15';ATBRisk='0.10';OpenRisk='0.75';RiskScale='1.00'}
    }
 )
 $windows = switch($Gate) {
@@ -114,6 +121,22 @@ $windows = switch($Gate) {
          [pscustomobject]@{Name='recent_2023_2026';From='2023.01.01';To='2026.07.12'},
          [pscustomobject]@{Name='continuous_2015_2026';From='2015.01.01';To='2026.07.12'}
       )
+   }
+   'Growth' {
+      @(
+         [pscustomobject]@{Name='older_2015_2018';From='2015.01.01';To='2018.12.31'},
+         [pscustomobject]@{Name='middle_2019_2022';From='2019.01.01';To='2022.12.31'},
+         [pscustomobject]@{Name='recent_2023_2026';From='2023.01.01';To='2026.07.12'},
+         [pscustomobject]@{Name='continuous_2015_2026';From='2015.01.01';To='2026.07.12'}
+      )
+   }
+   'GrowthAnnual' {
+      $annualWindows = [Collections.Generic.List[object]]::new()
+      foreach($year in 2015..2025) {
+         $annualWindows.Add([pscustomobject]@{Name="year_$year";From="$year.01.01";To="$year.12.31"}) | Out-Null
+      }
+      $annualWindows.Add([pscustomobject]@{Name='year_2026_ytd';From='2026.01.01';To='2026.07.12'}) | Out-Null
+      @($annualWindows)
    }
    'Annual' {
       $annualWindows = [Collections.Generic.List[object]]::new()
@@ -135,20 +158,35 @@ $rows=[Collections.Generic.List[object]]::new();$rank=0
 foreach($profile in $profiles){
    $inputs=Copy-PinnedInputs $base
    Set-PinnedInput $inputs 'InpRVMinimumDIEdge' $profile.DIEdge
+   Set-PinnedInput $inputs 'InpRVRiskPercent' $profile.RVRisk
+   Set-PinnedInput $inputs 'InpMORiskPercent' $profile.MORisk
+   Set-PinnedInput $inputs 'InpATBRiskPercent' $profile.ATBRisk
+   Set-PinnedInput $inputs 'InpMaximumPortfolioOpenRiskPercent' $profile.OpenRisk
    $profileName="$($profile.Profile).set";$profilePath=Join-Path $profileDir $profileName
    @($inputs.Keys|Sort-Object|ForEach-Object{$inputs[$_]})|Set-Content -LiteralPath $profilePath -Encoding ASCII
    $profileHash=(Get-FileHash -LiteralPath $profilePath -Algorithm SHA256).Hash.ToUpperInvariant()
    foreach($window in $windows){
       $rank++;$reportName="$($profile.Profile)_$($window.Name)_$modelTag";$configName=('{0:D3}_{1}.ini' -f $rank,$reportName);$configPath=Join-Path $configDir $configName
       Write-SeasonalTesterConfig -Path $configPath -ReportRoot $reportDir -ReportName $reportName -From $window.From -To $window.To -Inputs $inputs -Model $Model -Deposit 10000
-      $rows.Add([pscustomobject][ordered]@{QueueRank=$rank;Profile=$profile.Profile;Candidate=$profile.Profile;Phase=$Gate.ToLowerInvariant();Set='trade_ready_rc2';Window=$window.Name;From=$window.From;To=$window.To;Model=$Model;Deposit=10000;PackageConfig="$PackageDir\configs\$configName";ExpectedReportName=$reportName;ReportDestination="$PackageDir\reports_here\$reportName";ConfigSha256=(Get-FileHash -LiteralPath $configPath -Algorithm SHA256).Hash.ToUpperInvariant();SourceSha256=$sourceHash;ProfileSha256=$profileHash})|Out-Null
+      $rows.Add([pscustomobject][ordered]@{QueueRank=$rank;Profile=$profile.Profile;Candidate=$profile.Profile;Phase=$Gate.ToLowerInvariant();Set='trade_ready_rc2';Window=$window.Name;From=$window.From;To=$window.To;Model=$Model;Deposit=10000;RiskScale=$profile.RiskScale;RVRiskPercent=$profile.RVRisk;MORiskPercent=$profile.MORisk;ATBRiskPercent=$profile.ATBRisk;PortfolioOpenRiskPercent=$profile.OpenRisk;PackageConfig="$PackageDir\configs\$configName";ExpectedReportName=$reportName;ReportDestination="$PackageDir\reports_here\$reportName";ConfigSha256=(Get-FileHash -LiteralPath $configPath -Algorithm SHA256).Hash.ToUpperInvariant();SourceSha256=$sourceHash;ProfileSha256=$profileHash})|Out-Null
    }
 }
 $manifest=Resolve-RepoPath $ManifestPath;$rows|Export-Csv -LiteralPath $manifest -NoTypeInformation -Encoding ASCII
 $manifestHash=(Get-FileHash -LiteralPath $manifest -Algorithm SHA256).Hash.ToUpperInvariant()
-@("# Three-Lane Trade-Ready RC2 $Gate Gate",'',"**Status: FROZEN MODEL $Model EQUIVALENCE GATE.**",'',
-  "- Source SHA-256: ``$sourceHash``","- Manifest SHA-256: ``$manifestHash``",
-  '- Strategy and risk settings match RC1; only fail-closed execution hardening is added.',
-  "- $Gate windows must reproduce RC1 trade counts, profitability, and risk behavior.",
-  '- Any compiler warning, missing report, losing row, risk closure, or material trade/net mismatch rejects RC2.')|Set-Content -LiteralPath (Resolve-RepoPath $ContractPath) -Encoding ASCII
-[pscustomobject]@{Status='FROZEN';Gate=$Gate;Model=$Model;Profiles=$profiles.Count;Configurations=$rows.Count;Inputs=$base.Count;SourceSha256=$sourceHash;ManifestSha256=$manifestHash}
+$contractLines = if($Gate -in @('Growth','GrowthAnnual')) {
+   @("# Three-Lane Trade-Ready RC2 Growth Screen",'',"**Status: MODEL $Model RESEARCH ONLY. RC2 RELEASE UNCHANGED.**",'',
+     "- Source SHA-256: ``$sourceHash``","- Manifest SHA-256: ``$manifestHash``",
+     '- Signal, exit, calendar, and execution logic remain byte-identical to Trade-Ready RC2.',
+     '- Only lane risk and the matching portfolio open-risk allowance vary by adjacent scale.',
+     '- Daily, weekly, monthly, and 5% portfolio equity-loss limits remain fixed.',
+     '- Every broad era must be profitable; continuous PF >= 1.50, DD <= 3%, recovery >= 6, and useful profit scaling are required before Model 4.',
+     '- Any losing era, protection-driven trade collapse, or dominated return/drawdown profile rejects the scale.')
+} else {
+   @("# Three-Lane Trade-Ready RC2 $Gate Gate",'',"**Status: FROZEN MODEL $Model EQUIVALENCE GATE.**",'',
+     "- Source SHA-256: ``$sourceHash``","- Manifest SHA-256: ``$manifestHash``",
+     '- Strategy and risk settings match RC1; only fail-closed execution hardening is added.',
+     "- $Gate windows must reproduce RC1 trade counts, profitability, and risk behavior.",
+     '- Any compiler warning, missing report, losing row, risk closure, or material trade/net mismatch rejects RC2.')
+}
+$contractLines|Set-Content -LiteralPath (Resolve-RepoPath $ContractPath) -Encoding ASCII
+[pscustomobject]@{Status=if($Gate -in @('Growth','GrowthAnnual')){'RESEARCH'}else{'FROZEN'};Gate=$Gate;Model=$Model;Profiles=$profiles.Count;Configurations=$rows.Count;Inputs=$base.Count;SourceSha256=$sourceHash;ManifestSha256=$manifestHash}

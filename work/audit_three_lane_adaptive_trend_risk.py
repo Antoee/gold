@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import csv
 from collections import defaultdict
 from datetime import datetime
@@ -13,6 +14,8 @@ OUT_MD = REPO / "outputs" / "THREE_LANE_ADAPTIVE_TREND_MODEL4_RISK_AUDIT.md"
 INITIAL_DEPOSIT = 10_000.0
 PORTFOLIO_CAP_PERCENT = 0.75
 TOLERANCE_PERCENT = 0.005
+CAPS = {"reversion": 0.45, "momentum": 0.15, "adaptive_trend": 0.10}
+TITLE = "Three-Lane Adaptive Trend Risk Audit"
 
 
 def require(condition: bool, message: str) -> None:
@@ -22,13 +25,44 @@ def require(condition: bool, message: str) -> None:
 
 def lane_and_cap(comment: str) -> tuple[str, float]:
     if comment.startswith("RRO;"):
-        return "reversion", 0.45
+        return "reversion", CAPS["reversion"]
     if comment.startswith("MTSM_"):
-        return "momentum", 0.15
+        return "momentum", CAPS["momentum"]
     if comment.startswith("ATB_"):
-        return "adaptive_trend", 0.10
+        return "adaptive_trend", CAPS["adaptive_trend"]
     return "unknown", 0.0
 
+
+def repo_path(value: str) -> Path:
+    path = Path(value)
+    return path if path.is_absolute() else REPO / path
+
+
+parser = argparse.ArgumentParser(description="Audit three-lane initial-stop and portfolio risk from an MT5 ledger.")
+parser.add_argument("--ledger", default=str(LEDGER))
+parser.add_argument("--out-csv", default=str(OUT_CSV))
+parser.add_argument("--out-md", default=str(OUT_MD))
+parser.add_argument("--initial-deposit", type=float, default=INITIAL_DEPOSIT)
+parser.add_argument("--portfolio-cap-percent", type=float, default=PORTFOLIO_CAP_PERCENT)
+parser.add_argument("--reversion-cap-percent", type=float, default=CAPS["reversion"])
+parser.add_argument("--momentum-cap-percent", type=float, default=CAPS["momentum"])
+parser.add_argument("--adaptive-trend-cap-percent", type=float, default=CAPS["adaptive_trend"])
+parser.add_argument("--tolerance-percent", type=float, default=TOLERANCE_PERCENT)
+parser.add_argument("--title", default=TITLE)
+args = parser.parse_args()
+
+LEDGER = repo_path(args.ledger)
+OUT_CSV = repo_path(args.out_csv)
+OUT_MD = repo_path(args.out_md)
+INITIAL_DEPOSIT = args.initial_deposit
+PORTFOLIO_CAP_PERCENT = args.portfolio_cap_percent
+TOLERANCE_PERCENT = args.tolerance_percent
+CAPS = {
+    "reversion": args.reversion_cap_percent,
+    "momentum": args.momentum_cap_percent,
+    "adaptive_trend": args.adaptive_trend_cap_percent,
+}
+TITLE = args.title
 
 require(LEDGER.is_file(), f"Missing trade ledger: {LEDGER}")
 with LEDGER.open(newline="", encoding="utf-8-sig") as handle:
@@ -123,19 +157,18 @@ with OUT_CSV.open("w", newline="", encoding="utf-8") as handle:
 lane_violations = int(sum(stats["violations"] for stats in lane_stats.values()))
 passed = lane_violations == 0 and portfolio_violations == 0
 lines = [
-    "# Three-Lane Adaptive Trend Risk Audit",
+    f"# {TITLE}",
     "",
     f"**Status: {'PASS' if passed else 'FAIL'}.**",
     "",
     "| Lane | Trades | Net | Maximum initial risk | Hard cap | Violations |",
     "|---|---:|---:|---:|---:|---:|",
 ]
-caps = {"reversion": 0.45, "momentum": 0.15, "adaptive_trend": 0.10}
 for lane in ("reversion", "momentum", "adaptive_trend"):
     stats = lane_stats[lane]
     lines.append(
         f"| {lane} | {int(stats['trades'])} | ${stats['net']:.2f} | "
-        f"{stats['max_risk']:.4f}% | {caps[lane]:.2f}% | {int(stats['violations'])} |"
+        f"{stats['max_risk']:.4f}% | {CAPS[lane]:.4f}% | {int(stats['violations'])} |"
     )
 lines.extend(
     [

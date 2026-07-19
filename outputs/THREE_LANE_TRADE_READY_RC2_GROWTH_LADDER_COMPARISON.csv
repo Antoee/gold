@@ -1,0 +1,5 @@
+Profile,Stage,NetProfit,TotalIncreasePercent,CagrPercent,ProfitFactor,Trades,MaxEquityDrawdownMoney,MaxEquityDrawdownPercent,RecoveryFactor,Decision
+tlat_rc2_di12_center,Model4 continuous,1994.62,19.95,1.59,1.82,367,139.11,1.19,14.3384,KEEP_STABLE_BEST
+tlat_rc2_growth_125,Model4 continuous,2317.95,23.18,1.83,1.73,383,181.86,1.48,12.7458,RESEARCH_ONLY
+tlat_rc2_growth_150,Model4 continuous,2702.79,27.03,2.10,1.69,405,242.48,1.91,11.1464,REJECT_MIDDLE_PF_AND_RISK
+tlat_rc2_growth_200,Model1 continuous,3595.70,35.96,2.70,1.63,457,319.05,2.35,11.2700,REJECT_MODEL1_MIDDLE_PF
