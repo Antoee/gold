@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **Overnight-drift continuation passed discovery, then failed the frozen post-2020 holdout.** ATB150 remains the best. |
+| Latest research result | **Overnight-drift structure v2 fixed activity but failed pre-2021 quality gates.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,10 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+The M15 overnight-drift structure-v2 repair replaced the unaffordable full-Asian-range stop with recent M15 structure. That worked mechanically: the center produced 171 trades with near-zero geometry rejects, zero minimum-lot rejects, and zero order failures. It did not preserve the edge. No profile reached the frozen PF `1.20` gate; the best row, `ods2_entry8`, made `+$136.89` on 174 trades at PF `1.19`, while the center made only `+$34.47` at PF `1.04`. All 13 profiles were rejected before post-2020 data and Model 4.
+
+[Read the structure-v2 rejection](outputs/INDEPENDENT_M15_OVERNIGHT_DRIFT_STRUCTURE_V2_DISCOVERY_DECISION.md) and [compile evidence](outputs/INDEPENDENT_M15_OVERNIGHT_DRIFT_STRUCTURE_V2_COMPILE_EVIDENCE.md).
 
 The standalone M15 overnight-drift continuation was the first recent strategy-code experiment to pass discovery. Nine of 15 neighbor-supported profiles were profitable across both 2015-2018 and 2019-2020. The center plus two orthogonal one-factor survivors were frozen before post-2020 data was opened.
 
