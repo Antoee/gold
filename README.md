@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **Overnight-drift structure v2 fixed activity but failed pre-2021 quality gates.** ATB150 remains the best. |
+| Latest research result | **EURUSD/USDJPY USD-consensus lead-lag failed pre-2021 quality gates.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,12 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+The standalone M15 USD-consensus lead-lag experiment tested a genuinely different cross-market premise on `2026-07-19`: completed H1 EURUSD and USDJPY moves estimated USD pressure, a gold-lag gate rejected already-extended XAUUSD moves, and a completed M15 breakout supplied the entry. Broker-history probes first confirmed at least `99.9023%` yearly alignment and `100%` lookback readiness for both proxy symbols over 2015-2020.
+
+The strategy itself failed decisively. All 15 profiles lost money in 2015-2018, continuous PF ranged from `0.74` to `0.86`, and the least-bad continuous row, `usdcll_breakout6`, lost `-$128.09` on 173 trades at PF `0.84`. The final evidence set contains 45/45 parsed reports from one exact binary, with zero runner errors. No post-2020 holdout or Model 4 run was opened, and ATB150 remains unchanged as the research best.
+
+[Read the USD-consensus rejection](outputs/INDEPENDENT_M15_USD_CONSENSUS_LEAD_LAG_DISCOVERY_DECISION.md), [the parsed summary](outputs/INDEPENDENT_M15_USD_CONSENSUS_LEAD_LAG_DISCOVERY_MODEL1_SUMMARY.csv), and [the proxy-history feasibility evidence](outputs/XAUUSD_USD_PROXY_HISTORY_FEASIBILITY.md).
 
 The M15 overnight-drift structure-v2 repair replaced the unaffordable full-Asian-range stop with recent M15 structure. That worked mechanically: the center produced 171 trades with near-zero geometry rejects, zero minimum-lot rejects, and zero order failures. It did not preserve the edge. No profile reached the frozen PF `1.20` gate; the best row, `ods2_entry8`, made `+$136.89` on 174 trades at PF `1.19`, while the center made only `+$34.47` at PF `1.04`. All 13 profiles were rejected before post-2020 data and Model 4.
 

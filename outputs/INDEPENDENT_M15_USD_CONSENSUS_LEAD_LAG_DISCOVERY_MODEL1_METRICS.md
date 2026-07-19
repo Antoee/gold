@@ -1,0 +1,11 @@
+# Independent M15 USD-Consensus Lead-Lag Metrics
+
+- Parsed reports: `45 / 45`
+- Results SHA-256: `405696F0D8EC60E63F2FC434DC28AE776DEE7941128E6AC2CE3A655E45CB6A72`
+- Source SHA-256: `B19A299AB040C2050E881A481B71EEF57CD2C35155CF0EB65E5535C53C9AD7AA`
+- Portable binary SHA-256: `CD53ADD8511D8AF12BE1B4A1DB270CA6730FE1C949A3430AD3D489B804A510EF`
+- Exact binary identities: `1`
+- Starting deposit: `$10,000` in every report
+- Holdout opened: `NO`
+- Model 4 opened: `NO`
+- New best: `NO`

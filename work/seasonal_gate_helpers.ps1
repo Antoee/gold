@@ -15,7 +15,7 @@ function Import-SetInputs {
 
 function Set-InputLine {
    param($Inputs, [string]$Name, [string]$Value)
-   if($Name -in @("InpAllowedSymbol", "InpReferenceSymbol", "InpLogFileName", "InpNewsTimesCsv", "InpCorrelationSymbol", "InpBlockReasonDiagnosticsFile", "InpRealAccountApprovalCode", "InpRealAccountApprovalProfileId", "InpRealAccountApprovalSourceHash", "InpEvidenceProfileId", "InpEvidenceSourceHash", "InpEvidenceRunLabel")) {
+   if($Name -in @("InpAllowedSymbol", "InpReferenceSymbol", "InpEURUSDSymbol", "InpUSDJPYSymbol", "InpLogFileName", "InpNewsTimesCsv", "InpCorrelationSymbol", "InpBlockReasonDiagnosticsFile", "InpRealAccountApprovalCode", "InpRealAccountApprovalProfileId", "InpRealAccountApprovalSourceHash", "InpEvidenceProfileId", "InpEvidenceSourceHash", "InpEvidenceRunLabel")) {
       $Inputs[$Name] = "$Name=$Value"
       return
    }
