@@ -10,6 +10,26 @@ outputs/**/*.log
 work/**/*.log
 outputs/offline_refresh_logs/
 outputs/money_ready_refresh_logs/
+outputs/*_package/
+outputs/*_WORKER_*.csv
+
+# Local reject-only probe evidence summarized in committed decision files.
+outputs/ADAPTIVE_TREND_BREAKOUT*
+outputs/RC2_MOMENTUM_FEATURE*
+outputs/RDMC_CAP12_MODEL4_2019_2022_MOMENTUM_FEATURES.csv
+outputs/RDMC_MOMENTUM_FEATURE_2015_2022_*.csv
+outputs/RDMC_MOMENTUM_FEATURE_TRAINING_2015_2022.csv
+outputs/RDMC_DIVERSIFIED_REPAIR_EXECUTABLE_GATE_20*
+outputs/RDMC_DIVERSIFIED_REPAIR_EXECUTABLE_GATE_RESULTS.csv
+outputs/RDMC_DIVERSIFIED_REPAIR_EXECUTABLE_GATE_WAVE_01_*
+outputs/RDMC_EXECUTABLE_GATE_WAVE_01_WORKER_*.csv
+outputs/THREE_LANE_ADAPTIVE_TREND_BROAD_*
+outputs/THREE_LANE_ADAPTIVE_TREND_CENTER_*
+outputs/THREE_LANE_ADAPTIVE_TREND_GATE_*
+outputs/THREE_LANE_ADAPTIVE_TREND_MODEL4_ANNUAL_RETRY_MANIFEST.csv
+work/Professional_XAUUSD_Adaptive_Trend_Breakout_Portfolio.mq5
+work/build_adaptive_trend_breakout_discovery_package.ps1
+work/run_rdmc_diversified_repair_executable_gate_controlled_wave.ps1
 
 # Local background-run coordination files.
 work/*.unlock
