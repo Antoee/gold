@@ -1,0 +1,8 @@
+Candidate,BodyRatio,StrongRiskPercent,NetProfit,TotalReturnPercent,CagrPercent,ProfitFactor,Trades,MaxDrawdownPercent,RecoveryFactor,ReturnToDrawdown,RecoveryRetentionPercent,ReturnToDrawdownRetentionPercent,WorstEraNetProfit,AllErasPositive,Decision
+rvsr_control,0.15,0.60,2195.53,21.96,1.74,1.83,415,1.17,15.8168,18.7692,100.00,100.00,601.99,True,CONTROL
+rvsr_b100_r060,0.10,0.60,2383.01,23.83,1.87,1.89,415,1.55,12.4485,15.3742,78.70,81.91,739.66,True,REJECT
+rvsr_b150_r055,0.15,0.55,2372.14,23.72,1.86,1.89,415,1.55,12.3917,15.3032,78.35,81.53,622.92,True,REJECT
+rvsr_b150_r060,0.15,0.60,2383.01,23.83,1.87,1.89,415,1.55,12.4485,15.3742,78.70,81.91,739.66,True,REJECT
+rvsr_b150_r065,0.15,0.65,2438.12,24.38,1.91,1.91,415,1.54,12.7364,15.8312,80.52,84.35,739.66,True,REJECT
+rvsr_b200_r060,0.20,0.60,2383.01,23.83,1.87,1.89,415,1.55,12.4485,15.3742,78.70,81.91,739.66,True,REJECT
+rvsr_b250_r060,0.25,0.60,2314.68,23.15,1.82,1.87,415,1.21,16.0274,19.1322,101.33,101.93,671.73,True,REJECT

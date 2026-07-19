@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **A tightening-only reversion break-even manager reduced some drawdown but failed the frozen growth/PF gates. No new best.** ATB150 remains the best. |
+| Latest research result | **A completed-bar strong-reversion risk allocator produced a risk-efficient near-miss at +$2,391.89, 1.88% CAGR, PF 1.89, and 1.21% DD, but missed its frozen CAGR gate by 0.01 point. No new best.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,12 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+The completed-H1 strong-reversion risk experiment and its separately frozen strict-body ladder completed on `2026-07-19`. The code could raise requested risk only for an already-valid reversion entry whose completed directional candle body met a fixed ratio. It changed no entry eligibility, initial stop, VWAP target, exit, trend lane, lot cap, account-wide `0.75%` exposure cap, or loss limit; it was disabled by default and used no current-bar, future, calendar, account-profit, or prior-outcome data.
+
+The broad `28/28` Model 1 discovery rejected its highest-growth row: `+$2,438.12`, `1.91%` CAGR, and PF `1.91` came with `1.54%` drawdown and retained only `80.52%` of control recovery. Its strict `0.25` body row instead improved efficiency, so a new contract froze a narrow risk ladder before rerunning. All `32/32` ladder reports parsed on the same exact EX5. The top `0.70%` row made `+$2,391.89`, `1.88%` CAGR, PF `1.89`, and only `1.21%` drawdown; recovery and return/drawdown improved to `104.71%` and `105.32%` of control, with support from risk and body neighbors. The frozen CAGR requirement was `1.89%`, however, so the row missed by `0.01` point. The gate was not relaxed, no `0.71-0.74%` threshold chase or Model 4 run was opened, and ATB150 remains unchanged.
+
+[Read the broad strong-signal rejection](outputs/THREE_LANE_REVERSION_STRONG_SIGNAL_RISK_DISCOVERY_DECISION.md), [the strict-ladder near-miss](outputs/THREE_LANE_REVERSION_STRICT_BODY_RISK_LADDER_DECISION.md), and [the compact ladder results](outputs/THREE_LANE_REVERSION_STRICT_BODY_RISK_LADDER_SUMMARY.csv).
 
 The reversion break-even experiment completed on `2026-07-19`. This was a tightening-only exit-management code change: after a completed H1 bar reached a frozen R trigger, the EA could move an exact-ticket owned reversion stop to break-even or a small profit lock. It added no entry or close path, never widened a stop, was disabled by default, and left initial risk, VWAP targets, trend lanes, portfolio limits, and real-account protections unchanged.
 
