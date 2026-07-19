@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **A price-normalized stop rewrite repaired the M15 dual-regime strategy's recent geometry, improving 2024-2026 from -$66.41/PF 0.76 to -$7.93/PF 0.98 and continuous net from +$364.60 to +$430.93. The recent era remained negative, so it failed before Model 4. No new best.** ATB150 remains the best. |
+| Latest research result | **The strict-body reversion code was retested at 0.65% and 0.675% requested risk on Model 4 real ticks. Both produced +$2,271.52, 1.79% CAGR, PF 1.87, and 1.23% drawdown, but recovery fell from 15.6686 to 15.5754. The frozen efficiency and neighbor gates failed. No new best.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,12 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+The strict-body reversion real-tick plateau completed on `2026-07-19`. This was a preregistered follow-up to the already-audited strong-signal code branch, not a new optimizer sweep. It compared a fresh disabled-feature control with the previously defined completed-H1 body ratio `0.25` at requested risk `0.65%` and `0.675%`. Entries, stops, VWAP targets, exits, both trend lanes, the `0.75%` account open-risk cap, loss limits, and real-account lock remained unchanged.
+
+All `12/12` Model 4 reports parsed with exact source and compiled-binary identity. Four local workers completed the batch in `18m23s` with zero report errors. Control reproduced at `+$2,105.08`, `1.67%` CAGR, PF `1.81`, `1.15%` drawdown, and recovery `15.6686`. Both risk rows collapsed to the same broker lot steps and returned `+$2,271.52`, `1.79%` CAGR, PF `1.87`, 404 trades, `1.23%` drawdown, and return/drawdown `18.4715`. They improved every broad-era net and exceeded the frozen growth floor, but recovery declined to `15.5754`; the center and adjacent plateau gate therefore failed. Annual, cost, and Monte Carlo expansion did not open, ATB150 remains the historical champion, and the invalid forward registration remains unchanged.
+
+[Read the real-tick plateau rejection](outputs/THREE_LANE_REVERSION_STRICT_BODY_REAL_TICK_PLATEAU_DECISION.md) and [the compact three-profile results](outputs/THREE_LANE_REVERSION_STRICT_BODY_REAL_TICK_PLATEAU_SUMMARY.csv).
 
 The independent M15 dual-regime normalized-stop experiment completed on `2026-07-19`. The original strategy had passed sealed 2015-2020 discovery and then failed its 2021-2026 holdout while using an absolute `$6` secondary stop-distance ceiling. Because that unit does not scale with gold's price, a new default-off code path replaced only that ceiling with a percentage of entry price. Signals, ATR stop bounds, targets, exits, sessions, `0.10%` risk, broker-valued sizing, minimum-lot refusal, exposure guards, and every loss limit remained unchanged.
 
@@ -97,6 +103,7 @@ Continuous 2015-2026 figures use a sequential `$10,000` account path. V1 figures
 | Profile | Test model | Net | Total increase | CAGR | PF | Max DD | Recovery | Return/DD | Status |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | **ATB150** | Model 4 real ticks | **+$2,105.08** | **+21.05%** | **+1.67%/yr** | **1.81** | **1.15%** | **15.67** | **18.30** | **Current best** |
+| Strong-reversion body 0.25 / risk 0.65%-0.675% plateau | Model 4 real ticks | +$2,271.52 | +22.72% | +1.79%/yr | 1.87 | 1.23% | 15.5754 | 18.47 | Rejected by frozen recovery/neighbor gate |
 | Strong-reversion body 0.25 / risk 0.70% | Model 4 real ticks | +$2,284.81 | +22.85% | +1.80%/yr | 1.87 | 1.23% | 15.6666 | 18.58 | Rejected by frozen recovery gate |
 | Residual-risk V1 | Model 4 real ticks | +$2,935.46 | +29.35% | +2.26%/yr | 1.68 | 1.94% | 12.85 | 15.13 | Rejected |
 | Base-eligible V2 center | Model 1 only | +$2,832.59 | +28.33% | +2.19%/yr | 1.83 | 1.50% | 16.33 | 18.89 | Rejected before Model 4 |

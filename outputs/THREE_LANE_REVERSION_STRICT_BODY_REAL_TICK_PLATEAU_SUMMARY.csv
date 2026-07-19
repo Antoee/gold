@@ -1,0 +1,4 @@
+"Candidate","Enabled","StrongSignalMinimumBodyRatio","StrongSignalRiskPercent","OlderNetProfit","MiddleNetProfit","RecentNetProfit","ContinuousNetProfit","TotalReturnPercent","CagrPercent","ProfitFactor","TotalTrades","MaxDrawdownPercent","RecoveryFactor","ReturnDrawdown","GatePass"
+"rvsrp_control","False","0.25","0.6","856.18","572.09","602.11","2105.08","21.05","1.67","1.81","404","1.15","15.6686","18.3043","True"
+"rvsrp_b250_r065","True","0.25","0.65","856.18","620.19","671.88","2271.52","22.72","1.79","1.87","404","1.23","15.5754","18.4715","False"
+"rvsrp_b250_r0675","True","0.25","0.675","856.18","633.49","682.79","2271.52","22.72","1.79","1.87","404","1.23","15.5754","18.4715","False"
