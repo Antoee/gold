@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **A noncompounding risk-budget code change improved Model 1 PF from 1.83 to 1.93, drawdown from 1.17% to 1.05%, and recovery from 15.82 to 17.10, but net fell from +$2,195.53 to +$2,182.92 and CAGR from 1.74% to 1.73%. It failed the frozen growth gates before Model 4. No new best.** ATB150 remains the best. |
+| Latest research result | **A price-normalized stop rewrite repaired the M15 dual-regime strategy's recent geometry, improving 2024-2026 from -$66.41/PF 0.76 to -$7.93/PF 0.98 and continuous net from +$364.60 to +$430.93. The recent era remained negative, so it failed before Model 4. No new best.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,12 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+The independent M15 dual-regime normalized-stop experiment completed on `2026-07-19`. The original strategy had passed sealed 2015-2020 discovery and then failed its 2021-2026 holdout while using an absolute `$6` secondary stop-distance ceiling. Because that unit does not scale with gold's price, a new default-off code path replaced only that ceiling with a percentage of entry price. Signals, ATR stop bounds, targets, exits, sessions, `0.10%` risk, broker-valued sizing, minimum-lot refusal, exposure guards, and every loss limit remained unchanged.
+
+The frozen historical repair compared exact `$6`, ATR-only, and `0.25%`/`0.30%`/`0.35%` price caps across four disjoint eras and continuous 2015-2026. All `25/25` Model 1 reports parsed on one exact source and EX5 identity after three identity-only retries. The `0.30%` center raised recent trades from 54 to 71, improved recent PF from `0.76` to `0.98`, reduced the 2024-2026 loss from `-$66.41` to `-$7.93`, raised continuous net from `+$364.60` to `+$430.93`, and reduced drawdown from `1.07%` to `1.01%`. It still lost money in the recent era, missed the `1.05` recent-PF floor and `+25%` continuous-net hurdle, and had no passing percentage neighbor. Model 4 and portfolio integration were not opened. The fixed-dollar ceiling was a real geometry weakness, but it was not the root cause of the signal decay.
+
+[Read the normalized-stop rejection](outputs/INDEPENDENT_M15_DUAL_REGIME_NORMALIZED_STOP_MODEL1_DECISION.md) and [the compact five-profile results](outputs/INDEPENDENT_M15_DUAL_REGIME_NORMALIZED_STOP_MODEL1_SUMMARY.csv).
 
 The noncompounding risk-budget experiment completed on `2026-07-19`. This was a shared risk-manager code change motivated by exact trade attribution: higher reversion profits had pushed several later momentum trades across broker lot-step boundaries during the maximum-drawdown sequence. When enabled, the new default-off feature sizes every lane from `min(current equity, frozen initial capital)`. It can reduce size after losses but cannot increase the sizing budget after profits. It changes no signal, entry, stop, target, exit, ownership rule, lot cap, open-risk cap, or loss limit.
 
