@@ -6,12 +6,12 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 
 | Lane | Status |
 |---|---|
-| Best historical stability candidate | **Three-Lane Adaptive Trend RC1** |
+| Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2** |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
 
-Three-Lane RC1 is the first exact executable identity in this project to pass critical, broad, annual, hard-risk, deterministic-cost, and seeded Monte Carlo gates. It is the new historical research best, but it is not a promise of future profit and is not yet the registered forward bot.
+Three-Lane Trade-Ready RC2 exactly preserves RC1's validated strategy behavior while adding confirmed trade results, ownership-checked close/modify/delete operations, post-fill risk reconciliation, residual-order cleanup, verified persistent safety state, and live environment guards. It is the strongest exact historical candidate, but it is not a promise of future profit and is not yet the registered forward bot.
 
 ## Best Result
 
@@ -75,22 +75,23 @@ The tested profile caps total open risk at `0.75%`, permits at most three accoun
 
 ## Exact Candidate
 
-- [Release package](release/three-lane-adaptive-trend-rc1/README.md)
-- [Full decision](outputs/THREE_LANE_ADAPTIVE_TREND_MODEL4_DECISION.md)
-- [Broad metrics](outputs/THREE_LANE_ADAPTIVE_TREND_MODEL4_BROAD_METRICS.md)
-- [Annual metrics](outputs/THREE_LANE_ADAPTIVE_TREND_MODEL4_ANNUAL_METRICS.md)
+- [Trade-ready RC2 release package](release/three-lane-trade-ready-rc2/README.md)
+- [RC2 decision](outputs/THREE_LANE_TRADE_READY_RC2_DECISION.md)
+- [RC2 broad metrics](outputs/THREE_LANE_TRADE_READY_RC2_MODEL4_BROAD_METRICS.md)
+- [RC2 annual metrics](outputs/THREE_LANE_TRADE_READY_RC2_MODEL4_ANNUAL_METRICS.md)
+- [RC2 safety suite](outputs/THREE_LANE_TRADE_READY_RC2_STATIC_SAFETY.md)
 - [Risk audit](outputs/THREE_LANE_ADAPTIVE_TREND_MODEL4_RISK_AUDIT.md)
 - [Cost and Monte Carlo stress](outputs/THREE_LANE_ADAPTIVE_TREND_MODEL4_STRESS_DECISION.md)
 
-Source SHA-256: `51AE67DB56C3B584E8DA3A64C4B43ECAAE9ACE7E96541C22C9C5AC10E389FABB`
+Source SHA-256: `2F1C1C74067DA6173EB4133DB75C0B0DB4DE7BE46F2BB7A453AEE044536B2158`
 
-Profile SHA-256: `48636124EE5E38D516A48D7551F401F4B179A34296B6373C317F843CD3DEF1B1`
+Profile SHA-256: `60BF5D013153E3A38A6BD932E88CB41BD8FEAB5108648DDCBA1CCCCDD4D737F3`
 
 ## Forward Boundary
 
 The current demo attachment is invalid before its first trade because its `$100,000` balance does not match the frozen `$10,000 +/- $1` contract. Its elapsed time and trades must never be counted. The registered Operational Hardening candidate, profile, source, binary identity, evidence logs, and real-account lock remain unchanged.
 
-Three-Lane RC1 still needs an exact hardened release review, broker-specification variation, and a correctly capitalized untouched demo sample before any forward substitution can be considered. Real-money funding is not recommended.
+Three-Lane RC2 passed its hardened release review and exact historical equivalence gates. It still needs broker-specification variation and a correctly capitalized untouched demo sample before any forward substitution can be considered. Real-money funding is not recommended.
 
 ## Repository Map
 

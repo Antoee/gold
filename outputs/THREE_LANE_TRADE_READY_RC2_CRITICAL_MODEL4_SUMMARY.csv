@@ -1,0 +1,3 @@
+"Profile","Phase","Set","ReportsExpected","ReportsParsed","MissingReports","UnparsedReports","TotalNetProfit","WorstWindowNetProfit","BestWindowNetProfit","AverageAnnualizedReturnPercent","WorstAnnualizedReturnPercent","AverageCagrPercent","WorstCagrPercent","LosingWindows","ProfitableWindows","FlatWindows","WorstDrawdownMoney","AverageProfitFactor","AverageSharpeRatio","AverageWinRatePercent","WorstConsecutiveLosses","EvidenceComplete"
+"tlat_rc2_di11","critical","trade_ready_rc2","2","2","0","0","31.29","15.07","16.22","0.16","0.15","0.16","0.15","0","2","0","95.61","1.08","1.95","39.02","6","True"
+"tlat_rc2_di12_center","critical","trade_ready_rc2","2","2","0","0","31.29","15.07","16.22","0.16","0.15","0.16","0.15","0","2","0","95.61","1.08","1.95","39.02","6","True"
