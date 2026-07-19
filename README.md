@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **The fixed strong-reversion candidate reached +$2,284.81, 1.80% CAGR, PF 1.87, and 1.23% DD on continuous Model 4 real ticks, but recovery was 15.6666 versus the 15.6686 control. It failed the frozen risk-efficiency gate by 0.0020. No new best.** ATB150 remains the best. |
+| Latest research result | **A noncompounding risk-budget code change improved Model 1 PF from 1.83 to 1.93, drawdown from 1.17% to 1.05%, and recovery from 15.82 to 17.10, but net fell from +$2,195.53 to +$2,182.92 and CAGR from 1.74% to 1.73%. It failed the frozen growth gates before Model 4. No new best.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,12 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+The noncompounding risk-budget experiment completed on `2026-07-19`. This was a shared risk-manager code change motivated by exact trade attribution: higher reversion profits had pushed several later momentum trades across broker lot-step boundaries during the maximum-drawdown sequence. When enabled, the new default-off feature sizes every lane from `min(current equity, frozen initial capital)`. It can reduce size after losses but cannot increase the sizing budget after profits. It changes no signal, entry, stop, target, exit, ownership rule, lot cap, open-risk cap, or loss limit.
+
+The frozen four-way design separated champion control, budget only, strong risk only, and strong risk plus budget across three disjoint eras and continuous 2015-2026. All `16/16` Model 1 reports parsed on one exact source and EX5 identity after one identity-only retry. The combined profile improved PF from `1.83` to `1.93`, drawdown from `1.17%` to `1.05%`, recovery from `15.8168` to `17.1048`, and return/drawdown from `18.7692` to `20.7905`. It did not preserve growth: net fell from `+$2,195.53` to `+$2,182.92`, CAGR slipped from `1.74%` to `1.73%`, older and middle eras were below control, and trades fell from 415 to 402. The preregistered net, CAGR, and every-era comparison gates failed, so Model 4 was not opened. The result is retained as conservative risk-control research, not a new best.
+
+[Read the noncompounding risk-budget rejection](outputs/THREE_LANE_NONCOMPOUNDING_RISK_BUDGET_MODEL1_DECISION.md) and [the compact four-way results](outputs/THREE_LANE_NONCOMPOUNDING_RISK_BUDGET_MODEL1_SUMMARY.csv).
 
 The completed-H1 strong-reversion risk experiment and its separately frozen strict-body ladder completed on `2026-07-19`. The code could raise requested risk only for an already-valid reversion entry whose completed directional candle body met a fixed ratio. It changed no entry eligibility, initial stop, VWAP target, exit, trend lane, lot cap, account-wide `0.75%` exposure cap, or loss limit; it was disabled by default and used no current-bar, future, calendar, account-profit, or prior-outcome data.
 

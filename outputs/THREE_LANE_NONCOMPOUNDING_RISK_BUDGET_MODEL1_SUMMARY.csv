@@ -1,0 +1,5 @@
+"Candidate","StrongSignalRiskEnabled","NoncompoundingRiskBudgetEnabled","OlderNetProfit","MiddleNetProfit","RecentNetProfit","ContinuousNetProfit","TotalReturnPercent","CagrPercent","ProfitFactor","TotalTrades","MaxDrawdownPercent","RecoveryFactor","ReturnDrawdown","GatePass"
+"ncrb_control","false","false","860.86","694.54","601.99","2195.53","21.96","1.74","1.83","415","1.17","15.8168","18.7692","False"
+"ncrb_budget_only","false","true","815.51","614.68","599","2030.2","20.3","1.62","1.87","402","1.06","15.9082","19.1509","False"
+"ncrb_strong_dynamic","true","false","860.86","752.95","682.6","2391.89","23.92","1.88","1.89","415","1.21","16.562","19.7686","False"
+"ncrb_strong_noncomp","true","true","815.51","686.79","679.61","2182.92","21.83","1.73","1.93","402","1.05","17.1048","20.7905","False"
