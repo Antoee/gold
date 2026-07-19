@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **TLT rates-impulse M15 strategy failed pre-2021 broad-era gates. No new best.** ATB150 remains the best. |
+| Latest research result | **Protected momentum winner add-on failed its 2021-2026 holdout. No new best.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,14 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+The protected momentum winner add-on experiment completed on `2026-07-19`. This was a strategy-code change to ATB150, not a simple risk increase: it allowed one separately owned continuation entry only after the primary momentum trade reached a configurable profit threshold, its stop was locked in profit, and broker-valued locked profit covered the add-on's full risk. The `0.75%` portfolio open-risk cap, minimum-lot refusal, post-fill reconciliation, `$10,000` contract, and real-account lock remained unchanged.
+
+The feature passed sealed 2015-2020 discovery on one exact binary. The frozen `pwa_trigger100` survivor made `+$1,248.56`, CAGR `1.98%`, PF `1.80`, 272 trades, and `1.02%` maximum drawdown versus the disabled-feature control at `+$1,191.69`, CAGR `1.89%`, PF `1.77`, 265 trades, and the same drawdown. It recorded nine protected add-on entries and had adjacent support.
+
+The feature then failed its frozen feature-level 2021-2026 holdout. All candidate windows stayed profitable, but the selected profile made only `+$929.40`, CAGR `1.62%`, PF `1.99`, and `1.23%` drawdown versus control at `+$944.62`, CAGR `1.64%`, PF `2.01`, and the same drawdown. No holdout report contained a completed add-on. Results still changed because v1.51 can tighten the primary stop during an attempted add-on before exact coverage validation later refuses the entry; that safety-biased side effect is an additional rejection reason. All 30 discovery and eight holdout reports were tied to one source and EX5 identity with zero exact-run errors. No Model 4 run was opened, and ATB150 remains unchanged.
+
+[Read the discovery decision](outputs/THREE_LANE_PROTECTED_WINNER_ADDON_DISCOVERY_DECISION.md), [the holdout rejection](outputs/THREE_LANE_PROTECTED_WINNER_ADDON_HOLDOUT_DECISION.md), and [the 20-check safety audit](outputs/THREE_LANE_PROTECTED_WINNER_ADDON_STATIC_SAFETY.md).
 
 The standalone M15 TLT rates-impulse experiment completed on `2026-07-19`. Broker-history probes first showed `98.062%` to `98.450%` yearly D1 alignment between XAUUSD and TLT with `100%` lookback readiness over 2015-2020. The EA then used only the last provably completed TLT D1 bar as a long-duration/rates proxy and required a completed same-direction XAUUSD M15 breakout. This was a new cross-market strategy implementation, not an ATB150 settings pass.
 
