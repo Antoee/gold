@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **Protected momentum winner add-on failed its 2021-2026 holdout. No new best.** ATB150 remains the best. |
+| Latest research result | **Residual-risk V1 failed paired Model 4 risk-efficiency gates; base-eligible V2 failed its parameter-neighborhood gate. No new best.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,26 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+Two residual-risk allocation code experiments completed on `2026-07-19`. Both attempted to raise APR by using otherwise idle protected risk under the unchanged `0.75%` account-wide cap. Neither used prior outcomes, martingale, grid, averaging down, or recovery sizing. Both retained initial stops, broker-valued sizing, post-fill reconciliation, all portfolio loss limits, the `$10,000` contract, and the real-account lock.
+
+V1 reached `+$2,935.46`, `+29.35%` total, and `+2.26%` CAGR on paired continuous Model 4 real ticks versus ATB150/control at `+$2,105.08`, `+21.05%`, and `+1.67%` CAGR. It was rejected because PF fell from `1.81` to `1.68`, maximum drawdown rose from `1.15%` to `1.94%`, recovery fell from `15.67` to `12.85`, and return/drawdown fell from `18.30` to `15.13`. It also admitted 71 additional minimum-lot trades.
+
+V2 added a base-lot eligibility gate to all three lanes, so only signals already tradable at original ATB150 risk could receive expansion. Its Model 1 center improved from `+$2,195.53`, `+1.74%` CAGR, PF `1.83`, and `1.17%` drawdown to `+$2,832.59`, `+2.19%` CAGR, PF `1.83`, and `1.50%` drawdown. It was still rejected before Model 4 because the fixed neighborhood rule required at least three adjacent momentum ceilings to remain no worse than control on both recovery and return/drawdown. Only the `0.175%` center passed; the closest `0.170%` neighbor missed return/drawdown by `0.005`. The gate was not loosened after seeing the result.
+
+Across both versions, `104/104` exact reports completed with zero report errors on pinned per-source binaries. V1's tempting higher profit is recorded as a rejected growth result, not a new best. ATB150 remains the most stable historical profile.
+
+[Read the V1 real-tick rejection](outputs/THREE_LANE_RESIDUAL_RISK_V1_DECISION.md), [the V2 neighborhood rejection](outputs/THREE_LANE_RESIDUAL_RISK_V2_DECISION.md), and [the static safety summary](outputs/THREE_LANE_RESIDUAL_RISK_STATIC_SAFETY.md).
+
+### Rejected Higher-APR Comparison
+
+Continuous 2015-2026 figures use a sequential `$10,000` account path. V1 figures are Model 4 real ticks; V2 was stopped at Model 1 and is not directly promotable.
+
+| Profile | Test model | Net | Total increase | CAGR | PF | Max DD | Recovery | Return/DD | Status |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---|
+| **ATB150** | Model 4 real ticks | **+$2,105.08** | **+21.05%** | **+1.67%/yr** | **1.81** | **1.15%** | **15.67** | **18.30** | **Current best** |
+| Residual-risk V1 | Model 4 real ticks | +$2,935.46 | +29.35% | +2.26%/yr | 1.68 | 1.94% | 12.85 | 15.13 | Rejected |
+| Base-eligible V2 center | Model 1 only | +$2,832.59 | +28.33% | +2.19%/yr | 1.83 | 1.50% | 16.33 | 18.89 | Rejected before Model 4 |
 
 The protected momentum winner add-on experiment completed on `2026-07-19`. This was a strategy-code change to ATB150, not a simple risk increase: it allowed one separately owned continuation entry only after the primary momentum trade reached a configurable profit threshold, its stop was locked in profit, and broker-valued locked profit covered the add-on's full risk. The `0.75%` portfolio open-risk cap, minimum-lot refusal, post-fill reconciliation, `$10,000` contract, and real-account lock remained unchanged.
 
