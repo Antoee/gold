@@ -1,0 +1,13 @@
+# Independent M15 Session Impulse-Pullback Discovery Metrics
+
+- Parsed reports: `45 / 45`
+- Results SHA-256: `893321A806F324ABCFC2111F9AD6D4500BDA4F2B6ED9674C084FF87225CAD3DB`
+- Run attestation SHA-256: `F33CB829627184141FC73EF84144B98A15FFEA3AF92F4A2A618E9A8D728CE8A4`
+- Source SHA-256: `A5A4A1F8C26C7DBEDB7EAE46C599F6429626F69312A21D352883592E2D63FDD9`
+- Portable binary SHA-256: `69E76951ECE247CC928128D9E94C90622D42F39E15DA54C01D252689DB5A82F6`
+- Exact source identities: `1`
+- Exact binary identities: `1`
+- Starting deposit: `$10,000` in every report
+- Holdout opened: `NO`
+- Model 4 opened: `NO`
+- New best: `NO`

@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **EURUSD/USDJPY USD-consensus lead-lag failed pre-2021 quality gates.** ATB150 remains the best. |
+| Latest research result | **Fixed-session M15 impulse-pullback failed pre-2021 quality and activity gates. No new best.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,12 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+The standalone fixed-session M15 impulse-pullback experiment completed on `2026-07-19`. It measured a morning impulse through ATR magnitude, auction-path efficiency, directional-bar share, and close location, then required a bounded pullback plus a completed M15 reclaim. This was a new strategy implementation, not another settings-only pass over ATB150.
+
+It failed before recent data was opened. All 45/45 Model 1 reports parsed and were bound to one exact source and EX5 identity, but only `sip_end8` was profitable over continuous 2015-2020: `+$33.91`, PF `1.42`, and just 18 trades. That variant separately lost `-$15.08` in 2019-2020, while 12 continuous variants lost money and two were flat. The activity gate required 80 trades. No 2021-2026 holdout or Model 4 run was opened, there is no new best, and ATB150 remains unchanged.
+
+[Read the session impulse-pullback rejection](outputs/INDEPENDENT_M15_SESSION_IMPULSE_PULLBACK_DISCOVERY_DECISION.md), [the parsed summary](outputs/INDEPENDENT_M15_SESSION_IMPULSE_PULLBACK_DISCOVERY_MODEL1_SUMMARY.csv), and [the exact run attestation](outputs/INDEPENDENT_M15_SESSION_IMPULSE_PULLBACK_DISCOVERY_MODEL1_RUN_ATTESTATION.csv).
 
 The standalone M15 USD-consensus lead-lag experiment tested a genuinely different cross-market premise on `2026-07-19`: completed H1 EURUSD and USDJPY moves estimated USD pressure, a gold-lag gate rejected already-extended XAUUSD moves, and a completed M15 breakout supplied the entry. Broker-history probes first confirmed at least `99.9023%` yearly alignment and `100%` lookback readiness for both proxy symbols over 2015-2020.
 
