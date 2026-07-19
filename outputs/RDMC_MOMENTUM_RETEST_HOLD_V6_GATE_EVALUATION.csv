@@ -1,0 +1,4 @@
+QueueRank,Window,ExpectedReportName,GatePass,Reasons,NetProfit,ProfitFactor,TotalTrades,MaxDrawdownPercent,RecoveryFactor
+1,2015_2018,rdmc_mrh6_w01_m1_training_2015_2018,False,TotalTrades=47<60,205.88,1.69,47,1.83,1.1047
+2,2019,rdmc_mrh6_w02_m1_critical_2019,False,REPORT_MISSING_OR_UNPARSED,,,,,
+3,2022,rdmc_mrh6_w02_m1_critical_2022,False,REPORT_MISSING_OR_UNPARSED,,,,,

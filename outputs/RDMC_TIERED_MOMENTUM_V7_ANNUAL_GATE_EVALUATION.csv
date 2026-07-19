@@ -1,0 +1,3 @@
+QueueRank,Wave,Window,GatePass,Reasons,NetProfit,ProfitFactor,TotalTrades,MaxDrawdownPercent
+1,1,2017,False,NetProfit=-110.94<0.01;ProfitFactor=0.18<1,-110.94,0.18,20,1.13
+2,1,2025,False,NetProfit=-9.59<0.01;ProfitFactor=0.77<1,-9.59,0.77,8,0.37

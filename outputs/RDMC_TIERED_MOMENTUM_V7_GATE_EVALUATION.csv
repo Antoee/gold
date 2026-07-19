@@ -1,0 +1,4 @@
+QueueRank,Window,ExpectedReportName,GatePass,Reasons,NetProfit,ProfitFactor,TotalTrades,MaxDrawdownPercent,RecoveryFactor
+1,2015_2018,rdmc_tmv7_w01_m1_training_2015_2018,True,PASS,168.74,1.53,65,1.52,1.091
+2,2019,rdmc_tmv7_w02_m1_critical_2019,True,PASS,8.83,1.12,25,0.45,0.1956
+3,2022,rdmc_tmv7_w02_m1_critical_2022,True,PASS,81.25,1.98,20,0.51,1.5716
