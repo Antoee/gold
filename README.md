@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **ADR-exhaustion reversion rejected before holdout.** ATB150 remains the best; no recent-activity breakthrough yet. |
+| Latest research result | **Inside-day breakout rejected before holdout.** ATB150 remains the best; no recent-activity breakthrough yet. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -34,9 +34,11 @@ The previous RC2 center profile independently supports the same source at `+$1,9
 
 ## Latest Research Update
 
-The standalone M15 ADR-exhaustion/VWAP-reversion lane finished on `2026-07-19` and was rejected before recent data. All 33 source-identity-valid Model 1 reports parsed, but ten profiles made zero trades in 2015-2018 and the only active profile lost. Its best continuous row made only `+$20.08` on six trades, so no 2021-2026 holdout or Model 4 run was opened.
+The standalone M15 inside-day compression breakout finished on `2026-07-19` and was rejected before recent data. All 42 source-identity-valid Model 1 reports parsed, but every profile lost in 2019-2020. Its best continuous row made only `+$12.79` on 25 trades at PF `1.11`, so no 2021-2026 holdout or Model 4 run was opened.
 
-[Read the ADR-exhaustion rejection](outputs/INDEPENDENT_M15_ADR_EXHAUSTION_REVERSION_DISCOVERY_DECISION.md).
+[Read the inside-day rejection](outputs/INDEPENDENT_M15_INSIDE_DAY_BREAKOUT_DISCOVERY_DECISION.md).
+
+The preceding M15 ADR-exhaustion/VWAP-reversion experiment was also rejected before holdout: ten profiles made zero trades in 2015-2018 and its best continuous row made only `+$20.08` on six trades. [Read the ADR-exhaustion rejection](outputs/INDEPENDENT_M15_ADR_EXHAUSTION_REVERSION_DISCOVERY_DECISION.md).
 
 The earlier source-identical lane decomposition remains the latest promotion. Portfolio-wide scaling was rejected, but ATB-only `1.50x` improved risk-adjusted results and became the historical best.
 
