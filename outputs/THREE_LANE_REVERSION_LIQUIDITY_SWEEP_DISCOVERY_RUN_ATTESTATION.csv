@@ -1,0 +1,2 @@
+Status,Reports,InitialIdentityRefusals,SuccessfulRetries,WorkersInitial,WorkersRetry,UniquePortableBinarySha256,WorkerRecompiles,LaunchLocksRestored,MT5ProcessesAfter
+PASS,32,2,2,4,1,9191CA09F5A170E08ED982FB085005CED2A46DB142CB1ECCE69D449A84F8D0B2,0,True,0

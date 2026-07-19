@@ -1,0 +1,9 @@
+Candidate,NetProfit,TotalReturnPercent,CagrPercent,ProfitFactor,Trades,MaxDrawdownPercent,RecoveryFactor,ReturnToDrawdown,WorstEraNetProfit,AllErasPositive,Decision
+rvls_control,2195.53,21.96,1.74,1.83,415,1.17,15.8168,18.7692,601.99,True,CONTROL
+rvls_l3_s000,1084.94,10.85,0.90,1.45,390,2.31,4.3405,4.6970,66.39,True,REJECT
+rvls_l5_s000,1044.78,10.45,0.87,1.44,388,2.09,4.6381,5.0000,91.09,True,REJECT
+rvls_l8_s000,1044.78,10.45,0.87,1.44,388,2.09,4.6381,5.0000,91.09,True,REJECT
+rvls_l3_s003,1084.94,10.85,0.90,1.45,390,2.31,4.3405,4.6970,66.39,True,REJECT
+rvls_l5_s003,1044.78,10.45,0.87,1.44,388,2.09,4.6381,5.0000,91.09,True,REJECT
+rvls_l8_s003,1044.78,10.45,0.87,1.44,388,2.09,4.6381,5.0000,91.09,True,REJECT
+rvls_l5_s005,1060.44,10.60,0.88,1.45,387,2.09,4.7076,5.0718,112.09,True,REJECT

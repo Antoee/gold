@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **Residual-risk V2 was characterized on Model 4, then narrowed to reversion-only risk. Both failed frozen growth/risk-efficiency gates. No new best.** ATB150 remains the best. |
+| Latest research result | **A completed-bar reversion liquidity-sweep entry gate failed all frozen growth/risk-efficiency gates. No new best.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,12 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+The reversion liquidity-sweep experiment completed on `2026-07-19`. This was an entry-engine code change, not a risk increase: an optional gate required the closed H1 signal candle to sweep an earlier local extreme and reclaim it before the existing Bollinger/VWAP reversion entry. It used no current-bar or future data, was disabled by default, added no trade path, and left all risk, exit, portfolio, and real-account protections unchanged.
+
+All `32/32` final Model 1 reports parsed on one exact EX5 identity across three disjoint eras and continuous 2015-2026. Every candidate era stayed profitable, but the best candidate fell from control at `+$2,195.53`, `1.74%` CAGR, PF `1.83`, and `1.17%` drawdown to `+$1,084.94`, `0.90%` CAGR, PF `1.45`, and `2.31%` drawdown. Attribution showed why: the control's 38 reversion trades made `+$1,383.89`, while the least restrictive sweep gate retained 22 and only `+$375.87`. The gate removed valid band-exhaustion winners, so it was rejected before Model 4 and ATB150 remains unchanged.
+
+[Read the liquidity-sweep rejection](outputs/THREE_LANE_REVERSION_LIQUIDITY_SWEEP_DISCOVERY_DECISION.md) and [the compact results](outputs/THREE_LANE_REVERSION_LIQUIDITY_SWEEP_DISCOVERY_SUMMARY.csv).
 
 Three payoff-management experiments completed on `2026-07-19`. They were motivated by exact ATB150 trade-ledger evidence rather than an unrestricted parameter search. The fixed-target ladder changed only momentum and adaptive-trend targets; the selective-target code widened the adaptive target only after completed-H4 ADX and candle-quality checks; the protected-runner code paired a wider target with a second tightening-only stop milestone. All retained the same entries or could only alter payoff after an existing entry, preserved initial stops and requested risk, stayed under the `0.75%` open-risk cap, and left real trading disabled.
 
