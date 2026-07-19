@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **Inside-day breakout rejected before holdout.** ATB150 remains the best; no recent-activity breakthrough yet. |
+| Latest research result | **Overnight-drift continuation passed discovery, then failed the frozen post-2020 holdout.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,12 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+The standalone M15 overnight-drift continuation was the first recent strategy-code experiment to pass discovery. Nine of 15 neighbor-supported profiles were profitable across both 2015-2018 and 2019-2020. The center plus two orthogonal one-factor survivors were frozen before post-2020 data was opened.
+
+The holdout rejected all three. `odc_center` lost `-$25.53` in 2023-2024, `odc_entry8` lost `-$17.99` in 2021-2022 and `-$1.38` in 2025-2026 YTD, and `odc_signal25` lost `-$5.77` in 2023-2024. Each recent window produced only three trades because the frozen `$8` stop-distance cap rejected most high-price-era setups. No parameter was loosened after seeing the holdout, and no Model 4 run or promotion was opened.
+
+[Read the discovery pass](outputs/INDEPENDENT_M15_OVERNIGHT_DRIFT_CONTINUATION_DISCOVERY_DECISION.md), [the holdout rejection](outputs/INDEPENDENT_M15_OVERNIGHT_DRIFT_CONTINUATION_HOLDOUT_DECISION.md), and [the compile evidence](outputs/INDEPENDENT_M15_OVERNIGHT_DRIFT_CONTINUATION_COMPILE_EVIDENCE.md).
 
 The standalone M15 inside-day compression breakout finished on `2026-07-19` and was rejected before recent data. All 42 source-identity-valid Model 1 reports parsed, but every profile lost in 2019-2020. Its best continuous row made only `+$12.79` on 25 trades at PF `1.11`, so no 2021-2026 holdout or Model 4 run was opened.
 
