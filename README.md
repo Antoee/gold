@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **Residual-risk V1 failed paired Model 4 risk-efficiency gates; base-eligible V2 failed its parameter-neighborhood gate. No new best.** ATB150 remains the best. |
+| Latest research result | **Fixed-target, completed-bar selective-target, and protected-runner experiments all failed frozen growth/risk-efficiency gates. No new best.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,16 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+Three payoff-management experiments completed on `2026-07-19`. They were motivated by exact ATB150 trade-ledger evidence rather than an unrestricted parameter search. The fixed-target ladder changed only momentum and adaptive-trend targets; the selective-target code widened the adaptive target only after completed-H4 ADX and candle-quality checks; the protected-runner code paired a wider target with a second tightening-only stop milestone. All retained the same entries or could only alter payoff after an existing entry, preserved initial stops and requested risk, stayed under the `0.75%` open-risk cap, and left real trading disabled.
+
+The fixed-target ladder completed `27/27` exact Model 1 reports. Its best row, adaptive target `3R`, reached `+$1,239.96`, `1.97%` CAGR, PF `1.81`, and `1.08%` drawdown versus control at `+$1,191.69`, `1.89%` CAGR, PF `1.77`, and `1.02%` drawdown. The `+0.08`-point CAGR gain missed the frozen `+0.25` requirement and reduced both recovery and return/drawdown.
+
+The completed-bar selective extension completed `30/30` reports and genuinely changed 19 to 31 entries per profile. Its best row reached only `+$1,223.19` and `1.94%` CAGR, a `+0.05`-point gain, while risk efficiency again fell. The protected runner then completed `33/33` valid reports on one portable binary. Its best adaptive row reached `+$1,245.49`, `1.98%` CAGR, PF `1.82`, and `1.09%` drawdown, but the `+0.09`-point CAGR gain missed its `+0.15` gate and recovery and return/drawdown were both below control. Momentum runners were materially worse.
+
+All three families stayed profitable in both disjoint discovery eras, but none provided enough robust growth to justify opening recent data or Model 4 real ticks. Across them, `90/90` valid exact discovery reports completed with zero report errors; one earlier 33-row runner attempt was refused before testing because its portable binary identity had not yet been prepared and is not counted as evidence. ATB150 remains the most stable historical profile.
+
+[Read the fixed-target rejection](outputs/THREE_LANE_PAYOFF_LADDER_DISCOVERY_DECISION.md), [the selective-target rejection](outputs/THREE_LANE_SELECTIVE_PAYOFF_DISCOVERY_DECISION.md), and [the protected-runner rejection](outputs/THREE_LANE_PROTECTED_RUNNER_DISCOVERY_DECISION.md).
 
 Two residual-risk allocation code experiments completed on `2026-07-19`. Both attempted to raise APR by using otherwise idle protected risk under the unchanged `0.75%` account-wide cap. Neither used prior outcomes, martingale, grid, averaging down, or recovery sizing. Both retained initial stops, broker-valued sizing, post-fill reconciliation, all portfolio loss limits, the `$10,000` contract, and the real-account lock.
 
