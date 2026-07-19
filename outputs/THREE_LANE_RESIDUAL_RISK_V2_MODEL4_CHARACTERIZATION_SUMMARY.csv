@@ -1,0 +1,5 @@
+Candidate,NetProfit,TotalReturnPercent,CagrPercent,ProfitFactor,Trades,MaxDrawdownPercent,RecoveryFactor,ReturnToDrawdown,RecoveryRetentionPercent,ReturnDrawdownRetentionPercent,Decision
+rr2c_control,2105.08,21.05,1.67,1.81,404,1.15,15.6686,18.304,100.00,100.00,CONTROL
+rr2c_mo170,2497.64,24.98,1.95,1.77,404,1.68,13.3836,14.869,85.42,81.23,REJECT
+rr2c_center,2531.00,25.31,1.98,1.77,404,1.71,13.2409,14.801,84.51,80.86,REJECT
+rr2c_mo180,2488.79,24.89,1.95,1.73,404,1.79,12.4708,13.905,79.59,75.97,REJECT

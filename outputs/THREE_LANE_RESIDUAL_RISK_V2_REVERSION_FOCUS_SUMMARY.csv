@@ -1,0 +1,6 @@
+Candidate,NetProfit,TotalReturnPercent,CagrPercent,ProfitFactor,Trades,MaxDrawdownPercent,RecoveryFactor,ReturnToDrawdown,RecoveryRetentionPercent,ReturnDrawdownRetentionPercent,Decision
+rr2rf_control,2195.53,21.96,1.74,1.83,415,1.17,15.8168,18.7692,100.00,100.00,CONTROL
+rr2rf_rv500,2264.12,22.64,1.79,1.85,415,1.22,15.6773,18.5574,99.12,98.87,REJECT
+rr2rf_rv550,2387.36,23.87,1.87,1.89,415,1.55,12.4712,15.4000,78.85,82.05,REJECT
+rr2rf_rv600,2398.23,23.98,1.88,1.90,415,1.54,12.5280,15.5714,79.21,82.96,REJECT
+rr2rf_rv650,2458.12,24.58,1.93,1.92,415,1.54,12.8408,15.9610,81.19,85.04,REJECT

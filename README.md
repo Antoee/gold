@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **Fixed-target, completed-bar selective-target, and protected-runner experiments all failed frozen growth/risk-efficiency gates. No new best.** ATB150 remains the best. |
+| Latest research result | **Residual-risk V2 was characterized on Model 4, then narrowed to reversion-only risk. Both failed frozen growth/risk-efficiency gates. No new best.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -50,9 +50,13 @@ V1 reached `+$2,935.46`, `+29.35%` total, and `+2.26%` CAGR on paired continuous
 
 V2 added a base-lot eligibility gate to all three lanes, so only signals already tradable at original ATB150 risk could receive expansion. Its Model 1 center improved from `+$2,195.53`, `+1.74%` CAGR, PF `1.83`, and `1.17%` drawdown to `+$2,832.59`, `+2.19%` CAGR, PF `1.83`, and `1.50%` drawdown. It was still rejected before Model 4 because the fixed neighborhood rule required at least three adjacent momentum ceilings to remain no worse than control on both recovery and return/drawdown. Only the `0.175%` center passed; the closest `0.170%` neighbor missed return/drawdown by `0.005`. The gate was not loosened after seeing the result.
 
-Across both versions, `104/104` exact reports completed with zero report errors on pinned per-source binaries. V1's tempting higher profit is recorded as a rejected growth result, not a new best. ATB150 remains the most stable historical profile.
+The rejected V2 center and its closest momentum-ceiling neighbors were then characterized on continuous Model 4 real ticks under a separately frozen gate. The center improved control from `+$2,105.08` and `1.67%` CAGR to `+$2,531.00` and `1.98%` CAGR with the same 404 trades, but drawdown rose from `1.15%` to `1.71%`. Recovery retained only `84.51%` of control and return/drawdown retained `80.86%`, below the required `95%`. All `4/4` exact real-tick reports completed, and the prior rejection was not reversed.
 
-[Read the V1 real-tick rejection](outputs/THREE_LANE_RESIDUAL_RISK_V1_DECISION.md), [the V2 neighborhood rejection](outputs/THREE_LANE_RESIDUAL_RISK_V2_DECISION.md), and [the static safety summary](outputs/THREE_LANE_RESIDUAL_RISK_STATIC_SAFETY.md).
+Trade-ledger attribution showed that reversion retained PF near `3.9`, while the expanded trend lanes carried the weaker payoff. A final Model 1 neighborhood therefore allocated residual risk only to already-eligible reversion entries. All 20 final reports parsed, every disjoint era remained profitable, and all profiles kept the exact control's 415 trades. The highest row reached `+$2,458.12`, `+24.58%`, `1.93%` CAGR, and PF `1.92`, but missed the required `1.99%` CAGR, exceeded the `1.50%` drawdown ceiling at `1.54%`, and weakened both efficiency measures. The conservative `0.50%` row stayed at `1.22%` drawdown but added only `0.05` CAGR points and was also slightly less efficient. No row qualified for Model 4.
+
+Across both residual-risk versions and these follow-ups, higher historical profit is recorded as rejected research rather than a new best. ATB150 remains the most stable historical profile.
+
+[Read the V1 real-tick rejection](outputs/THREE_LANE_RESIDUAL_RISK_V1_DECISION.md), [the V2 neighborhood rejection](outputs/THREE_LANE_RESIDUAL_RISK_V2_DECISION.md), [the V2 real-tick characterization](outputs/THREE_LANE_RESIDUAL_RISK_V2_MODEL4_CHARACTERIZATION_DECISION.md), [the reversion-only rejection](outputs/THREE_LANE_RESIDUAL_RISK_V2_REVERSION_FOCUS_DECISION.md), and [the static safety summary](outputs/THREE_LANE_RESIDUAL_RISK_STATIC_SAFETY.md).
 
 ### Rejected Higher-APR Comparison
 
@@ -63,6 +67,8 @@ Continuous 2015-2026 figures use a sequential `$10,000` account path. V1 figures
 | **ATB150** | Model 4 real ticks | **+$2,105.08** | **+21.05%** | **+1.67%/yr** | **1.81** | **1.15%** | **15.67** | **18.30** | **Current best** |
 | Residual-risk V1 | Model 4 real ticks | +$2,935.46 | +29.35% | +2.26%/yr | 1.68 | 1.94% | 12.85 | 15.13 | Rejected |
 | Base-eligible V2 center | Model 1 only | +$2,832.59 | +28.33% | +2.19%/yr | 1.83 | 1.50% | 16.33 | 18.89 | Rejected before Model 4 |
+| Base-eligible V2 center | Model 4 real ticks | +$2,531.00 | +25.31% | +1.98%/yr | 1.77 | 1.71% | 13.24 | 14.80 | Characterization failed |
+| V2 reversion-only 0.65% | Model 1 only | +$2,458.12 | +24.58% | +1.93%/yr | 1.92 | 1.54% | 12.84 | 15.96 | Rejected before Model 4 |
 
 The protected momentum winner add-on experiment completed on `2026-07-19`. This was a strategy-code change to ATB150, not a simple risk increase: it allowed one separately owned continuation entry only after the primary momentum trade reached a configurable profit threshold, its stop was locked in profit, and broker-valued locked profit covered the add-on's full risk. The `0.75%` portfolio open-risk cap, minimum-lot refusal, post-fill reconciliation, `$10,000` contract, and real-account lock remained unchanged.
 
