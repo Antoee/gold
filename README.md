@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **A completed-bar reversion liquidity-sweep entry gate failed all frozen growth/risk-efficiency gates. No new best.** ATB150 remains the best. |
+| Latest research result | **A tightening-only reversion break-even manager reduced some drawdown but failed the frozen growth/PF gates. No new best.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,12 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+The reversion break-even experiment completed on `2026-07-19`. This was a tightening-only exit-management code change: after a completed H1 bar reached a frozen R trigger, the EA could move an exact-ticket owned reversion stop to break-even or a small profit lock. It added no entry or close path, never widened a stop, was disabled by default, and left initial risk, VWAP targets, trend lanes, portfolio limits, and real-account protections unchanged.
+
+All `28/28` final Model 1 reports parsed on one exact EX5 identity across three disjoint eras and continuous 2015-2026. Every era stayed profitable, but no profile beat the control's `+$2,195.53` and `1.74%` CAGR. The strongest efficiency row, trigger `1.00R` and lock `0.10R`, made `+$2,122.79`, `1.68%` CAGR, PF `1.82`, and `1.13%` drawdown. Its small recovery and return/drawdown gains cost `$72.74`, missed the required `+0.15` CAGR improvement, and remained below the PF `1.85` floor. It was rejected before Model 4.
+
+[Read the break-even rejection](outputs/THREE_LANE_REVERSION_BREAK_EVEN_DISCOVERY_DECISION.md) and [the compact results](outputs/THREE_LANE_REVERSION_BREAK_EVEN_DISCOVERY_SUMMARY.csv).
 
 The reversion liquidity-sweep experiment completed on `2026-07-19`. This was an entry-engine code change, not a risk increase: an optional gate required the closed H1 signal candle to sweep an earlier local extreme and reclaim it before the existing Bollinger/VWAP reversion entry. It used no current-bar or future data, was disabled by default, added no trade path, and left all risk, exit, portfolio, and real-account protections unchanged.
 
