@@ -5,7 +5,7 @@ param(
    [string]$ManifestPath = 'outputs\THREE_LANE_TRADE_READY_RC2_CRITICAL_MODEL1_MANIFEST.csv',
    [string]$ContractPath = 'outputs\THREE_LANE_TRADE_READY_RC2_CRITICAL_MODEL1_CONTRACT.md',
    [ValidateSet(1,4)][int]$Model = 1,
-   [ValidateSet('Critical','Broad','Annual','Growth','GrowthAnnual')][string]$Gate = 'Critical'
+   [ValidateSet('Critical','Broad','Annual','Growth','GrowthAnnual','GrowthDecomp','GrowthDecompAnnual')][string]$Gate = 'Critical'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -98,6 +98,14 @@ $profiles = @(
       [pscustomobject]@{Profile='tlat_rc2_growth_125';DIEdge='-12.0';RVRisk='0.5625';MORisk='0.1875';ATBRisk='0.125';OpenRisk='0.9375';RiskScale='1.25'},
       [pscustomobject]@{Profile='tlat_rc2_growth_150';DIEdge='-12.0';RVRisk='0.675';MORisk='0.225';ATBRisk='0.15';OpenRisk='1.125';RiskScale='1.50'},
       [pscustomobject]@{Profile='tlat_rc2_growth_200';DIEdge='-12.0';RVRisk='0.90';MORisk='0.30';ATBRisk='0.20';OpenRisk='1.50';RiskScale='2.00'}
+   } elseif($Gate -eq 'GrowthDecomp') {
+      [pscustomobject]@{Profile='tlat_rc2_decomp_control';DIEdge='-12.0';RVRisk='0.45';MORisk='0.15';ATBRisk='0.10';OpenRisk='0.75';RiskScale='control'},
+      [pscustomobject]@{Profile='tlat_rc2_decomp_atb125';DIEdge='-12.0';RVRisk='0.45';MORisk='0.15';ATBRisk='0.125';OpenRisk='0.75';RiskScale='atb_1.25'},
+      [pscustomobject]@{Profile='tlat_rc2_decomp_atb150';DIEdge='-12.0';RVRisk='0.45';MORisk='0.15';ATBRisk='0.15';OpenRisk='0.75';RiskScale='atb_1.50'},
+      [pscustomobject]@{Profile='tlat_rc2_decomp_mo125';DIEdge='-12.0';RVRisk='0.45';MORisk='0.1875';ATBRisk='0.10';OpenRisk='0.75';RiskScale='mo_1.25'},
+      [pscustomobject]@{Profile='tlat_rc2_decomp_rv125';DIEdge='-12.0';RVRisk='0.5625';MORisk='0.15';ATBRisk='0.10';OpenRisk='0.85';RiskScale='rv_1.25'}
+   } elseif($Gate -eq 'GrowthDecompAnnual') {
+      [pscustomobject]@{Profile='tlat_rc2_decomp_atb150';DIEdge='-12.0';RVRisk='0.45';MORisk='0.15';ATBRisk='0.15';OpenRisk='0.75';RiskScale='atb_1.50'}
    } elseif($Gate -eq 'GrowthAnnual') {
       [pscustomobject]@{Profile='tlat_rc2_growth_125';DIEdge='-12.0';RVRisk='0.5625';MORisk='0.1875';ATBRisk='0.125';OpenRisk='0.9375';RiskScale='1.25'}
    } elseif($Gate -eq 'Annual') {
@@ -129,6 +137,22 @@ $windows = switch($Gate) {
          [pscustomobject]@{Name='recent_2023_2026';From='2023.01.01';To='2026.07.12'},
          [pscustomobject]@{Name='continuous_2015_2026';From='2015.01.01';To='2026.07.12'}
       )
+   }
+   'GrowthDecomp' {
+      @(
+         [pscustomobject]@{Name='older_2015_2018';From='2015.01.01';To='2018.12.31'},
+         [pscustomobject]@{Name='middle_2019_2022';From='2019.01.01';To='2022.12.31'},
+         [pscustomobject]@{Name='recent_2023_2026';From='2023.01.01';To='2026.07.12'},
+         [pscustomobject]@{Name='continuous_2015_2026';From='2015.01.01';To='2026.07.12'}
+      )
+   }
+   'GrowthDecompAnnual' {
+      $annualWindows = [Collections.Generic.List[object]]::new()
+      foreach($year in 2015..2025) {
+         $annualWindows.Add([pscustomobject]@{Name="year_$year";From="$year.01.01";To="$year.12.31"}) | Out-Null
+      }
+      $annualWindows.Add([pscustomobject]@{Name='year_2026_ytd';From='2026.01.01';To='2026.07.12'}) | Out-Null
+      @($annualWindows)
    }
    'GrowthAnnual' {
       $annualWindows = [Collections.Generic.List[object]]::new()
@@ -173,7 +197,7 @@ foreach($profile in $profiles){
 }
 $manifest=Resolve-RepoPath $ManifestPath;$rows|Export-Csv -LiteralPath $manifest -NoTypeInformation -Encoding ASCII
 $manifestHash=(Get-FileHash -LiteralPath $manifest -Algorithm SHA256).Hash.ToUpperInvariant()
-$contractLines = if($Gate -in @('Growth','GrowthAnnual')) {
+$contractLines = if($Gate -in @('Growth','GrowthAnnual','GrowthDecomp','GrowthDecompAnnual')) {
    @("# Three-Lane Trade-Ready RC2 Growth Screen",'',"**Status: MODEL $Model RESEARCH ONLY. RC2 RELEASE UNCHANGED.**",'',
      "- Source SHA-256: ``$sourceHash``","- Manifest SHA-256: ``$manifestHash``",
      '- Signal, exit, calendar, and execution logic remain byte-identical to Trade-Ready RC2.',
@@ -189,4 +213,4 @@ $contractLines = if($Gate -in @('Growth','GrowthAnnual')) {
      '- Any compiler warning, missing report, losing row, risk closure, or material trade/net mismatch rejects RC2.')
 }
 $contractLines|Set-Content -LiteralPath (Resolve-RepoPath $ContractPath) -Encoding ASCII
-[pscustomobject]@{Status=if($Gate -in @('Growth','GrowthAnnual')){'RESEARCH'}else{'FROZEN'};Gate=$Gate;Model=$Model;Profiles=$profiles.Count;Configurations=$rows.Count;Inputs=$base.Count;SourceSha256=$sourceHash;ManifestSha256=$manifestHash}
+[pscustomobject]@{Status=if($Gate -in @('Growth','GrowthAnnual','GrowthDecomp','GrowthDecompAnnual')){'RESEARCH'}else{'FROZEN'};Gate=$Gate;Model=$Model;Profiles=$profiles.Count;Configurations=$rows.Count;Inputs=$base.Count;SourceSha256=$sourceHash;ManifestSha256=$manifestHash}

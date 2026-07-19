@@ -1,0 +1,9 @@
+Sampler,StressScenario,Trials,Seed,BlockLength,PreservesLocalOrder,P05TradeCount,MedianTradeCount,P95TradeCount,P05NetProfit,MedianNetProfit,MedianProfitFactor,P95MaxClosedDrawdownPercent,P95MaxConsecutiveLosses,RedTrialPercent,GatePass
+moving_block_08,standard,10000,26071840,8,True,390.0,395.0,400.0,793.17,1550.91,1.5612,2.9501,12.0,0.01,True
+moving_block_08,severe,10000,26071841,8,True,379.0,386.0,393.0,238.64,966.3,1.324,4.2251,16.0,1.35,True
+moving_block_16,standard,10000,26071842,16,True,390.0,395.0,400.0,790.31,1542.57,1.5578,2.5847,11.0,0.01,True
+moving_block_16,severe,10000,26071843,16,True,379.0,386.0,392.0,240.57,942.38,1.316,3.8476,15.0,1.25,True
+moving_block_24,standard,10000,26071844,24,True,390.0,395.0,400.0,805.84,1538.32,1.5548,2.2161,11.0,0.0,True
+moving_block_24,severe,10000,26071845,24,True,379.0,386.0,393.0,250.43,953.89,1.3204,3.4869,14.0,0.86,True
+calendar_year,standard,10000,26071846,0,True,299.0,398.0,491.0,982.42,1559.12,1.5585,1.8526,10.0,0.0,True
+calendar_year,severe,10000,26071847,0,True,291.0,386.0,477.0,421.71,971.05,1.3251,2.8861,15.0,0.12,True
