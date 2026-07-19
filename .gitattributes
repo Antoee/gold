@@ -145,3 +145,7 @@ outputs/rdmc_entry_regime_rewrite_v1_package/** -text whitespace=cr-at-eol
 outputs/RDMC_ENTRY_REGIME_REWRITE_V1_* -text whitespace=cr-at-eol
 work/*rdmc_entry_regime_rewrite_v1*.ps1 text eol=lf
 work/*rdmc_entry_regime_rewrite_v1*.py text eol=lf
+outputs/rdmc_lane_isolation_rewrite_v2_package/** -text whitespace=cr-at-eol
+outputs/RDMC_LANE_ISOLATION_REWRITE_V2_* -text whitespace=cr-at-eol
+work/*rdmc_lane_isolation_rewrite_v2*.ps1 text eol=lf
+work/*rdmc_lane_isolation_rewrite_v2*.py text eol=lf

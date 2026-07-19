@@ -4,7 +4,7 @@ Offline audit only. This script does not launch MT5.
 
 - Overall: **PASS**
 - Checks passed: 55 / 55
-- Runner scripts checked: 6
+- Runner scripts checked: 4
 - MT5 processes running: 0
 - Registered read-only forward terminal safe: False
 - Unlock file present: False
@@ -64,7 +64,7 @@ Offline audit only. This script does not launch MT5.
 | Money-ready refresh | Money-ready refresh child steps run without windows | True | work\refresh_money_ready_status.ps1 | Money-ready refresh child PowerShell steps must use ProcessStartInfo with CreateNoWindow and write logs. |
 | Money-ready refresh | Money-ready refresh avoids direct visible child shells | True | work\refresh_money_ready_status.ps1 | Replace direct powershell child calls with Invoke-QuietPowerShell. |
 | Money-ready refresh | Money-ready refresh does not launch MT5 | True | work\refresh_money_ready_status.ps1 | Money-ready refresh must rebuild state only; it must not launch MT5, MetaEditor, or Strategy Tester. |
-| Runner scripts | All MT5 runner scripts use an approved launch guard | True | Runner scripts checked: 6; unguarded: 0 | Use the legacy hard-lock guard, or the workspace-isolated portable guard that requires focus-risk authorization, hidden launch, bounded cleanup, and frozen-artifact verification. |
+| Runner scripts | All MT5 runner scripts use an approved launch guard | True | Runner scripts checked: 4; unguarded: 0 | Use the legacy hard-lock guard, or the workspace-isolated portable guard that requires focus-risk authorization, hidden launch, bounded cleanup, and frozen-artifact verification. |
 | Runner scripts | No runner uses an unapproved raw terminal launch | True | Raw terminal launch matches: 0 | Route tester launches through Start-MT5Hidden, or the approved workspace-isolated portable hidden runner. |
 | Watchdog | Watchdog script exists | True | work\mt5_focus_watchdog.ps1 | Restore work\mt5_focus_watchdog.ps1. |
 | Watchdog | Watchdog targets MT5 and MetaEditor | True | work\mt5_focus_watchdog.ps1 | Watchdog must stop terminal64, metatester64, and MetaEditor. |
@@ -81,6 +81,4 @@ Offline audit only. This script does not launch MT5.
 | `prepare_mt5_portable_shared_expert.ps1` | True | LegacyLaunchLock | False | False |
 | `run_first_pass_package_hidden.ps1` | True | LegacyLaunchLock | True | False |
 | `run_mt5_portable_config_hidden.ps1` | True | LegacyLaunchLock | False | False |
-| `run_rdmc_diversified_repair_executable_gate_wave.ps1` | True | LegacyLaunchLock | False | False |
-| `run_rdmc_money_ready_gate_repair_executable_wave.ps1` | True | LegacyLaunchLock | False | False |
 | `test_mt5_report_export_smoke.ps1` | True | LegacyLaunchLock | True | False |

@@ -1,0 +1,7 @@
+"EntryTime","ExitTime","EntryYear","EntryMonth","EntryHour","DayOfWeek","Symbol","Side","Volume","EntryPrice","ExitPrice","InitialStop","InitialTarget","InitialRiskMoney","RiskR","HoldMinutes","Profit","Winner","EntrySubtype","EntryComment","ExitComment"
+"2022-01-28T12:00:00","2022-01-31T01:05:00","2022","1","12","Friday","XAUUSD","sell","0.01","1791.43","1789.3","1799.31","1775.68","7.88","0.263959","3665","2.08","True","other","MTSM_SELL",""
+"2022-02-04T12:00:00","2022-02-04T15:31:40","2022","2","12","Friday","XAUUSD","buy","0.01","1811.04","1805.41","1805.41","1822.3","5.63","-1","211.67","-5.63","False","other","MTSM_BUY","sl 1805.41"
+"2022-05-18T07:00:00","2022-05-18T11:00:00","2022","5","7","Wednesday","XAUUSD","sell","0.01","1808.59","1815.57","1817.76","1790.25","9.17","-0.761178","240","-6.98","False","other","MTSM_SELL",""
+"2022-05-27T11:00:00","2022-05-27T15:32:40","2022","5","11","Friday","XAUUSD","buy","0.01","1858.36","1851.52","1851.52","1872.04","6.84","-1","272.67","-6.84","False","other","MTSM_BUY","sl 1851.52"
+"2022-11-25T07:00:00","2022-11-25T08:45:00","2022","11","7","Friday","XAUUSD","sell","0.1","1758.61","1756.6","1761.68","1747.72","30.7","0.654723","105","20.1","True","other","RRO;Band VWAP reversion;Upper-",""
+"2022-12-22T05:00:00","2022-12-22T07:29:20","2022","12","5","Thursday","XAUUSD","sell","0.1","1818.41","1820.51","1820.51","1809.41","21","-1","149.33","-21","False","other","RRO;Band VWAP reversion;Upper-","sl 1820.51"
