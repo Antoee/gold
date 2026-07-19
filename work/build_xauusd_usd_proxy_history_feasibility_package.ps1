@@ -2,7 +2,11 @@ param(
    [string]$SourcePath = "work\XAUUSD_USD_Proxy_History_Feasibility_Probe.mq5",
    [string]$PackageDir = "outputs\xauusd_usd_proxy_history_feasibility_package",
    [string]$ManifestPath = "outputs\XAUUSD_USD_PROXY_HISTORY_FEASIBILITY_MANIFEST.csv",
-   [string]$QueuePath = "outputs\XAUUSD_USD_PROXY_HISTORY_FEASIBILITY_QUEUE.csv"
+   [string]$QueuePath = "outputs\XAUUSD_USD_PROXY_HISTORY_FEASIBILITY_QUEUE.csv",
+   [string[]]$References = @('EURUSD','USDJPY'),
+   [int]$SignalTimeframe = 15,
+   [int]$MaximumAlignmentSeconds = 900,
+   [int]$RequiredLookbackBars = 32
 )
 
 Set-StrictMode -Version Latest
@@ -31,7 +35,11 @@ $sourceDir = Join-Path $packageFull "source"
 New-Item -ItemType Directory -Path $configDir, $profileDir, $reportDir, $sourceDir -Force | Out-Null
 Copy-Item -LiteralPath $sourceFull -Destination (Join-Path $sourceDir "Professional_XAUUSD_EA.mq5") -Force
 
-$references = @('EURUSD','USDJPY')
+if($References.Count -lt 1) { throw "At least one reference symbol is required." }
+if($SignalTimeframe -lt 1 -or $MaximumAlignmentSeconds -lt 0 -or $RequiredLookbackBars -lt 1) {
+   throw "Invalid timeframe, alignment, or lookback contract."
+}
+$references = @($References | ForEach-Object { $_.Trim() } | Where-Object { $_ } | Select-Object -Unique)
 $windows = @(
    [pscustomobject]@{ Name="older_2015_2018"; From="2015.01.01"; To="2018.12.31" },
    [pscustomobject]@{ Name="discovery_2019_2020"; From="2019.01.01"; To="2020.12.31" }
@@ -55,9 +63,9 @@ foreach($reference in $references) {
          "InpUseSymbolSafetyLock=true||true||0||0||N",
          "InpUseRealAccountSafetyLock=true||true||0||0||N",
          "InpReferenceSymbol=$reference",
-         "InpSignalTimeframe=15||15||0||0||N",
-         "InpMaximumAlignmentSeconds=900||900||0||0||N",
-         "InpRequiredLookbackBars=32||32||0||0||N",
+         "InpSignalTimeframe=$SignalTimeframe||$SignalTimeframe||0||0||N",
+         "InpMaximumAlignmentSeconds=$MaximumAlignmentSeconds||$MaximumAlignmentSeconds||0||0||N",
+         "InpRequiredLookbackBars=$RequiredLookbackBars||$RequiredLookbackBars||0||0||N",
          "InpProbeId=$candidate",
          "InpSourceSha256=$sourceHash",
          "InpOutputFileName=$evidenceFile"
@@ -91,7 +99,7 @@ foreach($reference in $references) {
       $configLines | Set-Content -LiteralPath $configPath -Encoding ASCII
       $manifest.Add([pscustomobject]@{
          QueueRank=$queueRank; Candidate=$candidate; Phase="history_feasibility_diagnostic"
-         PhaseLabel="Pre-2021 XAUUSD/USD-proxy M15 history alignment"; Window=$window.Name
+         PhaseLabel="Pre-2021 XAUUSD/reference history alignment"; Window=$window.Name
          Model=1; Deposit=10000; PackageConfig="$PackageDir\configs\$configName"
          SourceConfig="$PackageDir\configs\$configName"; ExpectedReportName=$reportName
          ReportDestination="$PackageDir\reports_here\$reportName"; ProfileSha256=$profileHash
@@ -102,7 +110,9 @@ foreach($reference in $references) {
          SourceRank=1; Phase="history_feasibility_diagnostic"; Set=$profileName; Window=$window.Name
          From=$window.From; To=$window.To; Model=1; Deposit=10000; Config="configs\$configName"
          ExpectedReportName=$reportName; ProfileSnapshot="profiles\$profileName"; ProfileSha256=$profileHash
-         SourceSha256=$sourceHash; ReferenceSymbol=$reference; EvidenceFile=$evidenceFile
+         SourceSha256=$sourceHash; ReferenceSymbol=$reference; SignalTimeframe=$SignalTimeframe
+         MaximumAlignmentSeconds=$MaximumAlignmentSeconds; RequiredLookbackBars=$RequiredLookbackBars
+         EvidenceFile=$evidenceFile
          StopRule="No orders; pre-2021 history feasibility only."
       }) | Out-Null
    }
@@ -112,14 +122,15 @@ $queue | Export-Csv -LiteralPath (Resolve-RepoPath $QueuePath) -NoTypeInformatio
 @(
    "# XAUUSD/USD-Proxy History-Feasibility Package",
    "",
-   "Strictly no-trading diagnostic for synchronized M15 XAUUSD, EURUSD, and USDJPY broker history. It uses only 2015-2020 and records year-level bar coverage and alignment.",
+   "Strictly no-trading diagnostic for synchronized XAUUSD and reference-symbol broker history. It uses only 2015-2020 and records year-level bar coverage and alignment.",
    "",
    "- Source SHA-256: ``$sourceHash``",
    "- Reference symbols: ``$($references -join ', ')``",
    "- Windows: ``$($windows.Name -join ', ')``",
    "- Configurations: ``$ordinal``",
-   "- Maximum alignment gap: ``900 seconds``",
-   "- Required feature lookback: ``32 M15 bars``",
+   "- Signal timeframe enum: ``$SignalTimeframe``",
+   "- Maximum alignment gap: ``$MaximumAlignmentSeconds seconds``",
+   "- Required feature lookback: ``$RequiredLookbackBars bars``",
    "- Real accounts are rejected and the source contains no order API."
 ) | Set-Content -LiteralPath (Join-Path $packageFull "README.md") -Encoding ASCII
 [pscustomobject]@{ Status="READY"; SourceSha256=$sourceHash; References=$references.Count; Configurations=$ordinal; PackageDir=$PackageDir }

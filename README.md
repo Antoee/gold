@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **Fixed-session M15 impulse-pullback failed pre-2021 quality and activity gates. No new best.** ATB150 remains the best. |
+| Latest research result | **TLT rates-impulse M15 strategy failed pre-2021 broad-era gates. No new best.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,12 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+The standalone M15 TLT rates-impulse experiment completed on `2026-07-19`. Broker-history probes first showed `98.062%` to `98.450%` yearly D1 alignment between XAUUSD and TLT with `100%` lookback readiness over 2015-2020. The EA then used only the last provably completed TLT D1 bar as a long-duration/rates proxy and required a completed same-direction XAUUSD M15 breakout. This was a new cross-market strategy implementation, not an ATB150 settings pass.
+
+The strategy failed decisively before recent data was opened. All 45/45 Model 1 reports parsed from one exact source and EX5 identity, with 195 to 874 trades per tested window and zero runner errors. Every profile lost in 2015-2018. The least-bad continuous row, `tltri_tp200`, lost `-$151.60` on 681 trades at PF `0.95` with `3.75%` maximum drawdown. No 2021-2026 holdout or Model 4 run was opened, there is no new best, and ATB150 remains unchanged.
+
+[Read the TLT rates-impulse rejection](outputs/INDEPENDENT_M15_TLT_RATES_IMPULSE_DISCOVERY_DECISION.md), [the parsed summary](outputs/INDEPENDENT_M15_TLT_RATES_IMPULSE_DISCOVERY_MODEL1_SUMMARY.csv), and [the TLT history-feasibility evidence](outputs/XAUUSD_TLT_D1_HISTORY_FEASIBILITY.md).
 
 The standalone fixed-session M15 impulse-pullback experiment completed on `2026-07-19`. It measured a morning impulse through ATR magnitude, auction-path efficiency, directional-bar share, and close location, then required a bounded pullback plus a completed M15 reclaim. This was a new strategy implementation, not another settings-only pass over ATB150.
 
