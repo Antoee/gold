@@ -6,45 +6,53 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 
 | Lane | Status |
 |---|---|
-| Highest verified historical result | **Strong-Signal Selective Reversion Lot Cap, provisional research leader.** Model 4 real ticks: `+$2,428.50`, `+24.28%`, `1.90%/yr` CAGR, PF `1.89`, `1.18%` drawdown. |
+| Highest verified historical result | **Momentum Same-Side Exit Cooldown 60, provisional research leader.** Model 4 real ticks: `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **Momentum-buy payoff rejected in discovery.** The `2.50R` center improved net, PF, drawdown-adjusted efficiency, and recovery, but returned 261 trades versus the frozen minimum 263 and had `0/3` passing neighbors. No post-2020 or Model 4 budget was spent. |
+| Latest research result | **New provisional historical leader.** The default-off 60-minute same-side momentum exit cooldown passed discovery, recent confirmation, Model 4 real ticks, annual restarts, hard-risk, added-cost, and clustered Monte Carlo gates. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
 
-The selective candidate raises only the lot ceiling for already-valid reversion signals whose completed H1 candle body is at least `0.25` of its range. Requested reversion risk remains `0.45%`; maximum portfolio open risk remains `0.75%`; all entries, stops, exits, loss limits, and real-account protections remain unchanged. The higher ceiling lets those strong signals size closer to their existing risk budget without martingale, grid, averaging down, or recovery sizing.
+The new candidate keeps the former selective reversion lot cap and adds one outcome-independent rule: after a momentum position exits, it blocks only a new momentum entry on the same symbol, magic number, and position side for 60 elapsed minutes. It never reads whether the prior trade won or lost. Entries, stops, targets, requested risk, lot caps, maximum `0.75%` portfolio open risk, loss limits, and real-account protections remain unchanged.
 
 ## Highest Historical Result
 
-Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` through `2026-07-18`:
+Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` through `2026-07-12`:
 
 | Metric | Result |
 |---|---:|
-| Net profit | **+$2,428.50** |
-| Ending balance | **$12,428.50** |
-| Total increase | **+24.28%** |
-| CAGR | **+1.90% per year** |
-| Profit factor | **1.89** |
-| Trades | **404** |
-| Win rate | **44.31%** |
+| Net profit | **+$2,492.25** |
+| Ending balance | **$12,492.25** |
+| Total increase | **+24.92%** |
+| CAGR | **+1.95% per year** |
+| Profit factor | **1.93** |
+| Trades | **400** |
+| Win rate | **44.75%** |
 | Maximum equity drawdown | **1.18%** |
-| Recovery factor | **17.09** |
-| Return / drawdown | **20.58** |
+| Recovery factor | **17.54** |
+| Return / drawdown | **21.12** |
 
-Against ATB150, the candidate adds `$323.42` (`+15.36%` more net profit), `+3.23` total-return points, and `+0.23` CAGR points per year. PF improves from `1.81` to `1.89`, recovery from `15.67` to `17.09`, and return/drawdown from `18.30` to `20.58`; drawdown rises only `0.03` point. These are historical measurements, not a forecast.
+Against ATB150, the candidate adds `$387.17` (`+18.39%` more net profit), `+3.87` total-return points, and `+0.28` CAGR points per year. PF improves from `1.81` to `1.93`, recovery from `15.67` to `17.54`, and return/drawdown from `18.30` to `21.12`; drawdown rises only `0.03` point. Against the previous research leader, it adds `$63.75`, `+0.64` return point, and `+0.05` CAGR point with the same rounded drawdown. These are historical measurements, not a forecast.
 
 ## Latest Research Update
 
-The momentum-buy payoff experiment completed on `2026-07-20` and was rejected in frozen pre-2021 discovery. Exact leader attribution showed that momentum buys had better PF than sells, remained profitable in all three Model 4 eras, and earned `+$1,618.27` from 58 direct `2R` target exits. The default-off code therefore widened only the initial target of otherwise-valid momentum buys. Sells stayed at `2R`; all entries, stops, requested risk, sizing, exit management, portfolio guards, and real-account protections remained unchanged.
+The same-side momentum exit-cooldown experiment completed on `2026-07-20` and became the new provisional historical leader. Exact ledger analysis found four momentum re-entries within 60 minutes of a same-side exit in the 2015-2020 discovery span; all four lost. The default-off implementation uses only elapsed time plus symbol, magic number, and position side. It never reads profit, loss, drawdown, loss streaks, or account outcome state.
 
-The exact source passed its direction-only, outcome-independence, default-off, and unchanged-trade-path audit. MetaEditor compiled it with zero errors and warnings to one EX5 identity. All `15/15` Model 1 reports were accepted with exact source, EX5, config, report, and sidecar identity after one report-export identity refusal was rerun unchanged.
+The source passed static ownership, outcome-independence, default-off, and unchanged-trade-path checks. MetaEditor compiled it with zero errors and warnings to one EX5 identity. The frozen 60-minute center passed 15-report pre-2021 Model 1 discovery with support from both the 90- and 120-minute neighbors. It then passed paired 2021-2026 Model 1 confirmation.
 
-Control made `+$1,353.74`, `2.14%/yr` CAGR, PF `1.85`, 265 trades, `1.06%` drawdown, recovery `11.4559`, and return/drawdown `12.7736`. The frozen buy-`2.50R` center improved to `+$1,412.34`, `2.23%/yr`, PF `1.90`, `1.10%` drawdown, recovery `11.4927`, and return/drawdown `12.8364`. It passed every frozen growth, broad-era, efficiency, and drawdown gate.
+Exact Model 4 real ticks improved the prior leader from `+$2,428.50` to `+$2,492.25`, CAGR from `1.90%` to `1.95%`, PF from `1.89` to `1.93`, recovery from `17.0889` to `17.5375`, and return/drawdown from `20.5763` to `21.1186`. Drawdown remained `1.18%`; trades changed from 404 to 400. The center was no worse in 2015-2018, 2019-2022, or 2023-2026.
 
-The center nevertheless produced 261 trades versus the preregistered minimum 263, so it failed the trade-retention gate. None of the three non-center neighbors passed the complete support gate: `2.25R` weakened recovery and exceeded the drawdown ceiling, while `2.75R` and `3.00R` also lost too many trades and missed risk-efficiency support. The gate was not relaxed after observation, so 2021-2026 and Model 4 remained closed. This is a useful near-miss, not a new best.
+All 12 annual Model 4 restarts were profitable and no worse than control; 2016, 2018, and 2024 improved. The exact 400-trade ledger had zero hard-risk violations and a maximum conservative portfolio initial risk of `0.5869%` against the `0.75%` cap. Severe added cost of `0.10R` per trade retained `+$1,864.19`, PF `1.616`, and `1.259%` closed-trade drawdown. All eight clustered Monte Carlo scenarios passed 10,000 trials each.
 
-[Read the buy-payoff rejection](outputs/THREE_LANE_MOMENTUM_BUY_PAYOFF_DISCOVERY_DECISION.md), [the frozen contract](outputs/THREE_LANE_MOMENTUM_BUY_PAYOFF_DISCOVERY_CONTRACT.md), [the compact summary](outputs/THREE_LANE_MOMENTUM_BUY_PAYOFF_DISCOVERY_SUMMARY.csv), and [the exact report ledger](outputs/THREE_LANE_MOMENTUM_BUY_PAYOFF_DISCOVERY_MODEL1_RESULTS.csv).
+This is a historical research promotion, not live approval. A second broker/specification and a valid frozen `$10,000` forward demo are still missing; the attached `$100,000` demo counts as zero evidence, and real-account trading remains disabled.
+
+[Read the Model 4 decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_DECISION.md), [annual decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_ANNUAL_MODEL4_DECISION.md), [stress decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_STRESS_DECISION.md), [risk audit](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_RISK_AUDIT.md), and [release package](release/three-lane-momentum-same-side-exit-cooldown-provisional/README.md).
+
+### Earlier Momentum-Buy Payoff Research
+
+The momentum-buy payoff experiment was rejected in frozen pre-2021 discovery. Its `2.50R` center improved net from `+$1,353.74` to `+$1,412.34`, but returned 261 trades versus the preregistered minimum 263 and had `0/3` passing neighbors. The gate was not relaxed, so newer data and Model 4 remained closed.
+
+[Read the buy-payoff rejection](outputs/THREE_LANE_MOMENTUM_BUY_PAYOFF_DISCOVERY_DECISION.md).
 
 ### Earlier Residual-Risk Research
 
@@ -308,7 +316,8 @@ Continuous 2015-2026 figures use a sequential `$10,000` account path. V1 figures
 
 | Profile | Test model | Net | Total increase | CAGR | PF | Max DD | Recovery | Return/DD | Status |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| **Selective strong-signal lot cap 0.15** | **Model 4 real ticks** | **+$2,428.50** | **+24.28%** | **+1.90%/yr** | **1.89** | **1.18%** | **17.09** | **20.58** | **Provisional historical leader; local gates pass** |
+| **Same-side exit cooldown 60** | **Model 4 real ticks** | **+$2,492.25** | **+24.92%** | **+1.95%/yr** | **1.93** | **1.18%** | **17.54** | **21.12** | **Provisional historical leader; all local gates pass** |
+| Selective strong-signal lot cap 0.15 | Model 4 real ticks | +$2,428.50 | +24.28% | +1.90%/yr | 1.89 | 1.18% | 17.09 | 20.58 | Previous historical leader; retained as control |
 | **ATB150** | Model 4 real ticks | **+$2,105.08** | **+21.05%** | **+1.67%/yr** | **1.81** | **1.15%** | **15.67** | **18.30** | **Released stable baseline** |
 | Strong reversion 0.70% / ATB 0.145% | Model 1 only | +$2,445.32 | +24.45% | +1.92%/yr | 1.92 | 1.22% | 16.7110 | 20.04 | Rejected before Model 4; narrow plateau failed |
 | Every-tick strong protection 1.00R / 0.10R | Model 1 only | +$2,289.77 | +22.90% | +1.80%/yr | 1.88 | 1.15% | 17.1198 | 19.91 | Rejected before Model 4; growth, retention, and neighbor gates failed |

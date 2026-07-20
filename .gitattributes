@@ -184,3 +184,7 @@ outputs/THREE_LANE_REVERSION_TIERED_STRONG_SIGNAL_LOT_CAP_* -text whitespace=cr-
 work/Professional_XAUUSD_Three_Lane_Reversion_High_Reward_Lot_Cap_Research.mq5 -text -diff
 outputs/THREE_LANE_REVERSION_HIGH_REWARD_LOT_CAP_* -text whitespace=cr-at-eol
 outputs/THREE_LANE_REVERSION_JOINT_STRONG_ALLOCATION_* -text whitespace=cr-at-eol
+work/Professional_XAUUSD_Three_Lane_Momentum_Same_Side_Exit_Cooldown_Research.mq5 -text -diff
+release/three-lane-momentum-same-side-exit-cooldown-provisional/*.mq5 -text -diff
+release/three-lane-momentum-same-side-exit-cooldown-provisional/*.set -text whitespace=cr-at-eol
+outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_* -text whitespace=cr-at-eol
