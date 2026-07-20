@@ -36,9 +36,9 @@ Updated: 2026-07-20
 
 ## Latest Completed Research
 
-The momentum/adaptive agreement allocation was rejected in 2015-2020 Model 1 discovery. The frozen `0.25%` center increased continuous net from `+$1,353.74` to only `+$1,365.75`, but reduced 2015-2018 by `$31.83`, lowered PF from `1.85` to `1.80`, raised drawdown from `1.06%` to `1.21%`, and lowered recovery from `11.4559` to `10.2634`. The best headline, agreement risk `0.225%`, gained only `1.74%` and missed the frozen recovery-retention gate. `0/3` neighbors passed, so architecture-seen recent data and Model 4 were not opened. The provisional leader above is unchanged.
+The strong-signal reversion partial runner was rejected in 2015-2020 Model 1 discovery. The frozen 80%-close / 2.00x-target / +0.50R-lock center reduced continuous net from `+$1,353.74` to `+$1,325.39`, reduced 2019-2020 by `$21.63`, lowered PF from `1.85` to `1.84`, and lowered recovery from `11.4559` to `11.2160`. Its partial path was active, but it failed the growth, independent-era, and efficiency gates. The best observed 1.75x row reached `+$1,392.02` but failed the frozen 2019-2020 retention floor; selecting it after observation would be threshold chasing. `0/6` neighbors passed, so post-2020 data and Model 4 were not opened. The provisional leader above is unchanged.
 
-- `outputs/THREE_LANE_MOMENTUM_ADAPTIVE_AGREEMENT_DISCOVERY_DECISION.md`
+- `outputs/THREE_LANE_REVERSION_PARTIAL_RUNNER_DISCOVERY_DECISION.md`
 
 ## Boundary
 

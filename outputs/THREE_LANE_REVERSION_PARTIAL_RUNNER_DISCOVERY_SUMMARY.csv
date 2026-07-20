@@ -1,0 +1,9 @@
+Candidate,Role,PartialRunnerEnabled,ClosePercent,TargetMultiplier,StopLockR,OlderNetProfit,LaterNetProfit,ContinuousNetProfit,TotalReturnPercent,CagrPercent,ProfitFactor,TotalTrades,MaxDrawdownPercent,RecoveryFactor,ReturnDrawdown,BehaviorChangedVsControl,DisjointEraFloor,NeighborGate
+rvpr_control,control,false,80,2.00,0.50,1001.72,370.41,1353.74,13.54,2.14,1.85,265,1.06,11.4559,12.7736,False,True,
+rvpr_center,center,true,80,2.00,0.50,995.0,348.78,1325.39,13.25,2.1,1.84,270,1.06,11.216,12.5,True,False,
+rvpr_close75,close_neighbor_low,true,75,2.00,0.50,977.54,341.02,1300.22,13.0,2.06,1.82,270,1.06,11.003,12.2642,True,False,False
+rvpr_close85,close_neighbor_high,true,85,2.00,0.50,995.0,348.78,1325.39,13.25,2.1,1.84,270,1.06,11.216,12.5,True,False,False
+rvpr_target175,target_neighbor_low,true,80,1.75,0.50,1070.15,348.78,1392.02,13.92,2.2,1.87,270,1.05,11.7798,13.2571,True,False,False
+rvpr_target225,target_neighbor_high,true,80,2.25,0.50,962.51,348.78,1292.95,12.93,2.05,1.81,270,1.06,10.9414,12.1981,True,False,False
+rvpr_lock025,lock_neighbor_low,true,80,2.00,0.25,1028.88,346.89,1357.38,13.57,2.14,1.86,270,1.06,11.4867,12.8019,True,False,False
+rvpr_lock075,lock_neighbor_high,true,80,2.00,0.75,1006.17,350.7,1338.48,13.38,2.12,1.84,270,1.06,11.3267,12.6226,True,False,False

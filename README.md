@@ -8,7 +8,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 |---|---|
 | Highest verified historical result | **Strong-Signal Selective Reversion Lot Cap, provisional research leader.** Model 4 real ticks: `+$2,428.50`, `+24.28%`, `1.90%/yr` CAGR, PF `1.89`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **Momentum/adaptive agreement allocation rejected in discovery.** The `0.25%` center added only `$12.01` continuously, lost `$31.83` in 2015-2018, weakened PF/recovery/return-to-drawdown, exceeded its drawdown ceiling, and had `0/3` passing neighbors. No recent-data or Model 4 budget was spent. |
+| Latest research result | **Strong-signal reversion partial runner rejected in discovery.** The frozen center reduced continuous net by `$28.35`, weakened PF/recovery/return-to-drawdown, failed its independent-era floor, and had `0/6` passing neighbors. No post-2020 or Model 4 budget was spent. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -36,13 +36,19 @@ Against ATB150, the candidate adds `$323.42` (`+15.36%` more net profit), `+3.23
 
 ## Latest Research Update
 
-The momentum/adaptive agreement allocation experiment completed on `2026-07-20` and was rejected in pre-2021 parameter discovery. Exact leader attribution had found 19 momentum entries opened while an adaptive-trend position was already open in the same direction; those historical trades made `+$179.27` at PF `5.12` and were positive in all three broad eras. Because this architecture was selected from the full ledger, the contract explicitly treated every historical era as architecture-seen and did not claim a pristine holdout.
+The strong-signal reversion partial-runner experiment completed on `2026-07-20` and was rejected in frozen pre-2021 discovery. Its default-off code left entries, initial stops, requested risk, lot caps, and portfolio guards unchanged. On completed-H1 body-`0.25` reversion signals with splittable volume, it moved the TP beyond the original VWAP, confirmed a profitable stop before closing most of the position at VWAP, and persisted filled volume plus completion state so a restart could not repeat the partial close.
 
-The default-off code changed no entry, stop, target, close, or modify path. It could only substitute requested momentum risk when an exact same-symbol, same-direction adaptive position was already open, used that risk consistently for broker-valued sizing and post-fill reconciliation, and preserved the authoritative `0.75%` account-wide open-risk refusal. Static source checks passed, and MetaEditor compiled the exact source with zero errors and zero warnings.
+Static ownership, volume, restart, and fail-closed checks passed. MetaEditor compiled the exact source with zero errors and zero warnings, one EX5 identity was installed on four portable workers, and `24/24` reports were accepted after five unchanged retries for MT5 agent-port/report-export failures. Active profiles produced 270 continuous report trades versus 265 for control, confirming that the partial path executed.
 
-All `15/15` Model 1 reports were accepted with exact source, EX5, config, report, and sidecar identity after one unchanged identity retry. Control made `+$1,353.74`, `2.14%/yr` CAGR, PF `1.85`, `1.06%` drawdown, and recovery `11.4559`. The frozen `0.25%` center made `+$1,365.75`, only `$12.01` or `0.89%` more, while 2015-2018 fell by `$31.83`, PF fell to `1.80`, drawdown rose to `1.21%`, and recovery fell to `10.2634`.
+Control made `+$1,353.74`, `2.14%/yr` CAGR, PF `1.85`, `1.06%` drawdown, and recovery `11.4559`. The frozen 80%-close / 2.00x-target / +0.50R-lock center made `+$1,325.39`, `2.10%/yr`, PF `1.84`, the same rounded drawdown, and recovery `11.2160`. It reduced continuous net by `$28.35` and reduced 2019-2020 by `$21.63`, missing the 98% independent-era retention floor as well as the growth and efficiency gates.
 
-The `0.225%` row reached the best headline at `+$1,377.30`, but its `1.74%` gain missed the frozen `2%` neighbor floor and recovery retained less than `97%` of control. Selecting it after observation would be threshold chasing. The family was rejected with `0/3` passing neighbors, so architecture-seen 2021-2026 and Model 4 remained unopened.
+The 1.75x-target row reached the best headline at `+$1,392.02`, but it was not the preregistered center and its 2019-2020 result was only `+$348.78` versus control `+$370.41`, below the frozen era floor. Selecting it after observation would be threshold chasing. The family was rejected with `0/6` passing neighbors, so 2021-2026 and Model 4 remained unopened.
+
+[Read the partial-runner rejection](outputs/THREE_LANE_REVERSION_PARTIAL_RUNNER_DISCOVERY_DECISION.md), [the frozen contract](outputs/THREE_LANE_REVERSION_PARTIAL_RUNNER_DISCOVERY_CONTRACT.md), [the compact summary](outputs/THREE_LANE_REVERSION_PARTIAL_RUNNER_DISCOVERY_SUMMARY.csv), and [the exact evidence ledger](outputs/THREE_LANE_REVERSION_PARTIAL_RUNNER_DISCOVERY_EVIDENCE.csv).
+
+### Earlier Agreement Allocation Research
+
+The momentum/adaptive agreement allocation was rejected on `2026-07-20`. Its `0.25%` center added only `$12.01` continuously, lost `$31.83` in 2015-2018, weakened PF/recovery/return-to-drawdown, exceeded its drawdown ceiling, and had `0/3` passing neighbors. The best `0.225%` headline missed its frozen growth and recovery floors, so no recent-data or Model 4 run was opened.
 
 [Read the agreement-allocation rejection](outputs/THREE_LANE_MOMENTUM_ADAPTIVE_AGREEMENT_DISCOVERY_DECISION.md), [the compact summary](outputs/THREE_LANE_MOMENTUM_ADAPTIVE_AGREEMENT_DISCOVERY_SUMMARY.csv), [the exact evidence ledger](outputs/THREE_LANE_MOMENTUM_ADAPTIVE_AGREEMENT_DISCOVERY_EVIDENCE.csv), and [the retrospective attribution](outputs/THREE_LANE_MOMENTUM_ADAPTIVE_AGREEMENT_ATTRIBUTION.md).
 
