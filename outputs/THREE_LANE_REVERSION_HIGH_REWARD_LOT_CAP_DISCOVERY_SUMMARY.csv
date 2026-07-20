@@ -1,0 +1,8 @@
+Candidate,Role,OlderNetProfit,LaterNetProfit,ContinuousNetProfit,TotalReturnPercent,CagrPercent,ProfitFactor,TotalTrades,MaxDrawdownPercent,RecoveryFactor,ReturnDrawdown,BehaviorChangedVsControl,NeighborGate
+hrlc_control,control,1001.72,370.41,1353.74,13.54,2.14,1.85,265,1.06,11.4559,12.7736,False,
+hrlc_strong020_reference,broad_reference,1024.13,388.14,1403.09,14.03,2.21,1.87,265,1.22,10.8843,11.5,True,
+hrlc_rr200,threshold_lower_neighbor,1005.65,388.14,1384.61,13.85,2.19,1.86,265,1.22,10.7409,11.3525,True,False
+hrlc_rr300,threshold_upper_neighbor,1001.72,388.14,1380.68,13.81,2.18,1.87,265,1.06,11.6838,13.0283,True,False
+hrlc_center_rr250_cap020,center,1001.72,388.14,1380.68,13.81,2.18,1.87,265,1.06,11.6838,13.0283,True,
+hrlc_cap018,cap_lower_neighbor,1001.72,388.14,1380.33,13.8,2.18,1.87,265,1.06,11.6809,13.0189,True,False
+hrlc_cap022,cap_upper_neighbor,1001.72,388.14,1380.68,13.81,2.18,1.87,265,1.06,11.6838,13.0283,True,False

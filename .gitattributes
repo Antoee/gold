@@ -177,3 +177,5 @@ release/three-lane-reversion-strong-signal-lot-cap-provisional/*.set -text white
 outputs/THREE_LANE_REVERSION_STRONG_SIGNAL_LOT_CAP_* -text whitespace=cr-at-eol
 work/Professional_XAUUSD_Three_Lane_Reversion_Tiered_Strong_Signal_Lot_Cap_Research.mq5 -text -diff
 outputs/THREE_LANE_REVERSION_TIERED_STRONG_SIGNAL_LOT_CAP_* -text whitespace=cr-at-eol
+work/Professional_XAUUSD_Three_Lane_Reversion_High_Reward_Lot_Cap_Research.mq5 -text -diff
+outputs/THREE_LANE_REVERSION_HIGH_REWARD_LOT_CAP_* -text whitespace=cr-at-eol
