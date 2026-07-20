@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **A new high-water risk throttle was inactive in sealed pre-2021 discovery. Champion control, unconditional body-0.25 / 0.70% strong risk, and all three 0.15% / 0.30% / 0.45% drawdown thresholds returned exactly +$1,191.69, +11.92% total, and 1.89% per year with identical risk metrics. No 2021-2026 or Model 4 test opened. No new best.** ATB150 remains the best. |
+| Latest research result | **A reversion lot-cap ladder increased sealed pre-2021 Model 1 profit, but failed its frozen risk-efficiency gate. The 0.15-lot center rose from +$1,191.69 / 1.89% per year to +$1,419.25 / 2.24% per year, while drawdown rose from 1.02% to 1.30% and return/drawdown fell. Upper rows weakened further. No 2021-2026 or Model 4 test opened. No new best.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,18 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+The reversion lot-cap experiment completed on `2026-07-19`. Exact ATB150 trade-ledger evidence showed that 29 of 38 real-tick reversion trades reached the existing `0.10`-lot ceiling, leaving average deployed initial risk near `0.28%` even though the lane requested `0.45%`. The contract therefore froze a settings-only `0.10 / 0.12 / 0.15 / 0.18 / 0.20` lot-cap ladder. The EA source stayed byte-identical to ATB150; requested reversion risk stayed `0.45%`; portfolio open risk stayed capped at `0.75%`; and all entries, stops, targets, exits, post-fill checks, loss limits, capital locks, and real-account protections remained unchanged.
+
+All `15/15` Model 1 reports completed in `145` seconds with zero errors or retries and exact source, EX5, config, report, and sidecar identity. Every row was profitable in both disjoint discovery eras. Control returned `+$1,191.69`, `+11.92%` total, `+1.89% per year`, PF `1.77`, `1.02%` drawdown, recovery `10.5778`, and return/drawdown `11.6863`. The `0.12` lower row reached `+$1,286.73` and `2.04%` per year with `1.12%` drawdown and higher `10.8722` recovery.
+
+The frozen `0.15` center increased net to `+$1,419.25`, total return to `+14.19%`, CAGR to `2.24%`, and PF to `1.85`, but drawdown rose to `1.30%`, recovery fell to `10.3136`, and return/drawdown fell to `10.9154`. It failed the preregistered efficiency and drawdown gates. The `0.18` and `0.20` rows raised net further but weakened recovery and return/drawdown again while drawdown reached `1.47%` and `1.59%`. The attractive `0.12` row cannot be selected after observation because it was frozen as a neighbor, not the center.
+
+The family was rejected without choosing a different cap or opening 2021-2026 and Model 4. These results show that the old fixed lot ceiling suppresses return, but simply lifting it converts that suppression into progressively worse drawdown efficiency. ATB150 remains the historical champion, and the invalid forward registration remains unchanged.
+
+[Read the lot-cap rejection](outputs/THREE_LANE_REVERSION_LOT_CAP_DISCOVERY_DECISION.md), [the compact results](outputs/THREE_LANE_REVERSION_LOT_CAP_DISCOVERY_MODEL1_SUMMARY.csv), and [the exact run attestation](outputs/THREE_LANE_REVERSION_LOT_CAP_DISCOVERY_MODEL1_RUN_ATTESTATION.csv).
+
+### Earlier Strong-Signal High-Water Risk Research
 
 The strong-reversion high-water risk-throttle experiment completed on `2026-07-19`. It targeted the closest prior real-tick near-pass: completed-H1 body ratio `0.25` / requested reversion risk `0.70%` had raised historical Model 4 CAGR from `1.67%` to `1.80%` but missed the frozen recovery gate by `0.0020`. The new default-off code allowed that extra risk only while current equity remained within a fixed percentage of the portfolio's existing high-water mark; otherwise it fell back to the champion's `0.45%` base reversion risk. It could only reduce risk during drawdown and added no entry, exit, stop-modification, lot-cap, martingale, or recovery-sizing path.
 
