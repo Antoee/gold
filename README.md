@@ -8,7 +8,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 |---|---|
 | Highest verified historical result | **Momentum Same-Side Exit Cooldown 60, provisional research leader.** Model 4 real ticks: `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **Independent D1 NR7 / H1 breakout rejected in pre-2021 discovery.** The center lost `$17.30` at PF `0.43` with only 10 trades. The least-bad variant made `+$10.34` (`0.02%/yr` CAGR) but lost 2019-2020 and produced only 14 trades. Holdout and Model 4 remained closed. **No new best.** |
+| Latest research result | **Reversion reward-quality risk and adjacent-timeframe transfer both rejected in pre-2021 discovery.** Reward-quality risk reduced the exact control from `+$1,379.93` (`2.18%/yr`) to `+$1,369.88` (`2.16%/yr`). M30 lost across every tested horizon; H2 peaked at only `+$326.93` (`0.54%/yr`) from seven trades. Holdout and Model 4 remained closed. **No new best.** |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -47,6 +47,26 @@ All 12 annual Model 4 restarts were profitable and no worse than control; 2016, 
 This is a historical research promotion, not live approval. A second broker/specification and a valid frozen `$10,000` forward demo are still missing; the attached `$100,000` demo counts as zero evidence, and real-account trading remains disabled.
 
 [Read the Model 4 decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_DECISION.md), [annual decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_ANNUAL_MODEL4_DECISION.md), [stress decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_STRESS_DECISION.md), [risk audit](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_RISK_AUDIT.md), and [release package](release/three-lane-momentum-same-side-exit-cooldown-provisional/README.md).
+
+### Latest Reversion Reward-Quality Risk Research
+
+The default-off reward-quality risk interaction completed on `2026-07-20` and was rejected in frozen 2015-2020 Model 1 discovery. It allowed higher requested reversion risk only when the existing completed-H1 strong-body test and a fixed spread-adjusted reward/risk threshold both passed. The proven body-based `0.15`-lot ceiling, entries, stops, VWAP targets, exits, broker-valued sizing, `0.75%` portfolio cap, minimum-lot refusal, and real-account lock remained unchanged.
+
+The exact source passed static ownership, outcome-independence, default-off, and unchanged-trade-path checks. MetaEditor compiled it with zero errors and warnings to one EX5 identity across four workers. All `21/21` reports parsed with exact source and binary identity after two unchanged report-export recoveries.
+
+Control made `+$1,379.93`, `+13.80%` total, `2.18%/yr` CAGR, PF `1.88`, 261 trades, `1.05%` drawdown, and recovery `11.6775`. The frozen RR-`1.50` / risk-`0.70%` center and every fixed reward/risk neighbor made `+$1,369.88`, `+13.70%` total, `2.16%/yr` CAGR, PF `1.87`, the same 261 trades, `1.06%` drawdown, and recovery `11.5925`. Recent-era profit retention was only `95.76%`, and no neighbor passed the growth or efficiency gates.
+
+The interaction supplied no stable gain, so no 2021-2026 holdout or Model 4 run was opened. The verified real-tick leader remains `+$2,492.25`, `+24.92%`, and `1.95%/yr` CAGR; the forward candidate remains unchanged and invalid for evidence on the attached `$100,000` demo.
+
+[Read the reward-quality rejection](outputs/THREE_LANE_REVERSION_REWARD_QUALITY_RISK_DISCOVERY_DECISION.md), [exact Model 1 results](outputs/THREE_LANE_REVERSION_REWARD_QUALITY_RISK_DISCOVERY_MODEL1_RESULTS.csv), [canonical run evidence](outputs/THREE_LANE_REVERSION_REWARD_QUALITY_RISK_DISCOVERY_RUN_ATTESTATION.csv), and [research source](work/Professional_XAUUSD_Three_Lane_Reversion_Reward_Quality_Risk_Research.mq5).
+
+### Latest Reversion Timeframe-Transfer Research
+
+The exact leader's reversion lane was also tested on adjacent M30 and H2 signal timeframes under a frozen pre-2021 contract. Seven timeframe/horizon variants ran across 2015-2018, 2019-2020, and continuous 2015-2020. All `21/21` reports parsed with exact source and binary identity after two unchanged report-export recoveries; no strategy source change was required.
+
+The isolated H1 control made `+$568.70` at `0.93%/yr` CAGR, PF `3.19`, and 19 trades. H2 local made `+$326.93` at `0.54%/yr` from only seven trades, while its two horizon neighbors made `+$41.80` and `-$47.78`. Every M30 row lost continuously, from `-$51.60` to `-$302.31`. No adjacent family provided both broad-era profitability and enough independent support, so holdout and Model 4 remained closed.
+
+[Read the timeframe-transfer rejection](outputs/THREE_LANE_REVERSION_TIMEFRAME_TRANSFER_DISCOVERY_DECISION.md), [exact Model 1 results](outputs/THREE_LANE_REVERSION_TIMEFRAME_TRANSFER_DISCOVERY_MODEL1_RESULTS.csv), and [canonical run evidence](outputs/THREE_LANE_REVERSION_TIMEFRAME_TRANSFER_DISCOVERY_RUN_ATTESTATION.csv).
 
 ### Latest Independent NR7 Breakout Research
 

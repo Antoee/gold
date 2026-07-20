@@ -1,0 +1,8 @@
+"Candidate","Family","OlderNet","OlderPF","RecentNet","RecentPF","ContinuousNet","CagrPercent","ProfitFactor","Trades","MaxDrawdownPercent","RecoveryFactor","BaseGatePass","FamilyBasePasses","ImprovesH1Control","DiscoveryGatePass","Decision"
+"rvtf_h1_control","h1","482.9","3.28","89.73","3.08","568.7","0.93","3.19","19","0.88","6.4522","False","0","False","False","REJECTED_NO_HOLDOUT_NO_MODEL4"
+"rvtf_h2_local","h2","194.31","6.73","132.62","2.57","326.93","0.54","3.77","7","0.91","3.4352","False","0","False","False","REJECTED_NO_HOLDOUT_NO_MODEL4"
+"rvtf_h2_duration","h2","41.8","2.17","0","0","41.8","0.07","2.17","2","0.71","0.5864","False","0","False","False","REJECTED_NO_HOLDOUT_NO_MODEL4"
+"rvtf_h2_mid","h2","-45.91","0","-1.87","0.98","-47.78","-0.08","0.61","4","1.09","-0.4379","False","0","False","False","REJECTED_NO_HOLDOUT_NO_MODEL4"
+"rvtf_m30_duration","m30","-118.63","0","67.03","1.91","-51.6","-0.09","0.73","7","2.16","-0.2387","False","0","False","False","REJECTED_NO_HOLDOUT_NO_MODEL4"
+"rvtf_m30_mid","m30","-10.03","0.97","-86.74","0.56","-96.77","-0.16","0.82","22","3.11","-0.3081","False","0","False","False","REJECTED_NO_HOLDOUT_NO_MODEL4"
+"rvtf_m30_local","m30","5.68","1.03","-307.99","0","-302.31","-0.51","0.38","20","5.04","-0.5869","False","0","False","False","REJECTED_NO_HOLDOUT_NO_MODEL4"
