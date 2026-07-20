@@ -8,7 +8,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 |---|---|
 | Highest verified historical result | **Momentum Same-Side Exit Cooldown 60, provisional research leader.** Model 4 real ticks: `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **M15 squeeze 2.25R target rejected in one-shot post-2020 feature holdout.** It improved continuous Model 1 net from `+$1,046.44` to `+$1,131.75` (`+8.15%`), but trailed control in 2024-2026, reduced PF from `2.08` to `1.76`, and raised drawdown from `1.21%` to `1.51%`. Neither fixed sensitivity row passed, so Model 4 remained closed. **No new best.** |
+| Latest research result | **Adaptive-exit to momentum same-side cooldown rejected in reserved 2019-2020 ledger validation.** The frozen 36-hour center removed one `-$9.46` momentum trade, below the required two events and `$10.00` loss-removal floors. Two of three fixed neighbors were negative, but the center failed, so no EA code or MT5 run was opened. **No new best.** |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -47,6 +47,16 @@ All 12 annual Model 4 restarts were profitable and no worse than control; 2016, 
 This is a historical research promotion, not live approval. A second broker/specification and a valid frozen `$10,000` forward demo are still missing; the attached `$100,000` demo counts as zero evidence, and real-account trading remains disabled.
 
 [Read the Model 4 decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_DECISION.md), [annual decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_ANNUAL_MODEL4_DECISION.md), [stress decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_STRESS_DECISION.md), [risk audit](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_RISK_AUDIT.md), and [release package](release/three-lane-momentum-same-side-exit-cooldown-provisional/README.md).
+
+### Latest Adaptive-Exit Momentum Cooldown Research
+
+An outcome-independent cross-lane cooldown was screened and rejected on `2026-07-20` before EA implementation. The causal hypothesis was that a same-side H1 momentum breakout shortly after the slower H4 adaptive lane exited may be late trend continuation. The proposed rule could use only symbol, lane magic, side, exit time, and elapsed time; it could not read whether the adaptive trade won or lost.
+
+The exact leader's 2015-2018 Model 4 ledger nominated a frozen 36-hour center. Momentum entries within 36 hours of a same-side adaptive exit were four trades and all four lost `-$24.53`. Fixed 24-, 48-, and 72-hour rows were also negative at `-$24.53`, `-$2.58`, and `-$18.50`. The analyzer, ledger, training outputs, center, neighbors, and transfer gate were hashed before opening 2019-2020.
+
+The clue did not transfer with enough activity. The 36-hour center found only one reserved-era event worth `-$9.46`, below the frozen minimum of two events and `-$10.00` of removed loss. The 24- and 48-hour rows were negative, but the 72-hour row was positive `+$2.49`, and fixed-neighbor support could not override the failed center. No strategy source, MT5 run, post-2020 test, or Model 4 test was opened.
+
+[Read the ledger-validation rejection](outputs/THREE_LANE_ADAPTIVE_EXIT_MOMENTUM_COOLDOWN_NOMINATION_DECISION.md), [frozen contract](outputs/THREE_LANE_ADAPTIVE_EXIT_MOMENTUM_COOLDOWN_NOMINATION_CONTRACT.md), [training screen](outputs/THREE_LANE_ADAPTIVE_EXIT_MOMENTUM_COOLDOWN_TRAINING.md), and [reserved validation](outputs/THREE_LANE_ADAPTIVE_EXIT_MOMENTUM_COOLDOWN_VALIDATION.md).
 
 ### Latest M15 Squeeze 2.25R Feature Holdout
 

@@ -1,0 +1,5 @@
+"CooldownHours","Role","AffectedTrades","AffectedNet","AffectedProfitFactor","PortfolioControlNet","OfflineProjectedPortfolioNet","OfflineProjectedImprovement","GatePass"
+"24","fixed_sensitivity","1","-9.46","0","291.76","301.22","9.46","True"
+"36","frozen_center","1","-9.46","0","291.76","301.22","9.46","False"
+"48","fixed_sensitivity","3","-23.85","0.0437","291.76","315.61","23.85","True"
+"72","fixed_sensitivity","4","2.49","1.0998","291.76","289.27","-2.49","False"
