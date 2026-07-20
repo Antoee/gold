@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **The strong-reversion protection code completed 20/20 Model 1 reports, but all three completed-H1 stop-lock profiles were exact behavioral no-ops versus strong-only: +$2,391.89, +23.92% total, 1.88% CAGR, PF 1.89, and 1.21% drawdown. Model 4 did not open. No new best.** ATB150 remains the best. |
+| Latest research result | **Every-tick strong-reversion protection improved the 0.10R center to 1.15% drawdown, 17.1198 recovery, and 19.913 return/drawdown, but net fell to +$2,289.77 and 1.80% CAGR and the frozen growth/neighbor gates failed. A higher-lock ladder was materially worse. Model 4 did not open. No new best.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,14 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+The strong-reversion every-tick protection experiment and its separately frozen lock ladder completed on `2026-07-19`. The prior completed-H1 manager had been a proven no-op because strong trades often exited before the next H1 evaluation. The new default-off code moved only owned-position protection ahead of the new-bar guard, so it could evaluate executable bid/ask on every tick while entry eligibility remained completed-H1 only. It retained the body `0.25` / requested risk `0.70%` strong allocation, exact stored initial risk, initial stops, VWAP targets, both trend lanes, `0.75%` portfolio open-risk cap, portfolio loss limits, and real-account lock. Static and compiler audits confirmed zero new entry or close paths, exactly one tightening-only stop path, and zero warnings.
+
+The first contract froze disabled control, strong-only control, and `1.00R / 0.05R`, `1.00R / 0.10R`, and `1.25R / 0.10R` protection rows. All `20/20` Model 1 reports parsed on one exact source and EX5 identity after one identity-only refusal was rerun unchanged. Strong-only returned `+$2,391.89`, `+23.92%` total, `1.88%` CAGR, PF `1.89`, 415 trades, `1.21%` drawdown, recovery `16.5620`, and return/drawdown `19.7686`. The `1.00R / 0.10R` center changed behavior and improved drawdown to `1.15%`, recovery to `17.1198`, and return/drawdown to `19.9130`, but net fell to `+$2,289.77`, CAGR to `1.80%`, and trades to 414. It produced only `+4.29%` more net than disabled control, below the frozen `+5%` floor, retained less than `97%` of strong-only net, and the `1.25R` neighbor failed independently. Model 4 did not open.
+
+Because raising the lock from `0.05R` to `0.10R` had improved net in that fixed-trigger comparison, one final contract froze the trigger at `1.00R` and tested only `0.15R / 0.20R / 0.25R` locks beside fresh controls and the observed `0.10R` reference. All `24/24` reports parsed on the same exact source and EX5 after three unchanged identity retries. The `0.20R` center collapsed to `+$2,005.83`, `1.60%` CAGR, PF `1.80`, 412 trades, `1.30%` drawdown, recovery `13.7678`, and return/drawdown `15.4308`; both neighbors also underperformed disabled control. The non-monotonic path response rejects the retained-profit premise. This protection family is closed without another trigger or lock search, ATB150 remains the historical champion, and the invalid forward registration remains unchanged.
+
+[Read the every-tick protection rejection](outputs/THREE_LANE_REVERSION_STRONG_SIGNAL_TICK_PROTECTION_MODEL1_DECISION.md), [the higher-lock rejection](outputs/THREE_LANE_REVERSION_STRONG_SIGNAL_TICK_PROTECTION_LOCK_LADDER_MODEL1_DECISION.md), and [the compact first-stage results](outputs/THREE_LANE_REVERSION_STRONG_SIGNAL_TICK_PROTECTION_MODEL1_SUMMARY.csv).
 
 The strong-reversion protection experiment completed on `2026-07-19`. It kept the already-studied completed-H1 body `0.25` / requested risk `0.70%` allocation and added one optional exact-ticket stop-modification path. Only a qualifying strong reversion position could register its initial risk, and its stop could only tighten after frozen favorable movement; entries, initial stops, VWAP targets, closes, both trend lanes, the `0.75%` open-risk cap, portfolio loss limits, and real-account lock remained unchanged. The source audit proved zero new entry or close paths and exactly one tightening-only modify path.
 
@@ -127,6 +135,7 @@ Continuous 2015-2026 figures use a sequential `$10,000` account path. V1 figures
 | Profile | Test model | Net | Total increase | CAGR | PF | Max DD | Recovery | Return/DD | Status |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | **ATB150** | Model 4 real ticks | **+$2,105.08** | **+21.05%** | **+1.67%/yr** | **1.81** | **1.15%** | **15.67** | **18.30** | **Current best** |
+| Every-tick strong protection 1.00R / 0.10R | Model 1 only | +$2,289.77 | +22.90% | +1.80%/yr | 1.88 | 1.15% | 17.1198 | 19.91 | Rejected before Model 4; growth, retention, and neighbor gates failed |
 | Rejection quality body 0.25 / wick 25% / risk 0.70% | Model 1 only | +$2,321.32 | +23.21% | +1.83%/yr | 1.87 | 1.22% | 16.0734 | 19.02 | Rejected before Model 4; CAGR gate missed by 0.01 point |
 | Strong-reward quality RR 1.50 / risk 0.70% | Model 4 real ticks | +$2,236.41 | +22.36% | +1.77%/yr | 1.85 | 1.24% | 15.3347 | 18.03 | Rejected by frozen recovery, return/DD, and relative-DD gates |
 | Strong-reversion body 0.25 / risk 0.65%-0.675% plateau | Model 4 real ticks | +$2,271.52 | +22.72% | +1.79%/yr | 1.87 | 1.23% | 15.5754 | 18.47 | Rejected by frozen recovery/neighbor gate |
