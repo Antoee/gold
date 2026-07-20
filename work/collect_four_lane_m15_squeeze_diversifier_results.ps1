@@ -1,0 +1,31 @@
+param(
+   [string]$ManifestPath='outputs\FOUR_LANE_M15_SQUEEZE_DIVERSIFIER_DISCOVERY_MODEL1_MANIFEST.csv',
+   [string]$ReportDir='outputs\four_lane_m15_squeeze_diversifier_discovery_model1_package\reports_here',
+   [string]$ParserManifestPath='outputs\FOUR_LANE_M15_SQUEEZE_DIVERSIFIER_DISCOVERY_MODEL1_PARSE_MANIFEST.csv',
+   [string]$RawResultsPath='outputs\FOUR_LANE_M15_SQUEEZE_DIVERSIFIER_DISCOVERY_MODEL1_RAW_RESULTS.csv',
+   [string]$ResultsPath='outputs\FOUR_LANE_M15_SQUEEZE_DIVERSIFIER_DISCOVERY_MODEL1_RESULTS.csv',
+   [string]$RunPath='outputs\FOUR_LANE_M15_SQUEEZE_DIVERSIFIER_DISCOVERY_RUN_ATTESTATION.csv',
+   [string]$SummaryPath='outputs\FOUR_LANE_M15_SQUEEZE_DIVERSIFIER_DISCOVERY_SUMMARY.csv',
+   [string]$MarkdownPath='outputs\FOUR_LANE_M15_SQUEEZE_DIVERSIFIER_DISCOVERY_MODEL1_METRICS.md'
+)
+$ErrorActionPreference='Stop';Set-StrictMode -Version Latest
+$repo=(Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+function Resolve-RepoPath([string]$Path){if([IO.Path]::IsPathRooted($Path)){return $Path};return Join-Path $repo $Path}
+$manifest=@(Import-Csv -LiteralPath (Resolve-RepoPath $ManifestPath));if($manifest.Count-ne15){throw "Expected 15 manifest rows, found $($manifest.Count)."};if(@($manifest|Where-Object{$_.To-gt'2020.12.31'}).Count){throw 'Post-2020 data leaked into discovery.'}
+$initial=@(Get-ChildItem -LiteralPath (Resolve-RepoPath 'outputs') -Filter 'FOUR_LANE_M15_SQUEEZE_DIVERSIFIER_WORKER_*.csv'|ForEach-Object{Import-Csv $_.FullName})
+$recovery=@(Get-ChildItem -LiteralPath (Resolve-RepoPath 'outputs') -Filter 'FOUR_LANE_M15_SQUEEZE_DIVERSIFIER_RECOVERY_*.csv'|ForEach-Object{Import-Csv $_.FullName})
+$canonical=foreach($queued in $manifest){
+   $rr=@($recovery|Where-Object{$_.QueueRank-eq$queued.QueueRank-and$_.Status-eq'REPORT_FOUND'});$ir=@($initial|Where-Object{$_.QueueRank-eq$queued.QueueRank-and$_.Status-eq'REPORT_FOUND'})
+   $selected=if($rr.Count){$rr|Select-Object -Last 1}elseif($ir.Count){$ir|Select-Object -Last 1}else{$null}
+   if($null-eq$selected){throw "No identity-valid result for rank $($queued.QueueRank)."};if($selected.PackageSourceSha256-ne$queued.SourceSha256){throw "Source mismatch at rank $($queued.QueueRank)."}
+   $report=[string]$selected.ReportPath;if($report.StartsWith($repo+'\',[StringComparison]::OrdinalIgnoreCase)){$report=$report.Substring($repo.Length+1)}
+   [pscustomobject]@{Worker=$selected.Worker;QueueRank=$selected.QueueRank;Candidate=$selected.Candidate;Window=$selected.Window;Status=$selected.Status;ReportPath=$report;Evidence=$selected.Evidence;PackageConfigSha256=$selected.PackageConfigSha256;PackageSourceSha256=$selected.PackageSourceSha256;PortableBinarySha256=$selected.PortableBinarySha256;PortableExpertRecompiled=$selected.PortableExpertRecompiled;ReportSha256=$selected.ReportSha256;ReportIdentityPath=$selected.ReportIdentityPath;ReportIdentityReused=$selected.ReportIdentityReused;Started=$selected.Started;Finished=$selected.Finished}
+}
+$canonical|Sort-Object{[int]$_.QueueRank}|Export-Csv -LiteralPath (Resolve-RepoPath $RunPath) -NoTypeInformation -Encoding ASCII
+$parser=foreach($row in $manifest){[pscustomobject]@{Rank=$row.QueueRank;Priority=$row.QueueRank;Phase=$row.Phase;Profile=$row.Candidate;Set=$row.Role;Window=$row.Window;From=$row.From;To=$row.To;ExpectedReportName=$row.ExpectedReportName;Deposit=$row.Deposit}}
+$parser|Export-Csv -LiteralPath (Resolve-RepoPath $ParserManifestPath) -NoTypeInformation -Encoding ASCII
+& (Join-Path $PSScriptRoot 'collect_validation_results.ps1') -RepoRoot $repo -ManifestPath $ParserManifestPath -ReportDir $ReportDir -ReportNameTemplate '{ExpectedReportName}' -OutResults $RawResultsPath -OutSummary $SummaryPath -OutMarkdown $MarkdownPath|Out-Null
+$raw=@(Import-Csv -LiteralPath (Resolve-RepoPath $RawResultsPath));if($raw.Count-ne15){throw "Expected 15 parsed rows, found $($raw.Count)."}
+$results=foreach($row in $raw){$m=@($manifest|Where-Object QueueRank -eq $row.Rank);if($m.Count-ne1){throw "Manifest identity missing for rank $($row.Rank)."};$q=$m[0];[pscustomobject]@{QueueRank=$q.QueueRank;Candidate=$q.Candidate;CandidateRank=$q.CandidateRank;Role=$q.Role;Phase=$q.Phase;Window=$q.Window;From=$q.From;To=$q.To;Model=$q.Model;Deposit=$q.Deposit;FeatureEnabled=$q.FeatureEnabled;MaximumAccountPositions=$q.MaximumAccountPositions;SqueezeRiskPercent=$q.SqueezeRiskPercent;BreakoutLookbackBars=$q.BreakoutLookbackBars;TakeProfitR=$q.TakeProfitR;MaximumHoldBars=$q.MaximumHoldBars;Status=$row.Status;ReportPath=$row.ReportPath;ProfileSha256=$q.ProfileSha256;SourceSha256=$q.SourceSha256;InitialDeposit=$row.InitialDeposit;CalendarDays=$row.CalendarDays;Years=$row.Years;NetProfit=$row.NetProfit;Balance=$row.Balance;TotalReturnPercent=$row.TotalReturnPercent;AnnualizedReturnPercent=$row.AnnualizedReturnPercent;CagrPercent=$row.CagrPercent;ProfitFactor=$row.ProfitFactor;ExpectedPayoff=$row.ExpectedPayoff;SharpeRatio=$row.SharpeRatio;WinRatePercent=$row.WinRatePercent;TotalTrades=$row.TotalTrades;MaxConsecutiveLosses=$row.MaxConsecutiveLosses;MaxDrawdownMoney=$row.MaxDrawdownMoney;MaxDrawdownPercent=$row.MaxDrawdownPercent;RecoveryFactor=$row.RecoveryFactor}}
+if(@($results|Where-Object Status -ne 'PARSED').Count){throw 'Every report must parse.'};$results|Sort-Object{[int]$_.QueueRank}|Export-Csv -LiteralPath (Resolve-RepoPath $ResultsPath) -NoTypeInformation -Encoding ASCII
+[pscustomobject]@{Status='PARSED';Reports=$results.Count;Candidates=@($results.Candidate|Sort-Object -Unique).Count;SourceSha256=@($results.SourceSha256|Sort-Object -Unique)[0];LatestData=($results.To|Sort-Object -Descending|Select-Object -First 1)}

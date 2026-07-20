@@ -8,7 +8,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 |---|---|
 | Highest verified historical result | **Momentum Same-Side Exit Cooldown 60, provisional research leader.** Model 4 real ticks: `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **Portfolio-solo reversion allocation and stop geometry both rejected in pre-2021 discovery.** The fixed solo-cap center improved Model 1 net from `+$1,379.93` to `+$1,416.50`, but drawdown rose from `1.05%` to `1.17%` and recovery fell from `11.68` to `11.40`. The 3-bar stop changed net by only `+$0.10`. Holdout and Model 4 remained closed. **No new best.** |
+| Latest research result | **Fourth-lane M15 volatility-squeeze diversifier rejected in pre-2021 discovery.** Its fixed `0.10%` center improved Model 1 net from `+$1,379.93` to `+$1,575.70`, CAGR from `2.18%/yr` to `2.47%/yr`, recovery from `11.68` to `13.44`, and return/drawdown from `13.14` to `14.33`, with drawdown only `1.10%`. PF fell from `1.88` to `1.78`, below the frozen 98% retention gate; both risk neighbors failed the same requirement. Holdout and Model 4 remained closed. **No new best.** |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -47,6 +47,18 @@ All 12 annual Model 4 restarts were profitable and no worse than control; 2016, 
 This is a historical research promotion, not live approval. A second broker/specification and a valid frozen `$10,000` forward demo are still missing; the attached `$100,000` demo counts as zero evidence, and real-account trading remains disabled.
 
 [Read the Model 4 decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_DECISION.md), [annual decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_ANNUAL_MODEL4_DECISION.md), [stress decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_STRESS_DECISION.md), [risk audit](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_RISK_AUDIT.md), and [release package](release/three-lane-momentum-same-side-exit-cooldown-provisional/README.md).
+
+### Latest M15 Squeeze-Diversifier Research
+
+The default-off fourth-lane experiment completed on `2026-07-20` and was rejected in frozen 2015-2020 Model 1 discovery. It ports the independently nominated M15 Bollinger/Keltner squeeze breakout with H1 EMA trend alignment, structural ATR-bounded stop, `1.50R` target, break-even, and 32-bar time exit into the current three-lane leader. The lane runs last, owns one position and magic number, and remains subject to the unchanged `0.75%` broker-valued account-wide open-risk cap. No martingale, grid, averaging, recovery sizing, or real-account path was added.
+
+Static ownership and outcome-independence checks passed. MetaEditor compiled the exact source with zero errors and warnings to one EX5 identity across four workers. All `15/15` reports parsed with exact identity after one unchanged report-export recovery. The disabled four-position capacity control exactly reproduced the three-position leader control, proving that capacity alone changed no result.
+
+Control made `+$1,379.93`, `2.18%/yr` CAGR, PF `1.88`, 261 trades, `1.05%` drawdown, recovery `11.68`, and return/drawdown `13.14`. The fixed `0.10%` center made `+$1,575.70`, a `14.19%` net improvement, at `2.47%/yr` CAGR, 350 trades, `1.10%` drawdown, recovery `13.44`, and return/drawdown `14.33`. Both disjoint eras improved. However, PF fell to `1.78`, retaining only `94.68%` of control versus the frozen `98%` floor. The `0.075%` and `0.125%` neighbors retained only `95.21%` and `93.62%`, so support was `0/2`.
+
+The efficiency gate was not weakened after observing the higher headline profit. No post-2020 or Model 4 run was opened, the verified real-tick leader remains `+$2,492.25`, and the invalid `$100,000` demo still counts as zero forward evidence.
+
+[Read the squeeze rejection](outputs/FOUR_LANE_M15_SQUEEZE_DIVERSIFIER_DISCOVERY_DECISION.md), [frozen contract](outputs/FOUR_LANE_M15_SQUEEZE_DIVERSIFIER_DISCOVERY_CONTRACT.md), [exact Model 1 results](outputs/FOUR_LANE_M15_SQUEEZE_DIVERSIFIER_DISCOVERY_MODEL1_RESULTS.csv), [canonical run evidence](outputs/FOUR_LANE_M15_SQUEEZE_DIVERSIFIER_DISCOVERY_RUN_ATTESTATION.csv), and [research source](work/Professional_XAUUSD_Four_Lane_M15_Squeeze_Diversifier_Research.mq5).
 
 ### Latest Portfolio-Solo Reversion Allocation Research
 
