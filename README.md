@@ -8,7 +8,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 |---|---|
 | Highest verified historical result | **Strong-Signal Selective Reversion Lot Cap, provisional research leader.** Model 4 real ticks: `+$2,428.50`, `+24.28%`, `1.90%/yr` CAGR, PF `1.89`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **High-reward strong-signal lot cap rejected in sealed discovery.** Its RR-`2.50` center improved 2015-2020 Model 1 net by only `$26.94`, missed the frozen growth and CAGR gates, and received no support from the four-neighbor growth gate. No recent-data or Model 4 budget was spent. |
+| Latest research result | **Joint strong-signal risk and lot-cap allocation rejected in sealed discovery.** The risk-`0.65%` center reduced 2015-2020 Model 1 net by `$26.63`, weakened PF/recovery/return-to-drawdown, and had `0/4` passing neighbors. No recent-data or Model 4 budget was spent. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -35,6 +35,16 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 Against ATB150, the candidate adds `$323.42` (`+15.36%` more net profit), `+3.23` total-return points, and `+0.23` CAGR points per year. PF improves from `1.81` to `1.89`, recovery from `15.67` to `17.09`, and return/drawdown from `18.30` to `20.58`; drawdown rises only `0.03` point. These are historical measurements, not a forecast.
 
 ## Latest Research Update
+
+The joint strong-signal allocation experiment completed on `2026-07-20` and was rejected in sealed pre-2021 discovery. It reused the exact published leader source and combined the proven completed-H1 body-`0.25` / `0.15`-lot ceiling with requested reversion risk `0.65%`. Broker-valued sizing, minimum-lot refusal, post-fill reconciliation, and the unchanged `0.75%` account-wide open-risk cap remained authoritative; no entry, stop, target, exit, or live-account protection changed.
+
+All `21/21` Model 1 reports were accepted with exact source, EX5, config, report, and sidecar identity after two unchanged identity retries. The exact leader control made `+$1,353.74`, `2.14%/yr` CAGR, PF `1.85`, `1.06%` drawdown, recovery `11.4559`, and return/drawdown `12.7736` in continuous 2015-2020. The frozen risk-`0.65%` center made only `+$1,327.11`, `2.10%/yr` CAGR, PF `1.83`, recovery `11.2305`, and return/drawdown `12.5189`.
+
+Risk `0.60%`, `0.65%`, and `0.70%` collapsed to the same broker lot decisions and all lost `$26.63` versus control. The body-`0.225` neighbor reached `+$1,369.84`, but its `1.19%` gain missed the frozen `1.5%` neighbor floor and drawdown rose to `1.21%`; selecting it after observation would be threshold chasing. The family was rejected with `0/4` passing neighbors, so 2021-2026 and Model 4 remained unopened.
+
+[Read the joint-allocation rejection](outputs/THREE_LANE_REVERSION_JOINT_STRONG_ALLOCATION_DISCOVERY_DECISION.md), [the compact summary](outputs/THREE_LANE_REVERSION_JOINT_STRONG_ALLOCATION_DISCOVERY_SUMMARY.csv), and [the exact evidence ledger](outputs/THREE_LANE_REVERSION_JOINT_STRONG_ALLOCATION_DISCOVERY_EVIDENCE.csv).
+
+### Earlier High-Reward Lot-Cap Research
 
 The high-reward strong-signal lot-cap experiment completed on `2026-07-20` and was rejected in sealed pre-2021 discovery. The default-off code preserved the proven completed-H1 body-`0.25` / `0.15`-lot rule, then allowed a `0.20` ceiling only when the same entry's spread-adjusted reward/risk was at least `2.50`. Requested reversion risk stayed `0.45%`, account-wide open risk stayed capped at `0.75%`, and no entry, close, stop-modification, martingale, grid, averaging-down, or recovery-sizing path was added.
 

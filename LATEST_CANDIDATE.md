@@ -36,9 +36,9 @@ Updated: 2026-07-20
 
 ## Latest Completed Research
 
-The high-reward RR-`2.50` / cap-`0.20` extension was rejected in sealed 2015-2020 Model 1 discovery. It improved continuous net from `+$1,353.74` to `+$1,380.68` with unchanged `1.06%` drawdown, but failed the frozen growth and CAGR gates and had `0/4` passing growth neighbors. Recent-data and Model 4 testing were not opened, so the provisional leader above is unchanged.
+The joint strong-signal cap-`0.15` / risk-`0.65%` allocation was rejected in sealed 2015-2020 Model 1 discovery. It reduced continuous net from `+$1,353.74` to `+$1,327.11` and weakened PF, recovery, and return/drawdown, with `0/4` passing neighbors. Recent-data and Model 4 testing were not opened, so the provisional leader above is unchanged.
 
-- `outputs/THREE_LANE_REVERSION_HIGH_REWARD_LOT_CAP_DISCOVERY_DECISION.md`
+- `outputs/THREE_LANE_REVERSION_JOINT_STRONG_ALLOCATION_DISCOVERY_DECISION.md`
 
 ## Boundary
 
