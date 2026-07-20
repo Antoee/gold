@@ -1,0 +1,5 @@
+"Candidate","BollingerDeviation","OlderNetProfit","MiddleNetProfit","RecentNetProfit","LatestNetProfit","ContinuousNetProfit","CagrPercent","ProfitFactor","TotalTrades","ReversionTrades","ReversionNetProfit","MaxDrawdownPercent","RecoveryFactor","ReturnDrawdown","FrozenGate"
+"rvbd_control200","2","1036.19","370.6","629.61","434.36","2660.57","2.07","1.98","411","38","1698.53","1.15","18.9068","23.1391","CONTROL"
+"rvbd_neighbor190","1.9","757.22","207.54","766.2","407.76","2270.43","1.79","1.85","406","35","1409.71","1.33","14.3236","17.0677","False"
+"rvbd_center180","1.8","671.92","111.27","612.68","367.16","1915.92","1.53","1.68","407","39","1045.73","1.37","12.3385","13.9854","False"
+"rvbd_neighbor170","1.7","374.25","169.69","327.09","363.42","1260.43","1.04","1.44","400","37","535.78","1.8","6.4647","7","False"

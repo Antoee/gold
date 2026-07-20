@@ -8,7 +8,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 |---|---|
 | Highest verified historical result | **Momentum Same-Side Exit Cooldown 60, provisional research leader.** Model 4 real ticks: `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **Capital-efficiency risk ladder rejected in Model 1.** The `1.50x` center reached `+$3,145.43`, `2.40%/yr` CAGR, PF `1.69`, and `2.26%` drawdown versus control at `+$2,660.57`, `2.07%/yr`, PF `1.98`, and `1.15%` drawdown. Both adjacent profiles failed the frozen quality gate. It is not a new best. |
+| Latest research result | **Momentum partial runner rejected in discovery and post-2020 holdout.** The frozen interaction made `+$1,050.90` versus `+$1,046.44` control over 2021-2026, only `+$4.46` (`+0.43%`). It missed the frozen growth gate, so Model 4 remained closed. **No new best.** |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -47,6 +47,26 @@ All 12 annual Model 4 restarts were profitable and no worse than control; 2016, 
 This is a historical research promotion, not live approval. A second broker/specification and a valid frozen `$10,000` forward demo are still missing; the attached `$100,000` demo counts as zero evidence, and real-account trading remains disabled.
 
 [Read the Model 4 decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_DECISION.md), [annual decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_ANNUAL_MODEL4_DECISION.md), [stress decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_STRESS_DECISION.md), [risk audit](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_RISK_AUDIT.md), and [release package](release/three-lane-momentum-same-side-exit-cooldown-provisional/README.md).
+
+### Latest Momentum Partial-Runner Research
+
+The default-off momentum partial runner completed on `2026-07-20` and was rejected. Split-capable positions could bank a fixed portion at the existing `2R` target only after first protecting the remainder, then let that remainder pursue a farther target. Unsplittable `0.01`-lot positions kept the exact baseline exit. Restart-safe terminal state prevented duplicate partial closes, and consecutive-loss controls aggregated all scale-outs by position so an early profitable exit could not hide a losing remainder.
+
+Static ownership and state checks passed. MetaEditor compiled the exact source with zero errors and warnings to one EX5 identity across four workers. The disabled control exactly reproduced the prior 2015-2018 and 2019-2020 leader results. All `24/24` pre-2021 Model 1 reports were profitable and identity-valid after two unchanged identity recoveries; the partial path was active.
+
+The frozen `60%` close / `4R` target / `+1.25R` lock center reduced continuous 2015-2020 net from `+$1,379.93` to `+$1,373.21`. It missed the older-era floor and the recovery and return/drawdown floors. Only `2/6` fixed neighbors passed versus `4/6` required, so the discovery was rejected.
+
+A separately preregistered interaction combined the two positive training components, `70%` close and `5R` target, and tested only post-2020 windows. All `12/12` holdout reports were profitable and identity-valid after two unchanged recoveries. The interaction produced `+$1,050.90` versus `+$1,046.44` control over 2021-2026, a gain of only `$4.46` or `0.43%`; the `5R` component alone gained `0.73%`. Neither met the frozen growth threshold. No Model 4 run, promotion, or forward substitution was allowed.
+
+[Read the discovery rejection](outputs/THREE_LANE_MOMENTUM_PARTIAL_RUNNER_DISCOVERY_DECISION.md), [post-2020 holdout rejection](outputs/THREE_LANE_MOMENTUM_PARTIAL_RUNNER_INTERACTION_HOLDOUT_DECISION.md), [discovery summary](outputs/THREE_LANE_MOMENTUM_PARTIAL_RUNNER_DISCOVERY_SUMMARY.csv), [holdout summary](outputs/THREE_LANE_MOMENTUM_PARTIAL_RUNNER_INTERACTION_HOLDOUT_SUMMARY.csv), and [research source](work/Professional_XAUUSD_Three_Lane_Momentum_Partial_Runner_Research.mq5).
+
+### Latest Reversion Band-Expansion Research
+
+The one-factor reversion band-deviation expansion completed on `2026-07-20` and was rejected across four disjoint eras plus continuous 2015-2026 Model 1. All `20/20` reports were profitable and identity-valid after one unchanged recovery. Only `InpRVBollingerDeviation` changed from the exact leader.
+
+Lowering the band from `2.00` produced monotonic deterioration: continuous net fell from `+$2,660.57` control to `+$2,270.43` at `1.90`, `+$1,915.92` at the frozen `1.80` center, and `+$1,260.43` at `1.70`. Drawdown rose from `1.15%` to as high as `1.80%`. The looser thresholds entered earlier but displaced stronger later reversion trades; none passed the frozen gate. Model 4 remained closed and the verified leader is unchanged.
+
+[Read the band-expansion rejection](outputs/THREE_LANE_REVERSION_BAND_DEVIATION_EXPANSION_DISCOVERY_DECISION.md), [compact summary](outputs/THREE_LANE_REVERSION_BAND_DEVIATION_EXPANSION_DISCOVERY_SUMMARY.csv), [lane evidence](outputs/THREE_LANE_REVERSION_BAND_DEVIATION_EXPANSION_DISCOVERY_LANE_EVIDENCE.csv), and [displacement evidence](outputs/THREE_LANE_REVERSION_BAND_DEVIATION_EXPANSION_DISCOVERY_DISPLACEMENT_EVIDENCE.csv).
 
 ### Latest Capital-Efficiency Research
 

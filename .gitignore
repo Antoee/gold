@@ -12,6 +12,12 @@ outputs/offline_refresh_logs/
 outputs/money_ready_refresh_logs/
 outputs/*_package/
 outputs/*_WORKER_*.csv
+outputs/*_RECOVERY_[0-9]*.csv
+
+# Large reject-only ledgers are summarized by compact committed evidence.
+outputs/THREE_LANE_REVERSION_BAND_DEVIATION_EXPANSION_*_MODEL1_TRADES.csv
+outputs/THREE_LANE_REVERSION_BAND_DEVIATION_EXPANSION_*_MODEL1_SEGMENTS.csv
+outputs/THREE_LANE_REVERSION_BAND_DEVIATION_EXPANSION_*_MODEL1_SEGMENTS.md
 
 # Local reject-only probe evidence summarized in committed decision files.
 outputs/ADAPTIVE_TREND_BREAKOUT*
