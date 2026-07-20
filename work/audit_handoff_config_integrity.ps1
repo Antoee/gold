@@ -1,7 +1,8 @@
 param(
    [string]$ManifestPath = "outputs\next_test_handoff\HANDOFF_MANIFEST.csv",
    [string]$OutCsv = "outputs\HANDOFF_CONFIG_INTEGRITY.csv",
-   [string]$OutMarkdown = "outputs\HANDOFF_CONFIG_INTEGRITY.md"
+   [string]$OutMarkdown = "outputs\HANDOFF_CONFIG_INTEGRITY.md",
+   [string]$ZipPath = "outputs\next_test_handoff.zip"
 )
 
 Set-StrictMode -Version Latest
@@ -143,6 +144,9 @@ foreach($item in $manifest) {
       if($inputName -eq "InpMaxEquityDrawdownPercent") {
          $expected = if([string]$item.Profile -eq "baseline_promoted") { "0.00" } else { "4.00" }
       }
+      if($inputName -eq "InpUseDateBuyBlock2") {
+         $expected = if([string]$item.Profile -eq "buyblock2_dd4") { "true" } else { "false" }
+      }
       $exists = $null -ne $actual
       $matches = $exists -and (($null -eq $expected) -or ($actual -eq $expected))
       $expectedLabel = if($null -eq $expected) { "present" } else { $expected }
@@ -169,8 +173,7 @@ $rows | Sort-Object Rank | Export-Csv -LiteralPath $OutCsv -NoTypeInformation
 
 $failedRows = @($rows | Where-Object { -not $_.Passed })
 $passedCount = ($rows.Count - $failedRows.Count)
-$zipPath = "outputs\next_test_handoff.zip"
-$zipHash = if(Test-Path -LiteralPath $zipPath) { (Get-FileHash -LiteralPath $zipPath -Algorithm SHA256).Hash } else { "" }
+$zipHash = if(Test-Path -LiteralPath $ZipPath) { (Get-FileHash -LiteralPath $ZipPath -Algorithm SHA256).Hash } else { "" }
 
 $md = New-Object System.Collections.Generic.List[string]
 $md.Add("# Handoff Config Integrity") | Out-Null

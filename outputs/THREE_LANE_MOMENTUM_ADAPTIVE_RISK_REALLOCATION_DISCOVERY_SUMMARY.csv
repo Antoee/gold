@@ -1,0 +1,6 @@
+"Candidate","Role","MomentumRiskPercent","AdaptiveRiskPercent","OlderNetProfit","LaterNetProfit","ContinuousNetProfit","TotalReturnPercent","CagrPercent","ProfitFactor","TotalTrades","MaxDrawdownPercent","RecoveryFactor","ReturnDrawdown","BehaviorChanged","FrozenGate"
+"marr_control_015_015","control","0.15","0.15","1036.19","370.6","1379.93","13.8","2.18","1.88","261","1.05","11.6775","13.1429","False","CONTROL"
+"marr_016_014","lower_boundary","0.16","0.14","978.02","331.93","1348.66","13.49","2.13","1.82","256","1.15","11.112","11.7304","True","False"
+"marr_0175_0125","lower_support","0.175","0.125","1043.51","322.55","1314.27","13.14","2.08","1.75","246","1.26","9.2613","10.4286","True","False"
+"marr_019_011","upper_support","0.19","0.11","1074.79","270.3","1435.37","14.35","2.26","1.78","239","1.39","9.2557","10.3237","True","False"
+"marr_center_020_010","center","0.2","0.1","1123.1","313.36","1519.85","15.2","2.39","1.8","228","1.4","9.6849","10.8571","True","False"

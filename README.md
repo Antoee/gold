@@ -8,7 +8,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 |---|---|
 | Highest verified historical result | **Momentum Same-Side Exit Cooldown 60, provisional research leader.** Model 4 real ticks: `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **Momentum channel-width gate rejected in reserved telemetry validation.** The center projected `$19.85` less portfolio profit and zero of three thresholds passed; no code or MT5 rerun was allowed. |
+| Latest research result | **Momentum/adaptive risk reallocation rejected in broad discovery.** The center reached `+$1,519.85` and `2.39%/yr`, but weakened 2019-2020, PF, drawdown, recovery, activity, and every lower-rung support gate. It is not a new best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -47,6 +47,18 @@ All 12 annual Model 4 restarts were profitable and no worse than control; 2016, 
 This is a historical research promotion, not live approval. A second broker/specification and a valid frozen `$10,000` forward demo are still missing; the attached `$100,000` demo counts as zero evidence, and real-account trading remains disabled.
 
 [Read the Model 4 decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_DECISION.md), [annual decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_ANNUAL_MODEL4_DECISION.md), [stress decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_STRESS_DECISION.md), [risk audit](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_RISK_AUDIT.md), and [release package](release/three-lane-momentum-same-side-exit-cooldown-provisional/README.md).
+
+### Latest Risk-Allocation Research
+
+The settings-only momentum/adaptive risk-reallocation experiment completed on `2026-07-20` and was rejected in frozen pre-2021 discovery. The exact published leader source and same-side cooldown remained unchanged. Reversion risk stayed `0.45%`, and each row kept the declared lane-risk sum plus the broker-valued portfolio open-risk cap fixed at `0.75%`; only `0.01` to `0.05` percentage points moved from the adaptive lane to momentum.
+
+All `15/15` Model 1 reports passed exact source, EX5, config, report, and sidecar identity checks after three first-pass identity refusals were rerun unchanged. Control exactly reproduced `+$1,379.93`, `2.18%/yr` CAGR, PF `1.88`, 261 trades, `1.05%` drawdown, recovery `11.6775`, and return/drawdown `13.1429` over 2015-2020.
+
+The frozen `0.20%` momentum / `0.10%` adaptive center reached `+$1,519.85` and `2.39%/yr`, but 2019-2020 profit fell from `+$370.60` to `+$313.36`. PF fell to `1.80`, drawdown rose to `1.40%` against the frozen `1.25%` ceiling, recovery fell to `9.6849`, return/drawdown fell to `10.8571`, and trades fell to 228 against the required minimum 256.
+
+Zero of three lower allocations passed the complete support gate. The higher continuous net is therefore a rejected in-sample headline, not a new best. Newer data and Model 4 remained closed, and the verified real-tick leader remains the 60-minute same-side cooldown at `+$2,492.25`, `1.95%/yr` CAGR, PF `1.93`, and `1.18%` drawdown.
+
+[Read the risk-reallocation rejection](outputs/THREE_LANE_MOMENTUM_ADAPTIVE_RISK_REALLOCATION_DISCOVERY_DECISION.md), [frozen contract](outputs/THREE_LANE_MOMENTUM_ADAPTIVE_RISK_REALLOCATION_DISCOVERY_CONTRACT.md), [compact summary](outputs/THREE_LANE_MOMENTUM_ADAPTIVE_RISK_REALLOCATION_DISCOVERY_SUMMARY.csv), and [exact Model 1 results](outputs/THREE_LANE_MOMENTUM_ADAPTIVE_RISK_REALLOCATION_DISCOVERY_MODEL1_RESULTS.csv).
 
 ### Latest Momentum Market-Phase Research
 

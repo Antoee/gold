@@ -80,7 +80,11 @@ try {
       [pscustomobject]@{ Check = "fixture"; Passed = "True"; Status = "" }
    )
    Write-CsvRows $compilePath @(
-      [pscustomobject]@{ Status = "PASS"; Evidence = "0 compile errors, 0 warnings." }
+      [pscustomobject]@{
+         Status = "PASS"
+         Evidence = "0 compile errors, 0 warnings."
+         SourceHashStatus = "MATCH"
+      }
    )
    Write-CsvRows $externalPackagePath @(
       [pscustomobject]@{ Check = "fixture"; Passed = "True"; Status = "" }
@@ -128,7 +132,9 @@ try {
 
    $markdown = Get-Content -LiteralPath $outMd -Raw
    if($markdown -notmatch "The import pipeline is ready") {
-      throw "Expected ready-but-waiting bottom line was not written."
+      $blockingRows = @($rows | Where-Object { $_.Status -in @("FAIL", "STALE", "HAS_UNPARSED_REPORTS", "COMPILE_REQUIRED") })
+      $blockingSummary = ($blockingRows | ForEach-Object { "$($_.Area)=$($_.Status)" }) -join "; "
+      throw "Expected ready-but-waiting bottom line was not written. Blocking=$blockingSummary"
    }
 
    "REPORT_IMPORT_PREFLIGHT_SMOKE_PASS"

@@ -14,11 +14,14 @@ $source = Get-Content -LiteralPath $EaPath -Raw
 $requiredPatterns = @(
    'input double\s+InpMaxOpenRiskPercent\s*=\s*0\.00;',
    'input bool\s+InpBlockUnprotectedExposure\s*=\s*true;',
-   'double RiskMoneyForLots\(const double stopDistance, const double lots\)',
+   'double RiskMoneyForOrder\(const ENUM_ORDER_TYPE orderType,',
+   'if\(!OrderCalcProfit\(orderType,',
    'double PositionRiskMoney\(const ulong ticket, bool &unprotected\)',
    'double OpenRiskPercent\(bool &hasUnprotectedPosition\)',
-   'bool ExposureAllows\(const double stopDistance, const double lots, string &reason\)',
-   'riskManager\.ExposureAllows\(stopDistance, lots, exposureReason\)',
+   'bool ExposureAllows\(const ENUM_TRADE_BIAS bias,',
+   'double addedRiskMoney = RiskMoneyForOrder\(orderType, entryPrice, stopPrice, lots\);',
+   'if\(openRiskPercent \+ addedRiskPercent > maxOpenRiskPercent\)',
+   'riskManager\.ExposureAllows\(signal\.bias, entry, stopDistance, lots, exposureReason\)',
    'g_lastBlockReason = exposureReason;',
    'reason = "open risk limit";',
    'reason = "unprotected open exposure";'
@@ -30,10 +33,10 @@ foreach($pattern in $requiredPatterns) {
    }
 }
 
-$lotsIndex = $source.IndexOf('double lots = riskManager.LotsForRisk(stopDistance);')
-$exposureIndex = $source.IndexOf('riskManager.ExposureAllows(stopDistance, lots, exposureReason)')
-$buyIndex = $source.IndexOf('trade.Buy(lots, _Symbol, 0, sl, tp, signal.reasons)')
-$sellIndex = $source.IndexOf('trade.Sell(lots, _Symbol, 0, sl, tp, signal.reasons)')
+$lotsIndex = $source.IndexOf('double lots = riskManager.LotsForRisk(signal.bias, entry, stopDistance, riskMultiplier);')
+$exposureIndex = $source.IndexOf('riskManager.ExposureAllows(signal.bias, entry, stopDistance, lots, exposureReason)')
+$buyIndex = $source.IndexOf('trade.Buy(lots, _Symbol, 0, sl, tp, tradeComment)')
+$sellIndex = $source.IndexOf('trade.Sell(lots, _Symbol, 0, sl, tp, tradeComment)')
 
 if($lotsIndex -lt 0 -or $exposureIndex -lt 0 -or $buyIndex -lt 0 -or $sellIndex -lt 0) {
    throw "Could not locate lot sizing, exposure guard, or order placement in EA source."
