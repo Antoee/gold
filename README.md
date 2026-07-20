@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **Every-tick strong-reversion protection improved the 0.10R center to 1.15% drawdown, 17.1198 recovery, and 19.913 return/drawdown, but net fell to +$2,289.77 and 1.80% CAGR and the frozen growth/neighbor gates failed. A higher-lock ladder was materially worse. Model 4 did not open. No new best.** ATB150 remains the best. |
+| Latest research result | **Strong-reversion/ATB risk balancing found an isolated Model 1 high at +$2,445.32, +24.45% total, and 1.92% CAGR, but the 0.140% center and 0.135% lower neighbor both lost to control in 2015-2018. The narrow plateau failed, Model 4 did not open, and the threshold family is closed. No new best.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,16 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+The strong-reversion / adaptive-trend risk-balance experiment completed on `2026-07-19`. It changed no entry, stop, target, or exit rule: completed-H1 body ratio stayed at `0.25`, requested strong-reversion risk stayed at `0.70%`, the rejected tick-protection feature stayed disabled, and only adaptive-trend risk was varied. The audited source, exact EX5, `0.75%` account-wide open-risk cap, portfolio loss limits, and real-account lock remained unchanged.
+
+The broad contract tested adaptive-trend risk `0.13% / 0.14% / 0.15%` beside a disabled-feature control. All `16/16` Model 1 reports parsed from one exact source and binary after one unchanged identity retry. The `0.14%` center improved continuous net from `+$2,195.53` to `+$2,367.32`, total return from `21.96%` to `23.67%`, CAGR from `1.74%` to `1.86%`, PF from `1.83` to `1.90`, and recovery from `15.8168` to `16.3919`, with `1.21%` drawdown. It nevertheless fell below control in 2015-2018 (`+$846.12` versus `+$860.86`). The `0.13%` lower neighbor also failed its older-era, recovery, return/drawdown, and 400-trade requirements, so the broad neighborhood was rejected.
+
+A separately frozen narrow plateau then tested only `0.135% / 0.140% / 0.145%`. All `16/16` reports completed in `2m42s` with zero retries or errors. The `0.145%` upper neighbor was the strongest Model 1 row at `+$2,445.32`, `+24.45%` total, `1.92%` CAGR, PF `1.92`, 411 trades, `1.22%` drawdown, recovery `16.7110`, and return/drawdown `20.0410`; it beat control in every era. It is not promoted because the center again missed the older-era gate and the `0.135%` lower neighbor missed the older-era, drawdown, recovery, and return/drawdown gates. This is an isolated upper result rather than a stable plateau. Per the frozen contract, no Model 4 run or further adjacent ATB threshold search is allowed, ATB150 remains the historical champion, and the invalid forward registration remains unchanged.
+
+[Read the broad risk-balance rejection](outputs/THREE_LANE_REVERSION_STRONG_ATB_RISK_BALANCE_MODEL1_DECISION.md), [the narrow-plateau rejection](outputs/THREE_LANE_REVERSION_STRONG_ATB_RISK_BALANCE_PLATEAU_MODEL1_DECISION.md), and [the compact plateau results](outputs/THREE_LANE_REVERSION_STRONG_ATB_RISK_BALANCE_PLATEAU_MODEL1_SUMMARY.csv).
+
+### Earlier Tick-Protection Research
 
 The strong-reversion every-tick protection experiment and its separately frozen lock ladder completed on `2026-07-19`. The prior completed-H1 manager had been a proven no-op because strong trades often exited before the next H1 evaluation. The new default-off code moved only owned-position protection ahead of the new-bar guard, so it could evaluate executable bid/ask on every tick while entry eligibility remained completed-H1 only. It retained the body `0.25` / requested risk `0.70%` strong allocation, exact stored initial risk, initial stops, VWAP targets, both trend lanes, `0.75%` portfolio open-risk cap, portfolio loss limits, and real-account lock. Static and compiler audits confirmed zero new entry or close paths, exactly one tightening-only stop path, and zero warnings.
 
@@ -135,6 +145,7 @@ Continuous 2015-2026 figures use a sequential `$10,000` account path. V1 figures
 | Profile | Test model | Net | Total increase | CAGR | PF | Max DD | Recovery | Return/DD | Status |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | **ATB150** | Model 4 real ticks | **+$2,105.08** | **+21.05%** | **+1.67%/yr** | **1.81** | **1.15%** | **15.67** | **18.30** | **Current best** |
+| Strong reversion 0.70% / ATB 0.145% | Model 1 only | +$2,445.32 | +24.45% | +1.92%/yr | 1.92 | 1.22% | 16.7110 | 20.04 | Rejected before Model 4; narrow plateau failed |
 | Every-tick strong protection 1.00R / 0.10R | Model 1 only | +$2,289.77 | +22.90% | +1.80%/yr | 1.88 | 1.15% | 17.1198 | 19.91 | Rejected before Model 4; growth, retention, and neighbor gates failed |
 | Rejection quality body 0.25 / wick 25% / risk 0.70% | Model 1 only | +$2,321.32 | +23.21% | +1.83%/yr | 1.87 | 1.22% | 16.0734 | 19.02 | Rejected before Model 4; CAGR gate missed by 0.01 point |
 | Strong-reward quality RR 1.50 / risk 0.70% | Model 4 real ticks | +$2,236.41 | +22.36% | +1.77%/yr | 1.85 | 1.24% | 15.3347 | 18.03 | Rejected by frozen recovery, return/DD, and relative-DD gates |
