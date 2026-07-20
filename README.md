@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **A pre-2023 momentum ridge-quality score failed its frozen offline gate. The 25th-percentile center improved validation net by only 0.57% and misranked 2021-2022; the 30th-percentile neighbor also misranked that fold. The isolated 20th-percentile pass is not a stable plateau. No MQL code or 2023-2026 test opened. No new best.** ATB150 remains the best. |
+| Latest research result | **A new momentum breakout-failure exit failed its frozen pre-2021 gate. The 3-bar / 0.05-ATR center reduced net from +$1,191.69 to +$943.30, reduced CAGR from 1.89% to 1.51% per year, and raised drawdown from 1.02% to 1.31%. All four neighbors also underperformed. No 2021-2026 or Model 4 test opened. No new best.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,18 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+The momentum breakout-failure exit experiment completed on `2026-07-19`. This was a strategy-code change, not a risk increase or settings-only pass. The default-off feature stored each momentum entry's pre-break H1 channel and entry ATR, then closed only that exact owned position if one of the first completed H1 closes returned inside the channel by a frozen ATR buffer. Entries, initial stops, targets, requested risk, position limits, account protections, and the real-account lock remained unchanged. Static safety checks and compilation passed with zero errors or warnings.
+
+The contract froze a disabled control, a 3-bar / `0.05`-ATR center, 2-bar and 4-bar timing neighbors, and `0.00` / `0.10`-ATR buffer neighbors across 2015-2018, 2019-2020, and continuous 2015-2020. All `18/18` Model 1 reports parsed with exact source, EX5, config, and report identity. Two stale first-launch reports were refused and rerun unchanged, leaving 18 accepted reports from 20 attempts.
+
+On a `$10,000` restart, control earned `+$1,191.69`, or `+11.92%` total and `+1.89% per year`, at PF `1.77`, 265 trades, and `1.02%` maximum drawdown. The frozen center fell to `+$943.30`, or `+9.43%` total and `+1.51% per year`, at PF `1.74`, 261 trades, and `1.31%` drawdown. That is `-$248.39` (`-20.84%`) versus control. The best enabled neighbor, 2 bars / `0.05` ATR, reached only `+$1,003.40`, `+10.03%` total, and `+1.61% per year`, with worse `1.36%` drawdown. Every enabled profile cut recoverable momentum trades too early and earned less than control.
+
+The family was rejected without changing timing or buffer after observation. The 2021-2026 holdout and Model 4 remained unopened, ATB150 remains the historical champion, and the invalid forward registration remains unchanged.
+
+[Read the momentum breakout-failure rejection](outputs/THREE_LANE_MOMENTUM_BREAKOUT_FAILURE_EXIT_DISCOVERY_DECISION.md), [the compact results](outputs/THREE_LANE_MOMENTUM_BREAKOUT_FAILURE_EXIT_DISCOVERY_MODEL1_SUMMARY.csv), and [the exact run attestation](outputs/THREE_LANE_MOMENTUM_BREAKOUT_FAILURE_EXIT_DISCOVERY_MODEL1_RUN_ATTESTATION.csv).
+
+### Earlier Momentum Ridge-Quality Research
 
 The momentum ridge-quality screen completed on `2026-07-19`. It joined 246 pre-2023 momentum entries carrying 11 already-logged, date-independent price-action, trend, volatility, volume, and stop-geometry features to the exact ATB150 Model 4 trade ledger. Before scoring, the contract froze a standardized ridge model with penalty `25.0`, chronological train/test folds ending in 2018, 2020, and 2022, a center that retained scores above the training 25th percentile, and fixed 20th/30th-percentile neighbors. The score could only suppress an existing momentum entry; it could not add trades or alter risk, stops, targets, or exits.
 

@@ -1,0 +1,7 @@
+"Candidate","Role","Enabled","MaximumBars","BufferATR","OlderNetProfit","LaterNetProfit","ContinuousNetProfit","TotalReturnPercent","CagrPercent","ProfitFactor","TotalTrades","MaxDrawdownPercent","RecoveryFactor","ReturnDrawdown","BehaviorChanged"
+"mobfe_control","control","false","3","0.05","860.86","330.02","1191.69","11.92","1.89","1.77","265","1.02","10.5778","11.6863","False"
+"mobfe_bars2","lower_time","true","2","0.05","690.54","274.42","1003.4","10.03","1.61","1.77","261","1.36","7.0183","7.375","True"
+"mobfe_center","center","true","3","0.05","639.41","260.89","943.3","9.43","1.51","1.74","261","1.31","6.894","7.1985","True"
+"mobfe_bars4","upper_time","true","4","0.05","639.41","265.88","948.29","9.48","1.52","1.75","261","1.31","6.9304","7.2366","True"
+"mobfe_buffer000","lower_buffer","true","3","0","646.81","274.5","965.06","9.65","1.55","1.77","262","1.31","7.012","7.3664","True"
+"mobfe_buffer010","upper_buffer","true","3","0.1","686.04","264.55","989.03","9.89","1.58","1.77","261","1.4","6.7451","7.0643","True"
