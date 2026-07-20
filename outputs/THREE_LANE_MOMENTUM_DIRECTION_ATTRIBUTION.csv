@@ -1,0 +1,9 @@
+Lane,Side,Era,Trades,NetProfit,ProfitFactor,WinRatePercent,AverageR
+momentum,buy,2015-2018,71,314.43,1.893,45.1,0.307
+momentum,buy,2019-2022,78,75.51,1.151,37.2,0.030
+momentum,buy,2023-2026,56,106.10,1.274,48.2,0.215
+momentum,buy,all,205,496.04,1.400,42.9,0.176
+momentum,sell,2015-2018,65,146.59,1.412,47.7,0.143
+momentum,sell,2019-2022,35,-50.10,0.804,37.1,-0.110
+momentum,sell,2023-2026,9,71.24,2.341,55.6,0.508
+momentum,sell,all,109,167.73,1.252,45.0,0.092
