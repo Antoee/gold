@@ -1,0 +1,5 @@
+"Candidate","Role","Enabled","RewardQualityEnabled","StrongSignalMinimumBodyRatio","StrongSignalRiskPercent","MinimumAdjustedRiskReward","OlderNetProfit","MiddleNetProfit","RecentNetProfit","ContinuousNetProfit","TotalReturnPercent","CagrPercent","ProfitFactor","TotalTrades","MaxDrawdownPercent","RecoveryFactor","ReturnDrawdown","GatePass"
+"rvsrq_control","control","False","false","0.25","0.7","1.2","856.18","572.09","602.11","2105.08","21.05","1.67","1.81","404","1.15","15.6686","18.3043","True"
+"rvsrq_rr135","lower_neighbor","True","true","0.25","0.7","1.35","856.18","633.49","682.79","2284.81","22.85","1.8","1.87","404","1.23","15.6666","18.5772","False"
+"rvsrq_rr150","center","True","true","0.25","0.7","1.5","856.18","633.49","631.23","2236.41","22.36","1.77","1.85","404","1.24","15.3347","18.0323","False"
+"rvsrq_rr165","upper_neighbor","True","true","0.25","0.7","1.65","856.18","633.49","631.23","2236.41","22.36","1.77","1.85","404","1.24","15.3347","18.0323","False"
