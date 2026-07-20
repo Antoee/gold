@@ -8,7 +8,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 |---|---|
 | Highest verified historical result | **Strong-Signal Selective Reversion Lot Cap, provisional research leader.** Model 4 real ticks: `+$2,428.50`, `+24.28%`, `1.90%/yr` CAGR, PF `1.89`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **Joint strong-signal risk and lot-cap allocation rejected in sealed discovery.** The risk-`0.65%` center reduced 2015-2020 Model 1 net by `$26.63`, weakened PF/recovery/return-to-drawdown, and had `0/4` passing neighbors. No recent-data or Model 4 budget was spent. |
+| Latest research result | **Momentum-exit ablation rejected in sealed discovery.** Removing the H1 channel exit improved 2019-2020 by `$58.34` but lost `$122.64` in 2015-2018, reduced continuous net by `$51.01`, and weakened PF/recovery/return-to-drawdown. `0/7` alternatives passed the frozen architecture gate. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -35,6 +35,16 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 Against ATB150, the candidate adds `$323.42` (`+15.36%` more net profit), `+3.23` total-return points, and `+0.23` CAGR points per year. PF improves from `1.81` to `1.89`, recovery from `15.67` to `17.09`, and return/drawdown from `18.30` to `20.58`; drawdown rises only `0.03` point. These are historical measurements, not a forecast.
 
 ## Latest Research Update
+
+The momentum-exit ablation diagnostic completed on `2026-07-20` and was rejected in sealed pre-2021 discovery. It reused the exact published leader source and compared the existing H1 channel, D1 momentum-failure, and 120-H1-bar time exits in all meaningful enabled/disabled combinations. Entry rules, initial stops, targets, risk, sizing, account protections, and the real-account lock remained unchanged.
+
+All `24/24` Model 1 reports were accepted with exact source, EX5, config, report, and sidecar identity after three unchanged identity retries. The full control made `+$1,353.74`, `+13.54%` total, `2.14%/yr` CAGR, PF `1.85`, `1.06%` drawdown, recovery `11.4559`, and return/drawdown `12.7736` in continuous 2015-2020.
+
+The H1 channel exit was the only mechanism that changed behavior in this sample. Removing it improved 2019-2020 from `+$370.41` to `+$428.75`, but reduced 2015-2018 from `+$1,001.72` to `+$879.08` and continuous net to `+$1,302.73`. PF fell to `1.73`, drawdown rose to `1.24%`, recovery fell to `9.5368`, and return/drawdown fell to `10.5081`. The momentum-failure and time exits were inactive whenever the channel exit remained enabled. No alternative was no worse in both disjoint eras, so the frozen gate returned `0` passing ablations and no code follow-up, recent-data run, or Model 4 run was opened.
+
+[Read the momentum-exit rejection](outputs/THREE_LANE_MOMENTUM_EXIT_ABLATION_DIAGNOSTIC_DECISION.md), [the compact summary](outputs/THREE_LANE_MOMENTUM_EXIT_ABLATION_DIAGNOSTIC_SUMMARY.csv), and [the exact evidence ledger](outputs/THREE_LANE_MOMENTUM_EXIT_ABLATION_DIAGNOSTIC_EVIDENCE.csv).
+
+### Earlier Joint Strong-Signal Allocation Research
 
 The joint strong-signal allocation experiment completed on `2026-07-20` and was rejected in sealed pre-2021 discovery. It reused the exact published leader source and combined the proven completed-H1 body-`0.25` / `0.15`-lot ceiling with requested reversion risk `0.65%`. Broker-valued sizing, minimum-lot refusal, post-fill reconciliation, and the unchanged `0.75%` account-wide open-risk cap remained authoritative; no entry, stop, target, exit, or live-account protection changed.
 

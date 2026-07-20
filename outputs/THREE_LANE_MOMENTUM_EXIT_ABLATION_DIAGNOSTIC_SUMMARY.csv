@@ -1,0 +1,9 @@
+Candidate,Role,ChannelExit,MomentumFailureExit,MaximumHoldBars,OlderNetProfit,LaterNetProfit,ContinuousNetProfit,TotalReturnPercent,CagrPercent,ProfitFactor,TotalTrades,MaxDrawdownPercent,RecoveryFactor,ReturnDrawdown,BehaviorChangedVsControl,NoWorseBothDisjointEras,ArchitectureGate
+mea_control,control,true,true,120,1001.72,370.41,1353.74,13.54,2.14,1.85,265,1.06,11.4559,12.7736,False,True,False
+mea_no_channel,single_ablation,false,true,120,879.08,428.75,1302.73,13.03,2.06,1.73,265,1.24,9.5368,10.5081,True,False,False
+mea_no_momentum,single_ablation,true,false,120,1001.72,370.41,1353.74,13.54,2.14,1.85,265,1.06,11.4559,12.7736,False,True,False
+mea_no_time,single_ablation,true,true,0,1001.72,370.41,1353.74,13.54,2.14,1.85,265,1.06,11.4559,12.7736,False,True,False
+mea_channel_only,isolated_exit,true,false,0,1001.72,370.41,1353.74,13.54,2.14,1.85,265,1.06,11.4559,12.7736,False,True,False
+mea_momentum_only,isolated_exit,false,true,0,879.08,428.75,1302.73,13.03,2.06,1.73,265,1.24,9.5368,10.5081,True,False,False
+mea_time_only,isolated_exit,false,false,120,879.08,428.75,1302.73,13.03,2.06,1.73,265,1.24,9.5368,10.5081,True,False,False
+mea_fixed_only,fixed_stop_target_only,false,false,0,879.08,428.75,1302.73,13.03,2.06,1.73,265,1.24,9.5368,10.5081,True,False,False
