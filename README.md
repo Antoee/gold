@@ -8,7 +8,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 |---|---|
 | Highest verified historical result | **Momentum Same-Side Exit Cooldown 60, provisional research leader.** Model 4 real ticks: `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **D1 extreme-momentum guard rejected as a near-miss in pre-2021 discovery.** The best bot remains the 60-minute same-side cooldown leader; recent data and Model 4 were not opened. |
+| Latest research result | **Momentum feature telemetry candidate rejected in reserved 2019-2020 validation.** The best bot remains the 60-minute same-side cooldown leader; no candidate code or post-2020 test was opened. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -48,7 +48,17 @@ This is a historical research promotion, not live approval. A second broker/spec
 
 [Read the Model 4 decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_DECISION.md), [annual decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_ANNUAL_MODEL4_DECISION.md), [stress decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_STRESS_DECISION.md), [risk audit](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_RISK_AUDIT.md), and [release package](release/three-lane-momentum-same-side-exit-cooldown-provisional/README.md).
 
-### Latest D1 Extreme-Guard Research
+### Latest Momentum Telemetry Research
+
+A behavior-neutral telemetry pass completed on `2026-07-20`. The fork added no strategy input or trade path and recorded only completed-bar D1 return, breakout geometry, candle structure, ATR, channel width, tick-volume ratio, and actual stop/ATR after an existing momentum fill. It exactly reproduced the leader's pre-2021 Model 1 control at `+$1,379.93`, `+13.80%` total, `2.18%/yr` CAGR, PF `1.88`, 261 portfolio trades, and `1.05%` drawdown.
+
+Training on 133 momentum trades from 2015-2018 nominated a new channel-normalized breakout-penetration feature. Minimum ratios of `0.015`, `0.020`, and `0.025` all improved training momentum net and PF and removed net losers independently in both training halves. The `0.020` center increased training momentum net from `+$478.60` to `+$531.97` and PF from `1.66` to `1.97`.
+
+The frozen pattern failed on the 61 reserved 2019-2020 momentum trades. The center reduced validation net from `+$147.65` to `+$73.06`, PF from `1.3858` to `1.1985`, and projected full-period portfolio net from `+$1,379.93` to `+$1,358.71`. Both neighbors also reduced validation and full-period net because they removed large 2020 winners. Support was `0/3` versus `2/3` required. No filter code was implemented, thresholds were not moved, and post-2020 data remained unopened.
+
+[Read the telemetry rejection](outputs/THREE_LANE_MOMENTUM_FEATURE_TELEMETRY_DECISION.md), [frozen nomination contract](outputs/THREE_LANE_MOMENTUM_FEATURE_TELEMETRY_NOMINATION.md), [reserved validation](outputs/THREE_LANE_MOMENTUM_FEATURE_TELEMETRY_VALIDATION.csv), [exact trade-feature ledger](outputs/THREE_LANE_MOMENTUM_FEATURE_TELEMETRY_TRADES.csv), and [run attestation](outputs/THREE_LANE_MOMENTUM_FEATURE_TELEMETRY_RUN_ATTESTATION.csv).
+
+### Earlier D1 Extreme-Guard Research
 
 The D1 extreme-momentum guard completed on `2026-07-20` and was rejected as a frozen near-miss. The default-off code tested maximum absolute 126-bar D1 close returns of `12%`, `18%`, `24%`, and `30%` before the momentum lane could accept its existing fresh H1 breakout. It added no entry, close, or stop-modification path; risk, targets, the `0.75%` account-wide exposure cap, and the real-account lock stayed unchanged.
 

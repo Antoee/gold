@@ -1,0 +1,5 @@
+Threshold,Role,ValidationTrades,ValidationNetProfit,ValidationProfitFactor,Removed2019Net,Removed2020Net,FullPeriodMomentumImprovement,ProjectedPortfolioNetProfit,FrozenGate
+0,control,61,147.65,1.3858,0.00,0.00,0.00,1379.93,CONTROL
+0.015,lower_neighbor,56,63.09,1.1669,-3.55,88.11,-24.11,1355.82,FAIL
+0.020,center,54,73.06,1.1985,-4.96,79.55,-21.22,1358.71,FAIL
+0.025,upper_neighbor,50,111.76,1.3394,-21.62,57.51,-9.83,1370.10,FAIL
