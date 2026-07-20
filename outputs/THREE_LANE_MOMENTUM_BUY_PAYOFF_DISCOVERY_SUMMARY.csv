@@ -1,0 +1,6 @@
+"Candidate","Role","BuyTakeProfitEnabled","MomentumBuyTakeProfitR","OlderNetProfit","LaterNetProfit","ContinuousNetProfit","TotalReturnPercent","CagrPercent","ProfitFactor","TotalTrades","MaxDrawdownPercent","RecoveryFactor","ReturnDrawdown","BehaviorChanged","FrozenGate"
+"mbp_control","control","false","2","1001.72","370.41","1353.74","13.54","2.14","1.85","265","1.06","11.4559","12.7736","False","CONTROL"
+"mbp_buy225","lower_support","true","2.25","1034.03","405.45","1406.57","14.07","2.22","1.89","262","1.15","10.9367","12.2348","True","False"
+"mbp_center_buy250","center","true","2.5","1061.03","396.16","1412.34","14.12","2.23","1.9","261","1.1","11.4927","12.8364","True","False"
+"mbp_buy275","upper_support","true","2.75","1031.98","410.27","1397.89","13.98","2.21","1.9","261","1.19","10.5168","11.7479","True","False"
+"mbp_buy300","upper_boundary","true","3","1052.4","449.14","1449.25","14.49","2.28","1.92","261","1.16","11.0833","12.4914","True","False"

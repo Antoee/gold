@@ -8,7 +8,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 |---|---|
 | Highest verified historical result | **Strong-Signal Selective Reversion Lot Cap, provisional research leader.** Model 4 real ticks: `+$2,428.50`, `+24.28%`, `1.90%/yr` CAGR, PF `1.89`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **Momentum-buy residual risk rejected in discovery.** The `0.20%` center raised pre-2021 net by `$170.65`, but drawdown rose from `1.06%` to `1.30%`, PF and recovery weakened, trade count changed, and `0/4` lower rungs passed the full frozen gate. No post-2020 or Model 4 budget was spent. |
+| Latest research result | **Momentum-buy payoff rejected in discovery.** The `2.50R` center improved net, PF, drawdown-adjusted efficiency, and recovery, but returned 261 trades versus the frozen minimum 263 and had `0/3` passing neighbors. No post-2020 or Model 4 budget was spent. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -35,6 +35,18 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 Against ATB150, the candidate adds `$323.42` (`+15.36%` more net profit), `+3.23` total-return points, and `+0.23` CAGR points per year. PF improves from `1.81` to `1.89`, recovery from `15.67` to `17.09`, and return/drawdown from `18.30` to `20.58`; drawdown rises only `0.03` point. These are historical measurements, not a forecast.
 
 ## Latest Research Update
+
+The momentum-buy payoff experiment completed on `2026-07-20` and was rejected in frozen pre-2021 discovery. Exact leader attribution showed that momentum buys had better PF than sells, remained profitable in all three Model 4 eras, and earned `+$1,618.27` from 58 direct `2R` target exits. The default-off code therefore widened only the initial target of otherwise-valid momentum buys. Sells stayed at `2R`; all entries, stops, requested risk, sizing, exit management, portfolio guards, and real-account protections remained unchanged.
+
+The exact source passed its direction-only, outcome-independence, default-off, and unchanged-trade-path audit. MetaEditor compiled it with zero errors and warnings to one EX5 identity. All `15/15` Model 1 reports were accepted with exact source, EX5, config, report, and sidecar identity after one report-export identity refusal was rerun unchanged.
+
+Control made `+$1,353.74`, `2.14%/yr` CAGR, PF `1.85`, 265 trades, `1.06%` drawdown, recovery `11.4559`, and return/drawdown `12.7736`. The frozen buy-`2.50R` center improved to `+$1,412.34`, `2.23%/yr`, PF `1.90`, `1.10%` drawdown, recovery `11.4927`, and return/drawdown `12.8364`. It passed every frozen growth, broad-era, efficiency, and drawdown gate.
+
+The center nevertheless produced 261 trades versus the preregistered minimum 263, so it failed the trade-retention gate. None of the three non-center neighbors passed the complete support gate: `2.25R` weakened recovery and exceeded the drawdown ceiling, while `2.75R` and `3.00R` also lost too many trades and missed risk-efficiency support. The gate was not relaxed after observation, so 2021-2026 and Model 4 remained closed. This is a useful near-miss, not a new best.
+
+[Read the buy-payoff rejection](outputs/THREE_LANE_MOMENTUM_BUY_PAYOFF_DISCOVERY_DECISION.md), [the frozen contract](outputs/THREE_LANE_MOMENTUM_BUY_PAYOFF_DISCOVERY_CONTRACT.md), [the compact summary](outputs/THREE_LANE_MOMENTUM_BUY_PAYOFF_DISCOVERY_SUMMARY.csv), and [the exact report ledger](outputs/THREE_LANE_MOMENTUM_BUY_PAYOFF_DISCOVERY_MODEL1_RESULTS.csv).
+
+### Earlier Residual-Risk Research
 
 The momentum-buy residual-risk experiment completed on `2026-07-20` and was rejected in frozen pre-2021 discovery. Exact Model 4 leader attribution had shown that 205 momentum buys made `+$496.04` at PF `1.40` and were profitable in all three broad eras, so the code tested whether already-base-eligible buys could use a small amount of unused portfolio capacity. Momentum sells stayed at `0.15%`, the original `0.15%` buy lot had to exist before residual sizing, and the broker-valued account-wide open-risk cap remained `0.75%`. No entry, stop, target, exit, martingale, grid, averaging, recovery-sizing, or live-account path was added.
 
