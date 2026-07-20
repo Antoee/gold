@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **A new momentum breakout-failure exit failed its frozen pre-2021 gate. The 3-bar / 0.05-ATR center reduced net from +$1,191.69 to +$943.30, reduced CAGR from 1.89% to 1.51% per year, and raised drawdown from 1.02% to 1.31%. All four neighbors also underperformed. No 2021-2026 or Model 4 test opened. No new best.** ATB150 remains the best. |
+| Latest research result | **A new high-water risk throttle was inactive in sealed pre-2021 discovery. Champion control, unconditional body-0.25 / 0.70% strong risk, and all three 0.15% / 0.30% / 0.45% drawdown thresholds returned exactly +$1,191.69, +11.92% total, and 1.89% per year with identical risk metrics. No 2021-2026 or Model 4 test opened. No new best.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,18 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+The strong-reversion high-water risk-throttle experiment completed on `2026-07-19`. It targeted the closest prior real-tick near-pass: completed-H1 body ratio `0.25` / requested reversion risk `0.70%` had raised historical Model 4 CAGR from `1.67%` to `1.80%` but missed the frozen recovery gate by `0.0020`. The new default-off code allowed that extra risk only while current equity remained within a fixed percentage of the portfolio's existing high-water mark; otherwise it fell back to the champion's `0.45%` base reversion risk. It could only reduce risk during drawdown and added no entry, exit, stop-modification, lot-cap, martingale, or recovery-sizing path.
+
+The contract froze champion control, an unconditional body-`0.25` / `0.70%` reference, a `0.30%` drawdown center, and `0.15%` / `0.45%` threshold neighbors across 2015-2018, 2019-2020, and continuous 2015-2020. All `15/15` Model 1 reports parsed with exact source, EX5, config, and report identity. One stale first-launch report was refused and rerun unchanged, leaving 15 accepted reports from 16 attempts. Static safety and compilation passed with zero errors or warnings.
+
+Every profile produced exactly the same result on a `$10,000` restart: `+$1,191.69`, `+11.92%` total, `+1.89% per year`, PF `1.77`, 265 trades, `1.02%` maximum drawdown, recovery `10.5778`, and return/drawdown `11.6863`. Even the unconditional higher-risk reference was inactive in these sealed eras. The differing requested-risk settings therefore did not change an executable trade, consistent with the existing broker lot step and reversion lot cap; this is an inference from the identical complete metrics, not a claim of a profitable throttle effect.
+
+An inactive mechanism cannot establish growth, incremental-net retention, or neighbor support. The family was rejected without moving its threshold or opening 2021-2026 and Model 4. ATB150 remains the historical champion, and the invalid forward registration remains unchanged.
+
+[Read the high-water risk rejection](outputs/THREE_LANE_REVERSION_STRONG_SIGNAL_HIGH_WATER_RISK_DISCOVERY_DECISION.md), [the compact results](outputs/THREE_LANE_REVERSION_STRONG_SIGNAL_HIGH_WATER_RISK_DISCOVERY_MODEL1_SUMMARY.csv), and [the exact run attestation](outputs/THREE_LANE_REVERSION_STRONG_SIGNAL_HIGH_WATER_RISK_DISCOVERY_MODEL1_RUN_ATTESTATION.csv).
+
+### Earlier Momentum Breakout-Failure Research
 
 The momentum breakout-failure exit experiment completed on `2026-07-19`. This was a strategy-code change, not a risk increase or settings-only pass. The default-off feature stored each momentum entry's pre-break H1 channel and entry ATR, then closed only that exact owned position if one of the first completed H1 closes returned inside the channel by a frozen ATR buffer. Entries, initial stops, targets, requested risk, position limits, account protections, and the real-account lock remained unchanged. Static safety checks and compilation passed with zero errors or warnings.
 

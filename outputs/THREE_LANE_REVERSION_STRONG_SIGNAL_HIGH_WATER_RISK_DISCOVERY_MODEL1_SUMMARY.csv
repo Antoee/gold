@@ -1,0 +1,6 @@
+"Candidate","Role","StrongSignalRiskEnabled","DrawdownThrottleEnabled","FullRiskMaximumDrawdownPercent","OlderNetProfit","LaterNetProfit","ContinuousNetProfit","TotalReturnPercent","CagrPercent","ProfitFactor","TotalTrades","MaxDrawdownPercent","RecoveryFactor","ReturnDrawdown","BehaviorChangedVsControl"
+"rvhwr_control","control","false","false","0.3","860.86","330.02","1191.69","11.92","1.89","1.77","265","1.02","10.5778","11.6863","False"
+"rvhwr_unconditional","unconditional_reference","true","false","0.3","860.86","330.02","1191.69","11.92","1.89","1.77","265","1.02","10.5778","11.6863","False"
+"rvhwr_dd015","lower_threshold","true","true","0.15","860.86","330.02","1191.69","11.92","1.89","1.77","265","1.02","10.5778","11.6863","False"
+"rvhwr_center_dd030","center","true","true","0.3","860.86","330.02","1191.69","11.92","1.89","1.77","265","1.02","10.5778","11.6863","False"
+"rvhwr_dd045","upper_threshold","true","true","0.45","860.86","330.02","1191.69","11.92","1.89","1.77","265","1.02","10.5778","11.6863","False"
