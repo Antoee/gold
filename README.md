@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **The completed-H1 rejection-wick allocation stayed profitable in every broad era, but its 25% center produced +$2,321.32, +23.21% total, and 1.83% CAGR on Model 1, missing the frozen +0.10-point CAGR-improvement gate by 0.01 point. Model 4 did not open. No new best.** ATB150 remains the best. |
+| Latest research result | **The strong-reversion protection code completed 20/20 Model 1 reports, but all three completed-H1 stop-lock profiles were exact behavioral no-ops versus strong-only: +$2,391.89, +23.92% total, 1.88% CAGR, PF 1.89, and 1.21% drawdown. Model 4 did not open. No new best.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,14 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+The strong-reversion protection experiment completed on `2026-07-19`. It kept the already-studied completed-H1 body `0.25` / requested risk `0.70%` allocation and added one optional exact-ticket stop-modification path. Only a qualifying strong reversion position could register its initial risk, and its stop could only tighten after frozen favorable movement; entries, initial stops, VWAP targets, closes, both trend lanes, the `0.75%` open-risk cap, portfolio loss limits, and real-account lock remained unchanged. The source audit proved zero new entry or close paths and exactly one tightening-only modify path.
+
+The contract froze disabled control, strong-only control, and protection rows `1.00R / 0.05R`, `1.00R / 0.10R`, and `1.25R / 0.10R` before testing. All `20/20` Model 1 reports parsed on one exact source and EX5 identity after two identity-only refusals were rerun unchanged and accepted. Strong-only returned `+$2,391.89`, `+23.92%` total, `1.88%` CAGR, PF `1.89`, 415 trades, `1.21%` drawdown, recovery `16.5620`, and return/drawdown `19.7686`.
+
+Every protected row produced exactly the same trading metrics in every window. Report files had different hashes because MT5 embeds different input settings, but entry count, net, PF, win rate, drawdown, recovery, and consecutive-loss metrics were unchanged. The formal effect detector therefore returned `False`: at completed-H1 resolution, none of the frozen stop-lock rules changed a qualifying trade before its normal exit. An identical result is not treated as validation. Model 4 did not open, no trigger was lowered after observation, ATB150 remains the historical champion, and the invalid forward registration remains unchanged.
+
+[Read the strong-signal protection rejection](outputs/THREE_LANE_REVERSION_STRONG_SIGNAL_PROTECTION_MODEL1_DECISION.md), [the compact results](outputs/THREE_LANE_REVERSION_STRONG_SIGNAL_PROTECTION_MODEL1_SUMMARY.csv), and [the exact run attestation](outputs/THREE_LANE_REVERSION_STRONG_SIGNAL_PROTECTION_MODEL1_RUN_ATTESTATION.csv).
 
 The completed-H1 rejection-wick allocation experiment completed on `2026-07-19`. Exact ATB150 trade-ledger attribution showed why reversion deserved the next distinct code test: its 38 trades made `+$1,366.48` at PF `3.94`, with positive net in 2015-2018, 2019-2022, and 2023-2026, while the two trend lanes were much less efficient. The new default-off allocator could request `0.70%` reversion risk only when an already-valid completed-H1 reversal met both the frozen `0.25` directional-body ratio and a directional rejection-wick threshold. It changed no entry, stop, target, close, or modify path and preserved all portfolio limits and the real-account lock.
 

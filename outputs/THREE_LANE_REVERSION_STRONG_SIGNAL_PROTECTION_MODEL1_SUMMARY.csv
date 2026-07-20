@@ -1,0 +1,6 @@
+"Candidate","Role","StrongSignalRiskEnabled","ProtectionEnabled","StrongSignalMinimumBodyRatio","StrongSignalRiskPercent","ProtectionTriggerR","ProtectionLockR","OlderNetProfit","MiddleNetProfit","RecentNetProfit","ContinuousNetProfit","TotalReturnPercent","CagrPercent","ProfitFactor","TotalTrades","MaxDrawdownPercent","RecoveryFactor","ReturnDrawdown","GatePass"
+"rvssp_control","control","false","false","0.25","0.7","1","0.1","860.86","694.54","601.99","2195.53","21.96","1.74","1.83","415","1.17","15.8168","18.7692","True"
+"rvssp_strong_only","strong_control","true","false","0.25","0.7","1","0.1","860.86","752.95","682.6","2391.89","23.92","1.88","1.89","415","1.21","16.562","19.7686","True"
+"rvssp_lock005","lower_neighbor","true","true","0.25","0.7","1","0.05","860.86","752.95","682.6","2391.89","23.92","1.88","1.89","415","1.21","16.562","19.7686","True"
+"rvssp_center","center","true","true","0.25","0.7","1","0.1","860.86","752.95","682.6","2391.89","23.92","1.88","1.89","415","1.21","16.562","19.7686","False"
+"rvssp_trigger125","upper_neighbor","true","true","0.25","0.7","1.25","0.1","860.86","752.95","682.6","2391.89","23.92","1.88","1.89","415","1.21","16.562","19.7686","True"
