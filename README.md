@@ -8,7 +8,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 |---|---|
 | Highest verified historical result | **Momentum Same-Side Exit Cooldown 60, provisional research leader.** Model 4 real ticks: `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **Reversion retracement-entry engine rejected in pre-2021 discovery.** The disabled fork exactly reproduced the current leader control at `+$1,379.93`, `2.18%/yr` CAGR, PF `1.88`, 261 trades, and `1.05%` drawdown. Waiting for the frozen `0.15 ATR` adverse retracement reduced net to `+$1,067.56`, `1.71%/yr` CAGR, PF `1.75`, and 252 trades. Both offset neighbors failed, so post-2020 and Model 4 remained closed. **No new best.** |
+| Latest research result | **M15 squeeze 2.25R target rejected in one-shot post-2020 feature holdout.** It improved continuous Model 1 net from `+$1,046.44` to `+$1,131.75` (`+8.15%`), but trailed control in 2024-2026, reduced PF from `2.08` to `1.76`, and raised drawdown from `1.21%` to `1.51%`. Neither fixed sensitivity row passed, so Model 4 remained closed. **No new best.** |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -47,6 +47,18 @@ All 12 annual Model 4 restarts were profitable and no worse than control; 2016, 
 This is a historical research promotion, not live approval. A second broker/specification and a valid frozen `$10,000` forward demo are still missing; the attached `$100,000` demo counts as zero evidence, and real-account trading remains disabled.
 
 [Read the Model 4 decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_DECISION.md), [annual decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_ANNUAL_MODEL4_DECISION.md), [stress decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_STRESS_DECISION.md), [risk audit](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_RISK_AUDIT.md), and [release package](release/three-lane-momentum-same-side-exit-cooldown-provisional/README.md).
+
+### Latest M15 Squeeze 2.25R Feature Holdout
+
+The M15 squeeze `2.25R` target completed a one-shot feature-specific post-2020 holdout on `2026-07-20` and was rejected. The target was nominated only from the prior 2015-2020 training matrix, where it had improved exact-control net from `+$1,379.93` to `+$1,753.53` while retaining PF `1.87` versus `1.88`. Before opening recent outcomes, the holdout fixed the `2.25R` center, `2.00R` and `2.50R` sensitivity rows, two disabled controls, and the existing `1.50R` enabled reference.
+
+The unchanged source compiled with zero errors and warnings to one current EX5 identity across four workers. All `18/18` Model 1 reports parsed after one preserved source-identity refusal and one unchanged single-worker recovery. The exact three-position and disabled four-position controls reproduced identically in 2021-2023, 2024-2026, and continuous 2021-2026.
+
+The center improved continuous net from `+$1,046.44` to `+$1,131.75`, an `8.15%` gain, and beat the enabled `1.50R` reference by `4.12%`. It failed the frozen transfer gate: 2024-2026 net fell from `+$434.36` to `+$418.67`, continuous CAGR improved only `0.14` point versus `0.15` required, PF fell from `2.08` to `1.76`, and drawdown rose from `1.21%` to `1.51%` versus the paired `1.41%` limit. The `2.50R` sensitivity row improved both eras and continuous net by `6.26%`, but also failed PF, recovery, return/drawdown, and drawdown requirements. Sensitivity support was `0/2`.
+
+The target was not moved after the holdout. No Model 4 run was opened, and the verified real-tick leader remains `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, and `1.18%` drawdown. The frozen forward candidate remains unchanged; the attached `$100,000` demo counts as zero evidence and real-account trading remains disabled.
+
+[Read the holdout rejection](outputs/FOUR_LANE_M15_SQUEEZE_225R_FEATURE_HOLDOUT_DECISION.md), [frozen contract](outputs/FOUR_LANE_M15_SQUEEZE_225R_FEATURE_HOLDOUT_CONTRACT.md), [exact Model 1 results](outputs/FOUR_LANE_M15_SQUEEZE_225R_FEATURE_HOLDOUT_MODEL1_RESULTS.csv), and [canonical run evidence](outputs/FOUR_LANE_M15_SQUEEZE_225R_FEATURE_HOLDOUT_RUN_ATTESTATION.csv).
 
 ### Latest Reversion Retracement-Entry Research
 
