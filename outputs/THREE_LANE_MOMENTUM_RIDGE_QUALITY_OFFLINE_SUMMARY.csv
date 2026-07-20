@@ -1,0 +1,4 @@
+Profile,Quantile,ControlNetProfit,CandidateNetProfit,NetImprovementPercent,ControlProfitFactor,CandidateProfitFactor,CandidateTrades,RemovedMomentumTrades,MinimumFoldRetentionPercent,FoldNetGate,FoldPositiveGate,AnnualPositiveGate,RankingGate,GrowthGate,ProfitFactorGate,WeakYearGate,ProfileGate,Net2017,Net2018,Net2019,Net2020,Net2021,Net2022
+ridge_q20,0.2,1050.31,1109.54,5.6393,1.6487,1.8003,221,34,70.3704,True,True,True,True,True,True,True,True,162.86,271.0,100.68,167.65,331.51,75.84
+ridge_q25_center,0.25,1050.31,1056.29,0.5694,1.6487,1.764,217,38,70.3704,False,True,True,False,False,True,True,False,137.57,274.73,100.68,167.65,331.51,44.15
+ridge_q30,0.3,1050.31,1087.85,3.5742,1.6487,1.8077,213,42,68.5185,True,True,True,False,True,True,True,False,137.57,274.73,114.32,167.65,340.14,53.44

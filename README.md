@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **A protected reversion winner add-on failed pre-2021 discovery. The center made zero add-ons; the two active variants reduced continuous net from +$1,191.69 to +$1,088.37 and +$979.05, with lower PF and recovery. The unopened 2021-2026 holdout and Model 4 stayed closed. No new best.** ATB150 remains the best. |
+| Latest research result | **A pre-2023 momentum ridge-quality score failed its frozen offline gate. The 25th-percentile center improved validation net by only 0.57% and misranked 2021-2022; the 30th-percentile neighbor also misranked that fold. The isolated 20th-percentile pass is not a stable plateau. No MQL code or 2023-2026 test opened. No new best.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,16 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+The momentum ridge-quality screen completed on `2026-07-19`. It joined 246 pre-2023 momentum entries carrying 11 already-logged, date-independent price-action, trend, volatility, volume, and stop-geometry features to the exact ATB150 Model 4 trade ledger. Before scoring, the contract froze a standardized ridge model with penalty `25.0`, chronological train/test folds ending in 2018, 2020, and 2022, a center that retained scores above the training 25th percentile, and fixed 20th/30th-percentile neighbors. The score could only suppress an existing momentum entry; it could not add trades or alter risk, stops, targets, or exits.
+
+The lower 20th-percentile neighbor was the only complete pass, raising 2017-2022 portfolio net from `+$1,050.31` to `+$1,109.54` (`+5.64%`) and PF from `1.6487` to `1.8003`. The frozen 25th-percentile center reached only `+$1,056.29` (`+0.57%`) and incorrectly ranked its removed 2021-2022 momentum trades above the retained trades; its fold net fell `-$4.26` versus control. The 30th-percentile neighbor reached `+$1,087.85` (`+3.57%`) but failed the same ranking requirement. One isolated threshold is not a robust neighborhood, so the family was rejected without a different model, penalty, feature, percentile, or split search.
+
+No MQL implementation was created, 2023-2026 remained unopened for this score, and no MT5 or Model 4 time was spent. ATB150 and the invalid forward registration remain unchanged.
+
+[Read the momentum ridge-quality rejection](outputs/THREE_LANE_MOMENTUM_RIDGE_QUALITY_OFFLINE_DECISION.md), [the compact summary](outputs/THREE_LANE_MOMENTUM_RIDGE_QUALITY_OFFLINE_SUMMARY.csv), and [the frozen contract](outputs/THREE_LANE_MOMENTUM_RIDGE_QUALITY_OFFLINE_CONTRACT.md).
+
+### Earlier Protected Winner Add-On Research
 
 The protected reversion winner add-on experiment completed on `2026-07-19`. The new default-off code could add once to a profitable strong-signal reversion position only after locking the primary stop, proving broker-valued locked-profit coverage, retaining at least `1.20R` of reward, and passing account-wide exposure checks before and after the fill. It added no martingale, grid, averaging down, recovery sizing, or new close path; real-account trading remained disabled. Static and compiler audits passed with zero errors or warnings.
 
