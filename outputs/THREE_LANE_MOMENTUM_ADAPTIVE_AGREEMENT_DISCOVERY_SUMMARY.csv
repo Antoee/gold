@@ -1,0 +1,6 @@
+Candidate,Role,AgreementEnabled,AgreementRiskPercent,OlderNetProfit,LaterNetProfit,ContinuousNetProfit,TotalReturnPercent,CagrPercent,ProfitFactor,TotalTrades,MaxDrawdownPercent,RecoveryFactor,ReturnDrawdown,BehaviorChangedVsControl,NoWorseBothDisjointEras,NeighborGate
+maa_control,control,false,0.250,1001.72,370.41,1353.74,13.54,2.14,1.85,265,1.06,11.4559,12.7736,False,True,
+maa_r020,conservative_neighbor,true,0.200,975.72,376.05,1338.46,13.38,2.12,1.81,265,1.11,10.8333,12.0541,True,False,False
+maa_r0225,lower_neighbor,true,0.225,1003.28,424.24,1377.3,13.77,2.17,1.82,265,1.15,10.6834,11.9739,True,True,False
+maa_center_r025,center,true,0.250,969.89,415.51,1365.75,13.66,2.16,1.8,265,1.21,10.2634,11.2893,True,False,
+maa_r0275,upper_neighbor,true,0.275,967.45,433.84,1377.71,13.78,2.17,1.78,265,1.34,9.3461,10.2836,True,False,False

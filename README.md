@@ -8,7 +8,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 |---|---|
 | Highest verified historical result | **Strong-Signal Selective Reversion Lot Cap, provisional research leader.** Model 4 real ticks: `+$2,428.50`, `+24.28%`, `1.90%/yr` CAGR, PF `1.89`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **Momentum-exit ablation rejected in sealed discovery.** Removing the H1 channel exit improved 2019-2020 by `$58.34` but lost `$122.64` in 2015-2018, reduced continuous net by `$51.01`, and weakened PF/recovery/return-to-drawdown. `0/7` alternatives passed the frozen architecture gate. |
+| Latest research result | **Momentum/adaptive agreement allocation rejected in discovery.** The `0.25%` center added only `$12.01` continuously, lost `$31.83` in 2015-2018, weakened PF/recovery/return-to-drawdown, exceeded its drawdown ceiling, and had `0/3` passing neighbors. No recent-data or Model 4 budget was spent. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -35,6 +35,18 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 Against ATB150, the candidate adds `$323.42` (`+15.36%` more net profit), `+3.23` total-return points, and `+0.23` CAGR points per year. PF improves from `1.81` to `1.89`, recovery from `15.67` to `17.09`, and return/drawdown from `18.30` to `20.58`; drawdown rises only `0.03` point. These are historical measurements, not a forecast.
 
 ## Latest Research Update
+
+The momentum/adaptive agreement allocation experiment completed on `2026-07-20` and was rejected in pre-2021 parameter discovery. Exact leader attribution had found 19 momentum entries opened while an adaptive-trend position was already open in the same direction; those historical trades made `+$179.27` at PF `5.12` and were positive in all three broad eras. Because this architecture was selected from the full ledger, the contract explicitly treated every historical era as architecture-seen and did not claim a pristine holdout.
+
+The default-off code changed no entry, stop, target, close, or modify path. It could only substitute requested momentum risk when an exact same-symbol, same-direction adaptive position was already open, used that risk consistently for broker-valued sizing and post-fill reconciliation, and preserved the authoritative `0.75%` account-wide open-risk refusal. Static source checks passed, and MetaEditor compiled the exact source with zero errors and zero warnings.
+
+All `15/15` Model 1 reports were accepted with exact source, EX5, config, report, and sidecar identity after one unchanged identity retry. Control made `+$1,353.74`, `2.14%/yr` CAGR, PF `1.85`, `1.06%` drawdown, and recovery `11.4559`. The frozen `0.25%` center made `+$1,365.75`, only `$12.01` or `0.89%` more, while 2015-2018 fell by `$31.83`, PF fell to `1.80`, drawdown rose to `1.21%`, and recovery fell to `10.2634`.
+
+The `0.225%` row reached the best headline at `+$1,377.30`, but its `1.74%` gain missed the frozen `2%` neighbor floor and recovery retained less than `97%` of control. Selecting it after observation would be threshold chasing. The family was rejected with `0/3` passing neighbors, so architecture-seen 2021-2026 and Model 4 remained unopened.
+
+[Read the agreement-allocation rejection](outputs/THREE_LANE_MOMENTUM_ADAPTIVE_AGREEMENT_DISCOVERY_DECISION.md), [the compact summary](outputs/THREE_LANE_MOMENTUM_ADAPTIVE_AGREEMENT_DISCOVERY_SUMMARY.csv), [the exact evidence ledger](outputs/THREE_LANE_MOMENTUM_ADAPTIVE_AGREEMENT_DISCOVERY_EVIDENCE.csv), and [the retrospective attribution](outputs/THREE_LANE_MOMENTUM_ADAPTIVE_AGREEMENT_ATTRIBUTION.md).
+
+### Earlier Momentum Exit Research
 
 The momentum-exit ablation diagnostic completed on `2026-07-20` and was rejected in sealed pre-2021 discovery. It reused the exact published leader source and compared the existing H1 channel, D1 momentum-failure, and 120-H1-bar time exits in all meaningful enabled/disabled combinations. Entry rules, initial stops, targets, risk, sizing, account protections, and the real-account lock remained unchanged.
 

@@ -36,9 +36,9 @@ Updated: 2026-07-20
 
 ## Latest Completed Research
 
-The momentum-exit ablation diagnostic was rejected in sealed 2015-2020 Model 1 discovery. Removing the H1 channel exit improved 2019-2020 net by `$58.34`, but lost `$122.64` in 2015-2018 and reduced continuous net from `+$1,353.74` to `+$1,302.73`. PF fell from `1.85` to `1.73`, drawdown rose from `1.06%` to `1.24%`, and recovery fell from `11.4559` to `9.5368`. The D1 momentum-failure and 120-bar time exits were inactive whenever the channel exit remained enabled. No alternative was no worse in both disjoint eras, so `0/7` passed the frozen architecture gate. Recent-data and Model 4 testing were not opened, and the provisional leader above is unchanged.
+The momentum/adaptive agreement allocation was rejected in 2015-2020 Model 1 discovery. The frozen `0.25%` center increased continuous net from `+$1,353.74` to only `+$1,365.75`, but reduced 2015-2018 by `$31.83`, lowered PF from `1.85` to `1.80`, raised drawdown from `1.06%` to `1.21%`, and lowered recovery from `11.4559` to `10.2634`. The best headline, agreement risk `0.225%`, gained only `1.74%` and missed the frozen recovery-retention gate. `0/3` neighbors passed, so architecture-seen recent data and Model 4 were not opened. The provisional leader above is unchanged.
 
-- `outputs/THREE_LANE_MOMENTUM_EXIT_ABLATION_DIAGNOSTIC_DECISION.md`
+- `outputs/THREE_LANE_MOMENTUM_ADAPTIVE_AGREEMENT_DISCOVERY_DECISION.md`
 
 ## Boundary
 

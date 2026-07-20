@@ -60,7 +60,10 @@ foreach($root in $roots) {
    $portableSource = Join-Path $root "MQL5\Experts\Professional_XAUUSD_EA.mq5"
    $portableBinary = Join-Path $root "MQL5\Experts\Professional_XAUUSD_EA.ex5"
    $portableIdentity = Join-Path $root "MQL5\Experts\Professional_XAUUSD_EA.compiled_identity.txt"
-   $identityLines = if(Test-Path -LiteralPath $portableIdentity -PathType Leaf) { @(Get-Content -LiteralPath $portableIdentity) } else { @() }
+   $identityLines = @()
+   if(Test-Path -LiteralPath $portableIdentity -PathType Leaf) {
+      $identityLines = @(Get-Content -LiteralPath $portableIdentity)
+   }
    $installedSourceHash = Get-OptionalHash $portableSource
    $binaryHash = Get-OptionalHash $portableBinary
    $identitySourceHash = if($identityLines.Count -ge 1) { ([string]$identityLines[0]).ToUpperInvariant() } else { "MISSING" }

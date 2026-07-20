@@ -1,0 +1,9 @@
+Group,Trades,NetProfit,ProfitFactor,WinRatePercent,AverageRiskR
+All same-direction cross-lane entries,31,210.31,2.7533,58.06,0.5285
+Adaptive after Momentum,8,9.37,1.1536,37.5,0.1938
+Momentum after Adaptive,19,179.27,5.123,63.16,0.6996
+Momentum after Momentum,4,21.67,2.4026,75.0,0.3856
+Selected: Momentum after Adaptive,19,179.27,5.123,63.16,0.6996
+Selected 2015-2018,11,66.96,2.959,45.45,0.4941
+Selected 2019-2022,6,78.78,9.471,83.33,0.9069
+Selected 2023-2026,2,33.53,INF,100.0,1.2077
