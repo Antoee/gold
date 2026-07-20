@@ -10,6 +10,7 @@ work/Professional_XAUUSD_Operational_Hardening_Portfolio_RC2.mq5 -text -diff
 work/Professional_XAUUSD_Momentum_Breakout_Quality_Portfolio.mq5 -text -diff
 work/Independent_XAUUSD_M15_Weekend_Gap_Fade.mq5 -text -diff
 work/Independent_XAUUSD_M15_Asian_Range_Sweep.mq5 -text -diff
+work/Independent_XAUUSD_D1_NR7_H1_Breakout.mq5 -text -diff
 work/Independent_XAUUSD_M15_Trend_Liquidity_Reclaim.mq5 -text -diff
 work/Professional_XAUUSD_Reversion_Shock_Guard_Portfolio.mq5 -text -diff
 release/transferable-portfolio-v0.2-rc2/** -text whitespace=cr-at-eol

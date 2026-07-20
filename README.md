@@ -8,7 +8,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 |---|---|
 | Highest verified historical result | **Momentum Same-Side Exit Cooldown 60, provisional research leader.** Model 4 real ticks: `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **Momentum partial runner rejected in discovery and post-2020 holdout.** The frozen interaction made `+$1,050.90` versus `+$1,046.44` control over 2021-2026, only `+$4.46` (`+0.43%`). It missed the frozen growth gate, so Model 4 remained closed. **No new best.** |
+| Latest research result | **Independent D1 NR7 / H1 breakout rejected in pre-2021 discovery.** The center lost `$17.30` at PF `0.43` with only 10 trades. The least-bad variant made `+$10.34` (`0.02%/yr` CAGR) but lost 2019-2020 and produced only 14 trades. Holdout and Model 4 remained closed. **No new best.** |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -47,6 +47,18 @@ All 12 annual Model 4 restarts were profitable and no worse than control; 2016, 
 This is a historical research promotion, not live approval. A second broker/specification and a valid frozen `$10,000` forward demo are still missing; the attached `$100,000` demo counts as zero evidence, and real-account trading remains disabled.
 
 [Read the Model 4 decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_DECISION.md), [annual decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_ANNUAL_MODEL4_DECISION.md), [stress decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_STRESS_DECISION.md), [risk audit](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_RISK_AUDIT.md), and [release package](release/three-lane-momentum-same-side-exit-cooldown-provisional/README.md).
+
+### Latest Independent NR7 Breakout Research
+
+The standalone D1 narrow-range / H1 breakout strategy completed on `2026-07-20` and was rejected in frozen 2015-2020 Model 1 discovery. It used only completed D1 and H1 bars: a configurable narrowest-range setup, fresh H1 structural break, D1 EMA trend, candle-body and tick-volume confirmation, broker-valued structural risk, fixed-R target, and optional chandelier protection. It shared no entry logic with the current three-lane leader.
+
+The source passed 20 static safety checks. MetaEditor compiled it with zero errors and warnings to one EX5 identity across four isolated workers. All `54/54` reports were parsed with exact source and binary identity after four unchanged report-export recoveries.
+
+The frozen center lost `$17.30` continuously at PF `0.43`, `-0.03%/yr` CAGR, and only 10 trades; both disjoint eras lost. The highest continuous result, the no-EMA variant, made only `+$10.34` at PF `1.28` and `0.02%/yr` CAGR with 14 trades, but lost `$14.75` in 2019-2020. No variant reached the minimum 80 trades or passed both-era profitability, so the entire neighborhood failed before recent data was opened.
+
+No 2021-2026 holdout or Model 4 run was allowed, the engine was not merged into the forward candidate, and the verified historical leader remains `+$2,492.25` at `1.95%/yr` CAGR. The invalid `$100,000` demo still counts as zero forward evidence, and real-account trading remains disabled.
+
+[Read the NR7 rejection](outputs/INDEPENDENT_D1_NR7_H1_BREAKOUT_DISCOVERY_DECISION.md), [exact Model 1 results](outputs/INDEPENDENT_D1_NR7_H1_BREAKOUT_DISCOVERY_MODEL1_RESULTS.csv), [canonical run evidence](outputs/INDEPENDENT_D1_NR7_H1_BREAKOUT_DISCOVERY_MODEL1_RUN.csv), and [research source](work/Independent_XAUUSD_D1_NR7_H1_Breakout.mq5).
 
 ### Latest Momentum Partial-Runner Research
 
