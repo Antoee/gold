@@ -1,0 +1,5 @@
+"Candidate","RiskScaleFactor","OlderNetProfit","MiddleNetProfit","RecentNetProfit","LatestNetProfit","ContinuousNetProfit","TotalReturnPercent","CagrPercent","ProfitFactor","TotalTrades","MaxDrawdownPercent","RecoveryFactor","ReturnDrawdown","FrozenGate"
+"cerl_control100","1","1036.19","370.6","629.61","434.36","2660.57","26.61","2.07","1.98","411","1.15","18.9068","23.1391","CONTROL"
+"cerl_low125","1.25","640.21","172.67","480.85","727.55","2177.34","21.77","1.72","1.7","409","1.77","10.9994","12.2994","False"
+"cerl_center150","1.5","1056.17","411.18","746.48","726.64","3145.43","31.45","2.4","1.69","455","2.26","11.7279","13.9159","False"
+"cerl_high175","1.75","760.53","429.63","792.77","1190.09","3347.9","33.48","2.54","1.67","452","3.43","8.4381","9.7609","False"

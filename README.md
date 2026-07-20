@@ -8,7 +8,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 |---|---|
 | Highest verified historical result | **Momentum Same-Side Exit Cooldown 60, provisional research leader.** Model 4 real ticks: `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **D1 EMA-slope momentum guard rejected in Model 1 neighborhood.** The `1.00 ATR` center reached `+$2,746.31`, `2.13%/yr` CAGR, PF `2.61`, and `1.10%` drawdown, but both `0.75/1.25` neighbors earned less than the `+$2,660.57` control. It is not a new best. |
+| Latest research result | **Capital-efficiency risk ladder rejected in Model 1.** The `1.50x` center reached `+$3,145.43`, `2.40%/yr` CAGR, PF `1.69`, and `2.26%` drawdown versus control at `+$2,660.57`, `2.07%/yr`, PF `1.98`, and `1.15%` drawdown. Both adjacent profiles failed the frozen quality gate. It is not a new best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -34,7 +34,7 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 
 Against ATB150, the candidate adds `$387.17` (`+18.39%` more net profit), `+3.87` total-return points, and `+0.28` CAGR points per year. PF improves from `1.81` to `1.93`, recovery from `15.67` to `17.54`, and return/drawdown from `18.30` to `21.12`; drawdown rises only `0.03` point. Against the previous research leader, it adds `$63.75`, `+0.64` return point, and `+0.05` CAGR point with the same rounded drawdown. These are historical measurements, not a forecast.
 
-## Latest Research Update
+## Current Leader Research
 
 The same-side momentum exit-cooldown experiment completed on `2026-07-20` and became the new provisional historical leader. Exact ledger analysis found four momentum re-entries within 60 minutes of a same-side exit in the 2015-2020 discovery span; all four lost. The default-off implementation uses only elapsed time plus symbol, magic number, and position side. It never reads profit, loss, drawdown, loss streaks, or account outcome state.
 
@@ -48,7 +48,19 @@ This is a historical research promotion, not live approval. A second broker/spec
 
 [Read the Model 4 decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_DECISION.md), [annual decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_ANNUAL_MODEL4_DECISION.md), [stress decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_STRESS_DECISION.md), [risk audit](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_RISK_AUDIT.md), and [release package](release/three-lane-momentum-same-side-exit-cooldown-provisional/README.md).
 
-### Latest D1 EMA-Slope Research
+### Latest Capital-Efficiency Research
+
+The proportional capital-efficiency ladder completed on `2026-07-20` and was rejected in a frozen full-history Model 1 discovery. It reused the exact verified leader source and tested `1.00x`, `1.25x`, `1.50x`, and `1.75x` requested lane risk across 2015-2018, 2019-2020, 2021-2023, 2024-2026, and continuous 2015-2026. The `5%` equity drawdown lock and all daily, weekly, monthly, cooldown, entry, exit, and real-account protections remained unchanged.
+
+All `20/20` reports parsed with exact source, EX5, config, report, and sidecar identity after one unchanged isolated identity retry. Every row was profitable. Model 1 control made `+$2,660.57`, `2.07%/yr` CAGR, PF `1.98`, 411 trades, `1.15%` drawdown, recovery `18.9068`, and return/drawdown `23.14`.
+
+The frozen `1.50x` center increased net to `+$3,145.43` and CAGR to `2.40%/yr`, but missed the required 20% net increase and weakened PF to `1.69`, drawdown to `2.26%`, recovery to `11.7279`, and return/drawdown to `13.92`. The `1.25x` neighbor earned only `+$2,177.34`; the `1.75x` row had the highest headline at `+$3,347.90`, but drawdown rose to `3.43%`, recovery fell to `8.4381`, and return/drawdown fell to `9.76`. Neither neighbor passed.
+
+The gate was not relaxed after observing the higher headline profit. Model 4 remained closed, the verified real-tick leader remains `+$2,492.25` at `1.95%/yr` CAGR and `1.18%` drawdown, and no forward or real-account setting changed.
+
+[Read the capital-efficiency rejection](outputs/THREE_LANE_CAPITAL_EFFICIENCY_RISK_LADDER_DISCOVERY_DECISION.md), [compact summary](outputs/THREE_LANE_CAPITAL_EFFICIENCY_RISK_LADDER_DISCOVERY_SUMMARY.csv), [exact Model 1 results](outputs/THREE_LANE_CAPITAL_EFFICIENCY_RISK_LADDER_DISCOVERY_MODEL1_RESULTS.csv), and [run attestation](outputs/THREE_LANE_CAPITAL_EFFICIENCY_RISK_LADDER_DISCOVERY_RUN_ATTESTATION.csv).
+
+### Previous D1 EMA-Slope Research
 
 The code-level D1 EMA-slope overextension guard completed on `2026-07-20` and was rejected in its frozen Model 1 neighborhood. It was nominated only after a behavior-neutral full-history Model 4 telemetry fork exactly reproduced the historical leader at `+$2,492.25`, 400 trades, PF `1.93`, and `1.18%` drawdown. The 310 momentum trades were then screened across 2015-2018, 2019-2020, 2021-2023, and 2024-2026.
 
