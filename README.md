@@ -8,7 +8,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 |---|---|
 | Highest verified historical result | **Momentum Same-Side Exit Cooldown 60, provisional research leader.** Model 4 real ticks: `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **D1 momentum-strength gate rejected in pre-2021 discovery.** The best bot remains the 60-minute same-side cooldown leader; recent data and Model 4 were not opened for the rejected feature. |
+| Latest research result | **D1 extreme-momentum guard rejected as a near-miss in pre-2021 discovery.** The best bot remains the 60-minute same-side cooldown leader; recent data and Model 4 were not opened. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -48,7 +48,17 @@ This is a historical research promotion, not live approval. A second broker/spec
 
 [Read the Model 4 decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_DECISION.md), [annual decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_ANNUAL_MODEL4_DECISION.md), [stress decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_STRESS_DECISION.md), [risk audit](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_RISK_AUDIT.md), and [release package](release/three-lane-momentum-same-side-exit-cooldown-provisional/README.md).
 
-### Latest D1 Momentum-Strength Research
+### Latest D1 Extreme-Guard Research
+
+The D1 extreme-momentum guard completed on `2026-07-20` and was rejected as a frozen near-miss. The default-off code tested maximum absolute 126-bar D1 close returns of `12%`, `18%`, `24%`, and `30%` before the momentum lane could accept its existing fresh H1 breakout. It added no entry, close, or stop-modification path; risk, targets, the `0.75%` account-wide exposure cap, and the real-account lock stayed unchanged.
+
+All `15/15` Model 1 reports and identity sidecars passed exact checks after two unchanged report-export retries. The `18%` center improved continuous 2015-2020 net from `+$1,379.93` to `+$1,416.00`, total return from `13.80%` to `14.16%`, CAGR from `2.18%` to `2.23%/yr`, PF from `1.88` to `1.95`, and recovery from `11.6775` to `12.0809`.
+
+It still failed the preregistered robustness gate: 2015-2018 was `$1.61` worse, drawdown rose from `1.05%` to `1.11%`, and return/drawdown fell from `13.1429` to `12.7568`. The `12%` neighbor also weakened return/drawdown, while the `24%` and `30%` rows improved net only `0.62%`; support was `0/3` versus `2/3` required. The threshold was not moved after observation. Recent data and Model 4 remained closed, and the historical leader remains unchanged.
+
+[Read the extreme-guard rejection](outputs/THREE_LANE_MOMENTUM_D1_EXTREME_GUARD_DISCOVERY_DECISION.md), [compact summary](outputs/THREE_LANE_MOMENTUM_D1_EXTREME_GUARD_DISCOVERY_SUMMARY.csv), [exact Model 1 results](outputs/THREE_LANE_MOMENTUM_D1_EXTREME_GUARD_DISCOVERY_MODEL1_RESULTS.csv), and [run attestation](outputs/THREE_LANE_MOMENTUM_D1_EXTREME_GUARD_DISCOVERY_RUN_ATTESTATION.csv).
+
+### Earlier D1 Momentum-Strength Research
 
 The D1 momentum-strength gate completed on `2026-07-20` and was rejected in frozen pre-2021 discovery. The default-off code tested whether the momentum lane should require a meaningful absolute 126-bar D1 close return before accepting its existing fresh H1 breakout. It added no entry, close, or stop-modification path; momentum risk remained `0.15%`, the account-wide open-risk cap remained `0.75%`, and real-account trading remained disabled.
 

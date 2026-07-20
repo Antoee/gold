@@ -1,0 +1,6 @@
+Candidate,Role,MaximumD1MomentumStrengthEnabled,MaximumAbsoluteD1MomentumPercent,OlderNetProfit,LaterNetProfit,ContinuousNetProfit,TotalReturnPercent,CagrPercent,ProfitFactor,TotalTrades,MaxDrawdownPercent,RecoveryFactor,SharpeRatio,ReturnDrawdown,FrozenGate
+mde_control,control,false,100,1036.19,370.60,1379.93,13.80,2.18,1.88,261,1.05,11.6775,5.15,13.1429,CONTROL
+mde_12,lower_support,true,12,1037.27,362.03,1400.64,14.01,2.21,2.06,220,1.11,11.9498,5.67,12.6216,FAIL
+mde_center_18,center,true,18,1034.58,400.36,1416.00,14.16,2.23,1.95,252,1.11,12.0809,5.37,12.7568,FAIL
+mde_24,upper_support,true,24,1036.19,379.16,1388.49,13.88,2.19,1.89,260,1.05,11.7499,5.19,13.2190,FAIL
+mde_30,upper_boundary,true,30,1036.19,379.16,1388.49,13.88,2.19,1.89,260,1.05,11.7499,5.19,13.2190,FAIL
