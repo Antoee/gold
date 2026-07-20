@@ -8,7 +8,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 |---|---|
 | Highest verified historical result | **Momentum Same-Side Exit Cooldown 60, provisional research leader.** Model 4 real ticks: `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **M15 squeeze completed-bar feature screen rejected before validation.** A behavior-neutral telemetry fork exactly reproduced the partial-runner result at `+$1,695.16`, `+16.95%`, `2.64%/yr` CAGR, PF `1.84`, 391 report trades, and `1.10%` drawdown. Its exact 88-position ledger screened 15 causal entry features in both directions across frozen 15/20/25% threshold neighborhoods. No family passed the complete 2015-2018 training gate, so reserved 2019-2020 validation, strategy code, post-2020 testing, and Model 4 remained closed. **No new best.** |
+| Latest research result | **Reversion retracement-entry engine rejected in pre-2021 discovery.** The disabled fork exactly reproduced the current leader control at `+$1,379.93`, `2.18%/yr` CAGR, PF `1.88`, 261 trades, and `1.05%` drawdown. Waiting for the frozen `0.15 ATR` adverse retracement reduced net to `+$1,067.56`, `1.71%/yr` CAGR, PF `1.75`, and 252 trades. Both offset neighbors failed, so post-2020 and Model 4 remained closed. **No new best.** |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -47,6 +47,18 @@ All 12 annual Model 4 restarts were profitable and no worse than control; 2016, 
 This is a historical research promotion, not live approval. A second broker/specification and a valid frozen `$10,000` forward demo are still missing; the attached `$100,000` demo counts as zero evidence, and real-account trading remains disabled.
 
 [Read the Model 4 decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_DECISION.md), [annual decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_ANNUAL_MODEL4_DECISION.md), [stress decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_STRESS_DECISION.md), [risk audit](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_RISK_AUDIT.md), and [release package](release/three-lane-momentum-same-side-exit-cooldown-provisional/README.md).
+
+### Latest Reversion Retracement-Entry Research
+
+The default-off reversion retracement-entry experiment completed on `2026-07-20` and was rejected in frozen 2015-2020 Model 1 discovery. It retained the exact completed-H1 Band/VWAP signal, structural stop, signal-time VWAP target, requested risk, selective lot cap, other lanes, 60-minute momentum cooldown, and all portfolio protections. An accepted setup could arm an in-memory trigger toward its stop for one or two H1 bars; it created no broker pending order and reran spread, loss-limit, position, spacing, geometry, broker-valued sizing, and account-wide open-risk checks at fill.
+
+Static checks proved that the fork added no direct buy/sell, close, modify, async, outcome-dependent, or calendar-dependent path. MetaEditor compiled the exact source with zero errors and warnings to one EX5 identity across four workers. All `15/15` reports parsed after two preserved startup identity refusals and one unchanged single-worker recovery. The disabled row exactly reproduced the current leader's pre-2021 control at `+$1,379.93`, `2.18%/yr` CAGR, PF `1.88`, 261 trades, `1.05%` drawdown, and recovery `11.6775`.
+
+The mechanism was active but weaker. The `0.10 ATR` row was the least-damaging enabled profile at `+$1,250.30`, `1.98%/yr` CAGR, PF `1.85`, and 258 trades. The frozen `0.15 ATR` center made `+$1,067.56`, `1.71%/yr` CAGR, PF `1.75`, 252 trades, `1.04%` drawdown, and recovery `9.4759`. It filled 13 retracement entries worth `+$284.35`, versus 19 original reversion entries worth `+$533.48` in control. The center improved 2019-2020 from `+$370.60` to `+$384.19`, but cut 2015-2018 from `+$1,036.19` to `+$682.44`; the `0.20 ATR` neighbor and two-bar lifetime could not repair that loss of older winners.
+
+The offset was not moved closer to zero after observation. Both adjacent offset gates failed, so no post-2020 holdout or Model 4 run was opened. The verified real-tick leader remains `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, and `1.18%` drawdown; the frozen forward candidate and invalid `$100,000` account boundary remain unchanged.
+
+[Read the retracement-entry rejection](outputs/THREE_LANE_REVERSION_RETRACEMENT_ENTRY_DISCOVERY_DECISION.md), [frozen contract](outputs/THREE_LANE_REVERSION_RETRACEMENT_ENTRY_DISCOVERY_CONTRACT.md), [exact Model 1 results](outputs/THREE_LANE_REVERSION_RETRACEMENT_ENTRY_DISCOVERY_MODEL1_RESULTS.csv), [entry-path evidence](outputs/THREE_LANE_REVERSION_RETRACEMENT_ENTRY_DISCOVERY_ENTRY_EVIDENCE.csv), and [research source](work/Professional_XAUUSD_Three_Lane_Reversion_Retracement_Entry_Research.mq5).
 
 ### Latest M15 Squeeze Feature-Telemetry Research
 
