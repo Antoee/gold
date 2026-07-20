@@ -8,7 +8,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 |---|---|
 | Highest verified historical result | **Momentum Same-Side Exit Cooldown 60, provisional research leader.** Model 4 real ticks: `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **Momentum feature telemetry candidate rejected in reserved 2019-2020 validation.** The best bot remains the 60-minute same-side cooldown leader; no candidate code or post-2020 test was opened. |
+| Latest research result | **Strong-breakout target extension rejected in pre-2021 discovery.** All seven enabled profiles reduced continuous profit and none passed the frozen gate; post-2020 data and Model 4 stayed closed. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -48,7 +48,19 @@ This is a historical research promotion, not live approval. A second broker/spec
 
 [Read the Model 4 decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_DECISION.md), [annual decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_ANNUAL_MODEL4_DECISION.md), [stress decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_STRESS_DECISION.md), [risk audit](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_RISK_AUDIT.md), and [release package](release/three-lane-momentum-same-side-exit-cooldown-provisional/README.md).
 
-### Latest Momentum Telemetry Research
+### Latest Strong-Breakout Target Research
+
+The default-off strong-breakout target extension completed on `2026-07-20` and was rejected in frozen pre-2021 discovery. It kept every entry, initial stop, requested risk, lot cap, portfolio exposure limit, and safety path unchanged. Only completed H1 momentum breakouts with body ratio at least `0.50` and directional close location at least `0.75` received the frozen `3.0R` target instead of `2.0R`.
+
+The source passed static checks with four new inputs, zero new entry/close/modify paths, completed-bar-only reads, unchanged `0.15%` momentum risk, and the `0.75%` account-wide exposure cap. MetaEditor compiled it with zero errors and warnings to one EX5 identity across four workers. All `24/24` Model 1 reports and identity sidecars passed after three unchanged export retries.
+
+The disabled control exactly reproduced `+$1,379.93`, `2.18%/yr` CAGR, PF `1.88`, 261 trades, and `1.05%` drawdown. The center improved 2019-2020 from `+$370.60` to `+$410.71`, but reduced 2015-2018 from `+$1,036.19` to `+$914.53`. Continuous net fell to `+$1,293.17`, CAGR to `2.05%/yr`, and recovery to `8.3285`, while drawdown rose to `1.48%`.
+
+Every enabled target/body/close-location neighbor also reduced continuous profit by `3.50%` to `6.97%`; support was `0/6` versus `3/6` required. The thresholds were not moved, reserved 2021-2022 data was not opened, and no Model 4 run or promotion was allowed.
+
+[Read the target-extension rejection](outputs/THREE_LANE_MOMENTUM_STRONG_BREAKOUT_TARGET_EXTENSION_DISCOVERY_DECISION.md), [frozen contract](outputs/THREE_LANE_MOMENTUM_STRONG_BREAKOUT_TARGET_EXTENSION_DISCOVERY_CONTRACT.md), [compact summary](outputs/THREE_LANE_MOMENTUM_STRONG_BREAKOUT_TARGET_EXTENSION_DISCOVERY_SUMMARY.csv), and [exact Model 1 results](outputs/THREE_LANE_MOMENTUM_STRONG_BREAKOUT_TARGET_EXTENSION_DISCOVERY_MODEL1_RESULTS.csv).
+
+### Earlier Momentum Telemetry Research
 
 A behavior-neutral telemetry pass completed on `2026-07-20`. The fork added no strategy input or trade path and recorded only completed-bar D1 return, breakout geometry, candle structure, ATR, channel width, tick-volume ratio, and actual stop/ATR after an existing momentum fill. It exactly reproduced the leader's pre-2021 Model 1 control at `+$1,379.93`, `+13.80%` total, `2.18%/yr` CAGR, PF `1.88`, 261 portfolio trades, and `1.05%` drawdown.
 
