@@ -3,7 +3,13 @@ param(
    [ValidateRange(1,100)][int]$MaxCpuPercent = 80,
    [ValidateRange(1,1440)][int]$TimeoutMinutesPerConfig = 15,
    [switch]$UserAuthorizedFocusRisk,
-   [switch]$SingleWorkerRecovery
+   [switch]$SingleWorkerRecovery,
+   [string]$ManifestRelativePath = 'outputs\THREE_LANE_MOMENTUM_FEATURE_TELEMETRY_MODEL1_MANIFEST.csv',
+   [string]$PackageSourceRelativePath = 'outputs\three_lane_momentum_feature_telemetry_model1_package\source\Professional_XAUUSD_EA.mq5',
+   [string]$ExpectedManifestHash = '6A4BB13F7416847FE87B4C6A6FC2E1B081CBE979A97B2E43A1F1F06E7563982A',
+   [string]$ExpectedSourceHash = '14F40409A6865F081774AEE18FEEC3E0F22ED1833F8ECAB54DD4BD852A3AD14B',
+   [string]$ExpectedBinaryHash = '2167D676ED538E8D97CE1C3AB68F3A4264FABB9D6B3622D97E6CFF847980F544',
+   [string]$OutputPrefix = 'THREE_LANE_MOMENTUM_FEATURE_TELEMETRY_WORKER'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -17,11 +23,8 @@ $outerLock = Join-Path $sharedWork 'MT5_LOCAL_LAUNCH_DISABLED.lock'
 $unlockFile = Join-Path $PSScriptRoot 'ALLOW_MT5_LOCAL_LAUNCH.unlock'
 $focusAck = Join-Path $PSScriptRoot 'ALLOW_MT5_HIDDEN_DESKTOP_ACK.unlock'
 $runner = Join-Path $PSScriptRoot 'run_mt5_portable_parallel_manifest.ps1'
-$manifest = Join-Path $repo 'outputs\THREE_LANE_MOMENTUM_FEATURE_TELEMETRY_MODEL1_MANIFEST.csv'
-$source = Join-Path $repo 'outputs\three_lane_momentum_feature_telemetry_model1_package\source\Professional_XAUUSD_EA.mq5'
-$expectedManifestHash = '6A4BB13F7416847FE87B4C6A6FC2E1B081CBE979A97B2E43A1F1F06E7563982A'
-$expectedSourceHash = '14F40409A6865F081774AEE18FEEC3E0F22ED1833F8ECAB54DD4BD852A3AD14B'
-$expectedBinaryHash = 'A50D24418921D92A478EDA1EC38BD1BDE6D0E5A941BA5A5236C42BF530F014CB'
+$manifest = Join-Path $repo $ManifestRelativePath
+$source = Join-Path $repo $PackageSourceRelativePath
 $roots = @(
    (Join-Path $sharedWork 'mt5_portable_research'),
    (Join-Path $sharedWork 'mt5_portable_research_w2'),
@@ -66,7 +69,7 @@ try {
    $env:ALLOW_MT5_FOCUS_RISK = '1'
    $env:ALLOW_MT5_HIDDEN_DESKTOP_ACK = '1'
    & $runner -ManifestPath $manifest -PortableRoots $roots -UserAuthorizedFocusRisk `
-      -OutputPrefix $(if($SingleWorkerRecovery) { 'THREE_LANE_MOMENTUM_FEATURE_TELEMETRY_SINGLE_WORKER' } else { 'THREE_LANE_MOMENTUM_FEATURE_TELEMETRY_WORKER' }) `
+      -OutputPrefix $(if($SingleWorkerRecovery) { $OutputPrefix + '_SINGLE_WORKER' } else { $OutputPrefix }) `
       -MaxCpuPercent $MaxCpuPercent -TimeoutMinutesPerConfig $TimeoutMinutesPerConfig `
       -ExpectedPortableBinarySha256 $expectedBinaryHash -ProgressIntervalSeconds 10
    $completed = $true

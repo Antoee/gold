@@ -8,7 +8,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 |---|---|
 | Highest verified historical result | **Momentum Same-Side Exit Cooldown 60, provisional research leader.** Model 4 real ticks: `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **Momentum/adaptive risk reallocation rejected in broad discovery.** The center reached `+$1,519.85` and `2.39%/yr`, but weakened 2019-2020, PF, drawdown, recovery, activity, and every lower-rung support gate. It is not a new best. |
+| Latest research result | **D1 EMA-slope momentum guard rejected in Model 1 neighborhood.** The `1.00 ATR` center reached `+$2,746.31`, `2.13%/yr` CAGR, PF `2.61`, and `1.10%` drawdown, but both `0.75/1.25` neighbors earned less than the `+$2,660.57` control. It is not a new best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -48,6 +48,18 @@ This is a historical research promotion, not live approval. A second broker/spec
 
 [Read the Model 4 decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_DECISION.md), [annual decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_ANNUAL_MODEL4_DECISION.md), [stress decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_STRESS_DECISION.md), [risk audit](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_RISK_AUDIT.md), and [release package](release/three-lane-momentum-same-side-exit-cooldown-provisional/README.md).
 
+### Latest D1 EMA-Slope Research
+
+The code-level D1 EMA-slope overextension guard completed on `2026-07-20` and was rejected in its frozen Model 1 neighborhood. It was nominated only after a behavior-neutral full-history Model 4 telemetry fork exactly reproduced the historical leader at `+$2,492.25`, 400 trades, PF `1.93`, and `1.18%` drawdown. The 310 momentum trades were then screened across 2015-2018, 2019-2020, 2021-2023, and 2024-2026.
+
+None of 94 original causal entry-feature thresholds passed the broad-era and neighborhood gates. An expanded telemetry fork added completed-bar D1/H4/H1 ADX, D1 50/200 EMA state, directional efficiency, daily range position, and H1 compression without adding a strategy input or trade path. It again reproduced the leader exactly. A maximum direction-adjusted 50-day EMA slope of `1.00 D1 ATR` had a coherent offline `0.75/1.00/1.25` neighborhood, so a default-off strategy implementation was allowed into fresh MT5 testing.
+
+All `20/20` Model 1 reports parsed across four disjoint eras and the continuous 2015-2026 period. The `1.00 ATR` center improved continuous net from `+$2,660.57` to `+$2,746.31`, CAGR from `2.07%/yr` to `2.13%/yr`, PF from `1.98` to `2.61`, drawdown from `1.15%` to `1.10%`, and recovery from `18.9068` to `20.5332`; all four broad eras remained profitable. However, the `0.75 ATR` and `1.25 ATR` neighbors fell to `+$2,612.36` and `+$2,629.03`, both below control. The isolated center peak failed the frozen support requirement, so no strategy Model 4 confirmation, promotion, or forward substitution was allowed.
+
+The verified real-tick leader remains the 60-minute same-side cooldown at `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, and `1.18%` drawdown. The attached `$100,000` demo remains invalid against the frozen `$10,000` contract, and real-account trading remains disabled.
+
+[Read the D1 EMA-slope rejection](outputs/THREE_LANE_MOMENTUM_D1_EMA_SLOPE_GUARD_DISCOVERY_DECISION.md), [exact Model 1 results](outputs/THREE_LANE_MOMENTUM_D1_EMA_SLOPE_GUARD_DISCOVERY_MODEL1_RESULTS.csv), [market-phase screen](outputs/THREE_LANE_MOMENTUM_MARKET_PHASE_TELEMETRY_MODEL4_FULL_SCREEN.md), [exact expanded ledger](outputs/THREE_LANE_MOMENTUM_MARKET_PHASE_TELEMETRY_MODEL4_FULL_TRADES.csv), and [research source](work/Professional_XAUUSD_Three_Lane_Momentum_D1_Ema_Slope_Guard_Research.mq5).
+
 ### Latest Risk-Allocation Research
 
 The settings-only momentum/adaptive risk-reallocation experiment completed on `2026-07-20` and was rejected in frozen pre-2021 discovery. The exact published leader source and same-side cooldown remained unchanged. Reversion risk stayed `0.45%`, and each row kept the declared lane-risk sum plus the broker-valued portfolio open-risk cap fixed at `0.75%`; only `0.01` to `0.05` percentage points moved from the adaptive lane to momentum.
@@ -60,7 +72,7 @@ Zero of three lower allocations passed the complete support gate. The higher con
 
 [Read the risk-reallocation rejection](outputs/THREE_LANE_MOMENTUM_ADAPTIVE_RISK_REALLOCATION_DISCOVERY_DECISION.md), [frozen contract](outputs/THREE_LANE_MOMENTUM_ADAPTIVE_RISK_REALLOCATION_DISCOVERY_CONTRACT.md), [compact summary](outputs/THREE_LANE_MOMENTUM_ADAPTIVE_RISK_REALLOCATION_DISCOVERY_SUMMARY.csv), and [exact Model 1 results](outputs/THREE_LANE_MOMENTUM_ADAPTIVE_RISK_REALLOCATION_DISCOVERY_MODEL1_RESULTS.csv).
 
-### Latest Momentum Market-Phase Research
+### Earlier Momentum Market-Phase Research
 
 A maximum H1 breakout-channel width normalized by ATR was nominated from 2015-2018 training telemetry and rejected on the frozen 2019-2020 feature rows. The `6.0`, `6.5`, and `7.0 ATR` thresholds had all improved training momentum net and PF in both training halves, so `6.5 ATR` was frozen as the center before their validation outcomes were calculated.
 

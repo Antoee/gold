@@ -1,0 +1,5 @@
+"Candidate","Role","ContinuousNet","ImprovementVsControl","ContinuousPF","ContinuousTrades","ContinuousDDPercent","ContinuousCAGRPercent","Recovery","ReturnToDD","Net2015_2018","Net2019_2020","Net2021_2023","Net2024_2026","AllBroadWindowsProfitable","BehaviorChanged","ContinuousNetImproved","ContinuousPFImproved","CenterRiskGate","FrozenGate"
+"mdes_control","default_off_control","2660.57","0","1.98","411","1.15","2.07","18.9068","23.1391","1036.19","370.6","629.61","434.36","True","False","False","False","True","CONTROL"
+"mdes_low075","lower_neighbor","2612.36","-48.21","2.63","252","1.11","2.03","19.5317","23.5315","885.38","242.67","871.83","341.6","True","True","False","True","True","FAIL"
+"mdes_center100","center","2746.31","85.74","2.61","271","1.1","2.13","20.5332","24.9636","955.07","311.57","843.91","360.37","True","True","True","True","True","PASS"
+"mdes_high125","upper_neighbor","2629.03","-31.54","2.4","292","1.11","2.05","19.6563","23.6847","911.53","327.71","773.22","370.61","True","True","False","True","True","FAIL"

@@ -1,19 +1,24 @@
 [CmdletBinding()]
-param([ValidateRange(1,100)][int]$MaxCpuPercent=80,[switch]$UserAuthorizedFocusRisk)
+param(
+   [ValidateRange(1,100)][int]$MaxCpuPercent=80,
+   [switch]$UserAuthorizedFocusRisk,
+   [string]$SourceRelativePath='outputs\three_lane_momentum_feature_telemetry_model1_package\source\Professional_XAUUSD_EA.mq5',
+   [string]$ExpectedSourceHash='14F40409A6865F081774AEE18FEEC3E0F22ED1833F8ECAB54DD4BD852A3AD14B',
+   [string]$AuditRelativePath='outputs\THREE_LANE_MOMENTUM_FEATURE_TELEMETRY_COMPILE_AUDIT.csv'
+)
 
 $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
 if(!$UserAuthorizedFocusRisk){throw 'Controlled compile requires explicit focus/window-risk authorization.'}
 $repo=(Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $sharedWork=Split-Path -Parent $repo
-$source=Join-Path $repo 'outputs\three_lane_momentum_feature_telemetry_model1_package\source\Professional_XAUUSD_EA.mq5'
-$expectedSourceHash='14F40409A6865F081774AEE18FEEC3E0F22ED1833F8ECAB54DD4BD852A3AD14B'
+$source=Join-Path $repo $SourceRelativePath
 $preparer=Join-Path $PSScriptRoot 'prepare_mt5_portable_shared_expert.ps1'
 $repoLock=Join-Path $PSScriptRoot 'MT5_LOCAL_LAUNCH_DISABLED.lock'
 $outerLock=Join-Path $sharedWork 'MT5_LOCAL_LAUNCH_DISABLED.lock'
 $unlockFile=Join-Path $PSScriptRoot 'ALLOW_MT5_LOCAL_LAUNCH.unlock'
 $focusAck=Join-Path $PSScriptRoot 'ALLOW_MT5_HIDDEN_DESKTOP_ACK.unlock'
-$auditPath=Join-Path $repo 'outputs\THREE_LANE_MOMENTUM_FEATURE_TELEMETRY_COMPILE_AUDIT.csv'
+$auditPath=Join-Path $repo $AuditRelativePath
 $roots=@(
    (Join-Path $sharedWork 'mt5_portable_research'),
    (Join-Path $sharedWork 'mt5_portable_research_w2'),

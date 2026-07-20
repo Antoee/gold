@@ -1,21 +1,9 @@
 [CmdletBinding()]
 param(
-   [string]$SourcePath = 'work\Professional_XAUUSD_Three_Lane_Momentum_Feature_Telemetry_Research.mq5',
+   [string]$SourcePath = 'work\Professional_XAUUSD_Three_Lane_Momentum_D1_Ema_Slope_Guard_Research.mq5',
    [string]$LeaderProfilePath = 'release\three-lane-momentum-same-side-exit-cooldown-provisional\THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_PROVISIONAL.set',
-   [string]$PackageDir = 'outputs\three_lane_momentum_feature_telemetry_model1_package',
-   [string]$ManifestPath = 'outputs\THREE_LANE_MOMENTUM_FEATURE_TELEMETRY_MODEL1_MANIFEST.csv',
-   [ValidateSet(0,1,2,3,4)][int]$Model = 1,
-   [string]$From = '2015.01.01',
-   [string]$To = '2020.12.31',
-   [string]$WindowName = 'continuous_2015_2020',
-   [string]$PhaseName = 'momentum_feature_telemetry_model1',
-   [string]$RunLabel = 'three_lane_momentum_feature_telemetry_model1',
-   [string]$MomentumLogFileName = 'MOMENTUM_FEATURE_TELEMETRY_2015_2020.csv',
-   [string]$ReversionLogFileName = 'MOMENTUM_FEATURE_TELEMETRY_RV_AUX.csv',
-   [string]$AdaptiveLogFileName = 'MOMENTUM_FEATURE_TELEMETRY_ATB_AUX.csv',
-   [string]$StopRule = 'Behavior-neutral pre-2021 telemetry only. The report must reproduce the frozen cooldown-leader Model1 control at +1379.93 net, 261 trades, PF 1.88, and 1.05% rounded equity drawdown before feature analysis. Telemetry may nominate a new hypothesis using 2015-2018 training only; 2019-2020 is reserved for independent validation and post-2020 data stays unopened.',
-   [string]$ExpectedSourceHash = '14F40409A6865F081774AEE18FEEC3E0F22ED1833F8ECAB54DD4BD852A3AD14B',
-   [string]$SourceTestScript = 'test_three_lane_momentum_feature_telemetry_source.ps1'
+   [string]$PackageDir = 'outputs\three_lane_momentum_d1_ema_slope_guard_discovery_model1_package',
+   [string]$ManifestPath = 'outputs\THREE_LANE_MOMENTUM_D1_EMA_SLOPE_GUARD_DISCOVERY_MODEL1_MANIFEST.csv'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -23,6 +11,7 @@ Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'seasonal_gate_helpers.ps1')
 $repo = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $outputsRoot = (Resolve-Path (Join-Path $repo 'outputs')).Path
+$expectedSourceHash = '4119CAF3DACE9D35C80CDE7BBDDB5DBAB45001C654352A82E216B80BF70E9D67'
 $expectedLeaderHash = 'ACFCE73E2A48723334CC416715F047E3CEA87018D46B12B8A6CB0663E025BA1C'
 
 function Resolve-RepoPath([string]$Path) {
@@ -66,16 +55,16 @@ function Clear-OutputDirSafe([string]$Path) {
    New-Item -ItemType Directory -Path $Path -Force | Out-Null
 }
 
-& (Join-Path $PSScriptRoot $SourceTestScript) | Out-Null
+& (Join-Path $PSScriptRoot 'test_three_lane_momentum_d1_ema_slope_guard_source.ps1') | Out-Null
 $source = (Resolve-Path -LiteralPath (Resolve-RepoPath $SourcePath)).Path
 $leader = (Resolve-Path -LiteralPath (Resolve-RepoPath $LeaderProfilePath)).Path
 $sourceHash = (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash.ToUpperInvariant()
 $leaderHash = (Get-FileHash -LiteralPath $leader -Algorithm SHA256).Hash.ToUpperInvariant()
-if($sourceHash -ne $ExpectedSourceHash) { throw "Momentum feature-telemetry source identity changed: $sourceHash" }
+if($sourceHash -ne $expectedSourceHash) { throw "D1 EMA-slope guard research source identity changed: $sourceHash" }
 if($leaderHash -ne $expectedLeaderHash) { throw "Leader profile identity changed: $leaderHash" }
 
 $base = Get-SourceInputs $source
-if($base.Count -ne 185) { throw "Expected 185 source inputs, found $($base.Count)." }
+if($base.Count -ne 190) { throw "Expected 190 source inputs, found $($base.Count)." }
 $leaderCount = 0
 foreach($line in Get-Content -LiteralPath $leader) {
    if($line -notmatch '^(Inp[^=]+)=(.*)$') { continue }
@@ -86,19 +75,24 @@ foreach($line in Get-Content -LiteralPath $leader) {
 }
 if($leaderCount -ne 185) { throw "Expected 185 leader inputs, found $leaderCount." }
 Set-FixedInput $base 'InpEvidenceSourceHash' $sourceHash -StringValue
-Set-FixedInput $base 'InpEvidenceRunLabel' $RunLabel -StringValue
-Set-FixedInput $base 'InpLogTrades' 'true'
+Set-FixedInput $base 'InpEvidenceRunLabel' 'three_lane_momentum_d1_ema_slope_guard_discovery_model1' -StringValue
+Set-FixedInput $base 'InpLogTrades' 'false'
 Set-FixedInput $base 'InpShowDashboard' 'false'
-Set-FixedInput $base 'InpMOLogFileName' $MomentumLogFileName -StringValue
-Set-FixedInput $base 'InpRVLogFileName' $ReversionLogFileName -StringValue
-Set-FixedInput $base 'InpATBLogFileName' $AdaptiveLogFileName -StringValue
 
 $variants = @(
-   [pscustomobject]@{Name='mft_control';Role='behavior_neutral_telemetry'}
+   [pscustomobject]@{Name='mdes_control';Role='default_off_control';Enabled='false';MaximumSlopeATR='1.00'},
+   [pscustomobject]@{Name='mdes_low075';Role='lower_neighbor';Enabled='true';MaximumSlopeATR='0.75'},
+   [pscustomobject]@{Name='mdes_center100';Role='center';Enabled='true';MaximumSlopeATR='1.00'},
+   [pscustomobject]@{Name='mdes_high125';Role='upper_neighbor';Enabled='true';MaximumSlopeATR='1.25'}
 )
 $windows = @(
-   [pscustomobject]@{Name=$WindowName;From=$From;To=$To}
+   [pscustomobject]@{Name='older_2015_2018';From='2015.01.01';To='2018.12.31'},
+   [pscustomobject]@{Name='middle_2019_2020';From='2019.01.01';To='2020.12.31'},
+   [pscustomobject]@{Name='recent_2021_2023';From='2021.01.01';To='2023.12.31'},
+   [pscustomobject]@{Name='latest_2024_2026';From='2024.01.01';To='2026.07.12'},
+   [pscustomobject]@{Name='continuous_2015_2026';From='2015.01.01';To='2026.07.12'}
 )
+$stopRule = 'Frozen four-era D1 EMA-slope guard discovery. Every row must parse. The 1.00 ATR center and both 0.75/1.25 neighbors must remain profitable in all four disjoint eras, change behavior, and improve continuous net and PF versus the default-off control. The center must keep continuous DD <=1.25%, recovery and return/DD no worse than control, and retain >=60% of control trades. No threshold rescue, capital change, or recent-window substitution after results.'
 
 $package = Resolve-RepoPath $PackageDir
 Clear-OutputDirSafe $package
@@ -111,34 +105,37 @@ $rows = [Collections.Generic.List[object]]::new(); $ordinal = 0; $candidateRank 
 foreach($variant in $variants) {
    $candidateRank++
    $inputs = Copy-Inputs $base
+   Set-FixedInput $inputs 'InpMOUseD1EmaSlopeOverextensionGuard' $variant.Enabled
+   Set-FixedInput $inputs 'InpMOMaximumD1EmaSlopeATR' $variant.MaximumSlopeATR
    $profilePath = Join-Path $profileDir "$($variant.Name).set"
    @($inputs.Keys | Sort-Object | ForEach-Object { $inputs[$_] }) | Set-Content -LiteralPath $profilePath -Encoding ASCII
    $profileHash = (Get-FileHash -LiteralPath $profilePath -Algorithm SHA256).Hash.ToUpperInvariant()
    foreach($window in $windows) {
       $ordinal++
-      $configName = '{0:000}_{1}_{2}_m{3}.ini' -f $ordinal,$variant.Name,$window.Name,$Model
+      $configName = '{0:000}_{1}_{2}_m1.ini' -f $ordinal,$variant.Name,$window.Name
       $configPath = Join-Path $configDir $configName
-      $reportName = "$($variant.Name)_$($window.Name)_m$Model"
-      Write-SeasonalTesterConfig -Path $configPath -ReportRoot $reportDir -ReportName $reportName -From $window.From -To $window.To -Inputs $inputs -Model $Model -Deposit 10000 -Period 15
+      $reportName = "$($variant.Name)_$($window.Name)_m1"
+      Write-SeasonalTesterConfig -Path $configPath -ReportRoot $reportDir -ReportName $reportName -From $window.From -To $window.To -Inputs $inputs -Model 1 -Deposit 10000 -Period 15
       $rows.Add([pscustomobject][ordered]@{
-         QueueRank=$ordinal;Candidate=$variant.Name;CandidateRank=$candidateRank;Role=$variant.Role;Phase=$PhaseName
-         Window=$window.Name;From=$window.From;To=$window.To;Model=$Model;Deposit=10000
+         QueueRank=$ordinal;Candidate=$variant.Name;CandidateRank=$candidateRank;Role=$variant.Role;Phase='momentum_d1_ema_slope_guard_discovery_model1'
+         Window=$window.Name;From=$window.From;To=$window.To;Model=1;Deposit=10000
+         D1EmaSlopeOverextensionGuardEnabled=$variant.Enabled;MaximumD1EmaSlopeATR=$variant.MaximumSlopeATR
          MomentumRiskPercent='0.15';ReversionRiskPercent='0.45';AdaptiveRiskPercent='0.15'
          MaximumPortfolioOpenRiskPercent='0.75';ExpectedReportName=$reportName
          PackageConfig="$PackageDir\configs\$configName";SourceConfig="$PackageDir\configs\$configName"
          ReportDestination="$PackageDir\reports_here\$reportName";ConfigSha256=(Get-FileHash -LiteralPath $configPath -Algorithm SHA256).Hash.ToUpperInvariant()
-         ProfileSha256=$profileHash;SourceSha256=$sourceHash;StopRule=$StopRule
+         ProfileSha256=$profileHash;SourceSha256=$sourceHash;StopRule=$stopRule
       }) | Out-Null
    }
 }
 $manifest = Resolve-RepoPath $ManifestPath
 $rows | Export-Csv -LiteralPath $manifest -NoTypeInformation -Encoding ASCII
 @(
-   '# Momentum Feature Telemetry Contract','',
+   '# Momentum D1 EMA-Slope Guard Discovery Contract','',
    '**Status: PREREGISTERED PRE-2021 RESEARCH. THE PUBLISHED LEADER AND FORWARD CANDIDATE ARE UNCHANGED.**','',
    "- Source SHA-256: ``$sourceHash``", "- Leader profile SHA-256: ``$leaderHash``", "- Manifest SHA-256: ``$((Get-FileHash -LiteralPath $manifest -Algorithm SHA256).Hash.ToUpperInvariant())``", '',
-   '- The telemetry fork changes no strategy decision and adds no input, entry, close, or stop-modification path.',
-   '- Completed-bar D1 return, breakout distance, candle geometry, channel width, ATR, tick-volume ratio, and actual stop/ATR are recorded only after an existing momentum order fills.',
-   "- $StopRule", '- No martingale, grid, averaging down, recovery sizing, outcome-conditioned sizing, capital change, forward substitution, or real-account trading.'
+   '- Frozen center: block a momentum breakout only when its direction-adjusted 50-day EMA move over 20 completed D1 bars exceeds 1.00 D1 ATR.',
+   '- Frozen neighborhood: disabled control plus 0.75, 1.00, and 1.25 ATR ceilings. Requested risk, targets, stops, sizing, cooldown, and the 0.75% account-wide exposure cap are unchanged.',
+   "- $stopRule", '- No martingale, grid, averaging down, recovery sizing, outcome-conditioned sizing, capital change, forward substitution, or real-account trading.'
 ) | Set-Content -LiteralPath (Join-Path $package 'DISCOVERY_CONTRACT.md') -Encoding ASCII
 [pscustomobject][ordered]@{Status='READY';SourceSha256=$sourceHash;LeaderProfileSha256=$leaderHash;ManifestSha256=(Get-FileHash -LiteralPath $manifest -Algorithm SHA256).Hash.ToUpperInvariant();Variants=$variants.Count;Windows=$windows.Count;Configurations=$ordinal;Inputs=$base.Count;PackageDir=$PackageDir}
