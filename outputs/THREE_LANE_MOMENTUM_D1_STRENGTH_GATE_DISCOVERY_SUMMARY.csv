@@ -1,0 +1,5 @@
+Candidate,Role,MinimumD1MomentumStrengthEnabled,MinimumAbsoluteD1MomentumPercent,OlderNetProfit,LaterNetProfit,ContinuousNetProfit,TotalReturnPercent,CagrPercent,ProfitFactor,TotalTrades,MaxDrawdownPercent,RecoveryFactor,SharpeRatio,FrozenGate
+mds_control,control,false,0,1036.19,370.60,1379.93,13.80,2.18,1.88,261,1.05,11.6775,5.15,CONTROL
+mds_02,lower_support,true,2,856.19,370.60,1227.66,12.28,1.95,1.89,233,1.13,10.2767,4.90,FAIL
+mds_center_04,center,true,4,758.97,380.62,1131.34,11.31,1.80,1.89,214,1.12,9.6522,4.68,FAIL
+mds_06,upper_support,true,6,707.03,299.59,1005.57,10.06,1.61,1.93,183,1.20,7.9725,4.53,FAIL
