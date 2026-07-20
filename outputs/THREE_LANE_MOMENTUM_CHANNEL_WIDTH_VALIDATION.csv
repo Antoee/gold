@@ -1,0 +1,5 @@
+"Candidate","Role","FeatureEnabled","MaximumChannelWidthATR","TrainingTrades","TrainingNet","ValidationTrades","ValidationNet","ValidationProfitFactor","Net2019","Net2020","RemovedValidationNet","Removed2019Net","Removed2020Net","FullPeriodMomentumImprovement","ProjectedPortfolioNet","BehaviorChanged","FrozenGate"
+"mcw_control","disabled_control","False","disabled","133","478.6","61","147.65","1.3858","37","110.65","0","0","0","0","1379.93","False","CONTROL"
+"mcw_max600","lower_neighbor","True","6","118","503.58","49","14.06","1.0403","-13.76","27.82","133.59","50.76","82.83","-108.61","1271.32","True","FAIL"
+"mcw_center","center","True","6.5","122","534.98","55","71.42","1.1925","-9.88","81.3","76.23","46.88","29.35","-19.85","1360.08","True","FAIL"
+"mcw_max700","upper_neighbor","True","7","127","487.35","58","90.33","1.2361","-20.32","110.65","57.32","57.32","0","-48.57","1331.36","True","FAIL"

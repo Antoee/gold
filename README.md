@@ -8,7 +8,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 |---|---|
 | Highest verified historical result | **Momentum Same-Side Exit Cooldown 60, provisional research leader.** Model 4 real ticks: `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **Momentum profit ratchet rejected in pre-2021 discovery.** The center added only `$2.33` (`+0.17%`) and zero of six neighbors passed; post-2020 data and Model 4 stayed closed. |
+| Latest research result | **Momentum channel-width gate rejected in reserved telemetry validation.** The center projected `$19.85` less portfolio profit and zero of three thresholds passed; no code or MT5 rerun was allowed. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -47,6 +47,16 @@ All 12 annual Model 4 restarts were profitable and no worse than control; 2016, 
 This is a historical research promotion, not live approval. A second broker/specification and a valid frozen `$10,000` forward demo are still missing; the attached `$100,000` demo counts as zero evidence, and real-account trading remains disabled.
 
 [Read the Model 4 decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_DECISION.md), [annual decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_ANNUAL_MODEL4_DECISION.md), [stress decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_STRESS_DECISION.md), [risk audit](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_RISK_AUDIT.md), and [release package](release/three-lane-momentum-same-side-exit-cooldown-provisional/README.md).
+
+### Latest Momentum Market-Phase Research
+
+A maximum H1 breakout-channel width normalized by ATR was nominated from 2015-2018 training telemetry and rejected on the frozen 2019-2020 feature rows. The `6.0`, `6.5`, and `7.0 ATR` thresholds had all improved training momentum net and PF in both training halves, so `6.5 ATR` was frozen as the center before their validation outcomes were calculated.
+
+The pattern did not transfer. Validation momentum net fell from `+$147.65` to `+$71.42` at the center, PF fell from `1.3858` to `1.1925`, and the projected full-period portfolio net fell by `$19.85` to `+$1,360.08`. The `6.0` and `7.0 ATR` neighbors projected `+$1,271.32` and `+$1,331.36`; support was `0/3` versus `2/3` required.
+
+Because the telemetry gate failed, no strategy code was implemented and no MT5 rerun, post-2020 test, or Model 4 test was allowed. This is a useful speed improvement in the research loop: recorded completed-bar features can reject a weak idea before consuming tester time. The historical leader and every live-safety boundary remain unchanged.
+
+[Read the channel-width rejection](outputs/THREE_LANE_MOMENTUM_CHANNEL_WIDTH_DECISION.md), [frozen nomination](outputs/THREE_LANE_MOMENTUM_CHANNEL_WIDTH_NOMINATION.md), and [exact validation table](outputs/THREE_LANE_MOMENTUM_CHANNEL_WIDTH_VALIDATION.csv).
 
 ### Latest Momentum Profit-Ratchet Research
 
