@@ -1,0 +1,8 @@
+Candidate,Role,OlderNetProfit,LaterNetProfit,ContinuousNetProfit,TotalReturnPercent,CagrPercent,ProfitFactor,TotalTrades,MaxDrawdownPercent,RecoveryFactor,ReturnDrawdown,BehaviorChangedVsControl,NeighborGate
+tsslc_control,control,1001.72,370.41,1353.74,13.54,2.14,1.85,265,1.06,11.4559,12.7736,False,
+tsslc_strong020_reference,broad_reference,1024.13,388.14,1403.09,14.03,2.21,1.87,265,1.22,10.8843,11.5,True,
+tsslc_body035,threshold_lower_neighbor,1017.35,370.41,1369.37,13.69,2.16,1.86,265,1.06,11.5881,12.9151,True,True
+tsslc_body045,threshold_upper_neighbor,1001.72,370.41,1353.74,13.54,2.14,1.85,265,1.06,11.4559,12.7736,False,False
+tsslc_center_body040_cap020,center,1017.35,370.41,1369.37,13.69,2.16,1.86,265,1.06,11.5881,12.9151,True,
+tsslc_cap018,cap_lower_neighbor,1017.35,370.41,1369.37,13.69,2.16,1.86,265,1.06,11.5881,12.9151,True,True
+tsslc_cap022,cap_upper_neighbor,1017.35,370.41,1369.37,13.69,2.16,1.86,265,1.06,11.5881,12.9151,True,True

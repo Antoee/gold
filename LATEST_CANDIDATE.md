@@ -34,6 +34,12 @@ Updated: 2026-07-20
 - `outputs/THREE_LANE_REVERSION_STRONG_SIGNAL_LOT_CAP_MODEL4_STRESS_DECISION.md`
 - `outputs/THREE_LANE_REVERSION_STRONG_SIGNAL_LOT_CAP_MODEL4_RISK_AUDIT.md`
 
+## Latest Completed Research
+
+The tiered body-`0.40` / cap-`0.20` extension was rejected in sealed 2015-2020 Model 1 discovery. It improved continuous net from `+$1,353.74` to `+$1,369.37`, but failed the frozen growth and CAGR gates and retained only `31.67%` of the broad-reference increment versus the required `40%`. Recent-data and Model 4 testing were not opened, so the provisional leader above is unchanged.
+
+- `outputs/THREE_LANE_REVERSION_TIERED_STRONG_SIGNAL_LOT_CAP_DISCOVERY_DECISION.md`
+
 ## Boundary
 
 The attached `$100,000` demo violates the frozen `$10,000` forward contract and contributes zero valid days or trades. A second broker/specification test and valid forward evidence are still required. Real-account trading remains disabled.
