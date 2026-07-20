@@ -8,7 +8,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 |---|---|
 | Highest verified historical result | **Momentum Same-Side Exit Cooldown 60, provisional research leader.** Model 4 real ticks: `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **Strong-breakout target extension rejected in pre-2021 discovery.** All seven enabled profiles reduced continuous profit and none passed the frozen gate; post-2020 data and Model 4 stayed closed. |
+| Latest research result | **Momentum profit ratchet rejected in pre-2021 discovery.** The center added only `$2.33` (`+0.17%`) and zero of six neighbors passed; post-2020 data and Model 4 stayed closed. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -47,6 +47,18 @@ All 12 annual Model 4 restarts were profitable and no worse than control; 2016, 
 This is a historical research promotion, not live approval. A second broker/specification and a valid frozen `$10,000` forward demo are still missing; the attached `$100,000` demo counts as zero evidence, and real-account trading remains disabled.
 
 [Read the Model 4 decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_DECISION.md), [annual decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_ANNUAL_MODEL4_DECISION.md), [stress decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_STRESS_DECISION.md), [risk audit](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_RISK_AUDIT.md), and [release package](release/three-lane-momentum-same-side-exit-cooldown-provisional/README.md).
+
+### Latest Momentum Profit-Ratchet Research
+
+The default-off completed-H1 profit ratchet completed on `2026-07-20` and was rejected in frozen pre-2021 discovery. It added a second stop-protection step after the existing `1.0R` break-even rule: the frozen center could lock `0.75R` only after favorable movement reached `1.50R`. Entry signals, initial stops, the `2.0R` take-profit, requested risk, lot caps, portfolio exposure limits, and every safety lock remained unchanged.
+
+Static checks confirmed exactly three new inputs and no new entry, close, or stop-modification path. MetaEditor compiled the exact source with zero errors and warnings to one EX5 identity across four workers. All `24/24` Model 1 reports and identity sidecars passed after two unchanged report-export retries.
+
+The disabled control exactly reproduced `+$1,379.93`, `2.18%/yr` CAGR, PF `1.88`, 261 trades, `1.05%` drawdown, recovery `11.6775`, and return/drawdown `13.1429`. The center reached `+$1,382.26`, an increase of only `$2.33` or `0.17%`; CAGR stayed `2.18%/yr`, drawdown rose to `1.06%`, and return/drawdown fell to `13.0377`. It also lost `$6.19` versus control in 2015-2018.
+
+Zero of six trigger/lock neighbors passed the complete gate. The aggressive `1.25R` trigger / `1.00R` lock reduced continuous net by `4.58%`, while two conservative rows were behaviorally inactive. The thresholds were not moved after observation, reserved 2021-2022 data was not opened, and no Model 4 run or promotion was allowed. The same-side cooldown profile remains the historical leader.
+
+[Read the profit-ratchet rejection](outputs/THREE_LANE_MOMENTUM_PROFIT_RATCHET_DISCOVERY_DECISION.md), [compact summary](outputs/THREE_LANE_MOMENTUM_PROFIT_RATCHET_DISCOVERY_SUMMARY.csv), [exact Model 1 results](outputs/THREE_LANE_MOMENTUM_PROFIT_RATCHET_DISCOVERY_MODEL1_RESULTS.csv), and [research source](work/Professional_XAUUSD_Three_Lane_Momentum_Profit_Ratchet_Research.mq5).
 
 ### Latest Strong-Breakout Target Research
 
