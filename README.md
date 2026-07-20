@@ -8,7 +8,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 |---|---|
 | Highest verified historical result | **Momentum Same-Side Exit Cooldown 60, provisional research leader.** Model 4 real ticks: `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **Reversion reward-quality risk and adjacent-timeframe transfer both rejected in pre-2021 discovery.** Reward-quality risk reduced the exact control from `+$1,379.93` (`2.18%/yr`) to `+$1,369.88` (`2.16%/yr`). M30 lost across every tested horizon; H2 peaked at only `+$326.93` (`0.54%/yr`) from seven trades. Holdout and Model 4 remained closed. **No new best.** |
+| Latest research result | **Portfolio-solo reversion allocation and stop geometry both rejected in pre-2021 discovery.** The fixed solo-cap center improved Model 1 net from `+$1,379.93` to `+$1,416.50`, but drawdown rose from `1.05%` to `1.17%` and recovery fell from `11.68` to `11.40`. The 3-bar stop changed net by only `+$0.10`. Holdout and Model 4 remained closed. **No new best.** |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -47,6 +47,28 @@ All 12 annual Model 4 restarts were profitable and no worse than control; 2016, 
 This is a historical research promotion, not live approval. A second broker/specification and a valid frozen `$10,000` forward demo are still missing; the attached `$100,000` demo counts as zero evidence, and real-account trading remains disabled.
 
 [Read the Model 4 decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_DECISION.md), [annual decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_ANNUAL_MODEL4_DECISION.md), [stress decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_STRESS_DECISION.md), [risk audit](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_RISK_AUDIT.md), and [release package](release/three-lane-momentum-same-side-exit-cooldown-provisional/README.md).
+
+### Latest Portfolio-Solo Reversion Allocation Research
+
+The default-off portfolio-solo strong-signal lot-cap experiment completed on `2026-07-20` and was rejected in frozen 2015-2020 Model 1 discovery. It could raise only the existing strong-reversion lot ceiling when no momentum or adaptive-trend position was open. The completed-H1 signal threshold, `0.45%` reversion risk request, entries, stops, VWAP targets, exits, trade-count logic, `0.75%` portfolio cap, loss limits, capital contract, and real-account lock remained unchanged.
+
+The research source passed static default-off, ownership, outcome-independence, and unchanged-trade-path checks. MetaEditor compiled it with zero errors and warnings to one exact EX5 identity across four workers. All `15/15` reports parsed with exact identity after one unchanged export recovery.
+
+Control made `+$1,379.93`, `2.18%/yr` CAGR, PF `1.88`, 261 trades, `1.05%` drawdown, and recovery `11.68`. The fixed `0.18` center made `+$1,416.50`, a `2.65%` net increase, at `2.23%/yr` CAGR and PF `1.90`; however, older-era growth reached only `2.17%` versus the frozen `3%` floor, drawdown rose to `1.17%`, and recovery fell to `11.40`. The `0.17` and `0.19` neighbors also failed the preregistered growth and efficiency gates.
+
+The cap was not moved after observation. No post-2020 or Model 4 run was opened, the verified real-tick leader remains `+$2,492.25`, and the invalid `$100,000` demo still counts as zero forward evidence.
+
+[Read the solo-cap rejection](outputs/THREE_LANE_REVERSION_SOLO_STRONG_SIGNAL_LOT_CAP_DISCOVERY_DECISION.md), [exact Model 1 results](outputs/THREE_LANE_REVERSION_SOLO_STRONG_SIGNAL_LOT_CAP_DISCOVERY_MODEL1_RESULTS.csv), [canonical run evidence](outputs/THREE_LANE_REVERSION_SOLO_STRONG_SIGNAL_LOT_CAP_DISCOVERY_RUN_ATTESTATION.csv), and [research source](work/Professional_XAUUSD_Three_Lane_Reversion_Solo_Strong_Signal_Lot_Cap_Research.mq5).
+
+### Latest Reversion Stop-Geometry Research
+
+The exact leader's reversion structural-stop lookback was tested at 2, 3, 4, 5, and 6 completed H1 bars under a frozen 2015-2020 Model 1 contract. All `15/15` reports parsed with exact source and binary identity after one unchanged export recovery. The signal, stop buffer, VWAP target, requested risk, selective lot cap, other lanes, and every account protection remained unchanged.
+
+The 5-bar control made `+$1,379.93`, `2.18%/yr` CAGR, PF `1.88`, 261 trades, `1.05%` drawdown, and recovery `11.68`. The fixed 3-bar center made `+$1,380.03`, only `$0.10` more; 4 and 6 bars exactly reproduced control. Two bars weakened the recent era by `$43.09` and continuous net by `$9.21`. No row provided the required broad, risk-adjusted improvement or adjacent support.
+
+No holdout or Model 4 run was opened, and the verified historical leader remains unchanged.
+
+[Read the stop-geometry rejection](outputs/THREE_LANE_REVERSION_STOP_GEOMETRY_DISCOVERY_DECISION.md), [exact Model 1 results](outputs/THREE_LANE_REVERSION_STOP_GEOMETRY_DISCOVERY_MODEL1_RESULTS.csv), and [canonical run evidence](outputs/THREE_LANE_REVERSION_STOP_GEOMETRY_DISCOVERY_RUN_ATTESTATION.csv).
 
 ### Latest Reversion Reward-Quality Risk Research
 
