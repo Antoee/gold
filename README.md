@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **Strong-reversion/ATB risk balancing found an isolated Model 1 high at +$2,445.32, +24.45% total, and 1.92% CAGR, but the 0.140% center and 0.135% lower neighbor both lost to control in 2015-2018. The narrow plateau failed, Model 4 did not open, and the threshold family is closed. No new best.** ATB150 remains the best. |
+| Latest research result | **An ATB session-shaped follow-up failed in Model 1. The 16-1 center fell to +$2,344.44 and 1.84% CAGR versus strong control at +$2,391.89 and 1.88%; the wider 16-9 row added only $6.30 with no CAGR gain. Model 4 did not open and the hour family is closed. No new best.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,14 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+The strong-reversion / adaptive-trend session experiment completed on `2026-07-19`. Exact ATB150 trade attribution had suggested that adaptive-trend breakouts around the 16:00-00:00 server session were more productive, so a new data-informed contract froze a strong-reversion control plus `12-1`, `16-1`, and `16-9` adaptive-trend entry windows. Strong-reversion body/risk stayed at `0.25 / 0.70%`, adaptive-trend risk stayed at `0.15%`, tick protection stayed disabled, and no entry, stop, target, exit, exposure cap, or loss limit changed.
+
+All `20/20` Model 1 reports parsed from one exact source and EX5 after one unchanged identity retry. The `16-1` center reduced continuous net from strong control at `+$2,391.89` to `+$2,344.44`, CAGR from `1.88%` to `1.84%`, and trades from 415 to 384; its 2015-2018 net fell from `+$860.86` to `+$799.29`. The `12-1` neighbor was weaker. The best `16-9` row reached `+$2,398.19`, PF `1.90`, and recovery `16.6057`, but added only `$6.30`, left CAGR unchanged at `1.88%`, and failed its frozen growth gate. The ledger-hour pattern did not transfer into a stable portfolio improvement. Model 4 did not open, no further hour search is permitted, and ATB150 remains unchanged.
+
+[Read the ATB session rejection](outputs/THREE_LANE_REVERSION_STRONG_ATB_SESSION_MODEL1_DECISION.md) and [the compact results](outputs/THREE_LANE_REVERSION_STRONG_ATB_SESSION_MODEL1_SUMMARY.csv).
+
+### Earlier Risk-Balance Research
 
 The strong-reversion / adaptive-trend risk-balance experiment completed on `2026-07-19`. It changed no entry, stop, target, or exit rule: completed-H1 body ratio stayed at `0.25`, requested strong-reversion risk stayed at `0.70%`, the rejected tick-protection feature stayed disabled, and only adaptive-trend risk was varied. The audited source, exact EX5, `0.75%` account-wide open-risk cap, portfolio loss limits, and real-account lock remained unchanged.
 

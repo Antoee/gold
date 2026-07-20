@@ -1,0 +1,6 @@
+"Candidate","Role","ATBSessionEnabled","ATBSessionStartHour","ATBSessionEndHour","OlderNetProfit","MiddleNetProfit","RecentNetProfit","ContinuousNetProfit","TotalReturnPercent","CagrPercent","ProfitFactor","TotalTrades","MaxDrawdownPercent","RecoveryFactor","ReturnDrawdown"
+"rvsats_champion","champion_control","false","6","20","860.86","694.54","601.99","2195.53","21.96","1.74","1.83","415","1.17","15.8168","18.7692"
+"rvsats_strong","strong_control","false","6","20","860.86","752.95","682.6","2391.89","23.92","1.88","1.89","415","1.21","16.562","19.7686"
+"rvsats_12_1","lower_neighbor","true","12","1","780.5","766.18","682.6","2332.93","23.33","1.84","1.91","392","1.21","16.1538","19.281"
+"rvsats_16_1","center","true","16","1","799.29","760.45","682.6","2344.44","23.44","1.84","1.93","384","1.21","16.2335","19.3719"
+"rvsats_16_9","upper_neighbor","true","16","9","884.46","747.59","682.6","2398.19","23.98","1.88","1.9","408","1.21","16.6057","19.8182"
