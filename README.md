@@ -8,7 +8,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 |---|---|
 | Highest verified historical result | **Momentum Same-Side Exit Cooldown 60, provisional research leader.** Model 4 real ticks: `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **M15 squeeze partial runner rejected in pre-2021 discovery.** The fixed `80%` close / `4R` runner / `+1.25R` lock center improved Model 1 net from `+$1,575.70` to `+$1,695.16`, CAGR from `2.47%/yr` to `2.64%/yr`, PF from `1.78` to `1.84`, and kept drawdown at `1.10%`. However, PF retained `97.87%` of the `1.88` leader control versus the frozen `98%` floor. All broad windows were profitable and `5/6` neighbors passed, but the center quality gate remained binding. Holdout and Model 4 stayed closed. **No new best.** |
+| Latest research result | **M15 squeeze completed-bar feature screen rejected before validation.** A behavior-neutral telemetry fork exactly reproduced the partial-runner result at `+$1,695.16`, `+16.95%`, `2.64%/yr` CAGR, PF `1.84`, 391 report trades, and `1.10%` drawdown. Its exact 88-position ledger screened 15 causal entry features in both directions across frozen 15/20/25% threshold neighborhoods. No family passed the complete 2015-2018 training gate, so reserved 2019-2020 validation, strategy code, post-2020 testing, and Model 4 remained closed. **No new best.** |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -47,6 +47,20 @@ All 12 annual Model 4 restarts were profitable and no worse than control; 2016, 
 This is a historical research promotion, not live approval. A second broker/specification and a valid frozen `$10,000` forward demo are still missing; the attached `$100,000` demo counts as zero evidence, and real-account trading remains disabled.
 
 [Read the Model 4 decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_DECISION.md), [annual decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_ANNUAL_MODEL4_DECISION.md), [stress decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_STRESS_DECISION.md), [risk audit](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_RISK_AUDIT.md), and [release package](release/three-lane-momentum-same-side-exit-cooldown-provisional/README.md).
+
+### Latest M15 Squeeze Feature-Telemetry Research
+
+The behavior-neutral squeeze telemetry experiment completed on `2026-07-20` and was rejected before filter implementation. It added zero strategy inputs and zero buy, sell, partial-close, or stop-modification paths. After every existing entry gate passed, it recorded only completed-bar breakout depth, candle geometry, expansion, channel width, tick volume, ATR, ADX, direction-adjusted H1 EMA state, squeeze compression, and actual stop distance.
+
+Static outcome-independence and unchanged-trade-path checks passed. MetaEditor compiled the exact source with zero errors and warnings to one EX5 identity across four workers. The one identity-bound Model 1 telemetry report exactly reproduced the partial-runner center at `+$1,695.16`, `+16.95%` total, `2.64%/yr` CAGR, PF `1.84`, 391 report trades, `1.10%` drawdown, and recovery `14.4626`.
+
+The exact ledger aggregated 88 squeeze positions from 129 exit deals and 41 protected partial events. Squeeze net was `+$328.66`. The analyzer was hashed before the run and allowed feature nomination from the 55 trades in 2015-2018 only; the 33 trades in 2019-2020 were reserved for one-shot validation. Each candidate required both training halves, at least 75% trade retention, improved PF, and support from its 15%, 20%, and 25% threshold neighborhood.
+
+Zero of 30 feature-direction families passed the complete training gate, so validation outcomes were never opened for candidate selection and no strategy filter was implemented. The closest family required a minimum breakout range/ATR: its 15% and 20% rungs improved both training halves, but the 25% neighbor retained only `41/55 = 74.55%`, below the frozen 75% floor. The retention rule and threshold were not changed after observation.
+
+This telemetry-first workflow completed in seconds instead of launching another large MT5 matrix. It found useful research structure without converting a near miss into a promoted bot. The verified real-tick leader remains `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, and `1.18%` drawdown.
+
+[Read the telemetry decision](outputs/FOUR_LANE_M15_SQUEEZE_FEATURE_TELEMETRY_DECISION.md), [frozen contract](outputs/FOUR_LANE_M15_SQUEEZE_FEATURE_TELEMETRY_CONTRACT.md), [exact 88-position ledger](outputs/FOUR_LANE_M15_SQUEEZE_FEATURE_TELEMETRY_TRADES.csv), [full screen](outputs/FOUR_LANE_M15_SQUEEZE_FEATURE_TELEMETRY_SCREEN.csv), and [telemetry source](work/Professional_XAUUSD_Four_Lane_M15_Squeeze_Feature_Telemetry_Research.mq5).
 
 ### Latest M15 Squeeze Partial-Runner Research
 

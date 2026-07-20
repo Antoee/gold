@@ -1,0 +1,2 @@
+Status,TrainingTrades,ValidationTrades,PassingTrainingFamilies,ValidationOpened,CodeTestPermitted,LedgerSha256
+NO_TRAINING_CANDIDATE,55,33,0,False,False,992D32AC8E7608CB24F337E4AB6275AADEA3580861A818EBDB2355A7E323CB84

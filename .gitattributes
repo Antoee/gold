@@ -191,6 +191,8 @@ work/Professional_XAUUSD_Three_Lane_Reversion_Reward_Quality_Risk_Research.mq5 -
 work/Professional_XAUUSD_Three_Lane_Reversion_Solo_Strong_Signal_Lot_Cap_Research.mq5 -text -diff
 work/Professional_XAUUSD_Four_Lane_M15_Squeeze_Diversifier_Research.mq5 -text -diff
 work/Professional_XAUUSD_Four_Lane_M15_Squeeze_Partial_Runner_Research.mq5 -text -diff
+work/Professional_XAUUSD_Four_Lane_M15_Squeeze_Feature_Telemetry_Research.mq5 -text -diff
+work/analyze_four_lane_m15_squeeze_feature_telemetry.py text eol=lf
 release/three-lane-momentum-same-side-exit-cooldown-provisional/*.mq5 -text -diff
 release/three-lane-momentum-same-side-exit-cooldown-provisional/*.set -text whitespace=cr-at-eol
 outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_* -text whitespace=cr-at-eol
@@ -201,3 +203,4 @@ outputs/THREE_LANE_REVERSION_SOLO_STRONG_SIGNAL_LOT_CAP_* -text whitespace=cr-at
 outputs/FOUR_LANE_M15_SQUEEZE_DIVERSIFIER_* -text whitespace=cr-at-eol
 outputs/FOUR_LANE_M15_SQUEEZE_TARGET_INTERACTION_* -text whitespace=cr-at-eol
 outputs/FOUR_LANE_M15_SQUEEZE_PARTIAL_RUNNER_* -text whitespace=cr-at-eol
+outputs/FOUR_LANE_M15_SQUEEZE_FEATURE_TELEMETRY_* -text whitespace=cr-at-eol
