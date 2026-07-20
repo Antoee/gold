@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **The strong-reward quality code passed Model 1, then failed its frozen Model 4 real-tick risk-efficiency gate. The 1.50-RR center produced +$2,236.41, +22.36% total, 1.77% CAGR, PF 1.85, and 1.24% drawdown, but recovery and return/drawdown fell below control. No new best.** ATB150 remains the best. |
+| Latest research result | **The completed-H1 rejection-wick allocation stayed profitable in every broad era, but its 25% center produced +$2,321.32, +23.21% total, and 1.83% CAGR on Model 1, missing the frozen +0.10-point CAGR-improvement gate by 0.01 point. Model 4 did not open. No new best.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,14 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+The completed-H1 rejection-wick allocation experiment completed on `2026-07-19`. Exact ATB150 trade-ledger attribution showed why reversion deserved the next distinct code test: its 38 trades made `+$1,366.48` at PF `3.94`, with positive net in 2015-2018, 2019-2022, and 2023-2026, while the two trend lanes were much less efficient. The new default-off allocator could request `0.70%` reversion risk only when an already-valid completed-H1 reversal met both the frozen `0.25` directional-body ratio and a directional rejection-wick threshold. It changed no entry, stop, target, close, or modify path and preserved all portfolio limits and the real-account lock.
+
+The contract froze a disabled-feature control plus `20% / 25% / 30%` wick thresholds before testing. All `16/16` Model 1 reports parsed on one exact source and EX5 identity after one identity-only refusal was rerun unchanged and accepted. Control returned `+$2,195.53`, `+21.96%` total, `1.74%` CAGR, PF `1.83`, 415 trades, `1.17%` drawdown, recovery `15.8168`, and return/drawdown `18.7692`. The `25%` center improved to `+$2,321.32`, `+23.21%` total, `1.83%` CAGR, PF `1.87`, the same 415 trades, `1.22%` drawdown, recovery `16.0734`, and return/drawdown `19.0246`. Every broad era remained positive and no worse than control.
+
+The center nevertheless missed its frozen CAGR requirement by `0.01` point: the contract required at least `1.84%`, not `1.83%`. The `20%` lower neighbor simply reproduced the earlier body-only allocation at `+$2,391.89` and `1.88%` CAGR; the `25%` and `30%` rows collapsed to the same broker lot decisions and removed part of that improvement. The gate was not rounded or relaxed after observation. Model 4 did not open, ATB150 remains the historical champion, and the invalid forward registration remains unchanged.
+
+[Read the rejection-wick Model 1 decision](outputs/THREE_LANE_REVERSION_REJECTION_QUALITY_MODEL1_DECISION.md), [the compact results](outputs/THREE_LANE_REVERSION_REJECTION_QUALITY_MODEL1_SUMMARY.csv), and [the exact run attestation](outputs/THREE_LANE_REVERSION_REJECTION_QUALITY_MODEL1_RUN_ATTESTATION.csv).
 
 The strong-reward quality allocation experiment completed on `2026-07-19`. It addressed a specific weakness in the earlier completed-H1 body feature: extra reversion risk had been allowed from candle body alone even when the setup barely cleared the existing `1.20` spread-adjusted reward/risk floor. The new default-off code requires both the frozen body ratio `0.25` and a separately frozen minimum adjusted reward/risk before requesting `0.70%` risk. It changes no entry, stop, target, close, or modify path; uses no future, current-bar, outcome, account-profit, or calendar data; and preserves the `0.75%` account open-risk cap, portfolio loss limits, minimum-lot refusal, and real-account lock.
 
@@ -111,6 +119,7 @@ Continuous 2015-2026 figures use a sequential `$10,000` account path. V1 figures
 | Profile | Test model | Net | Total increase | CAGR | PF | Max DD | Recovery | Return/DD | Status |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | **ATB150** | Model 4 real ticks | **+$2,105.08** | **+21.05%** | **+1.67%/yr** | **1.81** | **1.15%** | **15.67** | **18.30** | **Current best** |
+| Rejection quality body 0.25 / wick 25% / risk 0.70% | Model 1 only | +$2,321.32 | +23.21% | +1.83%/yr | 1.87 | 1.22% | 16.0734 | 19.02 | Rejected before Model 4; CAGR gate missed by 0.01 point |
 | Strong-reward quality RR 1.50 / risk 0.70% | Model 4 real ticks | +$2,236.41 | +22.36% | +1.77%/yr | 1.85 | 1.24% | 15.3347 | 18.03 | Rejected by frozen recovery, return/DD, and relative-DD gates |
 | Strong-reversion body 0.25 / risk 0.65%-0.675% plateau | Model 4 real ticks | +$2,271.52 | +22.72% | +1.79%/yr | 1.87 | 1.23% | 15.5754 | 18.47 | Rejected by frozen recovery/neighbor gate |
 | Strong-reversion body 0.25 / risk 0.70% | Model 4 real ticks | +$2,284.81 | +22.85% | +1.80%/yr | 1.87 | 1.23% | 15.6666 | 18.58 | Rejected by frozen recovery gate |
