@@ -198,3 +198,4 @@ outputs/THREE_LANE_REVERSION_BAND_DEVIATION_EXPANSION_* -text whitespace=cr-at-e
 outputs/THREE_LANE_REVERSION_STOP_GEOMETRY_* -text whitespace=cr-at-eol
 outputs/THREE_LANE_REVERSION_SOLO_STRONG_SIGNAL_LOT_CAP_* -text whitespace=cr-at-eol
 outputs/FOUR_LANE_M15_SQUEEZE_DIVERSIFIER_* -text whitespace=cr-at-eol
+outputs/FOUR_LANE_M15_SQUEEZE_TARGET_INTERACTION_* -text whitespace=cr-at-eol
