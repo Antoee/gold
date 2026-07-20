@@ -1,26 +1,39 @@
 # Latest Candidate
 
-Updated: 2026-07-11
+Updated: 2026-07-20
 
-The previous README status showing roughly `+$866` over 2024-01-01 to 2026-07-02 is superseded by the current promoted research candidate:
+## Provisional Historical Leader
 
-- Candidate: `CANDIDATE_MAR10_MAY10_CONTINUOUS_PROFILE`
-- Base: `CANDIDATE_LIQUIDITY_STOP_CONFLICT_MARCH_MAY280_MAYCAP17_PROFILE`
-- Key overrides: `InpUseMonthDayWindowFilter=true`, `InpMarchMaxDay=10`, `InpMayMaxDay=10`
-- Current-source continuous full-period net: `+$3,746.45`
-- Full-period final balance on `$1,000` deposit: `$4,746.45`
-- 2026 YTD: `+$1,107.93`
-- 2025 full: `+$214.30`
-- 2024 full: `+$1,409.57`
-- Worst broad validation window: `$0.00`
-- Losing broad validation windows: `0`
-- Monthly shortlist: `30/30` parsed, total `+$3,358.64`, worst month `$0.00`, losing months `0`
+- Candidate: `Strong-Signal Selective Reversion Lot Cap 0.15`
+- Status: provisional research leader; not live-approved and not substituted into the registered forward run
+- Test: XAUUSD M15, MT5 Model 4 real ticks, `$10,000`, 2015-01-01 through 2026-07-18
+- Net profit: `+$2,428.50`
+- Ending balance: `$12,428.50`
+- Total increase: `+24.28%`
+- CAGR: `+1.90% per year`
+- Profit factor: `1.89`
+- Maximum equity drawdown: `1.18%`
+- Recovery factor: `17.09`
+- Trades: `404`
+- Improvement over ATB150: `+$323.42`, or `+15.36%` more historical net, with the same trade count
 
-Evidence files:
+## Validation
 
-- `outputs/EA_CANDIDATE_STATE_2026-07-11_MAR10_MAY10_CONTINUOUS.txt`
-- `outputs/CANDIDATE_MAR10_MAY10_CONTINUOUS_PROFILE_OVERRIDES.set`
-- `outputs/MAR10_MAY10_CURRENT_LOG_SUMMARY.csv`
-- `outputs/MAR10_MAY10_CURRENT_LOG_RESULTS.csv`
+- Sealed 2015-2020 discovery: pass
+- Feature-level 2021-2026 validation: pass
+- Exact 2015-2026 Model 4 broad/continuous gate: pass
+- Annual Model 4 restarts: 12/12 profitable, 11/12 no worse than control
+- Hard-risk audit: pass; maximum portfolio initial risk `0.5892%` against `0.75%`
+- Added-cost stress: pass; severe `0.10R` per trade retained `+$1,798.19`, PF `1.59`
+- Clustered Monte Carlo: 8/8 scenarios pass, 10,000 trials each
 
-Risk note: this is a promoted research candidate, not a live-trading guarantee. It relies on March/May day-window filtering, so it needs continued walk-forward and post-July-2026 out-of-sample validation before any live use.
+## Evidence
+
+- `outputs/THREE_LANE_REVERSION_STRONG_SIGNAL_LOT_CAP_MODEL4_DECISION.md`
+- `outputs/THREE_LANE_REVERSION_STRONG_SIGNAL_LOT_CAP_ANNUAL_MODEL4_DECISION.md`
+- `outputs/THREE_LANE_REVERSION_STRONG_SIGNAL_LOT_CAP_MODEL4_STRESS_DECISION.md`
+- `outputs/THREE_LANE_REVERSION_STRONG_SIGNAL_LOT_CAP_MODEL4_RISK_AUDIT.md`
+
+## Boundary
+
+The attached `$100,000` demo violates the frozen `$10,000` forward contract and contributes zero valid days or trades. A second broker/specification test and valid forward evidence are still required. Real-account trading remains disabled.

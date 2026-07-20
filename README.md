@@ -6,33 +6,51 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 
 | Lane | Status |
 |---|---|
-| Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **A reversion lot-cap ladder increased sealed pre-2021 Model 1 profit, but failed its frozen risk-efficiency gate. The 0.15-lot center rose from +$1,191.69 / 1.89% per year to +$1,419.25 / 2.24% per year, while drawdown rose from 1.02% to 1.30% and return/drawdown fell. Upper rows weakened further. No 2021-2026 or Model 4 test opened. No new best.** ATB150 remains the best. |
+| Highest verified historical result | **Strong-Signal Selective Reversion Lot Cap, provisional research leader.** Model 4 real ticks: `+$2,428.50`, `+24.28%`, `1.90%/yr` CAGR, PF `1.89`, `1.18%` drawdown. |
+| Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
+| Latest research result | **The selective `0.15`-lot ceiling passed sealed discovery, 2021-2026 validation, exact Model 4, 12 annual restarts, hard-risk audit, added-cost stress, and 80,000 clustered Monte Carlo trials.** It earned `$323.42` more than ATB150 on the continuous real-tick path with the same 404 trades. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
 
-Three-Lane Trade-Ready RC2 ATB150 uses the exact hardened RC2 source and raises only the adaptive-trend lane risk from `0.10%` to `0.15%`. Reversion, momentum, total open risk, and every portfolio loss limit remain unchanged. It is the strongest exact historical profile, but it is not a promise of future profit and is not the registered forward bot.
+The selective candidate raises only the lot ceiling for already-valid reversion signals whose completed H1 candle body is at least `0.25` of its range. Requested reversion risk remains `0.45%`; maximum portfolio open risk remains `0.75%`; all entries, stops, exits, loss limits, and real-account protections remain unchanged. The higher ceiling lets those strong signals size closer to their existing risk budget without martingale, grid, averaging down, or recovery sizing.
 
-## Best Result
+## Highest Historical Result
 
-Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` through `2026-07-12`:
+Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` through `2026-07-18`:
 
 | Metric | Result |
 |---|---:|
-| Net profit | **+$2,105.08** |
-| Ending balance | **$12,105.08** |
-| Total increase | **+21.05%** |
-| CAGR | **+1.67% per year** |
-| Profit factor | **1.81** |
+| Net profit | **+$2,428.50** |
+| Ending balance | **$12,428.50** |
+| Total increase | **+24.28%** |
+| CAGR | **+1.90% per year** |
+| Profit factor | **1.89** |
 | Trades | **404** |
 | Win rate | **44.31%** |
-| Maximum equity drawdown | **$134.35 / 1.15%** |
-| Recovery factor | **15.67** |
+| Maximum equity drawdown | **1.18%** |
+| Recovery factor | **17.09** |
+| Return / drawdown | **20.58** |
 
-The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
+Against ATB150, the candidate adds `$323.42` (`+15.36%` more net profit), `+3.23` total-return points, and `+0.23` CAGR points per year. PF improves from `1.81` to `1.89`, recovery from `15.67` to `17.09`, and return/drawdown from `18.30` to `20.58`; drawdown rises only `0.03` point. These are historical measurements, not a forecast.
 
 ## Latest Research Update
+
+The strong-signal selective lot-cap experiment completed on `2026-07-20`. It was a strategy-code change: only already-valid reversion entries with a completed-H1 body ratio of at least `0.25` may use a `0.15`-lot ceiling; all other reversion entries retain `0.10`. The feature is default-off in source, uses no current/future bar or prior trade outcome, adds no entry or exit path, and never raises requested risk above `0.45%`.
+
+Sealed 2015-2020 Model 1 discovery passed all growth, risk, efficiency, and neighbor gates. The `0.15` selective center reached `+$1,353.74`, `2.14%/yr` CAGR, PF `1.85`, `1.06%` drawdown, recovery `11.4559`, and return/drawdown `12.7736` versus control at `+$1,191.69`, `1.89%/yr`, PF `1.77`, `1.02%` drawdown, recovery `10.5778`, and return/drawdown `11.6863`.
+
+The exact center then passed feature-level 2021-2026 validation: continuous net improved from `+$944.62` to `+$1,045.26`, CAGR from `1.64%` to `1.81%`, PF from `2.01` to `2.07`, and recovery from `7.3380` to `8.1198`, while drawdown fell from `1.23%` to `1.21%`. Every paired recent window was positive and no worse than control.
+
+Exact Model 4 real ticks confirmed the result across 2015-2018, 2019-2022, 2023-2026, and continuous 2015-2026. Continuous net rose from `+$2,105.08` to `+$2,428.50`, CAGR from `1.67%` to `1.90%`, PF from `1.81` to `1.89`, recovery from `15.6686` to `17.0889`, and return/drawdown from `18.3043` to `20.5763`; all three disjoint eras remained profitable and no worse than control.
+
+All 12 annual center restarts were profitable. The summed annual robustness score increased from `+$1,999.97` to `+$2,260.63` with the same 392 trades, 11 of 12 years were no worse than control, and worst annual drawdown stayed `1.24%`. Under severe added execution cost of `0.10R` per trade, net remained `+$1,798.19`, PF `1.59`, closed-trade drawdown `1.26%`, and every broad era stayed positive. All eight clustered 10,000-trial Monte Carlo scenarios passed; the weakest severe P05 net was still `+$379.29`, with `0.65%` red trials and `4.26%` P95 closed-trade drawdown.
+
+The exact hard-risk audit found maximum reversion initial risk `0.4448%`, maximum portfolio initial risk `0.5892%` against the `0.75%` cap, maximum volume `0.15` lots, and zero lane or portfolio violations. A second broker/specification test and a valid frozen `$10,000` forward demo are still missing, so this is the provisional historical research leader, not a released live bot. The registered forward candidate and invalid-account boundary remain unchanged.
+
+[Open the exact provisional source/profile package](release/three-lane-reversion-strong-signal-lot-cap-provisional/README.md), [Model 4 decision](outputs/THREE_LANE_REVERSION_STRONG_SIGNAL_LOT_CAP_MODEL4_DECISION.md), [annual decision](outputs/THREE_LANE_REVERSION_STRONG_SIGNAL_LOT_CAP_ANNUAL_MODEL4_DECISION.md), [stress decision](outputs/THREE_LANE_REVERSION_STRONG_SIGNAL_LOT_CAP_MODEL4_STRESS_DECISION.md), and [risk audit](outputs/THREE_LANE_REVERSION_STRONG_SIGNAL_LOT_CAP_MODEL4_RISK_AUDIT.md).
+
+### Earlier Unconditional Lot-Cap Research
 
 The reversion lot-cap experiment completed on `2026-07-19`. Exact ATB150 trade-ledger evidence showed that 29 of 38 real-tick reversion trades reached the existing `0.10`-lot ceiling, leaving average deployed initial risk near `0.28%` even though the lane requested `0.45%`. The contract therefore froze a settings-only `0.10 / 0.12 / 0.15 / 0.18 / 0.20` lot-cap ladder. The EA source stayed byte-identical to ATB150; requested reversion risk stayed `0.45%`; portfolio open risk stayed capped at `0.75%`; and all entries, stops, targets, exits, post-fill checks, loss limits, capital locks, and real-account protections remained unchanged.
 
@@ -202,13 +220,14 @@ Across both residual-risk versions and these follow-ups, higher historical profi
 
 [Read the V1 real-tick rejection](outputs/THREE_LANE_RESIDUAL_RISK_V1_DECISION.md), [the V2 neighborhood rejection](outputs/THREE_LANE_RESIDUAL_RISK_V2_DECISION.md), [the V2 real-tick characterization](outputs/THREE_LANE_RESIDUAL_RISK_V2_MODEL4_CHARACTERIZATION_DECISION.md), [the reversion-only rejection](outputs/THREE_LANE_RESIDUAL_RISK_V2_REVERSION_FOCUS_DECISION.md), and [the static safety summary](outputs/THREE_LANE_RESIDUAL_RISK_STATIC_SAFETY.md).
 
-### Rejected Higher-APR Comparison
+### Higher-APR Comparison
 
 Continuous 2015-2026 figures use a sequential `$10,000` account path. V1 figures are Model 4 real ticks; V2 was stopped at Model 1 and is not directly promotable.
 
 | Profile | Test model | Net | Total increase | CAGR | PF | Max DD | Recovery | Return/DD | Status |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| **ATB150** | Model 4 real ticks | **+$2,105.08** | **+21.05%** | **+1.67%/yr** | **1.81** | **1.15%** | **15.67** | **18.30** | **Current best** |
+| **Selective strong-signal lot cap 0.15** | **Model 4 real ticks** | **+$2,428.50** | **+24.28%** | **+1.90%/yr** | **1.89** | **1.18%** | **17.09** | **20.58** | **Provisional historical leader; local gates pass** |
+| **ATB150** | Model 4 real ticks | **+$2,105.08** | **+21.05%** | **+1.67%/yr** | **1.81** | **1.15%** | **15.67** | **18.30** | **Released stable baseline** |
 | Strong reversion 0.70% / ATB 0.145% | Model 1 only | +$2,445.32 | +24.45% | +1.92%/yr | 1.92 | 1.22% | 16.7110 | 20.04 | Rejected before Model 4; narrow plateau failed |
 | Every-tick strong protection 1.00R / 0.10R | Model 1 only | +$2,289.77 | +22.90% | +1.80%/yr | 1.88 | 1.15% | 17.1198 | 19.91 | Rejected before Model 4; growth, retention, and neighbor gates failed |
 | Rejection quality body 0.25 / wick 25% / risk 0.70% | Model 1 only | +$2,321.32 | +23.21% | +1.83%/yr | 1.87 | 1.22% | 16.0734 | 19.02 | Rejected before Model 4; CAGR gate missed by 0.01 point |

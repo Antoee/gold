@@ -171,3 +171,7 @@ outputs/rdmc_tiered_momentum_v7_annual_package/** -text whitespace=cr-at-eol
 outputs/RDMC_TIERED_MOMENTUM_V7_* -text whitespace=cr-at-eol
 work/*rdmc_tiered_momentum_v7*.ps1 text eol=lf
 work/*rdmc_tiered_momentum_v7*.py text eol=lf
+work/Professional_XAUUSD_Three_Lane_Reversion_Strong_Signal_Lot_Cap_Research.mq5 -text -diff
+release/three-lane-reversion-strong-signal-lot-cap-provisional/*.mq5 -text -diff
+release/three-lane-reversion-strong-signal-lot-cap-provisional/*.set -text whitespace=cr-at-eol
+outputs/THREE_LANE_REVERSION_STRONG_SIGNAL_LOT_CAP_* -text whitespace=cr-at-eol

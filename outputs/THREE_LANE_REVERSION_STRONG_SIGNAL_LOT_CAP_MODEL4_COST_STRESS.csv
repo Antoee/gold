@@ -1,0 +1,5 @@
+Scenario,AddedCostRPerTrade,Trades,ExtraCost,NetProfit,ProfitFactor,MaxClosedDrawdownPercent,Older2015To2018,Middle2019To2022,Recent2023To2026,AllBroadErasPositive,GatePass
+base,0.0,404,0.0,2428.5,1.894,1.0006,971.96,795.81,660.73,True,True
+light,0.02,404,126.06,2302.44,1.8273,1.0513,917.27,753.45,631.72,True,True
+moderate,0.05,404,315.16,2113.34,1.733,1.1292,835.23,689.91,588.21,True,True
+severe,0.1,404,630.31,1798.19,1.5881,1.264,698.5,584.01,515.68,True,True
