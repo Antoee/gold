@@ -1,0 +1,2 @@
+"Status","StartedAtUtc","CompletedAtUtc","SourceSha256","PortableBinarySha256","Workers","CompileErrors","CompileWarnings","LaunchLocksRestored","MT5Processes","ForwardCandidateChanged","RealAccountApproved"
+"COMPILE_PASS","2026-07-20T19:13:21.1808435Z","2026-07-20T19:13:26.5924334Z","1E05D5E8A9283EC34EC9F8116E21C363E4D100BE782065E87DDDC90CCC3E6005","405665BCE71400E067AD6DE80CFA4CAEE4C937C2F916F05A1545327DAAE2E4B1","4","0","0","True","0","False","False"

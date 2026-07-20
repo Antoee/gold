@@ -8,7 +8,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 |---|---|
 | Highest verified historical result | **Momentum Same-Side Exit Cooldown 60, provisional research leader.** Model 4 real ticks: `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, `1.18%` drawdown. |
 | Released stable baseline | **Three-Lane Trade-Ready RC2 ATB150**, `+$2,105.08`, `+21.05%`, `1.67%/yr` CAGR, PF `1.81`, `1.15%` drawdown. |
-| Latest research result | **M15 squeeze target interaction rejected in pre-2021 discovery.** The fixed `2.00R` center improved Model 1 net from `+$1,379.93` to `+$1,658.76`, CAGR from `2.18%/yr` to `2.59%/yr`, and kept drawdown at `1.10%`, but PF `1.82` retained only `96.81%` of control versus the frozen `98%` floor. The observed `2.25R` upper edge reached `+$1,753.53`, `2.73%/yr`, and PF `1.87`, but selecting it after observation is forbidden. Holdout and Model 4 remained closed. **No new best.** |
+| Latest research result | **M15 squeeze partial runner rejected in pre-2021 discovery.** The fixed `80%` close / `4R` runner / `+1.25R` lock center improved Model 1 net from `+$1,575.70` to `+$1,695.16`, CAGR from `2.47%/yr` to `2.64%/yr`, PF from `1.78` to `1.84`, and kept drawdown at `1.10%`. However, PF retained `97.87%` of the `1.88` leader control versus the frozen `98%` floor. All broad windows were profitable and `5/6` neighbors passed, but the center quality gate remained binding. Holdout and Model 4 stayed closed. **No new best.** |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -47,6 +47,20 @@ All 12 annual Model 4 restarts were profitable and no worse than control; 2016, 
 This is a historical research promotion, not live approval. A second broker/specification and a valid frozen `$10,000` forward demo are still missing; the attached `$100,000` demo counts as zero evidence, and real-account trading remains disabled.
 
 [Read the Model 4 decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_DECISION.md), [annual decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_ANNUAL_MODEL4_DECISION.md), [stress decision](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_STRESS_DECISION.md), [risk audit](outputs/THREE_LANE_MOMENTUM_SAME_SIDE_EXIT_COOLDOWN_MODEL4_RISK_AUDIT.md), and [release package](release/three-lane-momentum-same-side-exit-cooldown-provisional/README.md).
+
+### Latest M15 Squeeze Partial-Runner Research
+
+The default-off, restart-safe squeeze partial runner completed on `2026-07-20` and was rejected in frozen 2015-2020 Model 1 discovery. Eligible squeeze positions first lock the remainder at `+1.25R`, bank `80%` at the original `+1.50R` target, and let the remaining `20%` pursue `+4.00R`. Broker-volume geometry keeps unsplittable positions on the exact original target. Persisted owned-position state prevents a restart from repeating a partial close, and any protection, execution, or state ambiguity fails closed.
+
+Static ownership, default-off, unchanged-entry, outcome-independence, restart, and protection-order checks passed. MetaEditor compiled the exact source with zero errors and warnings to one EX5 identity across four workers. All `27/27` reports were identity-valid after two unchanged report-export recoveries. The exact leader control and active `1.50R` squeeze reference reproduced their prior results, and every broad-window report was profitable.
+
+The active reference made `+$1,575.70`, `+15.76%` total, `2.47%/yr` CAGR, PF `1.78`, 350 report trades, `1.10%` drawdown, and recovery `13.4434`. The fixed partial-runner center improved both disjoint eras and reached `+$1,695.16`, `+16.95%` total, `2.64%/yr` CAGR, PF `1.84`, 391 report trades, the same `1.10%` drawdown, and recovery `14.4626`. This was a `+$119.46` or `7.58%` net improvement over the active reference.
+
+The center still failed the preregistered quality gate: PF `1.84` retained `97.87%` of the exact three-lane leader control's PF `1.88`, just below the frozen `98%` floor. Five of six one-factor neighbors passed, but neighbor support cannot override a failed center. No post-2020 or Model 4 test was opened, and the `90%` close or other observed neighbor was not substituted after seeing results.
+
+The verified real-tick leader remains `+$2,492.25`, `+24.92%`, `1.95%/yr` CAGR, PF `1.93`, and `1.18%` drawdown. The frozen forward candidate remains unchanged; the attached `$100,000` demo counts as zero evidence and real-account trading remains disabled.
+
+[Read the partial-runner rejection](outputs/FOUR_LANE_M15_SQUEEZE_PARTIAL_RUNNER_DISCOVERY_DECISION.md), [frozen contract](outputs/FOUR_LANE_M15_SQUEEZE_PARTIAL_RUNNER_DISCOVERY_CONTRACT.md), [exact Model 1 results](outputs/FOUR_LANE_M15_SQUEEZE_PARTIAL_RUNNER_DISCOVERY_MODEL1_RESULTS.csv), [canonical run evidence](outputs/FOUR_LANE_M15_SQUEEZE_PARTIAL_RUNNER_DISCOVERY_RUN_ATTESTATION.csv), and [research source](work/Professional_XAUUSD_Four_Lane_M15_Squeeze_Partial_Runner_Research.mq5).
 
 ### Latest M15 Squeeze Target Research
 
