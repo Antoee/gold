@@ -1,0 +1,7 @@
+"Candidate","Role","AddOnEnabled","AddOnTriggerR","AddOnPrimaryLockR","AddOnRiskPercent","OlderNetProfit","LaterNetProfit","ContinuousNetProfit","TotalReturnPercent","CagrPercent","ProfitFactor","TotalTrades","MaxDrawdownPercent","RecoveryFactor","ReturnDrawdown","AddOnEntries"
+"rvpwa_control","control","false","1","0.5","0.15","860.86","330.02","1191.69","11.92","1.89","1.77","265","1.02","10.5778","11.6863","0"
+"rvpwa_trigger075","lower_trigger","true","0.75","0.4","0.15","860.86","330.02","1191.69","11.92","1.89","1.77","265","1.02","10.5778","11.6863","0"
+"rvpwa_center","center","true","1","0.5","0.15","860.86","330.02","1191.69","11.92","1.89","1.77","265","1.02","10.5778","11.6863","0"
+"rvpwa_trigger125","upper_trigger","true","1.25","0.75","0.15","845.52","215.16","1088.37","10.88","1.74","1.69","269","1.02","9.6607","10.6667","4"
+"rvpwa_risk010","lower_risk","true","1","0.5","0.1","747.67","214.6","979.05","9.79","1.57","1.64","269","1.03","8.6903","9.5049","5"
+"rvpwa_risk020","upper_risk","true","1","0.5","0.2","860.86","330.02","1191.69","11.92","1.89","1.77","265","1.02","10.5778","11.6863","0"

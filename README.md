@@ -7,7 +7,7 @@ Risk-first MetaTrader 5 research for XAUUSD. No martingale, grid, averaging down
 | Lane | Status |
 |---|---|
 | Best historical/trade-ready candidate | **Three-Lane Trade-Ready RC2 ATB150** |
-| Latest research result | **An ATB session-shaped follow-up failed in Model 1. The 16-1 center fell to +$2,344.44 and 1.84% CAGR versus strong control at +$2,391.89 and 1.88%; the wider 16-9 row added only $6.30 with no CAGR gain. Model 4 did not open and the hour family is closed. No new best.** ATB150 remains the best. |
+| Latest research result | **A protected reversion winner add-on failed pre-2021 discovery. The center made zero add-ons; the two active variants reduced continuous net from +$1,191.69 to +$1,088.37 and +$979.05, with lower PF and recovery. The unopened 2021-2026 holdout and Model 4 stayed closed. No new best.** ATB150 remains the best. |
 | Registered forward candidate | Operational Hardening v0.2-rc2, unchanged |
 | Valid forward evidence | **None**. The attached $100,000 demo violates the frozen $10,000 contract and counts as zero days/trades. |
 | Real-money approval | **No. Real-account trading remains disabled.** |
@@ -33,6 +33,16 @@ Continuous MT5 Model 4 real ticks, XAUUSD, `$10,000` restart, `2015-01-01` throu
 The previous RC2 center profile independently supports the same source at `+$1,994.62`, PF `1.82`, 367 trades, and no losing broad era. ATB150 adds `$110.46`, reduces money drawdown by `$4.76`, and improves recovery by `9.28%`. Every promoted number above comes from Model 4 real ticks.
 
 ## Latest Research Update
+
+The protected reversion winner add-on experiment completed on `2026-07-19`. The new default-off code could add once to a profitable strong-signal reversion position only after locking the primary stop, proving broker-valued locked-profit coverage, retaining at least `1.20R` of reward, and passing account-wide exposure checks before and after the fill. It added no martingale, grid, averaging down, recovery sizing, or new close path; real-account trading remained disabled. Static and compiler audits passed with zero errors or warnings.
+
+The frozen discovery contract tested a disabled control, trigger neighbors at `0.75R / 1.00R / 1.25R`, and add-on risk neighbors at `0.10% / 0.15% / 0.20%` across 2015-2018, 2019-2020, and continuous 2015-2020. All `18/18` Model 1 reports parsed from one exact source and EX5 after one unchanged identity retry. Control returned `+$1,191.69`, `+11.92%` total, `1.89%` CAGR, PF `1.77`, 265 trades, `1.02%` drawdown, recovery `10.5778`, and return/drawdown `11.6863`.
+
+The center, `0.75R` trigger, and `0.20%` risk rows produced zero add-ons and exactly reproduced control. The active `1.25R` trigger row opened four continuous add-ons but fell to `+$1,088.37`, `1.74%` CAGR, PF `1.69`, and recovery `9.6607`. The active `0.10%` risk row opened five and fell further to `+$979.05`, `1.57%` CAGR, PF `1.64`, and recovery `8.6903`. The active variants materially weakened payoff, so the family was rejected without post-result retuning. The 2021-2026 holdout and Model 4 were not opened, ATB150 remains the historical champion, and the invalid forward registration remains unchanged.
+
+[Read the protected winner add-on rejection](outputs/THREE_LANE_REVERSION_PROTECTED_WINNER_ADDON_DISCOVERY_DECISION.md), [the compact results](outputs/THREE_LANE_REVERSION_PROTECTED_WINNER_ADDON_DISCOVERY_MODEL1_SUMMARY.csv), and [the exact run attestation](outputs/THREE_LANE_REVERSION_PROTECTED_WINNER_ADDON_DISCOVERY_MODEL1_RUN_ATTESTATION.csv).
+
+### Earlier Session-Shaped Research
 
 The strong-reversion / adaptive-trend session experiment completed on `2026-07-19`. Exact ATB150 trade attribution had suggested that adaptive-trend breakouts around the 16:00-00:00 server session were more productive, so a new data-informed contract froze a strong-reversion control plus `12-1`, `16-1`, and `16-9` adaptive-trend entry windows. Strong-reversion body/risk stayed at `0.25 / 0.70%`, adaptive-trend risk stayed at `0.15%`, tick protection stayed disabled, and no entry, stop, target, exit, exposure cap, or loss limit changed.
 
